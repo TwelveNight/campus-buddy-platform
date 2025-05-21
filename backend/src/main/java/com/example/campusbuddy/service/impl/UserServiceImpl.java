@@ -7,22 +7,30 @@ import com.example.campusbuddy.dto.RegisterDTO;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.security.JwtUtil;
+import com.example.campusbuddy.service.UserRoleService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     @Autowired
     private JwtUtil jwtUtil;
+
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private UserRoleService userRoleService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
+    @Transactional
     public UserVO register(RegisterDTO dto) {
         // 检查用户名是否已存在
         if (userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername())) != null) {
@@ -35,6 +43,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setCreditScore(100);
         user.setStatus("ACTIVE");
         this.save(user);
+
+        // 为新用户分配默认角色
+        userRoleService.addRoleToUser(user.getUserId(), "ROLE_USER");
+
         return getUserVOById(user.getUserId());
     }
 
