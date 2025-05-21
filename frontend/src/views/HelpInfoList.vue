@@ -38,7 +38,7 @@
             <el-table v-loading="loading" :data="list" style="width: 100%">
                 <el-table-column prop="title" label="标题" min-width="200">
                     <template #default="scope">
-                        <router-link :to="`/helpinfo/${scope.row.id}`" class="title-link">
+                        <router-link :to="`/helpinfo/${scope.row.infoId}`" class="title-link">
                             {{ scope.row.title }}
                         </router-link>
                     </template>
