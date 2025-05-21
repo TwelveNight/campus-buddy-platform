@@ -21,6 +21,13 @@ axios.interceptors.request.use(
 // 响应拦截器 - 处理常见错误
 axios.interceptors.response.use(
   response => {
+    // 检查业务响应码，如果不是200，则抛出错误
+    if (response.data && response.data.code !== undefined && response.data.code !== 200) {
+      const error = new Error(response.data.message || '操作失败')
+      // @ts-ignore
+      error.response = response
+      return Promise.reject(error)
+    }
     return response
   },
   error => {

@@ -67,7 +67,7 @@ public class HelpInfoController {
             wrapper.eq("type", type);
         if (status != null)
             wrapper.eq("status", status);
-        
+
         // 处理 publisherId 参数，如果为 'my' 则表示获取当前用户发布的互助信息
         if (publisherId != null) {
             if ("my".equals(publisherId)) {
@@ -87,7 +87,7 @@ public class HelpInfoController {
                 }
             }
         }
-        
+
         IPage<HelpInfo> result = helpInfoService.page(new Page<>(page, size), wrapper);
         return R.ok("获取互助信息列表成功", result);
     }

@@ -99,6 +99,20 @@ const isPublisher = computed(() => {
         <div class="action-container" v-if="info.status === 'OPEN' && !isPublisher">
           <el-button type="primary" @click="applyDialogVisible = true">申请帮助</el-button>
         </div>
+
+        <!-- 提示信息 - 发布者查看自己发布的互助信息时显示 -->
+        <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
+          <el-alert title="这是您发布的互助信息" type="info" description="您不能申请自己发布的互助信息，请等待其他用户申请帮助。" show-icon
+            :closable="false">
+          </el-alert>
+        </div>
+
+        <!-- 提示信息 - 发布者查看自己发布的互助信息时显示 -->
+        <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
+          <el-alert title="这是您发布的互助信息" type="info" description="您不能申请自己发布的互助信息，请等待其他用户申请帮助。" show-icon
+            :closable="false">
+          </el-alert>
+        </div>
       </div>
     </el-card>
 
@@ -159,8 +173,8 @@ const updateLoading = ref(false)
 
 // 判断当前用户是否为发布者
 const isPublisher = computed(() => {
-  if (!info.value || !authStore.user) return false
-  return info.value.publisherId === authStore.user.id
+  if (!info.value || !authStore.user || !authStore.user.userId) return false
+  return info.value.publisherId === authStore.user.userId
 })
 
 // 获取已接受的申请
@@ -486,6 +500,10 @@ function formatDate(dateString: string | Date) {
   display: flex;
   gap: 10px;
   justify-content: center;
+}
+
+.info-section {
+  margin-top: 20px;
 }
 
 .dialog-footer {
