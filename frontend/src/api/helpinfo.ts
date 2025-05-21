@@ -24,3 +24,13 @@ export function updateHelpInfo(id: number, data: any) {
 export function deleteHelpInfo(id: number) {
   return axios.delete(`/api/helpinfo/${id}`)
 }
+
+// 更新互助信息状态
+export function updateHelpInfoStatus(id: number, status: string) {
+  return axios.patch(`/api/helpinfo/${id}/status?status=${status}`)
+}
+
+// 增加浏览量
+export function incrementHelpInfoViewCount(id: number) {
+  return axios.patch(`/api/helpinfo/${id}/view`)
+}

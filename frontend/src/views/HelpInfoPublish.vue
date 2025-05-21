@@ -13,20 +13,38 @@
                 <el-form-item label="类型" prop="type">
                     <el-select v-model="form.type" placeholder="请选择类型" style="width: 100%">
                         <el-option label="课程辅导" value="COURSE_TUTORING"></el-option>
-                        <el-option label="技能交换" value="SKILL_EXCHANGE"></el-option>
-                        <el-option label="物品借用" value="ITEM_BORROW"></el-option>
+                        <el-option label="技能学习" value="SKILL_LEARNING"></el-option>
+                        <el-option label="物品借用" value="ITEM_LEND"></el-option>
+                        <el-option label="物品交换" value="ITEM_EXCHANGE"></el-option>
+                        <el-option label="组队合作" value="TEAM_UP"></el-option>
                     </el-select>
                 </el-form-item>
 
                 <el-form-item label="描述" prop="description">
-                    <el-input v-model="form.description" type="textarea" placeholder="请详细描述您的互助需求" :rows="6"
-                        maxlength="500" show-word-limit></el-input>
+                    <RichEditor v-model="form.description" placeholder="请详细描述您的互助需求" :maxLength="500" />
+                </el-form-item>
+
+                <el-form-item label="预期时间" prop="expectedTime">
+                    <el-input v-model="form.expectedTime" placeholder="例如：周一至周五18:00-20:00，或具体日期"></el-input>
+                </el-form-item>
+
+                <el-form-item label="预期地点" prop="expectedLocation">
+                    <el-input v-model="form.expectedLocation" placeholder="例如：图书馆、教学楼、线上会议等"></el-input>
+                </el-form-item>
+
+                <el-form-item label="联系方式" prop="contactMethod">
+                    <el-input v-model="form.contactMethod" placeholder="请填写您的联系方式，如微信号、QQ、电话等"></el-input>
                 </el-form-item>
 
                 <el-form-item label="悬赏金额">
                     <el-input-number v-model="form.rewardAmount" :min="0" :precision="2"
                         style="width: 100%"></el-input-number>
                     <div class="form-tips">可选，如需悬赏请输入金额</div>
+                </el-form-item>
+
+                <el-form-item label="上传图片">
+                    <ImageUploader v-model:value="form.imageUrlsList" />
+                    <div class="form-tips">可选，上传相关图片，最多5张</div>
                 </el-form-item>
 
                 <el-form-item>
@@ -44,6 +62,8 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useHelpInfoStore } from '../store/helpinfo'
 import { useAuthStore } from '../store/auth'
+import ImageUploader from '../components/ImageUploader.vue'
+import RichEditor from '../components/RichEditor.vue'
 
 const router = useRouter()
 const helpInfoStore = useHelpInfoStore()
@@ -56,14 +76,19 @@ const form = reactive({
     title: '',
     type: 'COURSE_TUTORING',
     description: '',
-    rewardAmount: 0
+    expectedTime: '',
+    expectedLocation: '',
+    contactMethod: '',
+    rewardAmount: 0,
+    imageUrls: '',
+    imageUrlsList: [] as string[]
 })
 
 // 表单验证规则
 const rules: FormRules = {
     title: [
         { required: true, message: '请输入标题', trigger: 'blur' },
-        { min: 3, max: 50, message: '标题长度应为3至50个字符', trigger: 'blur' }
+        { min: 2, max: 50, message: '标题长度应为2至50个字符', trigger: 'blur' }
     ],
     type: [
         { required: true, message: '请选择类型', trigger: 'change' }
@@ -71,6 +96,15 @@ const rules: FormRules = {
     description: [
         { required: true, message: '请输入描述', trigger: 'blur' },
         { min: 10, max: 500, message: '描述长度应为10至500个字符', trigger: 'blur' }
+    ],
+    expectedTime: [
+        { required: true, message: '请输入预期时间', trigger: 'blur' }
+    ],
+    expectedLocation: [
+        { required: true, message: '请输入预期地点', trigger: 'blur' }
+    ],
+    contactMethod: [
+        { required: true, message: '请输入联系方式', trigger: 'blur' }
     ]
 }
 
@@ -88,11 +122,20 @@ async function onSubmit() {
         if (valid) {
             loading.value = true
             try {
+                // 如果有图片URL列表，转换成JSON字符串
+                if (form.imageUrlsList && form.imageUrlsList.length > 0) {
+                    form.imageUrls = JSON.stringify(form.imageUrlsList);
+                }
+
                 await helpInfoStore.publishInfo({
                     title: form.title,
                     type: form.type,
                     description: form.description,
-                    rewardAmount: form.rewardAmount > 0 ? form.rewardAmount : null
+                    expectedTime: form.expectedTime,
+                    expectedLocation: form.expectedLocation,
+                    contactMethod: form.contactMethod,
+                    rewardAmount: form.rewardAmount > 0 ? form.rewardAmount : null,
+                    imageUrls: form.imageUrls || null
                 })
 
                 ElMessage.success('发布成功!')

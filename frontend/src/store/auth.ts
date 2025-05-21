@@ -5,7 +5,14 @@ import axios from 'axios'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('token') || '',
-    user: null as null | { username: string; nickname: string; userId?: number; avatarUrl?: string; creditScore?: number },
+    user: null as null | { 
+      username: string;
+      nickname: string;
+      userId?: number;
+      avatarUrl?: string;
+      creditScore?: number;
+      roles?: string[];
+    },
     isAuthenticated: !!localStorage.getItem('token'),
   }),
   actions: {

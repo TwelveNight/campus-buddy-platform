@@ -18,14 +18,14 @@ export function getApplications(helpInfoId: number) {
 }
 
 // 接受申请
-export function acceptApplication(applicationId: number) {
+export function acceptApplication(helpInfoId: number, applicationId: number) {
   return axios.put(`/api/help-application/${applicationId}/status`, {
     status: 'ACCEPTED'
   })
 }
 
 // 拒绝申请
-export function rejectApplication(applicationId: number) {
+export function rejectApplication(helpInfoId: number, applicationId: number) {
   return axios.put(`/api/help-application/${applicationId}/status`, {
     status: 'REJECTED'
   })
@@ -33,9 +33,7 @@ export function rejectApplication(applicationId: number) {
 
 // 完成互助（将互助信息状态改为已解决）
 export function completeHelpInfo(helpInfoId: number) {
-  return axios.patch(`/api/helpinfo/${helpInfoId}/status`, {
-    status: 'RESOLVED'
-  })
+  return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=RESOLVED`)
 }
 
 // 关闭互助信息

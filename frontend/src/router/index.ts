@@ -8,6 +8,9 @@ import HelpInfoList from '../views/HelpInfoList.vue'
 import HelpInfoDetail from '../views/HelpInfoDetail.vue'
 import HelpInfoPublish from '../views/HelpInfoPublish.vue'
 import MyApplications from '../views/MyApplications.vue'
+import MyHelpInfo from '../views/MyHelpInfo.vue'
+import Profile from '../views/Profile.vue'
+import AdminHelpInfo from '../views/AdminHelpInfo.vue'
 import { useAuthStore } from '../store/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -49,6 +52,21 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'applications',
         component: MyApplications,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'my/helpinfo',
+        component: MyHelpInfo,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'profile',
+        component: Profile,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'admin/helpinfo',
+        component: AdminHelpInfo,
         meta: { requiresAuth: true }
       },
     ]

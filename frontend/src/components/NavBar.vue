@@ -11,8 +11,14 @@
                     <el-menu-item index="/helpinfo/publish" v-if="authStore.isAuthenticated">
                         发布互助
                     </el-menu-item>
+                    <el-menu-item index="/my/helpinfo" v-if="authStore.isAuthenticated">
+                        我的互助
+                    </el-menu-item>
                     <el-menu-item index="/applications" v-if="authStore.isAuthenticated">
                         我的申请
+                    </el-menu-item>
+                    <el-menu-item index="/admin/helpinfo" v-if="isAdmin">
+                        管理后台
                     </el-menu-item>
                 </el-menu>
             </div>
@@ -25,8 +31,9 @@
                         </span>
                         <template #dropdown>
                             <el-dropdown-menu>
+                                <el-dropdown-item @click="$router.push('/my/helpinfo')">我的互助</el-dropdown-item>
                                 <el-dropdown-item @click="$router.push('/applications')">我的申请</el-dropdown-item>
-                                <el-dropdown-item disabled>个人中心</el-dropdown-item>
+                                <el-dropdown-item @click="$router.push('/profile')">个人中心</el-dropdown-item>
                                 <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
                             </el-dropdown-menu>
                         </template>
@@ -52,6 +59,13 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const activeIndex = computed(() => route.path)
+
+// 判断当前用户是否是管理员
+const isAdmin = computed(() => {
+    return authStore.user &&
+        authStore.user.roles &&
+        authStore.user.roles.includes('ROLE_ADMIN')
+})
 
 const handleLogout = () => {
     authStore.logout()

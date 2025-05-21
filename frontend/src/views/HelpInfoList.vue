@@ -20,8 +20,10 @@
                     <el-select v-model="filterType" placeholder="类型" clearable style="width: 150px" @change="fetchData">
                         <el-option label="全部" value=""></el-option>
                         <el-option label="课程辅导" value="COURSE_TUTORING"></el-option>
-                        <el-option label="技能交换" value="SKILL_EXCHANGE"></el-option>
-                        <el-option label="物品借用" value="ITEM_BORROW"></el-option>
+                        <el-option label="技能学习" value="SKILL_LEARNING"></el-option>
+                        <el-option label="物品借用" value="ITEM_LEND"></el-option>
+                        <el-option label="物品交换" value="ITEM_EXCHANGE"></el-option>
+                        <el-option label="组队合作" value="TEAM_UP"></el-option>
                     </el-select>
 
                     <el-select v-model="filterStatus" placeholder="状态" clearable style="width: 150px"
@@ -35,23 +37,39 @@
                 </div>
             </template>
 
-            <el-table v-loading="loading" :data="list" style="width: 100%">
-                <el-table-column prop="title" label="标题" min-width="200">
+            <el-table v-loading="loading" :data="list" style="width: 100%" row-key="infoId">
+                <el-table-column prop="title" label="标题" min-width="180">
                     <template #default="scope">
                         <router-link :to="`/helpinfo/${scope.row.infoId}`" class="title-link">
                             {{ scope.row.title }}
                         </router-link>
                     </template>
                 </el-table-column>
-                <el-table-column prop="type" label="类型" width="120"></el-table-column>
-                <el-table-column prop="status" label="状态" width="120">
+                <el-table-column prop="type" label="类型" width="100">
                     <template #default="scope">
-                        <el-tag :type="getStatusType(scope.row.status)">{{ scope.row.status }}</el-tag>
+                        <el-tag>{{ getTypeLabel(scope.row.type) }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="publisherNickname" label="发布者" width="120"></el-table-column>
+                <el-table-column prop="status" label="状态" width="100">
+                    <template #default="scope">
+                        <el-tag :type="getStatusType(scope.row.status)">{{ getStatusLabel(scope.row.status) }}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="expectedTime" label="时间" width="120"
+                    :show-overflow-tooltip="true"></el-table-column>
+                <el-table-column prop="expectedLocation" label="地点" width="120"
+                    :show-overflow-tooltip="true"></el-table-column>
+                <el-table-column prop="publisherName" label="发布者" width="100"></el-table-column>
                 <el-table-column prop="createdAt" label="发布时间" width="180"></el-table-column>
                 <el-table-column prop="viewCount" label="浏览数" width="80" align="center"></el-table-column>
+                <el-table-column label="操作" width="100" fixed="right">
+                    <template #default="scope">
+                        <el-button type="primary" size="small" link
+                            @click="$router.push(`/helpinfo/${scope.row.infoId}`)">
+                            查看详情
+                        </el-button>
+                    </template>
+                </el-table-column>
             </el-table>
 
             <div class="pagination-container">
@@ -125,6 +143,28 @@ function getStatusType(status: string) {
         'EXPIRED': 'danger'
     }
     return statusMap[status] || ''
+}
+
+function getStatusLabel(status: string) {
+    const statusMap: Record<string, string> = {
+        'OPEN': '进行中',
+        'IN_PROGRESS': '处理中',
+        'RESOLVED': '已解决',
+        'CLOSED': '已关闭',
+        'EXPIRED': '已过期'
+    }
+    return statusMap[status] || status
+}
+
+function getTypeLabel(type: string) {
+    const typeMap: Record<string, string> = {
+        'COURSE_TUTORING': '课程辅导',
+        'SKILL_LEARNING': '技能学习',
+        'ITEM_LEND': '物品借用',
+        'ITEM_EXCHANGE': '物品交换',
+        'TEAM_UP': '组队合作'
+    }
+    return typeMap[type] || type
 }
 </script>
 
