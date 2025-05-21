@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../utils/request'
 
 // 用户登录
 export function login(data: { username: string; password: string }) {
@@ -8,4 +8,9 @@ export function login(data: { username: string; password: string }) {
 // 用户注册
 export function register(data: { username: string; password: string; nickname: string }) {
   return axios.post('/api/user/register', data)
+}
+
+// 获取当前用户信息
+export function getCurrentUser() {
+  return axios.get('/api/user/current')
 }
