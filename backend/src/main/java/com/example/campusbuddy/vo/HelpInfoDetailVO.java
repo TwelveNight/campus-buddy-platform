@@ -25,6 +25,7 @@ public class HelpInfoDetailVO {
     private String imageUrls;
     private String status;
     private Integer viewCount;
+    private Long acceptedApplicationId; // 已接受的申请ID
     private Date createdAt;
     private Date updatedAt;
 
@@ -47,6 +48,7 @@ public class HelpInfoDetailVO {
         vo.setImageUrls(helpInfo.getImageUrls());
         vo.setStatus(helpInfo.getStatus());
         vo.setViewCount(helpInfo.getViewCount());
+        vo.setAcceptedApplicationId(helpInfo.getAcceptedApplicationId());
         vo.setCreatedAt(helpInfo.getCreatedAt());
         vo.setUpdatedAt(helpInfo.getUpdatedAt());
 

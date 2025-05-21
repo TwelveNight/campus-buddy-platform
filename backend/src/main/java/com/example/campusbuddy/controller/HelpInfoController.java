@@ -189,6 +189,12 @@ public class HelpInfoController {
 
         // 更新状态
         existingInfo.setStatus(status);
+        
+        // 如果状态变为OPEN，清除已接受的申请ID
+        if ("OPEN".equals(status)) {
+            existingInfo.setAcceptedApplicationId(null);
+        }
+        
         helpInfoService.updateById(existingInfo);
 
         return R.ok("互助信息状态更新成功", existingInfo);

@@ -31,6 +31,13 @@ export function rejectApplication(helpInfoId: number, applicationId: number) {
   })
 }
 
+// 取消申请
+export function cancelApplication(applicationId: number) {
+  return axios.put(`/api/help-application/${applicationId}/status`, {
+    status: 'CANCELED'
+  })
+}
+
 // 完成互助（将互助信息状态改为已解决）
 export function completeHelpInfo(helpInfoId: number) {
   return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=RESOLVED`)

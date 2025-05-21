@@ -48,6 +48,11 @@ public class HelpApplicationController {
         if (!"OPEN".equals(helpInfo.getStatus())) {
             return R.fail("该互助信息当前状态不允许申请");
         }
+        
+        // 检查是否已经有被接受的申请
+        if (helpInfo.getAcceptedApplicationId() != null) {
+            return R.fail("该互助信息已有被接受的申请");
+        }
 
         // 检查是否已经申请过该互助信息
         long count = helpApplicationService.lambdaQuery()
@@ -116,13 +121,36 @@ public class HelpApplicationController {
             return R.fail("只有发布者才能更新申请状态");
         }
 
-        // 检查申请状态是否为待处理
+        // 获取请求中的新状态
+        String newStatus = updateRequest.getStatus();
+        
+        // 处理取消申请的情况，申请人可以取消自己的申请
+        if ("CANCELED".equals(newStatus)) {
+            // 判断是否是申请人本人在取消申请
+            if (userId.equals(application.getApplicantId())) {
+                // 允许用户取消自己的申请
+                application.setStatus(newStatus);
+                helpApplicationService.updateById(application);
+                
+                // 如果取消的是已接受的申请，则需要清除HelpInfo的acceptedApplicationId字段，并将状态设为OPEN
+                HelpInfo helpInfo = helpInfoService.getById(application.getInfoId());
+                if (helpInfo != null && helpInfo.getAcceptedApplicationId() != null 
+                        && helpInfo.getAcceptedApplicationId().equals(applicationId)) {
+                    helpInfo.setAcceptedApplicationId(null);
+                    helpInfo.setStatus("OPEN");
+                    helpInfoService.updateById(helpInfo);
+                }
+                
+                return R.ok("申请已取消", application);
+            }
+        }
+        
+        // 对于非取消操作，检查是否是待处理状态
         if (!"PENDING".equals(application.getStatus())) {
             return R.fail("只能更新待处理的申请");
         }
-
-        // 获取请求中的新状态
-        String newStatus = updateRequest.getStatus();
+        
+        // 验证状态是否合法（只能是ACCEPTED或REJECTED）
         if (newStatus == null || (!newStatus.equals("ACCEPTED") && !newStatus.equals("REJECTED"))) {
             return R.fail("无效的申请状态，只能接受(ACCEPTED)或拒绝(REJECTED)");
         }
@@ -131,11 +159,13 @@ public class HelpApplicationController {
         application.setStatus(newStatus);
         helpApplicationService.updateById(application);
 
-        // 如果是接受申请，则将互助信息状态更新为"处理中"
+        // 如果是接受申请，则将互助信息状态更新为"处理中"，并记录已接受的申请ID
         if ("ACCEPTED".equals(newStatus)) {
             HelpInfo helpInfo = helpInfoService.getById(application.getInfoId());
             if (helpInfo != null) {
+                // 更新状态为处理中并记录已接受的申请ID
                 helpInfo.setStatus("IN_PROGRESS");
+                helpInfo.setAcceptedApplicationId(applicationId);
                 helpInfoService.updateById(helpInfo);
             }
 
