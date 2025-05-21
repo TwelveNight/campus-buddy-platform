@@ -22,7 +22,8 @@ public class HelpApplicationController {
     @PostMapping
     public R<HelpApplication> apply(@RequestBody HelpApplication application, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        if (userId == null) return R.unauthorized();
+        if (userId == null)
+            return R.unauthorized();
         application.setApplicantId(userId);
         application.setStatus("PENDING");
         helpApplicationService.save(application);
@@ -33,9 +34,10 @@ public class HelpApplicationController {
     @GetMapping("/my")
     public R<List<HelpApplication>> myApplications(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        if (userId == null) return R.unauthorized();
+        if (userId == null)
+            return R.unauthorized();
         List<HelpApplication> list = helpApplicationService.lambdaQuery()
-            .eq(HelpApplication::getApplicantId, userId).list();
+                .eq(HelpApplication::getApplicantId, userId).list();
         return R.ok("获取成功", list);
     }
 
@@ -43,9 +45,10 @@ public class HelpApplicationController {
     @GetMapping("/received")
     public R<List<HelpApplication>> receivedApplications(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        if (userId == null) return R.unauthorized();
+        if (userId == null)
+            return R.unauthorized();
         List<HelpApplication> list = helpApplicationService.lambdaQuery()
-            .eq(HelpApplication::getPublisherId, userId).list();
+                .eq(HelpApplication::getPublisherId, userId).list();
         return R.ok("获取成功", list);
     }
 

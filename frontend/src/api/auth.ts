@@ -12,5 +12,5 @@ export function register(data: { username: string; password: string; nickname: s
 
 // 获取当前用户信息
 export function getCurrentUser() {
-  return axios.get('/api/user/current')
+  return axios.get('/api/user/me')
 }
