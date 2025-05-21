@@ -53,4 +53,14 @@ public class UserController {
         UserVO userVO = userService.getUserVOById(userId);
         return R.ok("获取当前用户信息成功", userVO);
     }
+    
+    @Operation(summary = "通过用户ID获取用户信息")
+    @GetMapping("/{id}")
+    public R<UserVO> getUserById(@PathVariable Long id) {
+        UserVO userVO = userService.getUserVOById(id);
+        if (userVO == null) {
+            return R.fail("用户不存在");
+        }
+        return R.ok("获取用户信息成功", userVO);
+    }
 }

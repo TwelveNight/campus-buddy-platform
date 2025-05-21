@@ -2,11 +2,7 @@
   <div class="helpinfo-detail-page">
     <el-card v-loading="loading">
       <template #header>
-        <div class="card-// 判断当前用户是否为发布者
-const isPublisher = computed(() => {
-    if (!info.value || !authStore.user || !authStore.user.userId) return false
-    return info.value.publisherId === authStore.user.userId
-})r">
+        <div class="card-header">
           <h2>{{ info?.title || '互助信息详情' }}</h2>
           <div class="header-actions" v-if="info && isPublisher">
             <el-button-group>
@@ -61,8 +57,11 @@ const isPublisher = computed(() => {
           <h3>申请列表</h3>
           <el-table :data="applications" style="width: 100%">
             <el-table-column prop="applicantNickname" label="申请人" width="120"></el-table-column>
-            <el-table-column prop="message" label="申请消息"></el-table-column>
-            <el-table-column prop="contactInfo" label="联系方式" width="150"></el-table-column>
+            <el-table-column prop="message" label="申请消息" min-width="220">
+              <template #default="scope">
+                <div class="message-content" v-html="formatMessage(scope.row.message)"></div>
+              </template>
+            </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="scope">
                 <el-tag :type="getApplicationStatusType(scope.row.status)">
@@ -370,6 +369,21 @@ async function handleStatusUpdate() {
   }
 }
 
+// 格式化消息，将消息中的联系方式部分高亮显示
+function formatMessage(message: string): string {
+  if (!message) return ''
+  
+  // 如果消息中包含联系方式,使用HTML格式化显示
+  const contactInfoMatch = message.match(/联系方式[:：](.+)$/m)
+  if (contactInfoMatch) {
+    const mainMessage = message.replace(/联系方式[:：](.+)$/m, '')
+    return mainMessage + '<div class="contact-info">联系方式: ' + contactInfoMatch[1].trim() + '</div>'
+  }
+  
+  return message.replace(/\n/g, '<br>')
+}
+
+// 获取申请状态标签
 function getTypeLabel(type: string) {
   const typeMap: Record<string, string> = {
     'COURSE_TUTORING': '课程辅导',
@@ -475,6 +489,22 @@ function formatDate(dateString: string | Date) {
   white-space: pre-line;
   line-height: 1.6;
   margin-top: 5px;
+}
+
+.message-content {
+  white-space: pre-line;
+  line-height: 1.5;
+  color: #606266;
+}
+
+.contact-info {
+  margin-top: 5px;
+  padding: 4px 8px;
+  background-color: #f0f9eb;
+  color: #67c23a;
+  border-radius: 4px;
+  font-size: 0.9em;
+  display: inline-block;
 }
 
 .action-container {

@@ -9,16 +9,27 @@
                 <!-- 互助信息 -->
                 <el-table-column label="互助信息" min-width="180">
                     <template #default="scope">
-                        <div class="helpinfo-column">
-                            <router-link :to="`/helpinfo/${scope.row.helpInfo.id}`" class="title-link">
-                                {{ scope.row.helpInfo.title }}
-                            </router-link>
-                            <div class="helpinfo-meta">
-                                <el-tag size="small">{{ getTypeLabel(scope.row.helpInfo.type) }}</el-tag>
-                                <el-tag size="small" :type="getStatusType(scope.row.helpInfo.status)">
-                                    {{ getStatusLabel(scope.row.helpInfo.status) }}
-                                </el-tag>
+                        <div class="helpinfo-column" v-if="scope.row.helpInfo">
+                            <!-- 当互助信息处于加载状态时 -->
+                            <div v-if="scope.row.helpInfo.title === '加载中...'" class="loading-info">
+                                <el-skeleton :rows="2" animated />
                             </div>
+                            <!-- 当互助信息加载完成时 -->
+                            <template v-else>
+                                <!-- 使用router-link包装标题，确保可点击 -->
+                                <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`" class="title-link">
+                                    {{ scope.row.helpInfo.title }}
+                                </router-link>
+                                <div class="helpinfo-meta">
+                                    <el-tag size="small">{{ getTypeLabel(scope.row.helpInfo.type) }}</el-tag>
+                                    <el-tag size="small" :type="getStatusType(scope.row.helpInfo.status)">
+                                        {{ getStatusLabel(scope.row.helpInfo.status) }}
+                                    </el-tag>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="helpinfo-column" v-else>
+                            <span class="no-data">互助信息不存在或已删除</span>
                         </div>
                     </template>
                 </el-table-column>
@@ -36,11 +47,7 @@
                 <!-- 申请消息 -->
                 <el-table-column label="申请消息" min-width="220">
                     <template #default="scope">
-                        <div class="message-content">
-                            {{ scope.row.message }}
-                            <div v-if="scope.row.contactInfo" class="contact-info">
-                                联系方式: {{ scope.row.contactInfo }}
-                            </div>
+                        <div class="message-content" v-html="formatMessage(scope.row.message)">
                         </div>
                     </template>
                 </el-table-column>
@@ -151,25 +158,62 @@ const showActions = computed(() => {
 // 获取用户头像
 function getUserAvatar(scope: any) {
     const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
-    if (props.type === 'sent') {
-        return scope.row.helpInfo.publisherAvatar || defaultAvatar
-    } else {
-        return scope.row.applicantAvatar || defaultAvatar
+    
+    try {
+        if (props.type === 'sent') {
+            // 获取发布者头像
+            if (scope.row.helpInfo?.publisherAvatar) {
+                return scope.row.helpInfo.publisherAvatar
+            } else if (scope.row.helpInfo?.publisher?.avatar) {
+                return scope.row.helpInfo.publisher.avatar
+            }
+        } else {
+            // 获取申请者头像
+            if (scope.row.applicantAvatar) {
+                return scope.row.applicantAvatar
+            }
+        }
+    } catch (error) {
+        console.error('获取头像时出错:', error)
     }
+    
+    return defaultAvatar
 }
 
 // 获取用户名称
 function getUserName(scope: any) {
-    if (props.type === 'sent') {
-        return scope.row.helpInfo.publisherNickname
-    } else {
-        return scope.row.applicantNickname
+    try {
+        if (props.type === 'sent') {
+            // 获取发布者名称
+            if (scope.row.helpInfo?.publisherNickname) {
+                return scope.row.helpInfo.publisherNickname
+            } else if (scope.row.helpInfo?.publisher?.nickname) {
+                return scope.row.helpInfo.publisher.nickname
+            } else if (scope.row.helpInfo?.publisherId) {
+                return '加载中...'
+            }
+        } else {
+            // 获取申请者名称
+            if (scope.row.applicantNickname) {
+                return scope.row.applicantNickname
+            } else if (scope.row.applicantId) {
+                return '加载中...'
+            }
+        }
+    } catch (error) {
+        console.error('获取用户名称时出错:', error)
     }
+    
+    return '未知用户'
 }
 
 // 处理接受申请
 async function handleAccept(application: any) {
     try {
+        if (!application.helpInfo || !application.helpInfo.id) {
+            throw new Error('互助信息不存在或已被删除')
+        }
+        
         const res = await acceptApplication(
             application.helpInfo.id,
             application.id
@@ -186,6 +230,10 @@ async function handleAccept(application: any) {
 // 处理拒绝申请
 async function handleReject(application: any) {
     try {
+        if (!application.helpInfo || !application.helpInfo.id) {
+            throw new Error('互助信息不存在或已被删除')
+        }
+        
         const res = await rejectApplication(
             application.helpInfo.id,
             application.id
@@ -202,6 +250,10 @@ async function handleReject(application: any) {
 // 处理完成互助
 async function handleComplete(application: any) {
     try {
+        if (!application.helpInfo || !application.helpInfo.id) {
+            throw new Error('互助信息不存在或已被删除')
+        }
+        
         const res = await completeHelpInfo(application.helpInfo.id)
         if (res.data.code === 200) {
             ElMessage.success('已完成互助')
@@ -214,6 +266,11 @@ async function handleComplete(application: any) {
 
 // 处理取消合作
 function handleCancel(application: any) {
+    if (!application.helpInfo || !application.helpInfo.id) {
+        ElMessage.error('互助信息不存在或已被删除')
+        return
+    }
+    
     ElMessageBox.confirm(
         '确定要取消当前合作吗？这将重新开放互助信息。',
         '警告',
@@ -240,7 +297,9 @@ function handleCancel(application: any) {
 }
 
 // 互助信息类型标签
-function getTypeLabel(type: string) {
+function getTypeLabel(type: string | undefined) {
+    if (!type) return '未知类型'
+    
     const typeMap: Record<string, string> = {
         'COURSE_TUTORING': '课程辅导',
         'SKILL_EXCHANGE': '技能交换',
@@ -250,7 +309,9 @@ function getTypeLabel(type: string) {
 }
 
 // 互助信息状态标签
-function getStatusLabel(status: string) {
+function getStatusLabel(status: string | undefined) {
+    if (!status) return '未知状态'
+    
     const statusMap: Record<string, string> = {
         'OPEN': '进行中',
         'IN_PROGRESS': '处理中',
@@ -262,7 +323,9 @@ function getStatusLabel(status: string) {
 }
 
 // 互助信息状态类型
-function getStatusType(status: string) {
+function getStatusType(status: string | undefined) {
+    if (!status) return ''
+    
     const statusMap: Record<string, string> = {
         'OPEN': 'success',
         'IN_PROGRESS': 'warning',
@@ -274,7 +337,9 @@ function getStatusType(status: string) {
 }
 
 // 申请状态标签
-function getApplicationStatusLabel(status: string) {
+function getApplicationStatusLabel(status: string | undefined) {
+    if (!status) return '未知状态'
+    
     const statusMap: Record<string, string> = {
         'PENDING': '待处理',
         'ACCEPTED': '已接受',
@@ -284,13 +349,34 @@ function getApplicationStatusLabel(status: string) {
 }
 
 // 申请状态类型
-function getApplicationStatusType(status: string) {
+function getApplicationStatusType(status: string | undefined) {
+    if (!status) return ''
+    
     const statusMap: Record<string, string> = {
         'PENDING': 'warning',
         'ACCEPTED': 'success',
         'REJECTED': 'info'
     }
     return statusMap[status] || ''
+}
+
+// 格式化消息，将消息中的联系方式部分高亮显示
+function formatMessage(message: string | undefined | null): string {
+    if (!message) return ''
+    
+    try {
+        // 如果消息中包含联系方式,使用HTML格式化显示
+        const contactInfoMatch = message.match(/联系方式[:：](.+)$/m)
+        if (contactInfoMatch) {
+            const mainMessage = message.replace(/联系方式[:：](.+)$/m, '')
+            return mainMessage + '<div class="contact-info">联系方式: ' + contactInfoMatch[1].trim() + '</div>'
+        }
+        
+        return message.replace(/\n/g, '<br>')
+    } catch (error) {
+        console.error('格式化消息时出错:', error)
+        return String(message) // 确保返回一个字符串
+    }
 }
 </script>
 
@@ -309,14 +395,28 @@ function getApplicationStatusType(status: string) {
     gap: 5px;
 }
 
+.loading-info {
+    padding: 5px 0;
+    width: 100%;
+}
+
 .title-link {
     color: #409EFF;
     text-decoration: none;
     font-weight: 500;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 4px;
 }
 
 .title-link:hover {
     text-decoration: underline;
+    color: #66b1ff;
+}
+
+.title-text {
+    font-weight: 500;
+    color: #303133;
 }
 
 .helpinfo-meta {
@@ -345,5 +445,10 @@ function getApplicationStatusType(status: string) {
 .action-buttons {
     display: flex;
     gap: 8px;
+}
+
+.no-data {
+    color: #909399;
+    font-style: italic;
 }
 </style>

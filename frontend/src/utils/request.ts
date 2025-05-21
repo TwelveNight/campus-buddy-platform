@@ -37,6 +37,13 @@ axios.interceptors.response.use(
         localStorage.removeItem('token')
         window.location.href = '/login'
       }
+      // 处理400请求体格式错误
+      else if (error.response.status === 400) {
+        const errorMessage = error.response.data && error.response.data.message
+          ? error.response.data.message 
+          : '请求格式错误，请检查提交的数据'
+        error.message = errorMessage
+      }
     }
     return Promise.reject(error)
   }

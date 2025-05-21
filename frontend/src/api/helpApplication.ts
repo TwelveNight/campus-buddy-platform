@@ -7,8 +7,8 @@ export function submitApplication(helpInfoId: number, data: {
 }) {
   return axios.post(`/api/help-application`, {
     infoId: helpInfoId,
-    message: data.message,
-    contactInfo: data.contactInfo
+    message: data.message
+    // 移除contactInfo字段，后端实体中不存在该字段
   })
 }
 
