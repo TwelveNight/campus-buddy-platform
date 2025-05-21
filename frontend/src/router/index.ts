@@ -1,22 +1,56 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
+import Home from '../views/Home.vue'
 import HelpInfoList from '../views/HelpInfoList.vue'
 import HelpInfoDetail from '../views/HelpInfoDetail.vue'
 import HelpInfoPublish from '../views/HelpInfoPublish.vue'
+import MyApplications from '../views/MyApplications.vue'
+import { useAuthStore } from '../store/auth'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: MainLayout,
     children: [
-      { path: '', redirect: '/helpinfo' },
-      { path: 'login', component: Login },
-      { path: 'register', component: Register },
-      { path: 'helpinfo', component: HelpInfoList },
-      { path: 'helpinfo/publish', component: HelpInfoPublish },
-      { path: 'helpinfo/:id', component: HelpInfoDetail, props: true },
+      { 
+        path: '', 
+        component: Home,
+        meta: { requiresAuth: true }
+      },
+      { 
+        path: 'login', 
+        component: Login,
+        meta: { guestOnly: true }
+      },
+      { 
+        path: 'register', 
+        component: Register,
+        meta: { guestOnly: true } 
+      },
+      { 
+        path: 'helpinfo', 
+        component: HelpInfoList,
+        meta: { requiresAuth: true }
+      },
+      { 
+        path: 'helpinfo/publish', 
+        component: HelpInfoPublish,
+        meta: { requiresAuth: true }
+      },
+      { 
+        path: 'helpinfo/:id', 
+        component: HelpInfoDetail, 
+        props: true,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'applications',
+        component: MyApplications,
+        meta: { requiresAuth: true }
+      },
     ]
   }
 ]
@@ -24,6 +58,21 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// 路由守卫
+router.beforeEach((to, _from, next) => {
+  const authStore = useAuthStore()
+  
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    // 需要认证但未登录，重定向到登录页
+    next('/login')
+  } else if (to.meta.guestOnly && authStore.isAuthenticated) {
+    // 已登录用户不允许访问的页面(如登录页)，重定向到首页
+    next('/')
+  } else {
+    next()
+  }
 })
 
 export default router
