@@ -70,13 +70,17 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="180" v-if="info.status === 'OPEN'">
+            <el-table-column label="操作" width="180" v-if="info.status === 'OPEN' || info.status === 'IN_PROGRESS'">
               <template #default="scope">
-                <el-button-group v-if="scope.row.status === 'PENDING'">
-                  <el-button size="small" type="success" @click="handleAcceptApplication(scope.row.id)">接受</el-button>
-                  <el-button size="small" type="danger" @click="handleRejectApplication(scope.row.id)">拒绝</el-button>
-                </el-button-group>
-                <span v-else>-</span>
+                <div class="action-buttons">
+                  <template v-if="scope.row.status === 'PENDING'">
+                    <el-button size="small" type="success" @click="handleAcceptApplication(scope.row)">接受</el-button>
+                    <el-button size="small" type="danger" @click="handleRejectApplication(scope.row)">拒绝</el-button>
+                  </template>
+                  <template v-else>
+                    <span>-</span>
+                  </template>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -316,9 +320,15 @@ async function fetchApplications() {
 }
 
 // 接受申请
-async function handleAcceptApplication(applicationId: number) {
+async function handleAcceptApplication(application: any) {
   try {
     const id = Number(route.params.id)
+    // 兼容 application.id/application.applicationId
+    const applicationId = application.applicationId || application.id
+    if (!applicationId) {
+      ElMessage.error('申请ID无效')
+      return
+    }
     const res = await acceptApplication(id, applicationId)
     if (res.data.code === 200) {
       ElMessage.success('已接受申请')
@@ -331,9 +341,15 @@ async function handleAcceptApplication(applicationId: number) {
 }
 
 // 拒绝申请
-async function handleRejectApplication(applicationId: number) {
+async function handleRejectApplication(application: any) {
   try {
     const id = Number(route.params.id)
+    // 兼容 application.id/application.applicationId
+    const applicationId = application.applicationId || application.id
+    if (!applicationId) {
+      ElMessage.error('申请ID无效')
+      return
+    }
     const res = await rejectApplication(id, applicationId)
     if (res.data.code === 200) {
       ElMessage.success('已拒绝申请')

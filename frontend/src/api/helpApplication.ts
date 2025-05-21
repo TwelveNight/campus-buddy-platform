@@ -18,15 +18,35 @@ export function getApplications(helpInfoId: number) {
 }
 
 // 接受申请
-export function acceptApplication(helpInfoId: number, applicationId: number) {
-  return axios.put(`/api/help-application/${applicationId}/status`, {
+export function acceptApplication(helpInfoId: number, applicationId: any) {
+  // 确保applicationId是一个数值
+  const numericApplicationId = Number(applicationId);
+  
+  // 如果转换结果是NaN，抛出错误
+  if (isNaN(numericApplicationId)) {
+    throw new Error('applicationId 必须是一个有效的数值');
+  }
+  
+  console.log(`调用接受API，applicationId: ${applicationId}, 转换后: ${numericApplicationId}`);
+  
+  return axios.put(`/api/help-application/${numericApplicationId}/status`, {
     status: 'ACCEPTED'
   })
 }
 
 // 拒绝申请
-export function rejectApplication(helpInfoId: number, applicationId: number) {
-  return axios.put(`/api/help-application/${applicationId}/status`, {
+export function rejectApplication(helpInfoId: number, applicationId: any) {
+  // 确保applicationId是一个数值
+  const numericApplicationId = Number(applicationId);
+  
+  // 如果转换结果是NaN，抛出错误
+  if (isNaN(numericApplicationId)) {
+    throw new Error('applicationId 必须是一个有效的数值');
+  }
+  
+  console.log(`调用拒绝API，applicationId: ${applicationId}, 转换后: ${numericApplicationId}`);
+  
+  return axios.put(`/api/help-application/${numericApplicationId}/status`, {
     status: 'REJECTED'
   })
 }

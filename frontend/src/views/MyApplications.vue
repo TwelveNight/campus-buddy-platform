@@ -36,8 +36,12 @@
                     <template v-else>
                         <el-tabs v-model="receivedApplicationTab">
                             <el-tab-pane label="待处理" name="pending">
-                                <application-list :applications="pendingReceivedApplications" type="received"
-                                    status="pending" @refresh="fetchData" />
+                                <application-list 
+                                    :applications="pendingReceivedApplications" 
+                                    type="received" 
+                                    status="pending" 
+                                    @refresh="fetchData"
+                                />
                             </el-tab-pane>
 
                             <el-tab-pane label="处理中" name="processing">

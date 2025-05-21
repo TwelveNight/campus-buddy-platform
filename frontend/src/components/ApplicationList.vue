@@ -73,8 +73,7 @@
                 <el-table-column label="操作" width="160" v-if="showActions">
                     <template #default="scope">
                         <div class="action-buttons">
-                            <!-- 针对我收到的待处理申请 -->
-                            <template v-if="type === 'received' && status === 'pending'">
+                            <template v-if="props.type === 'received' && props.status === 'pending'">
                                 <el-button size="small" type="success" @click="handleAccept(scope.row)">
                                     接受
                                 </el-button>
@@ -82,18 +81,6 @@
                                     拒绝
                                 </el-button>
                             </template>
-
-                            <!-- 针对我收到的处理中申请 -->
-                            <template v-else-if="type === 'received' && status === 'processing'">
-                                <el-button size="small" type="success" @click="handleComplete(scope.row)">
-                                    完成
-                                </el-button>
-                                <el-button size="small" @click="handleCancel(scope.row)">
-                                    取消
-                                </el-button>
-                            </template>
-
-                            <!-- 默认情况 -->
                             <template v-else>
                                 <span>-</span>
                             </template>
@@ -210,41 +197,43 @@ function getUserName(scope: any) {
 
 // 处理接受申请
 async function handleAccept(application: any) {
+    console.log('点击了接受', application);
     try {
-        if (!application.helpInfo || !application.helpInfo.id) {
+        // 兼容 helpInfo 字段缺失，优先用 infoId
+        const helpInfoId = application.infoId || (application.helpInfo && application.helpInfo.id);
+        if (!helpInfoId) {
             throw new Error('互助信息不存在或已被删除')
         }
-
-        const res = await acceptApplication(
-            application.helpInfo.id,
-            application.id
-        )
+        const applicationId = application.applicationId || application.id;
+        const res = await acceptApplication(helpInfoId, applicationId);
         if (res.data.code === 200) {
             ElMessage.success('已接受申请')
             emit('refresh')
         }
     } catch (e: any) {
         ElMessage.error(e.message || '操作失败')
+        console.error('接受申请失败:', e);
     }
 }
 
 // 处理拒绝申请
 async function handleReject(application: any) {
+    console.log('点击了拒绝', application);
     try {
-        if (!application.helpInfo || !application.helpInfo.id) {
+        // 兼容 helpInfo 字段缺失，优先用 infoId
+        const helpInfoId = application.infoId || (application.helpInfo && application.helpInfo.id);
+        if (!helpInfoId) {
             throw new Error('互助信息不存在或已被删除')
         }
-
-        const res = await rejectApplication(
-            application.helpInfo.id,
-            application.id
-        )
+        const applicationId = application.applicationId || application.id;
+        const res = await rejectApplication(helpInfoId, applicationId);
         if (res.data.code === 200) {
             ElMessage.success('已拒绝申请')
             emit('refresh')
         }
     } catch (e: any) {
         ElMessage.error(e.message || '操作失败')
+        console.error('拒绝申请失败:', e);
     }
 }
 
