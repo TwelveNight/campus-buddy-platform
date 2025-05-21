@@ -59,12 +59,35 @@ public class HelpInfoController {
     public R<IPage<HelpInfo>> list(@RequestParam(defaultValue = "1") long page,
             @RequestParam(defaultValue = "10") long size,
             @RequestParam(required = false) String type,
-            @RequestParam(required = false) String status) {
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String publisherId,
+            HttpServletRequest request) {
         QueryWrapper<HelpInfo> wrapper = new QueryWrapper<>();
         if (type != null)
             wrapper.eq("type", type);
         if (status != null)
             wrapper.eq("status", status);
+        
+        // 处理 publisherId 参数，如果为 'my' 则表示获取当前用户发布的互助信息
+        if (publisherId != null) {
+            if ("my".equals(publisherId)) {
+                // 从认证信息中获取当前用户ID
+                Long userId = (Long) request.getAttribute("userId");
+                if (userId == null) {
+                    throw new UnauthorizedException();
+                }
+                wrapper.eq("publisher_id", userId);
+            } else {
+                // 如果不是 'my'，则可能是其他用户ID
+                try {
+                    Long pubId = Long.parseLong(publisherId);
+                    wrapper.eq("publisher_id", pubId);
+                } catch (NumberFormatException e) {
+                    throw new InvalidParameterException("发布者ID格式不正确");
+                }
+            }
+        }
+        
         IPage<HelpInfo> result = helpInfoService.page(new Page<>(page, size), wrapper);
         return R.ok("获取互助信息列表成功", result);
     }
