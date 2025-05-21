@@ -54,13 +54,14 @@ public class HelpApplicationController {
             return R.fail("该互助信息已有被接受的申请");
         }
 
-        // 检查是否已经申请过该互助信息
-        long count = helpApplicationService.lambdaQuery()
+        // 检查用户是否已有正在处理中或已被接受的申请
+        long activeApplicationCount = helpApplicationService.lambdaQuery()
                 .eq(HelpApplication::getInfoId, helpInfoId)
                 .eq(HelpApplication::getApplicantId, userId)
+                .in(HelpApplication::getStatus, "PENDING", "ACCEPTED") // 只检查PENDING或ACCEPTED状态的申请
                 .count();
-        if (count > 0) {
-            return R.fail("您已经申请过该互助信息");
+        if (activeApplicationCount > 0) {
+            return R.fail("您已经提交过申请，且该申请正在处理中或已被接受。");
         }
 
         // 设置申请者ID和初始状态
@@ -116,35 +117,43 @@ public class HelpApplicationController {
             return R.fail("申请信息不存在");
         }
 
-        // 检查是否是互助信息的发布者
-        if (!userId.equals(application.getPublisherId())) {
-            return R.fail("只有发布者才能更新申请状态");
-        }
-
         // 获取请求中的新状态
         String newStatus = updateRequest.getStatus();
-        
-        // 处理取消申请的情况，申请人可以取消自己的申请
+
+        // 处理取消申请的情况：申请人可以取消自己的申请
         if ("CANCELED".equals(newStatus)) {
-            // 判断是否是申请人本人在取消申请
             if (userId.equals(application.getApplicantId())) {
                 // 允许用户取消自己的申请
                 application.setStatus(newStatus);
                 helpApplicationService.updateById(application);
-                
+
                 // 如果取消的是已接受的申请，则需要清除HelpInfo的acceptedApplicationId字段，并将状态设为OPEN
                 HelpInfo helpInfo = helpInfoService.getById(application.getInfoId());
-                if (helpInfo != null && helpInfo.getAcceptedApplicationId() != null 
+                if (helpInfo != null && helpInfo.getAcceptedApplicationId() != null
                         && helpInfo.getAcceptedApplicationId().equals(applicationId)) {
                     helpInfo.setAcceptedApplicationId(null);
                     helpInfo.setStatus("OPEN");
                     helpInfoService.updateById(helpInfo);
                 }
-                
                 return R.ok("申请已取消", application);
+            } else {
+                // 如果不是申请人自己取消，则需要发布者权限
+                if (!userId.equals(application.getPublisherId())) {
+                    return R.fail("只有发布者或申请人才能取消申请");
+                }
+                // 如果是发布者取消一个非自己申请的CANCELED状态（理论上不应该发生），按兵不动或按需处理
+                // 此处我们假设发布者不能直接将一个别人的申请标记为CANCELED，除非这个申请已被接受然后发布者想撤销合作
+                // 但撤销合作的逻辑通常是改变HelpInfo的状态，而不是直接改Application的状态为CANCELED
+                // 为简化，此处若为发布者操作CANCELED，且非申请人，则拒绝
+                return R.fail("发布者不能直接取消他人的申请，除非是撤销已接受的合作（这应通过其他接口）");
             }
         }
-        
+
+        // 对于非取消操作（如接受、拒绝），检查是否是互助信息的发布者
+        if (!userId.equals(application.getPublisherId())) {
+            return R.fail("只有发布者才能执行此操作");
+        }
+
         // 对于非取消操作，检查是否是待处理状态
         if (!"PENDING".equals(application.getStatus())) {
             return R.fail("只能更新待处理的申请");

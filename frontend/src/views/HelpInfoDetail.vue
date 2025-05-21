@@ -115,7 +115,8 @@
                 <el-button @click="applyDialogVisible = true">重新申请</el-button>
               </template>
               <template v-else-if="myApplication.status === 'CANCELED'">
-                <el-button type="primary" @click="applyDialogVisible = true">申请帮助</el-button>
+                <el-button type="info" disabled style="margin-right: 10px;">已取消</el-button>
+                <el-button type="primary" @click="applyDialogVisible = true">重新申请</el-button>
               </template>
             </el-button-group>
           </template>
@@ -242,21 +243,6 @@ const availableStatuses = computed(() => {
     }
   }
   return statuses
-})
-
-// 判断当前用户是否可以申请
-const canApply = computed(() => {
-  // 基本条件检查
-  if (!info.value || !info.value.status) return false
-  if (!hasToken.value) return false // 未登录用户不能申请
-  if (isPublisher.value) return false // 发布者不能申请自己的互助信息
-  if (info.value.status !== 'OPEN') return false // 只有开放状态可以申请
-
-  // 检查是否已有被接受的申请
-  if (info.value.acceptedApplicationId) return false // 已有被接受的申请，不能再申请
-
-  // 返回true表示可以申请
-  return true
 })
 
 onMounted(async () => {
@@ -476,14 +462,13 @@ async function checkUserApplication() {
 
   // 检查token和用户信息
   if (hasToken.value) {
-    // 如果有token但没有用户信息，尝试获取用户信息
     if (!authStore.user || !authStore.user.userId) {
       try {
         console.log('检测到token存在但用户信息不完整，尝试先获取用户信息...')
         await authStore.fetchCurrentUser()
       } catch (err) {
         console.error('获取当前用户信息失败:', err)
-        return // 获取用户失败，退出函数
+        return
       }
     }
   } else {
@@ -491,7 +476,6 @@ async function checkUserApplication() {
     return
   }
 
-  // 再次检查用户信息
   if (!authStore.user || !authStore.user.userId) {
     console.log('无法获取有效的用户信息，取消检查申请状态')
     return
@@ -505,14 +489,31 @@ async function checkUserApplication() {
     if (res.data.code === 200) {
       const apps = res.data.data || []
       const currentInfoId = Number(route.params.id)
-      const userApp = apps.find((app: any) => app.infoId === currentInfoId || app.infoId === Number(currentInfoId))
+      
+      // 筛选出针对当前互助信息的所有申请
+      const userAppsForCurrentInfo = apps.filter((app: any) => app.infoId === currentInfoId || app.infoId === Number(currentInfoId))
 
-      console.log('当前互助ID:', currentInfoId, '匹配的用户申请:', userApp)
+      console.log('当前互助ID:', currentInfoId, '该用户的所有相关申请:', userAppsForCurrentInfo)
 
-      if (userApp) {
-        hasApplied.value = true
-        myApplication.value = userApp
-        console.log('用户已申请此互助，状态:', userApp.status)
+      if (userAppsForCurrentInfo.length > 0) {
+        // 定义状态优先级
+        const statusPriority: Record<string, number> = {
+          'ACCEPTED': 1,
+          'PENDING': 2,
+          'REJECTED': 3,
+          'CANCELED': 4
+        };
+
+        // 根据优先级排序申请，优先级数字越小越高
+        userAppsForCurrentInfo.sort((a: any, b: any) => {
+          const priorityA = statusPriority[a.status] || 99;
+          const priorityB = statusPriority[b.status] || 99;
+          return priorityA - priorityB;
+        });
+
+        myApplication.value = userAppsForCurrentInfo[0]; // 选择优先级最高的申请
+        hasApplied.value = true;
+        console.log('用户已申请此互助，选定的最高优先级申请状态:', myApplication.value.status)
       } else {
         hasApplied.value = false
         myApplication.value = null
@@ -573,12 +574,13 @@ async function handleCancelApplication() {
 
 // 申请成功后的处理
 async function handleApplySuccess() {
-  // 更新申请列表
-  if (isPublisher.value) {
-    await fetchApplications()
-  }
-  // 更新当前用户的申请状态
+  applyDialogVisible.value = false
+  ElMessage.success('申请已提交')
+  // 重新检查用户申请状态以更新按钮显示
   await checkUserApplication()
+  // 如果需要，也可以重新获取互助详情和申请列表，以防万一状态有变
+  // await helpInfoStore.fetchDetail(Number(route.params.id))
+  // await fetchApplications()
 }
 
 // 获取申请状态标签
