@@ -26,7 +26,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public UserVO register(RegisterDTO dto) {
         // 检查用户名是否已存在
         if (userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername())) != null) {
-            throw new RuntimeException("用户名已存在");
+            throw new IllegalArgumentException("用户名已存在");
         }
         User user = new User();
         user.setUsername(dto.getUsername());
@@ -42,7 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public String login(LoginDTO dto) {
         User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername()));
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("用户名或密码错误");
+            throw new IllegalArgumentException("用户名或密码错误");
         }
         return jwtUtil.generateToken(user.getUserId(), user.getUsername());
     }
@@ -50,7 +50,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public UserVO getUserVOById(Long userId) {
         User user = userMapper.selectById(userId);
-        if (user == null) return null;
+        if (user == null)
+            return null;
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
         return vo;
