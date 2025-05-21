@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Tag(name = "用户接口", description = "用户相关操作")
@@ -40,5 +41,16 @@ public class UserController {
     public R<List<User>> listUsers() {
         List<User> users = userService.list();
         return R.ok("获取用户列表成功", users);
+    }
+
+    @Operation(summary = "获取当前登录用户信息")
+    @GetMapping("/me")
+    public R<UserVO> getCurrentUser(jakarta.servlet.http.HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.fail(ResultCode.UNAUTHORIZED, "未登录");
+        }
+        UserVO userVO = userService.getUserVOById(userId);
+        return R.ok("获取当前用户信息成功", userVO);
     }
 }
