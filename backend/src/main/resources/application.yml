@@ -6,10 +6,22 @@ spring:
   redis:
     host: localhost
     port: 6379
+  # 禁用全局异常处理注解与Swagger冲突
+  mvc:
+    problemdetails:
+      enabled: false
 
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+  type-aliases-package: com.example.campusbuddy.entity
+  mapper-locations: classpath:mapper/*.xml
+  # 开启驼峰命名
+  configuration-properties:
+    map-underscore-to-camel-case: true
 
 springdoc:
   api-docs:
