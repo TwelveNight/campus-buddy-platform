@@ -1,8 +1,6 @@
 package com.example.campusbuddy.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -23,6 +21,10 @@ public class HelpInfo {
     private String imageUrls; // JSON字符串
     private String status; // OPEN, IN_PROGRESS, RESOLVED, EXPIRED, CLOSED
     private Integer viewCount;
+
+    @TableField(fill = FieldFill.INSERT)
     private Date createdAt;
+
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updatedAt;
 }

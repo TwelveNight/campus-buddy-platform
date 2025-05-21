@@ -4,12 +4,24 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.common.R;
+import com.example.campusbuddy.common.ResultCode;
+import com.example.campusbuddy.dto.HelpInfoDTO;
 import com.example.campusbuddy.entity.HelpInfo;
+import com.example.campusbuddy.exception.ForbiddenException;
+import com.example.campusbuddy.exception.InvalidParameterException;
+import com.example.campusbuddy.exception.ResourceNotFoundException;
+import com.example.campusbuddy.exception.UnauthorizedException;
 import com.example.campusbuddy.service.HelpInfoService;
+import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/helpinfo")
@@ -20,9 +32,26 @@ public class HelpInfoController {
 
     @PostMapping
     @Operation(summary = "发布互助信息")
-    public R<HelpInfo> create(@RequestBody HelpInfo helpInfo) {
+    public R<HelpInfo> create(@Valid @RequestBody HelpInfoDTO helpInfoDTO, HttpServletRequest request) {
+        // 从认证信息中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+
+        // DTO转换为实体
+        HelpInfo helpInfo = new HelpInfo();
+        BeanUtils.copyProperties(helpInfoDTO, helpInfo);
+
+        // 设置发布者ID为当前登录用户
+        helpInfo.setPublisherId(userId);
+        // 设置初始状态为"开放"
+        helpInfo.setStatus("OPEN");
+        // 设置初始浏览量为0
+        helpInfo.setViewCount(0);
+
         helpInfoService.save(helpInfo);
-        return R.ok(helpInfo);
+        return R.ok("互助信息发布成功", helpInfo);
     }
 
     @GetMapping
@@ -37,15 +66,124 @@ public class HelpInfoController {
         if (status != null)
             wrapper.eq("status", status);
         IPage<HelpInfo> result = helpInfoService.page(new Page<>(page, size), wrapper);
-        return R.ok(result);
+        return R.ok("获取互助信息列表成功", result);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "查看互助信息详情")
-    public R<HelpInfo> detail(@PathVariable Long id) {
-        HelpInfo info = helpInfoService.getById(id);
-        if (info == null)
-            return R.fail(404, "互助信息不存在");
-        return R.ok(info);
+    public R<HelpInfoDetailVO> detail(@PathVariable Long id) {
+        HelpInfoDetailVO info = helpInfoService.getHelpInfoDetail(id);
+        return R.ok("获取互助信息详情成功", info);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "更新互助信息")
+    public R<HelpInfo> update(@PathVariable Long id, @Valid @RequestBody HelpInfoDTO helpInfoDTO,
+            HttpServletRequest request) {
+        // 从认证信息中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+
+        // 检查互助信息是否存在
+        HelpInfo existingInfo = helpInfoService.getById(id);
+        if (existingInfo == null) {
+            throw new ResourceNotFoundException("互助信息", id);
+        }
+
+        // 检查是否是发布者本人在更新
+        if (!existingInfo.getPublisherId().equals(userId)) {
+            throw new ForbiddenException("只有发布者才能更新互助信息");
+        }
+
+        // 更新互助信息
+        BeanUtils.copyProperties(helpInfoDTO, existingInfo);
+        existingInfo.setInfoId(id); // 确保ID不变
+        existingInfo.setPublisherId(userId); // 确保发布者ID不变
+
+        helpInfoService.updateById(existingInfo);
+        return R.ok("互助信息更新成功", existingInfo);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除互助信息")
+    public R<Void> delete(@PathVariable Long id, HttpServletRequest request) {
+        // 从认证信息中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+
+        // 检查互助信息是否存在
+        HelpInfo existingInfo = helpInfoService.getById(id);
+        if (existingInfo == null) {
+            throw new ResourceNotFoundException("互助信息", id);
+        }
+
+        // 检查权限：只有发布者本人或管理员可以删除
+        if (!existingInfo.getPublisherId().equals(userId)) {
+            // 获取用户角色列表
+            @SuppressWarnings("unchecked")
+            List<String> roles = (List<String>) request.getAttribute("roles");
+            boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
+
+            if (!isAdmin) {
+                throw new ForbiddenException("只有发布者或管理员才能删除互助信息");
+            }
+        }
+
+        helpInfoService.removeById(id);
+        return R.ok("互助信息删除成功", null);
+    }
+
+    @PatchMapping("/{id}/status")
+    @Operation(summary = "更新互助信息状态")
+    public R<HelpInfo> updateStatus(@PathVariable Long id,
+            @RequestParam String status,
+            HttpServletRequest request) {
+        // 从认证信息中获取用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+
+        // 检查互助信息是否存在
+        HelpInfo existingInfo = helpInfoService.getById(id);
+        if (existingInfo == null) {
+            throw new ResourceNotFoundException("互助信息", id);
+        }
+
+        // 检查是否是发布者本人在更新状态
+        if (!existingInfo.getPublisherId().equals(userId)) {
+            throw new ForbiddenException("只有发布者才能更新互助信息状态");
+        }
+
+        // 验证状态值是否合法
+        if (!isValidStatus(status)) {
+            throw new InvalidParameterException("无效的状态值");
+        }
+
+        // 更新状态
+        existingInfo.setStatus(status);
+        helpInfoService.updateById(existingInfo);
+
+        return R.ok("互助信息状态更新成功", existingInfo);
+    }
+
+    // 验证状态值是否合法
+    private boolean isValidStatus(String status) {
+        return status != null && (status.equals("OPEN") ||
+                status.equals("IN_PROGRESS") ||
+                status.equals("RESOLVED") ||
+                status.equals("EXPIRED") ||
+                status.equals("CLOSED"));
+    }
+
+    @PatchMapping("/{id}/view")
+    @Operation(summary = "增加互助信息浏览量")
+    public R<HelpInfo> incrementViewCount(@PathVariable Long id) {
+        HelpInfo info = helpInfoService.incrementViewCount(id);
+        return R.ok("浏览量更新成功", info);
     }
 }
