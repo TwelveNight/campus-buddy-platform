@@ -69,17 +69,18 @@ async function submitForm() {
             loading.value = true
             try {
                 // 如果用户提供了联系方式，将它合并到申请消息中
-                const messageWithContact = form.contactInfo ? 
-                    `${form.message}\n\n联系方式: ${form.contactInfo}` : 
+                const messageWithContact = form.contactInfo ?
+                    `${form.message}\n\n联系方式: ${form.contactInfo}` :
                     form.message
-                
+
                 await submitApplication(props.helpInfoId, {
                     message: messageWithContact
                 })
 
                 ElMessage.success('申请提交成功！')
                 emit('success')
-                handleClose()                } catch (e: any) {
+                handleClose()
+            } catch (e: any) {
                 // 显示具体的错误信息
                 if (e.message && e.message.includes('不能申请自己')) {
                     ElMessage.error('您不能申请自己发布的互助信息')

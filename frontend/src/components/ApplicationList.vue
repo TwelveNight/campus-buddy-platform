@@ -17,7 +17,8 @@
                             <!-- 当互助信息加载完成时 -->
                             <template v-else>
                                 <!-- 使用router-link包装标题，确保可点击 -->
-                                <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`" class="title-link">
+                                <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
+                                    class="title-link">
                                     {{ scope.row.helpInfo.title }}
                                 </router-link>
                                 <div class="helpinfo-meta">
@@ -158,7 +159,7 @@ const showActions = computed(() => {
 // 获取用户头像
 function getUserAvatar(scope: any) {
     const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
-    
+
     try {
         if (props.type === 'sent') {
             // 获取发布者头像
@@ -176,7 +177,7 @@ function getUserAvatar(scope: any) {
     } catch (error) {
         console.error('获取头像时出错:', error)
     }
-    
+
     return defaultAvatar
 }
 
@@ -203,7 +204,7 @@ function getUserName(scope: any) {
     } catch (error) {
         console.error('获取用户名称时出错:', error)
     }
-    
+
     return '未知用户'
 }
 
@@ -213,7 +214,7 @@ async function handleAccept(application: any) {
         if (!application.helpInfo || !application.helpInfo.id) {
             throw new Error('互助信息不存在或已被删除')
         }
-        
+
         const res = await acceptApplication(
             application.helpInfo.id,
             application.id
@@ -233,7 +234,7 @@ async function handleReject(application: any) {
         if (!application.helpInfo || !application.helpInfo.id) {
             throw new Error('互助信息不存在或已被删除')
         }
-        
+
         const res = await rejectApplication(
             application.helpInfo.id,
             application.id
@@ -253,7 +254,7 @@ async function handleComplete(application: any) {
         if (!application.helpInfo || !application.helpInfo.id) {
             throw new Error('互助信息不存在或已被删除')
         }
-        
+
         const res = await completeHelpInfo(application.helpInfo.id)
         if (res.data.code === 200) {
             ElMessage.success('已完成互助')
@@ -270,7 +271,7 @@ function handleCancel(application: any) {
         ElMessage.error('互助信息不存在或已被删除')
         return
     }
-    
+
     ElMessageBox.confirm(
         '确定要取消当前合作吗？这将重新开放互助信息。',
         '警告',
@@ -299,7 +300,7 @@ function handleCancel(application: any) {
 // 互助信息类型标签
 function getTypeLabel(type: string | undefined) {
     if (!type) return '未知类型'
-    
+
     const typeMap: Record<string, string> = {
         'COURSE_TUTORING': '课程辅导',
         'SKILL_EXCHANGE': '技能交换',
@@ -311,7 +312,7 @@ function getTypeLabel(type: string | undefined) {
 // 互助信息状态标签
 function getStatusLabel(status: string | undefined) {
     if (!status) return '未知状态'
-    
+
     const statusMap: Record<string, string> = {
         'OPEN': '进行中',
         'IN_PROGRESS': '处理中',
@@ -325,7 +326,7 @@ function getStatusLabel(status: string | undefined) {
 // 互助信息状态类型
 function getStatusType(status: string | undefined) {
     if (!status) return ''
-    
+
     const statusMap: Record<string, string> = {
         'OPEN': 'success',
         'IN_PROGRESS': 'warning',
@@ -339,7 +340,7 @@ function getStatusType(status: string | undefined) {
 // 申请状态标签
 function getApplicationStatusLabel(status: string | undefined) {
     if (!status) return '未知状态'
-    
+
     const statusMap: Record<string, string> = {
         'PENDING': '待处理',
         'ACCEPTED': '已接受',
@@ -351,7 +352,7 @@ function getApplicationStatusLabel(status: string | undefined) {
 // 申请状态类型
 function getApplicationStatusType(status: string | undefined) {
     if (!status) return ''
-    
+
     const statusMap: Record<string, string> = {
         'PENDING': 'warning',
         'ACCEPTED': 'success',
@@ -363,7 +364,7 @@ function getApplicationStatusType(status: string | undefined) {
 // 格式化消息，将消息中的联系方式部分高亮显示
 function formatMessage(message: string | undefined | null): string {
     if (!message) return ''
-    
+
     try {
         // 如果消息中包含联系方式,使用HTML格式化显示
         const contactInfoMatch = message.match(/联系方式[:：](.+)$/m)
@@ -371,7 +372,7 @@ function formatMessage(message: string | undefined | null): string {
             const mainMessage = message.replace(/联系方式[:：](.+)$/m, '')
             return mainMessage + '<div class="contact-info">联系方式: ' + contactInfoMatch[1].trim() + '</div>'
         }
-        
+
         return message.replace(/\n/g, '<br>')
     } catch (error) {
         console.error('格式化消息时出错:', error)

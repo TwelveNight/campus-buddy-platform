@@ -98,15 +98,9 @@
         <!-- 操作按钮 - 非发布者且互助信息状态为进行中可见 -->
         <div class="action-container" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
           <!-- 错误信息 -->
-          <el-alert
-            v-if="!hasToken"
-            title="请先登录"
-            type="warning"
-            show-icon
-            :closable="false"
-            style="margin-bottom: 10px"
-          />
-          
+          <el-alert v-if="!hasToken" title="请先登录" type="warning" show-icon :closable="false"
+            style="margin-bottom: 10px" />
+
           <template v-if="hasApplied && myApplication">
             <el-button-group>
               <template v-if="myApplication.status === 'PENDING'">
@@ -257,10 +251,10 @@ const canApply = computed(() => {
   if (!hasToken.value) return false // 未登录用户不能申请
   if (isPublisher.value) return false // 发布者不能申请自己的互助信息
   if (info.value.status !== 'OPEN') return false // 只有开放状态可以申请
-  
+
   // 检查是否已有被接受的申请
   if (info.value.acceptedApplicationId) return false // 已有被接受的申请，不能再申请
-  
+
   // 返回true表示可以申请
   return true
 })
@@ -274,7 +268,7 @@ onMounted(async () => {
     }
     await helpInfoStore.fetchDetail(id)
     await fetchApplications()
-    
+
     // 先尝试获取用户信息
     const token = localStorage.getItem('token')
     if (token && (!authStore.user || !authStore.user.userId)) {
@@ -285,7 +279,7 @@ onMounted(async () => {
         console.error('获取当前用户信息失败:', err)
       }
     }
-    
+
     // 检查当前用户是否已申请
     if (authStore.user && authStore.user.userId) {
       try {
@@ -461,25 +455,25 @@ async function handleStatusUpdate() {
 // 格式化消息，将消息中的联系方式部分高亮显示
 function formatMessage(message: string): string {
   if (!message) return ''
-  
+
   // 如果消息中包含联系方式,使用HTML格式化显示
   const contactInfoMatch = message.match(/联系方式[:：](.+)$/m)
   if (contactInfoMatch) {
     const mainMessage = message.replace(/联系方式[:：](.+)$/m, '')
     return mainMessage + '<div class="contact-info">联系方式: ' + contactInfoMatch[1].trim() + '</div>'
   }
-  
+
   return message.replace(/\n/g, '<br>')
 }
 
 // 检查用户的申请状态
 async function checkUserApplication() {
   console.log('正在检查用户申请状态...')
-  
+
   // 重置状态
   hasApplied.value = false
   myApplication.value = null
-  
+
   // 检查token和用户信息
   if (hasToken.value) {
     // 如果有token但没有用户信息，尝试获取用户信息
@@ -496,25 +490,25 @@ async function checkUserApplication() {
     console.log('未找到token，用户未登录')
     return
   }
-  
+
   // 再次检查用户信息
   if (!authStore.user || !authStore.user.userId) {
     console.log('无法获取有效的用户信息，取消检查申请状态')
     return
   }
-  
+
   try {
     console.log('获取我的申请列表...当前用户ID:', authStore.user.userId)
     const res = await getMyApplications()
     console.log('申请列表响应:', res.data)
-    
+
     if (res.data.code === 200) {
       const apps = res.data.data || []
       const currentInfoId = Number(route.params.id)
       const userApp = apps.find((app: any) => app.infoId === currentInfoId || app.infoId === Number(currentInfoId))
-      
+
       console.log('当前互助ID:', currentInfoId, '匹配的用户申请:', userApp)
-      
+
       if (userApp) {
         hasApplied.value = true
         myApplication.value = userApp
@@ -564,7 +558,7 @@ async function handleCancelApplication() {
         ElMessage.success('申请已取消')
         hasApplied.value = false
         myApplication.value = null
-        
+
         // 重新获取页面数据
         await checkUserApplication()
       } else {
@@ -574,7 +568,7 @@ async function handleCancelApplication() {
       console.error('取消申请失败:', e)
       ElMessage.error(e.message || '取消申请失败')
     }
-  }).catch(() => {})
+  }).catch(() => { })
 }
 
 // 申请成功后的处理
@@ -666,7 +660,7 @@ function handleApplyClick() {
     router.push('/login') // 跳转到登录页面
     return
   }
-  
+
   // 尝试获取用户信息
   if (!authStore.user || !authStore.user.userId) {
     authStore.fetchCurrentUser().then(() => {
