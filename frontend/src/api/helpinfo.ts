@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from '../utils/request'
 
 // 获取互助信息列表
 export function fetchHelpInfoList(params: any) {
@@ -11,8 +11,16 @@ export function fetchHelpInfoDetail(id: number) {
 }
 
 // 发布互助信息
-export function publishHelpInfo(data: any, token: string) {
-  return axios.post('/api/helpinfo', data, {
-    headers: { Authorization: `Bearer ${token}` }
-  })
+export function publishHelpInfo(data: any) {
+  return axios.post('/api/helpinfo', data)
+}
+
+// 更新互助信息
+export function updateHelpInfo(id: number, data: any) {
+  return axios.put(`/api/helpinfo/${id}`, data)
+}
+
+// 删除互助信息
+export function deleteHelpInfo(id: number) {
+  return axios.delete(`/api/helpinfo/${id}`)
 }
