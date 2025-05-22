@@ -65,7 +65,7 @@
                 <!-- 申请时间 -->
                 <el-table-column label="申请时间" width="180">
                     <template #default="scope">
-                        {{ scope.row.createdAt }}
+                        {{ formatDate(scope.row.createdAt) }}
                     </template>
                 </el-table-column>
 
@@ -366,6 +366,27 @@ function formatMessage(message: string | undefined | null): string {
     } catch (error) {
         console.error('格式化消息时出错:', error)
         return String(message) // 确保返回一个字符串
+    }
+}
+
+// 格式化日期
+function formatDate(dateString: string | Date | number) {
+    if (!dateString) return ''
+    try {
+        // 处理数字类型的时间戳（毫秒）
+        const date = typeof dateString === 'number' ? new Date(dateString) : 
+                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        })
+    } catch (error) {
+        console.error('日期格式化错误:', error, dateString)
+        return String(dateString)
     }
 }
 </script>
