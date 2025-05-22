@@ -1,0 +1,1 @@
+UPDATE review SET review_type = 'PUBLISHER_TO_HELPER' WHERE review_type IS NULL;
