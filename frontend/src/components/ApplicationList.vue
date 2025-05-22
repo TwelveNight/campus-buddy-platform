@@ -92,13 +92,11 @@
 
 <script setup lang="ts">
 import { computed, defineProps, defineEmits } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import {
     acceptApplication,
-    rejectApplication,
-    completeHelpInfo
+    rejectApplication
 } from '../api/helpApplication'
-import { updateHelpInfo } from '../api/helpinfo'
 
 const props = defineProps({
     applications: {
@@ -235,119 +233,6 @@ async function handleReject(application: any) {
     }
 }
 
-// 处理完成互助
-async function handleComplete(application: any) {
-    try {
-        if (!application.helpInfo || !application.helpInfo.id) {
-            throw new Error('互助信息不存在或已被删除')
-        }
-
-        const res = await completeHelpInfo(application.helpInfo.id)
-        if (res.data.code === 200) {
-            ElMessage.success('已完成互助')
-            emit('refresh')
-        }
-    } catch (e: any) {
-        ElMessage.error(e.message || '操作失败')
-    }
-}
-
-// 处理取消合作
-function handleCancel(application: any) {
-    if (!application.helpInfo || !application.helpInfo.id) {
-        ElMessage.error('互助信息不存在或已被删除')
-        return
-    }
-
-    ElMessageBox.confirm(
-        '确定要取消当前合作吗？这将重新开放互助信息。',
-        '警告',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-        }
-    ).then(async () => {
-        try {
-            // 将状态重置为OPEN
-            const res = await updateHelpInfo(
-                application.helpInfo.id,
-                { status: 'OPEN' }
-            )
-            if (res.data.code === 200) {
-                ElMessage.success('已取消合作')
-                emit('refresh')
-            }
-        } catch (e: any) {
-            ElMessage.error('操作失败')
-        }
-    }).catch(() => { })
-}
-
-// 互助信息类型标签
-function getTypeLabel(type: string | undefined) {
-    if (!type) return '未知类型'
-
-    const typeMap: Record<string, string> = {
-        'COURSE_TUTORING': '课程辅导',
-        'SKILL_EXCHANGE': '技能交换',
-        'ITEM_BORROW': '物品借用'
-    }
-    return typeMap[type] || type
-}
-
-// 互助信息状态标签
-function getStatusLabel(status: string | undefined) {
-    if (!status) return '未知状态'
-
-    const statusMap: Record<string, string> = {
-        'OPEN': '进行中',
-        'IN_PROGRESS': '处理中',
-        'RESOLVED': '已解决',
-        'CLOSED': '已关闭',
-        'EXPIRED': '已过期'
-    }
-    return statusMap[status] || status
-}
-
-// 互助信息状态类型
-function getStatusType(status: string | undefined) {
-    if (!status) return ''
-
-    const statusMap: Record<string, string> = {
-        'OPEN': 'success',
-        'IN_PROGRESS': 'warning',
-        'RESOLVED': 'info',
-        'CLOSED': '',
-        'EXPIRED': 'danger'
-    }
-    return statusMap[status] || ''
-}
-
-// 申请状态标签
-function getApplicationStatusLabel(status: string | undefined) {
-    if (!status) return '未知状态'
-
-    const statusMap: Record<string, string> = {
-        'PENDING': '待处理',
-        'ACCEPTED': '已接受',
-        'REJECTED': '已拒绝'
-    }
-    return statusMap[status] || status
-}
-
-// 申请状态类型
-function getApplicationStatusType(status: string | undefined) {
-    if (!status) return ''
-
-    const statusMap: Record<string, string> = {
-        'PENDING': 'warning',
-        'ACCEPTED': 'success',
-        'REJECTED': 'info'
-    }
-    return statusMap[status] || ''
-}
-
 // 格式化消息，将消息中的联系方式部分高亮显示
 function formatMessage(message: string | undefined | null): string {
     if (!message) return ''
@@ -386,6 +271,30 @@ function formatDate(dateString: string | Date | number) {
         console.error('日期格式化错误:', error, dateString)
         return String(dateString)
     }
+}
+
+// 获取申请状态类型
+function getApplicationStatusType(status: string): string {
+    const statusTypeMap: Record<string, string> = {
+        'pending': 'warning',
+        'accepted': 'success',
+        'rejected': 'danger',
+        'processing': 'info',
+        'completed': 'success'
+    }
+    return statusTypeMap[status] || 'default'
+}
+
+// 获取申请状态标签
+function getApplicationStatusLabel(status: string): string {
+    const statusLabelMap: Record<string, string> = {
+        'pending': '待处理',
+        'accepted': '已接受',
+        'rejected': '已拒绝',
+        'processing': '处理中',
+        'completed': '已完成'
+    }
+    return statusLabelMap[status] || '未知状态'
 }
 </script>
 
