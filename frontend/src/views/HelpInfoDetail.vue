@@ -488,13 +488,13 @@ function confirmDelete() {
 // 处理编辑按钮点击
 function handleEdit() {
   if (!info.value) return
-  
+
   // 检查状态，只有当状态为OPEN时才能编辑
   if (info.value.status !== 'OPEN') {
     ElMessage.warning('只有处于"进行中"状态的互助信息才能被编辑')
     return
   }
-  
+
   const id = Number(route.params.id)
   // 跳转到编辑页面，将当前互助信息ID传递过去
   router.push(`/helpinfo/edit/${id}`)
@@ -581,7 +581,7 @@ async function checkUserApplication() {
     if (res.data.code === 200) {
       const apps = res.data.data || []
       const currentInfoId = Number(route.params.id)
-      
+
       // 筛选出针对当前互助信息的所有申请
       const userAppsForCurrentInfo = apps.filter((app: any) => app.infoId === currentInfoId || app.infoId === Number(currentInfoId))
 
@@ -733,9 +733,9 @@ function formatDate(dateString: string | Date | number) {
 
   try {
     // 处理数字类型的时间戳（毫秒）
-    const date = typeof dateString === 'number' ? new Date(dateString) : 
-                (typeof dateString === 'string' ? new Date(dateString) : dateString);
-    
+    const date = typeof dateString === 'number' ? new Date(dateString) :
+      (typeof dateString === 'string' ? new Date(dateString) : dateString);
+
     return date.toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',

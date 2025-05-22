@@ -250,8 +250,8 @@ function formatDate(dateString: string | Date | number) {
     if (!dateString) return ''
     try {
         // 处理数字类型的时间戳（毫秒）
-        const date = typeof dateString === 'number' ? new Date(dateString) : 
-                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
+        const date = typeof dateString === 'number' ? new Date(dateString) :
+            (typeof dateString === 'string' ? new Date(dateString) : dateString)
         return date.toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',

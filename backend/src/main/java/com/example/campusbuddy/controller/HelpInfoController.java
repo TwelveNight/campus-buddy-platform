@@ -33,10 +33,10 @@ import java.util.List;
 public class HelpInfoController {
     @Autowired
     private HelpInfoService helpInfoService;
-    
+
     @Autowired
     private UserMapper userMapper;
-    
+
     @PostMapping
     @Operation(summary = "发布互助信息")
     public R<HelpInfo> create(@Valid @RequestBody HelpInfoDTO helpInfoDTO, HttpServletRequest request) {
@@ -96,7 +96,7 @@ public class HelpInfoController {
         }
 
         IPage<HelpInfo> result = helpInfoService.page(new Page<>(page, size), wrapper);
-        
+
         // 处理结果，添加发布者名称信息
         for (HelpInfo info : result.getRecords()) {
             User publisher = userMapper.selectById(info.getPublisherId());
@@ -105,7 +105,7 @@ public class HelpInfoController {
                 info.getParams().put("publisherAvatar", publisher.getAvatarUrl());
             }
         }
-        
+
         return R.ok("获取互助信息列表成功", result);
     }
 
@@ -206,12 +206,12 @@ public class HelpInfoController {
 
         // 更新状态
         existingInfo.setStatus(status);
-        
+
         // 如果状态变为OPEN，清除已接受的申请ID
         if ("OPEN".equals(status)) {
             existingInfo.setAcceptedApplicationId(null);
         }
-        
+
         helpInfoService.updateById(existingInfo);
 
         return R.ok("互助信息状态更新成功", existingInfo);

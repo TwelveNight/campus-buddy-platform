@@ -61,7 +61,8 @@
                     :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="publisherId" label="发布者" width="100">
                     <template #default="scope">
-                        <span v-if="scope.row.params && scope.row.params.publisherName">{{ scope.row.params.publisherName }}</span>
+                        <span v-if="scope.row.params && scope.row.params.publisherName">{{
+                            scope.row.params.publisherName }}</span>
                         <span v-else>用户{{ scope.row.publisherId }}</span>
                     </template>
                 </el-table-column>
@@ -181,8 +182,8 @@ function formatDate(dateString: string | Date | number) {
     if (!dateString) return ''
     try {
         // 处理数字类型的时间戳（毫秒）
-        const date = typeof dateString === 'number' ? new Date(dateString) : 
-                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
+        const date = typeof dateString === 'number' ? new Date(dateString) :
+            (typeof dateString === 'string' ? new Date(dateString) : dateString)
         return date.toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',

@@ -5,26 +5,25 @@
                 <img src="../assets/vue.svg" alt="学伴" />
                 <h1>学伴</h1>
             </router-link>
-            
+
             <div class="menu" v-if="!isAuthPage">
-                <el-menu 
-                    mode="horizontal" 
-                    router 
-                    :default-active="activeIndex"
-                    background-color="transparent"
-                    text-color="var(--text-primary)"
-                    active-text-color="var(--primary-color)">
-                    
+                <el-menu mode="horizontal" router :default-active="activeIndex" background-color="transparent"
+                    text-color="var(--text-primary)" active-text-color="var(--primary-color)">
+
                     <!-- 首页 -->
                     <el-menu-item index="/">
-                        <el-icon><House /></el-icon>
+                        <el-icon>
+                            <House />
+                        </el-icon>
                         首页
                     </el-menu-item>
-                    
+
                     <!-- 互助信息下拉菜单 -->
                     <el-sub-menu index="/helpinfo">
                         <template #title>
-                            <el-icon><Service /></el-icon>
+                            <el-icon>
+                                <Service />
+                            </el-icon>
                             互助信息
                         </template>
                         <el-menu-item index="/helpinfo">浏览互助</el-menu-item>
@@ -32,48 +31,60 @@
                             发布互助
                         </el-menu-item>
                     </el-sub-menu>
-                    
+
                     <!-- 我的中心 -->
                     <el-sub-menu index="my" v-if="authStore.isAuthenticated">
                         <template #title>
-                            <el-icon><User /></el-icon>
+                            <el-icon>
+                                <User />
+                            </el-icon>
                             个人中心
                         </template>
                         <el-menu-item index="/my/helpinfo">我的互助</el-menu-item>
                         <el-menu-item index="/applications">我的申请</el-menu-item>
                         <el-menu-item index="/profile">个人资料</el-menu-item>
                     </el-sub-menu>
-                    
+
                     <!-- 管理后台 -->
                     <el-menu-item index="/admin/helpinfo" v-if="isAdmin">
-                        <el-icon><Setting /></el-icon>
+                        <el-icon>
+                            <Setting />
+                        </el-icon>
                         管理后台
                     </el-menu-item>
                 </el-menu>
             </div>
-            
+
             <div class="user-actions">
                 <template v-if="authStore.isAuthenticated">
                     <div class="user-avatar-container">
                         <el-dropdown trigger="click">
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="getUserAvatar()"></el-avatar>
-                                <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户' }}</span>
-                                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+                                <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
+                                    }}</span>
                             </div>
                             <template #dropdown>
                                 <el-dropdown-menu>
                                     <el-dropdown-item @click="$router.push('/profile')">
-                                        <el-icon><User /></el-icon>个人中心
+                                        <el-icon>
+                                            <User />
+                                        </el-icon>个人中心
                                     </el-dropdown-item>
                                     <el-dropdown-item @click="$router.push('/my/helpinfo')">
-                                        <el-icon><List /></el-icon>我的互助
+                                        <el-icon>
+                                            <List />
+                                        </el-icon>我的互助
                                     </el-dropdown-item>
                                     <el-dropdown-item @click="$router.push('/applications')">
-                                        <el-icon><Document /></el-icon>我的申请
+                                        <el-icon>
+                                            <Document />
+                                        </el-icon>我的申请
                                     </el-dropdown-item>
                                     <el-dropdown-item divided @click="handleLogout">
-                                        <el-icon><SwitchButton /></el-icon>退出登录
+                                        <el-icon>
+                                            <SwitchButton />
+                                        </el-icon>退出登录
                                     </el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
@@ -93,11 +104,10 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
-import { 
-    ArrowDown, 
-    User, 
-    House, 
-    Service, 
+import {
+    User,
+    House,
+    Service,
     Setting,
     Document,
     List,
@@ -212,6 +222,10 @@ const handleLogout = () => {
 :deep(.el-menu--horizontal > .el-sub-menu.is-active .el-sub-menu__title) {
     border-bottom: 2px solid var(--primary-color) !important;
     font-weight: 500;
+}
+
+:deep(.el-sub-menu__icon-arrow) {
+    display: none !important;
 }
 
 .user-actions {

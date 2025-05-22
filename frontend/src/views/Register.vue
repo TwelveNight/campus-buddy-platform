@@ -6,83 +6,66 @@
                 <p>校园互助与资源共享平台</p>
                 <div class="auth-features">
                     <div class="feature">
-                        <el-icon size="24"><Connection /></el-icon>
+                        <el-icon size="24">
+                            <Connection />
+                        </el-icon>
                         <span>连接校园资源</span>
                     </div>
                     <div class="feature">
-                        <el-icon size="24"><UserFilled /></el-icon>
+                        <el-icon size="24">
+                            <UserFilled />
+                        </el-icon>
                         <span>认识志同道合的朋友</span>
                     </div>
                     <div class="feature">
-                        <el-icon size="24"><School /></el-icon>
+                        <el-icon size="24">
+                            <School />
+                        </el-icon>
                         <span>共同学习成长</span>
                     </div>
                 </div>
             </div>
-            
+
             <el-card class="auth-card register-card">
                 <div class="auth-header">
                     <h2>创建新账号</h2>
                     <p>加入学伴，享受校园互助服务</p>
                 </div>
-                
+
                 <el-form :model="form" :rules="rules" ref="registerForm" @submit.prevent="onSubmit">
                     <el-form-item prop="username">
-                        <el-input 
-                            v-model="form.username" 
-                            placeholder="请输入用户名"
-                            prefix-icon="User"
-                            size="large">
+                        <el-input v-model="form.username" placeholder="请输入用户名" prefix-icon="User" size="large">
                         </el-input>
                     </el-form-item>
-                    
+
                     <el-form-item prop="nickname">
-                        <el-input 
-                            v-model="form.nickname" 
-                            placeholder="请输入昵称"
-                            prefix-icon="EditPen"
-                            size="large">
+                        <el-input v-model="form.nickname" placeholder="请输入昵称" prefix-icon="EditPen" size="large">
                         </el-input>
                     </el-form-item>
-                    
+
                     <el-form-item prop="password">
-                        <el-input 
-                            v-model="form.password" 
-                            type="password" 
-                            placeholder="请输入密码"
-                            prefix-icon="Lock"
-                            size="large"
-                            show-password>
+                        <el-input v-model="form.password" type="password" placeholder="请输入密码" prefix-icon="Lock"
+                            size="large" show-password>
                         </el-input>
                     </el-form-item>
-                    
+
                     <el-form-item prop="confirmPassword">
-                        <el-input 
-                            v-model="form.confirmPassword" 
-                            type="password" 
-                            placeholder="请再次输入密码"
-                            prefix-icon="Key"
-                            size="large"
-                            show-password>
+                        <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" prefix-icon="Key"
+                            size="large" show-password>
                         </el-input>
                     </el-form-item>
-                    
+
                     <div class="terms">
                         <el-checkbox v-model="agreeTerms">我已阅读并同意<a href="#">服务条款</a>和<a href="#">隐私政策</a></el-checkbox>
                     </div>
-                    
+
                     <el-form-item>
-                        <el-button 
-                            type="primary" 
-                            native-type="submit" 
-                            :loading="loading" 
-                            class="submit-btn"
-                            :disabled="!agreeTerms"
-                            round>
+                        <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn"
+                            :disabled="!agreeTerms" round>
                             创建账号
                         </el-button>
                     </el-form-item>
-                    
+
                     <div class="auth-footer">
                         <span>已有账号？</span>
                         <router-link to="/login" class="login-link">立即登录</router-link>
@@ -99,13 +82,13 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '../store/auth'
-import { 
-    User, 
-    EditPen, 
-    Lock, 
-    Key, 
-    Connection, 
-    UserFilled, 
+import {
+    User,
+    EditPen,
+    Lock,
+    Key,
+    Connection,
+    UserFilled,
     School
 } from '@element-plus/icons-vue'
 
@@ -303,7 +286,7 @@ async function onSubmit() {
         flex-direction: column;
         width: 100%;
     }
-    
+
     .auth-welcome {
         padding: 30px;
     }

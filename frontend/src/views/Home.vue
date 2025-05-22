@@ -7,10 +7,15 @@
                 <p class="hero-description">连接校园资源，互助共享，共同成长</p>
                 <div class="cta-buttons">
                     <el-button type="primary" size="large" round @click="navigateTo('/helpinfo')">
-                        <el-icon><Promotion /></el-icon>浏览互助信息
+                        <el-icon>
+                            <Promotion />
+                        </el-icon>浏览互助信息
                     </el-button>
-                    <el-button size="large" round class="secondary-btn" @click="navigateTo('/helpinfo/publish')" v-if="authStore.isAuthenticated">
-                        <el-icon><Edit /></el-icon>发布互助
+                    <el-button size="large" round class="secondary-btn" @click="navigateTo('/helpinfo/publish')"
+                        v-if="authStore.isAuthenticated">
+                        <el-icon>
+                            <Edit />
+                        </el-icon>发布互助
                     </el-button>
                 </div>
             </div>
@@ -25,21 +30,27 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <div class="feature-icon">
-                        <el-icon><Connection /></el-icon>
+                        <el-icon>
+                            <Connection />
+                        </el-icon>
                     </div>
                     <h3>互助合作</h3>
                     <p>发布求助、提供帮助，让校园互助更便捷</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon accent">
-                        <el-icon><Trophy /></el-icon>
+                        <el-icon>
+                            <Trophy />
+                        </el-icon>
                     </div>
                     <h3>信用积分</h3>
                     <p>完成互助任务获取积分，提升个人信用等级</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon secondary">
-                        <el-icon><ChatLineRound /></el-icon>
+                        <el-icon>
+                            <ChatLineRound />
+                        </el-icon>
                     </div>
                     <h3>实时沟通</h3>
                     <p>便捷的沟通工具，使互助过程更高效</p>
@@ -59,7 +70,9 @@
                         <h3>互助信息</h3>
                         <p>浏览和发布互助信息，包括课程辅导、技能交换、物品借用等</p>
                         <div class="card-action">
-                            <el-button type="primary" text round>立即体验<el-icon><ArrowRight /></el-icon></el-button>
+                            <el-button type="primary" text round>立即体验<el-icon>
+                                    <ArrowRight />
+                                </el-icon></el-button>
                         </div>
                     </el-card>
                 </el-col>
@@ -95,12 +108,12 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
-import { 
-    Connection, 
-    UserFilled, 
-    Files, 
-    Service, 
-    ChatLineRound, 
+import {
+    Connection,
+    UserFilled,
+    Files,
+    Service,
+    ChatLineRound,
     Trophy,
     Promotion,
     Edit,

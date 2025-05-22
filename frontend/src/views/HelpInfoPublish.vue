@@ -123,7 +123,7 @@ onMounted(async () => {
             const res = await fetchHelpInfoDetail(infoId.value)
             if (res.data.code === 200) {
                 const info = res.data.data
-                
+
                 // 填充表单数据
                 form.title = info.title
                 form.type = info.type
@@ -132,7 +132,7 @@ onMounted(async () => {
                 form.expectedLocation = info.expectedLocation
                 form.contactMethod = info.contactMethod
                 form.rewardAmount = info.rewardAmount || 0
-                
+
                 // 解析图片URL列表
                 if (info.imageUrls) {
                     try {

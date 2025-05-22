@@ -55,7 +55,7 @@ public class UserController {
         UserVO userVO = userService.getUserVOById(userId);
         return R.ok("获取当前用户信息成功", userVO);
     }
-    
+
     @Operation(summary = "通过用户ID获取用户信息")
     @GetMapping("/{id}")
     public R<UserVO> getUserById(@PathVariable Long id) {
@@ -65,7 +65,7 @@ public class UserController {
         }
         return R.ok("获取用户信息成功", userVO);
     }
-    
+
     @Operation(summary = "更新用户个人信息")
     @PutMapping("/profile")
     public R<UserVO> updateProfile(HttpServletRequest request, @RequestBody ProfileUpdateDTO dto) {
@@ -80,7 +80,7 @@ public class UserController {
             return R.fail(e.getMessage());
         }
     }
-    
+
     @Operation(summary = "修改用户密码")
     @PutMapping("/password")
     public R<Void> updatePassword(HttpServletRequest request, @RequestBody PasswordUpdateDTO dto) {

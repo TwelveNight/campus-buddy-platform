@@ -10,8 +10,12 @@ import com.example.campusbuddy.vo.UserVO;
 
 public interface UserService extends IService<User> {
     UserVO register(RegisterDTO dto);
+
     String login(LoginDTO dto);
+
     UserVO getUserVOById(Long userId);
+
     UserVO updateProfile(Long userId, ProfileUpdateDTO dto);
+
     void updatePassword(Long userId, PasswordUpdateDTO dto);
 }

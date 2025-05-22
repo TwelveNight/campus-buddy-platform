@@ -14,12 +14,8 @@
                         </div>
                         <h2>{{ form.nickname || form.username }}</h2>
                         <div class="user-credit">
-                            <el-progress 
-                                type="dashboard" 
-                                :percentage="getCreditPercentage()" 
-                                :color="creditColors"
-                                :stroke-width="8"
-                            >
+                            <el-progress type="dashboard" :percentage="getCreditPercentage()" :color="creditColors"
+                                :stroke-width="8">
                                 <template #default>
                                     <div class="credit-label">
                                         <span class="credit-value">{{ form.creditScore }}</span>
@@ -31,11 +27,15 @@
                         </div>
                         <div class="user-stats">
                             <div class="stat-item">
-                                <el-icon><Medal /></el-icon>
+                                <el-icon>
+                                    <Medal />
+                                </el-icon>
                                 <span>注册用户</span>
                             </div>
                             <div class="stat-item">
-                                <el-icon><Calendar /></el-icon>
+                                <el-icon>
+                                    <Calendar />
+                                </el-icon>
                                 <span>活跃用户</span>
                             </div>
                         </div>
@@ -49,17 +49,20 @@
                 <el-card class="profile-card" shadow="hover">
                     <template #header>
                         <div class="card-header">
-                            <el-icon><User /></el-icon>
+                            <el-icon>
+                                <User />
+                            </el-icon>
                             <h2>个人资料设置</h2>
                         </div>
                     </template>
 
-                    <el-form :model="form" :rules="rules" ref="formRef" label-position="top"
-                        v-loading="loading">
+                    <el-form :model="form" :rules="rules" ref="formRef" label-position="top" v-loading="loading">
                         <el-form-item label="用户名">
                             <el-input v-model="form.username" disabled>
                                 <template #prefix>
-                                    <el-icon><Avatar /></el-icon>
+                                    <el-icon>
+                                        <Avatar />
+                                    </el-icon>
                                 </template>
                             </el-input>
                             <div class="form-tips">用户名不可修改</div>
@@ -68,17 +71,23 @@
                         <el-form-item label="昵称" prop="nickname">
                             <el-input v-model="form.nickname" placeholder="请输入昵称">
                                 <template #prefix>
-                                    <el-icon><UserFilled /></el-icon>
+                                    <el-icon>
+                                        <UserFilled />
+                                    </el-icon>
                                 </template>
                             </el-input>
                         </el-form-item>
 
                         <el-form-item>
                             <el-button type="primary" @click="handleSubmit" :loading="loading" round>
-                                <el-icon><Check /></el-icon>保存修改
+                                <el-icon>
+                                    <Check />
+                                </el-icon>保存修改
                             </el-button>
                             <el-button @click="$router.push('/')" round>
-                                <el-icon><Back /></el-icon>返回
+                                <el-icon>
+                                    <Back />
+                                </el-icon>返回
                             </el-button>
                         </el-form-item>
                     </el-form>
@@ -88,26 +97,30 @@
                 <el-card class="profile-card password-card" shadow="hover">
                     <template #header>
                         <div class="card-header">
-                            <el-icon><Lock /></el-icon>
+                            <el-icon>
+                                <Lock />
+                            </el-icon>
                             <h2>修改密码</h2>
                         </div>
                     </template>
-                    
+
                     <el-form :model="pwdForm" :rules="pwdRules" ref="pwdFormRef" label-position="top">
                         <el-form-item label="当前密码" prop="oldPassword">
-                            <el-input v-model="pwdForm.oldPassword" type="password" placeholder="请输入当前密码"
-                                show-password>
+                            <el-input v-model="pwdForm.oldPassword" type="password" placeholder="请输入当前密码" show-password>
                                 <template #prefix>
-                                    <el-icon><Key /></el-icon>
+                                    <el-icon>
+                                        <Key />
+                                    </el-icon>
                                 </template>
                             </el-input>
                         </el-form-item>
 
                         <el-form-item label="新密码" prop="newPassword">
-                            <el-input v-model="pwdForm.newPassword" type="password" placeholder="请输入新密码"
-                                show-password>
+                            <el-input v-model="pwdForm.newPassword" type="password" placeholder="请输入新密码" show-password>
                                 <template #prefix>
-                                    <el-icon><Lock /></el-icon>
+                                    <el-icon>
+                                        <Lock />
+                                    </el-icon>
                                 </template>
                             </el-input>
                         </el-form-item>
@@ -116,14 +129,18 @@
                             <el-input v-model="pwdForm.confirmPassword" type="password" placeholder="请再次输入新密码"
                                 show-password>
                                 <template #prefix>
-                                    <el-icon><Check /></el-icon>
+                                    <el-icon>
+                                        <Check />
+                                    </el-icon>
                                 </template>
                             </el-input>
                         </el-form-item>
 
                         <el-form-item>
                             <el-button type="primary" @click="handleChangePassword" :loading="pwdLoading" round>
-                                <el-icon><RefreshRight /></el-icon>修改密码
+                                <el-icon>
+                                    <RefreshRight />
+                                </el-icon>修改密码
                             </el-button>
                         </el-form-item>
                     </el-form>
@@ -141,9 +158,9 @@ import type { FormInstance } from 'element-plus'
 import { useAuthStore } from '../store/auth'
 import AvatarUploader from '../components/AvatarUploader.vue'
 import { updateUserProfile, changePassword } from '../api/user'
-import { 
-    User, UserFilled, Avatar, Key, Lock, Check, 
-    RefreshRight, Back, Medal, Calendar 
+import {
+    User, UserFilled, Avatar, Key, Lock, Check,
+    RefreshRight, Back, Medal, Calendar
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -267,7 +284,7 @@ async function handleSubmit() {
                         type: 'success',
                         duration: 2000
                     })
-                    
+
                     // 更新存储中的用户信息
                     if (authStore.user) {
                         authStore.user.nickname = form.nickname
@@ -304,12 +321,12 @@ async function handleChangePassword() {
                         type: 'success',
                         duration: 2000
                     })
-                    
+
                     // 清空表单
                     pwdForm.oldPassword = ''
                     pwdForm.newPassword = ''
                     pwdForm.confirmPassword = ''
-                    
+
                     // 短暂延迟后退出登录
                     setTimeout(() => {
                         authStore.logout()
@@ -510,11 +527,11 @@ async function handleChangePassword() {
     .profile-header h1 {
         font-size: 1.8rem;
     }
-    
+
     .profile-content {
         margin-top: 24px;
     }
-    
+
     .user-summary {
         padding: 10px 0;
     }

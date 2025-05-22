@@ -32,7 +32,7 @@ public class HelpInfo {
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updatedAt;
-    
+
     // 非数据库字段，存储临时参数
     @TableField(exist = false)
     private Map<String, Object> params = new HashMap<>();

@@ -6,63 +6,55 @@
                 <p>校园互助与资源共享平台</p>
                 <div class="auth-features">
                     <div class="feature">
-                        <el-icon size="24"><ChatLineRound /></el-icon>
+                        <el-icon size="24">
+                            <ChatLineRound />
+                        </el-icon>
                         <span>互助合作</span>
                     </div>
                     <div class="feature">
-                        <el-icon size="24"><Share /></el-icon>
+                        <el-icon size="24">
+                            <Share />
+                        </el-icon>
                         <span>资源共享</span>
                     </div>
                     <div class="feature">
-                        <el-icon size="24"><Trophy /></el-icon>
+                        <el-icon size="24">
+                            <Trophy />
+                        </el-icon>
                         <span>共同成长</span>
                     </div>
                 </div>
             </div>
-            
+
             <el-card class="auth-card login-card">
                 <div class="auth-header">
                     <h2>登录账号</h2>
                     <p>快速登录开始使用学伴平台</p>
                 </div>
-                
+
                 <el-form :model="form" :rules="rules" ref="loginForm" @submit.prevent="onSubmit">
                     <el-form-item prop="username">
-                        <el-input 
-                            v-model="form.username" 
-                            placeholder="请输入用户名"
-                            prefix-icon="User"
-                            size="large">
+                        <el-input v-model="form.username" placeholder="请输入用户名" prefix-icon="User" size="large">
                         </el-input>
                     </el-form-item>
-                    
+
                     <el-form-item prop="password">
-                        <el-input 
-                            v-model="form.password" 
-                            type="password" 
-                            placeholder="请输入密码"
-                            prefix-icon="Lock"
-                            size="large"
-                            show-password>
+                        <el-input v-model="form.password" type="password" placeholder="请输入密码" prefix-icon="Lock"
+                            size="large" show-password>
                         </el-input>
                     </el-form-item>
-                    
+
                     <div class="remember-me">
                         <el-checkbox v-model="rememberMe">记住我</el-checkbox>
                         <a href="#" class="forgot-password">忘记密码?</a>
                     </div>
-                    
+
                     <el-form-item>
-                        <el-button 
-                            type="primary" 
-                            native-type="submit" 
-                            :loading="loading" 
-                            class="submit-btn"
-                            round>
+                        <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn" round>
                             登录账号
                         </el-button>
                     </el-form-item>
-                    
+
                     <div class="auth-footer">
                         <span>还没有账号？</span>
                         <router-link to="/register" class="register-link">立即注册</router-link>
@@ -107,7 +99,7 @@ const rules: FormRules = {
 function checkSavedCredentials() {
     const savedUsername = localStorage.getItem('savedUsername')
     const savedPassword = localStorage.getItem('savedPassword')
-    
+
     if (savedUsername && savedPassword) {
         form.username = savedUsername
         form.password = atob(savedPassword) // 使用Base64解码密码
@@ -134,19 +126,19 @@ async function onSubmit() {
                     localStorage.removeItem('savedUsername')
                     localStorage.removeItem('savedPassword')
                 }
-                
+
                 await auth.loginAction({
                     username: form.username,
                     password: form.password
                 })
-                
+
                 // 登录成功后立即获取完整用户信息
                 try {
                     await auth.fetchCurrentUser()
                 } catch (fetchError) {
                     console.error('获取用户信息失败，但不影响登录流程', fetchError)
                 }
-                
+
                 ElMessage.success('登录成功')
                 router.push('/')
             } catch (e: any) {
@@ -288,7 +280,7 @@ async function onSubmit() {
         flex-direction: column;
         width: 100%;
     }
-    
+
     .auth-welcome {
         padding: 30px;
     }

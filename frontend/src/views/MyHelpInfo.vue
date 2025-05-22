@@ -26,7 +26,7 @@
                         <el-table-column prop="status" label="状态" width="120">
                             <template #default="scope">
                                 <el-tag :type="getStatusType(scope.row.status)">{{ getStatusLabel(scope.row.status)
-                                    }}</el-tag>
+                                }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column prop="createdAt" label="发布时间" width="180">
@@ -226,8 +226,8 @@ function formatDate(dateString: string | Date | number) {
     if (!dateString) return ''
     try {
         // 处理数字类型的时间戳（毫秒）
-        const date = typeof dateString === 'number' ? new Date(dateString) : 
-                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
+        const date = typeof dateString === 'number' ? new Date(dateString) :
+            (typeof dateString === 'string' ? new Date(dateString) : dateString)
         return date.toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',

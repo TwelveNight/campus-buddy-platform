@@ -19,15 +19,28 @@
                                 <!-- 使用router-link包装标题，确保可点击 -->
                                 <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
                                     class="title-link">
-                                    {{ scope.row.helpInfo.title }}
+                                    {{ scope.row.helpInfo.title || scope.row.title || '无标题' }}
                                 </router-link>
                                 <div class="helpinfo-meta">
-                                    <el-tag size="small">{{ getTypeLabel(scope.row.helpInfo.type) }}</el-tag>
-                                    <el-tag size="small" :type="getStatusType(scope.row.helpInfo.status)">
-                                        {{ getStatusLabel(scope.row.helpInfo.status) }}
+                                    <el-tag size="small">{{ getTypeLabel(scope.row.helpInfo.type || scope.row.type)
+                                        }}</el-tag>
+                                    <el-tag size="small"
+                                        :type="getStatusType(scope.row.helpInfo.status || scope.row.status)">
+                                        {{ getStatusLabel(scope.row.helpInfo.status || scope.row.status) }}
                                     </el-tag>
                                 </div>
                             </template>
+                        </div>
+                        <div class="helpinfo-column" v-else-if="scope.row.title">
+                            <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.id}`" class="title-link">
+                                {{ scope.row.title }}
+                            </router-link>
+                            <div class="helpinfo-meta">
+                                <el-tag size="small">{{ getTypeLabel(scope.row.type) }}</el-tag>
+                                <el-tag size="small" :type="getStatusType(scope.row.status)">
+                                    {{ getStatusLabel(scope.row.status) }}
+                                </el-tag>
+                            </div>
                         </div>
                         <div class="helpinfo-column" v-else>
                             <span class="no-data">互助信息不存在或已删除</span>
@@ -374,8 +387,8 @@ function formatDate(dateString: string | Date | number) {
     if (!dateString) return ''
     try {
         // 处理数字类型的时间戳（毫秒）
-        const date = typeof dateString === 'number' ? new Date(dateString) : 
-                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
+        const date = typeof dateString === 'number' ? new Date(dateString) :
+            (typeof dateString === 'string' ? new Date(dateString) : dateString)
         return date.toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',

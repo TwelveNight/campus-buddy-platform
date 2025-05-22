@@ -70,42 +70,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BeanUtils.copyProperties(user, vo);
         return vo;
     }
-    
+
     @Override
     public UserVO updateProfile(Long userId, ProfileUpdateDTO dto) {
         User user = getById(userId);
         if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
-        
+
         // 更新用户信息
         if (dto.getNickname() != null && !dto.getNickname().isEmpty()) {
             user.setNickname(dto.getNickname());
         }
-        
+
         if (dto.getAvatarUrl() != null) {
             user.setAvatarUrl(dto.getAvatarUrl());
         }
-        
+
         // 保存更新
         this.updateById(user);
-        
+
         // 返回更新后的用户信息
         return getUserVOById(userId);
     }
-    
+
     @Override
     public void updatePassword(Long userId, PasswordUpdateDTO dto) {
         User user = getById(userId);
         if (user == null) {
             throw new IllegalArgumentException("用户不存在");
         }
-        
+
         // 验证旧密码
         if (!passwordEncoder.matches(dto.getOldPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("原密码错误");
         }
-        
+
         // 更新密码
         user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
         this.updateById(user);
