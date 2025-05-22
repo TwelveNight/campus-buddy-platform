@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "@types/date-fns": "^2.5.3",
+    "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.9.0",
     "date-fns": "^4.1.0",
@@ -19,6 +21,8 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/vue": "^1.0.31",
     "@vitejs/plugin-vue": "^5.2.3",
     "@vue/tsconfig": "^0.7.0",
     "typescript": "~5.8.3",
