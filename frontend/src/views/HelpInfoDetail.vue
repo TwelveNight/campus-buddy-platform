@@ -4,8 +4,7 @@
       <template #header>
         <div class="card-header">
           <h2>{{ info?.title || '互助信息详情' }}</h2>
-          <div class="header-actions" v-if="info">
-
+          <div class="header-actions" v-if="info && isPublisher">
             <el-button-group>
               <el-button size="small" type="primary" :disabled="!canChangeStatus"
                 @click="statusDialogVisible = true">修改状态</el-button>
