@@ -62,6 +62,14 @@ async function onSubmit() {
                     username: form.username,
                     password: form.password
                 })
+                
+                // 登录成功后立即获取完整用户信息
+                try {
+                    await auth.fetchCurrentUser()
+                } catch (fetchError) {
+                    console.error('获取用户信息失败，但不影响登录流程', fetchError)
+                }
+                
                 ElMessage.success('登录成功')
                 router.push('/')
             } catch (e: any) {

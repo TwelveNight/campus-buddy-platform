@@ -26,17 +26,15 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('token', this.token);
         console.log('Token stored in localStorage:', localStorage.getItem('token'));
 
-        // Attempt to decode user information from token
+        // 临时获取基本信息 - 这将稍后被 fetchCurrentUser 更新的完整信息替代
         try {
           const tokenParts = this.token.split('.');
           if (tokenParts.length === 3) {
             const payloadData = JSON.parse(atob(tokenParts[1]));
             this.user = {
               username: payloadData.sub, // 'sub' usually holds the username
-              // Attempt to get nickname, fallback to username if not present
-              nickname: payloadData.nickname || payloadData.name || payloadData.sub 
+              nickname: payloadData.sub // 暂时使用用户名作为昵称，会在获取完整信息时更新
             };
-            console.log('User info from token:', this.user);
           } else {
             console.error('Invalid JWT structure: cannot decode user info.');
             this.user = null; 
