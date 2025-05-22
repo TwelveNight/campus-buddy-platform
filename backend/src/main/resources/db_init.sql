@@ -41,9 +41,11 @@ CREATE TABLE IF NOT EXISTS help_info (
         'CLOSED'
     ) DEFAULT 'OPEN' COMMENT '状态',
     view_count INT DEFAULT 0 COMMENT '浏览次数',
+    accepted_application_id BIGINT DEFAULT NULL COMMENT '已接受的申请ID',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (publisher_id) REFERENCES user(user_id)
+    FOREIGN KEY (publisher_id) REFERENCES user(user_id),
+    FOREIGN KEY (accepted_application_id) REFERENCES help_application(application_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 -- 互助申请表
 CREATE TABLE IF NOT EXISTS help_application (
