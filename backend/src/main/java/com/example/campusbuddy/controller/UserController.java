@@ -3,6 +3,8 @@ package com.example.campusbuddy.controller;
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.common.ResultCode;
 import com.example.campusbuddy.dto.LoginDTO;
+import com.example.campusbuddy.dto.PasswordUpdateDTO;
+import com.example.campusbuddy.dto.ProfileUpdateDTO;
 import com.example.campusbuddy.dto.RegisterDTO;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.UserService;
@@ -62,5 +64,35 @@ public class UserController {
             return R.fail("用户不存在");
         }
         return R.ok("获取用户信息成功", userVO);
+    }
+    
+    @Operation(summary = "更新用户个人信息")
+    @PutMapping("/profile")
+    public R<UserVO> updateProfile(HttpServletRequest request, @RequestBody ProfileUpdateDTO dto) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.fail(ResultCode.UNAUTHORIZED, "未登录");
+        }
+        try {
+            UserVO userVO = userService.updateProfile(userId, dto);
+            return R.ok("个人信息更新成功", userVO);
+        } catch (IllegalArgumentException e) {
+            return R.fail(e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "修改用户密码")
+    @PutMapping("/password")
+    public R<Void> updatePassword(HttpServletRequest request, @RequestBody PasswordUpdateDTO dto) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.fail(ResultCode.UNAUTHORIZED, "未登录");
+        }
+        try {
+            userService.updatePassword(userId, dto);
+            return R.ok("密码修改成功", null);
+        } catch (IllegalArgumentException e) {
+            return R.fail(e.getMessage());
+        }
     }
 }
