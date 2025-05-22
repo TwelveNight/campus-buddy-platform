@@ -12,6 +12,7 @@ export interface Review {
   reviewerNickname?: string;
   reviewerAvatar?: string;
   moduleType?: string; // 例如：'互助', '学习小组', '资源共享'
+  reviewType?: string; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
 }
 
 
@@ -68,12 +69,39 @@ export function hasReviewed(reviewerId: number, helpInfoId: number) {
   });
 }
 
+// 检查用户是否可以对某互助进行评价
+export function canReview(userId: number, helpInfoId: number, reviewType: string) {
+  return request({
+    url: '/api/review/canReview',
+    method: 'get',
+    params: { userId, helpInfoId, reviewType }
+  });
+}
+
+// 获取互助信息的评价状态
+export function getHelpInfoReviewStatus(helpInfoId: number) {
+  return request({
+    url: '/api/review/status',
+    method: 'get',
+    params: { helpInfoId }
+  });
+}
+
 // 获取用户的评价列表（可筛选）
 export function getUserReviews(query: ReviewQuery) {
   return request({
     url: '/api/review/list',
     method: 'get',
     params: query
+  });
+}
+
+// 获取用户对特定互助信息的评价状态
+export function getUserReviewStatus(userId: number, helpInfoId: number) {
+  return request({
+    url: '/api/review/userReviewStatus',
+    method: 'get',
+    params: { userId, helpInfoId }
   });
 }
 

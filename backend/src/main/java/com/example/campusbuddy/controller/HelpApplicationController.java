@@ -48,7 +48,7 @@ public class HelpApplicationController {
         if (!"OPEN".equals(helpInfo.getStatus())) {
             return R.fail("该互助信息当前状态不允许申请");
         }
-        
+
         // 检查是否已经有被接受的申请
         if (helpInfo.getAcceptedApplicationId() != null) {
             return R.fail("该互助信息已有被接受的申请");
@@ -161,7 +161,7 @@ public class HelpApplicationController {
                 return R.fail("只能更新待处理的申请，或将已接受的申请更新为已拒绝");
             }
         }
-        
+
         // 验证状态是否合法（只能是ACCEPTED或REJECTED）
         if (newStatus == null || (!newStatus.equals("ACCEPTED") && !newStatus.equals("REJECTED"))) {
             return R.fail("无效的申请状态，只能接受(ACCEPTED)或拒绝(REJECTED)");
@@ -230,5 +230,34 @@ public class HelpApplicationController {
                 .list();
 
         return R.ok("获取成功", applications);
+    }
+
+    /**
+     * 获取单个申请的详细信息
+     */
+    @Operation(summary = "获取单个申请详情")
+    @GetMapping("/{applicationId}")
+    public R<HelpApplication> getApplicationById(
+            @PathVariable Long applicationId,
+            HttpServletRequest request) {
+
+        // 获取当前用户ID
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.unauthorized();
+        }
+
+        // 获取申请信息
+        HelpApplication application = helpApplicationService.getById(applicationId);
+        if (application == null) {
+            return R.fail("申请信息不存在");
+        }
+
+        // 检查权限：只有申请人或发布者可以查看详情
+        if (!userId.equals(application.getApplicantId()) && !userId.equals(application.getPublisherId())) {
+            return R.fail("您无权查看此申请详情");
+        }
+
+        return R.ok("获取成功", application);
     }
 }

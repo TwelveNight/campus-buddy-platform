@@ -29,6 +29,14 @@ public class HelpInfoDetailVO {
     private Date createdAt;
     private Date updatedAt;
 
+    // 评价状态相关字段
+    private Long helperId; // 帮助者ID
+    private String helperName; // 帮助者姓名
+    private Boolean canPublisherReview; // 发布者是否可以评价
+    private Boolean canHelperReview; // 帮助者是否可以评价
+    private Boolean publisherHasReviewed; // 发布者是否已评价
+    private Boolean helperHasReviewed; // 帮助者是否已评价
+
     // 从HelpInfo实体转换为VO
     public static HelpInfoDetailVO fromEntity(HelpInfo helpInfo) {
         if (helpInfo == null) {

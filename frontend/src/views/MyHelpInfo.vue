@@ -6,7 +6,9 @@
                     <template #header>
                         <div class="card-header">
                             <h3>我发布的互助信息</h3>
-                            <el-button type="primary" @click="$router.push('/helpinfo/publish')">发布新互助</el-button>
+                            <div>
+                                <el-button type="primary" @click="$router.push('/helpinfo/publish')">发布新互助</el-button>
+                            </div>
                         </div>
                     </template>
 
@@ -26,7 +28,7 @@
                         <el-table-column prop="status" label="状态" width="120">
                             <template #default="scope">
                                 <el-tag :type="getStatusType(scope.row.status)">{{ getStatusLabel(scope.row.status)
-                                    }}</el-tag>
+                                }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column prop="createdAt" label="发布时间" width="180">
@@ -35,7 +37,7 @@
                             </template>
                         </el-table-column>
                         <el-table-column prop="viewCount" label="浏览数" width="80" align="center"></el-table-column>
-                        <el-table-column label="操作" width="150" fixed="right">
+                        <el-table-column label="操作" width="180" fixed="right">
                             <template #default="scope">
                                 <el-button-group>
                                     <el-button type="primary" size="small" link
@@ -46,6 +48,16 @@
                                         v-if="scope.row.status === 'OPEN'">
                                         删除
                                     </el-button>
+                                    <el-button
+                                        v-if="scope.row.status === 'RESOLVED' && scope.row.acceptedApplicationId && scope.row.canPublisherReview === true"
+                                        type="success" size="small" link @click="openReviewDialog(scope.row)">
+                                        评价帮助者
+                                    </el-button>
+                                    <el-tag
+                                        v-else-if="scope.row.status === 'RESOLVED' && scope.row.acceptedApplicationId && scope.row.publisherHasReviewed === true"
+                                        type="info" size="small">
+                                        已评价
+                                    </el-tag>
                                 </el-button-group>
                             </template>
                         </el-table-column>
@@ -93,6 +105,26 @@
                                 {{ formatDate(scope.row.createdAt) }}
                             </template>
                         </el-table-column>
+                        <el-table-column label="操作" width="180" fixed="right">
+                            <template #default="scope">
+                                <el-button-group>
+                                    <el-button type="primary" size="small" link
+                                        @click="$router.push(`/helpinfo/${scope.row.infoId}`)">
+                                        查看
+                                    </el-button>
+                                    <el-button
+                                        v-if="scope.row.status === 'ACCEPTED' && scope.row.helpInfo?.status === 'RESOLVED' && scope.row.canHelperReview === true"
+                                        type="success" size="small" link @click="openReviewPublisherDialog(scope.row)">
+                                        评价发布者
+                                    </el-button>
+                                    <el-tag
+                                        v-else-if="scope.row.status === 'ACCEPTED' && scope.row.helpInfo?.status === 'RESOLVED' && scope.row.helperHasReviewed === true"
+                                        type="info" size="small">
+                                        已评价
+                                    </el-tag>
+                                </el-button-group>
+                            </template>
+                        </el-table-column>
                     </el-table>
 
                     <div class="empty-block" v-if="appliedList.length === 0 && !loading">
@@ -108,15 +140,25 @@
                 </el-card>
             </el-tab-pane>
         </el-tabs>
+        <ReviewDialog v-if="reviewDialogVisible" :visible="reviewDialogVisible"
+            :help-info-id="currentSelectedInfo?.helpInfoId" :reviewed-user-id="currentSelectedInfo?.reviewedUserId"
+            :reviewer-user-id="currentSelectedInfo?.reviewerUserId"
+            :review-type="currentSelectedInfo?.reviewType || 'PUBLISHER_TO_HELPER'"
+            :title="currentSelectedInfo?.title || '评价帮助者'" @update:visible="reviewDialogVisible = $event"
+            @review-submitted="handleReviewSubmitted" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchHelpInfoList, deleteHelpInfo } from '../api/helpinfo'
 import { useApplicationStore } from '../store/application'
+import ReviewDialog from '../components/ReviewDialog.vue'
+import { canReview, getHelpInfoReviewStatus, getUserReviewStatus } from '../api/review'
+import { useAuthStore } from '../store/auth'
+import { getApplicationById } from '../api/helpApplication'
 
 const router = useRouter()
 const loading = ref(false)
@@ -135,11 +177,40 @@ const appliedPageSize = ref(10)
 const appliedTotal = ref(0)
 
 const applicationStore = useApplicationStore()
+const authStore = useAuthStore()
+const reviewDialogVisible = ref(false)
+const currentSelectedInfo = ref<any>(null)
 
 onMounted(() => {
     loadMyPublishedHelpInfo()
     loadMyApplications()
+    initReviewStatus()
 })
+
+// 初始化评价状态（不再需要从本地存储恢复，因为使用后端API）
+function initReviewStatus() {
+    // 该函数保留但不执行任何操作，因为我们现在使用后端API获取评价状态
+    console.log('评价状态初始化 - 现在使用后端API获取评价状态');
+}
+
+// 调试函数：在每次加载或更新数据后打印评价状态
+function debugReviewStatus() {
+    console.log('=== 评价状态调试信息 ===');
+
+    // 查看已发布互助信息的评价状态
+    console.log('已发布互助信息评价状态:');
+    publishedList.value.forEach(item => {
+        console.log(`互助ID: ${item.infoId}, 标题: ${item.title}, 状态: ${item.status}, 可评价: ${item.canPublisherReview}, 已评价: ${item.publisherHasReviewed}`);
+    });
+
+    // 查看已申请互助信息的评价状态
+    console.log('已申请互助信息评价状态:');
+    appliedList.value.forEach(item => {
+        console.log(`申请ID: ${item.id}, 互助ID: ${item.infoId}, 状态: ${item.status}, 可评价: ${item.canHelperReview}, 已评价: ${item.helperHasReviewed}`);
+    });
+
+    console.log('=== 调试信息结束 ===');
+}
 
 // 获取我发布的互助信息
 async function loadMyPublishedHelpInfo() {
@@ -151,8 +222,37 @@ async function loadMyPublishedHelpInfo() {
             publisherId: 'my' // 这里需要后端支持获取当前用户发布的互助信息
         })
         if (res.data.code === 200) {
-            publishedList.value = res.data.data.records || res.data.data || []
-            publishedTotal.value = res.data.data.total || publishedList.value.length
+            let records = res.data.data.records || res.data.data || [];
+
+            // 处理每条记录的评价状态 - 使用后端API获取准确的评价状态
+            for (const record of records) {
+                if (record.status === 'RESOLVED' && record.acceptedApplicationId) {
+                    try {
+                        // 从后端获取用户对该互助信息的评价状态
+                        const currentUserId = authStore.user?.userId;
+                        if (!currentUserId) continue;
+
+                        const statusRes = await getUserReviewStatus(currentUserId, record.infoId);
+                        if (statusRes && statusRes.data) {
+                            record.canPublisherReview = statusRes.data.canPublisherReview;
+                            record.publisherHasReviewed = statusRes.data.publisherHasReviewed;
+                        }
+                    } catch (error) {
+                        console.error('获取评价状态失败:', error);
+                        // 出错时设置默认值
+                        record.publisherHasReviewed = false;
+                        record.canPublisherReview = false;
+                    }
+                } else {
+                    // 非RESOLVED状态不能评价
+                    record.canPublisherReview = false;
+                }
+            }
+
+            publishedList.value = records;
+            publishedTotal.value = res.data.data.total || records.length;
+
+            console.log('加载的互助信息列表:', publishedList.value);
         } else {
             ElMessage.error(res.data.message || '获取数据失败')
         }
@@ -160,6 +260,7 @@ async function loadMyPublishedHelpInfo() {
         ElMessage.error(e.message || '获取数据失败')
     } finally {
         loading.value = false
+        debugReviewStatus()
     }
 }
 
@@ -168,12 +269,41 @@ async function loadMyApplications() {
     loading.value = true
     try {
         await applicationStore.fetchMyApplications()
-        appliedList.value = applicationStore.myApplications
-        appliedTotal.value = appliedList.value.length
+
+        // 处理每条申请的评价状态
+        const applications = [...applicationStore.myApplications];
+        for (const app of applications) {
+            if (app.status === 'ACCEPTED' && app.helpInfo?.status === 'RESOLVED' && app.infoId) {
+                try {
+                    // 从后端获取用户对该互助信息的评价状态
+                    const currentUserId = authStore.user?.userId;
+                    if (!currentUserId) continue;
+
+                    const statusRes = await getUserReviewStatus(currentUserId, app.infoId);
+                    if (statusRes && statusRes.data) {
+                        app.canHelperReview = statusRes.data.canHelperReview;
+                        app.helperHasReviewed = statusRes.data.helperHasReviewed;
+                    }
+                } catch (error) {
+                    console.error('获取评价状态失败:', error);                        // 出错时设置默认值
+                    app.helperHasReviewed = false;
+                    app.canHelperReview = false;
+                }
+            } else {
+                // 非ACCEPTED状态或互助非RESOLVED状态不能评价
+                app.canHelperReview = false;
+            }
+        }
+
+        appliedList.value = applications;
+        appliedTotal.value = applications.length;
+
+        console.log('加载的申请列表:', appliedList.value);
     } catch (e: any) {
         ElMessage.error(e.message || '获取数据失败')
     } finally {
         loading.value = false
+        debugReviewStatus()
     }
 }
 
@@ -295,6 +425,191 @@ function getApplicationStatusLabel(status: string) {
     }
     return statusMap[status] || status
 }
+
+// 判断是否显示“评价发布者”按钮
+function canShowReviewPublisherBtn(row: any) {
+    return (row.canHelperReview === true || row._canHelperReview === true) && !reviewedApplications.value[row.id]
+}
+
+// 打开评价帮助者弹窗
+async function openReviewDialog(row: any) {
+    // 从后端获取最新的评价状态
+    const currentUserId = authStore.user?.userId;
+    if (!currentUserId) {
+        ElMessage.warning('用户未登录，无法评价');
+        return;
+    }
+
+    try {
+        const statusRes = await getUserReviewStatus(currentUserId, row.infoId);
+        if (statusRes && statusRes.data) {
+            // 如果后端返回不能评价或已评价，则拒绝评价
+            if (!statusRes.data.canPublisherReview) {
+                if (statusRes.data.publisherHasReviewed) {
+                    ElMessage.warning('您已评价过该帮助者');
+                } else {
+                    ElMessage.warning('当前无法评价该帮助者');
+                }
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('获取评价状态失败:', error);
+        // 出错时使用本地状态判断
+        if (row.publisherHasReviewed === true) {
+            ElMessage.warning('您已评价过该帮助者');
+            return;
+        }
+
+        if (row.canPublisherReview === false) {
+            ElMessage.warning('当前无法评价该帮助者');
+            return;
+        }
+    }
+
+    // 确保状态为已解决且有已接受的申请
+    if (row.status !== 'RESOLVED' || !row.acceptedApplicationId) {
+        ElMessage.warning('当前互助状态不允许评价');
+        return;
+    }
+
+    let helperId = null;
+    const acceptedApplicationId = row.acceptedApplicationId || row.helpInfo?.acceptedApplicationId;
+    if (acceptedApplicationId && Array.isArray(row.applications)) {
+        const acceptedApp = row.applications.find((app: any) => app.id === acceptedApplicationId);
+        if (acceptedApp) helperId = acceptedApp.applicantId;
+    } else if (acceptedApplicationId && Array.isArray(applicationStore.myApplications)) {
+        const acceptedApp = applicationStore.myApplications.find((app: any) => app.id === acceptedApplicationId);
+        if (acceptedApp) helperId = acceptedApp.applicantId;
+    }
+    // 如果本地没有，尝试异步获取
+    if (!helperId && acceptedApplicationId) {
+        try {
+            const res = await getApplicationById(acceptedApplicationId);
+            if (res.data && res.data.data && res.data.data.applicantId) {
+                helperId = res.data.data.applicantId;
+            }
+        } catch (e) {
+            // 忽略，后面兜底
+        }
+    }
+    // 兜底：兼容旧数据结构
+    if (!helperId) {
+        helperId = row.acceptedApplicantId || row.acceptedUserId || row.acceptedApplicant || row.helperId;
+    }
+    if (!helperId) {
+        ElMessage.warning('无法获取帮助者信息，请稍后重试');
+        return;
+    }
+    currentSelectedInfo.value = {
+        helpInfoId: row.infoId,
+        reviewedUserId: helperId,
+        reviewerUserId: authStore.user?.userId,
+        reviewType: 'PUBLISHER_TO_HELPER',
+        title: '评价帮助者',
+        applicationId: row.id
+    }
+    reviewDialogVisible.value = true
+}
+
+// 打开评价发布者弹窗（新加）
+async function openReviewPublisherDialog(row: any) {
+    // 从后端获取最新的评价状态
+    const currentUserId = authStore.user?.userId;
+    if (!currentUserId) {
+        ElMessage.warning('用户未登录，无法评价');
+        return;
+    }
+
+    try {
+        const statusRes = await getUserReviewStatus(currentUserId, row.infoId);
+        if (statusRes && statusRes.data) {
+            // 如果后端返回不能评价或已评价，则拒绝评价
+            if (!statusRes.data.canHelperReview) {
+                if (statusRes.data.helperHasReviewed) {
+                    ElMessage.warning('您已评价过该发布者');
+                } else {
+                    ElMessage.warning('当前无法评价该发布者');
+                }
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('获取评价状态失败:', error);
+        // 出错时使用本地状态判断
+        if (row.helperHasReviewed === true) {
+            ElMessage.warning('您已评价过该发布者');
+            return;
+        }
+
+        if (row.canHelperReview === false) {
+            ElMessage.warning('当前无法评价该发布者');
+            return;
+        }
+    }
+
+    // 确保申请状态为已接受且互助状态为已解决
+    if (row.status !== 'ACCEPTED' || row.helpInfo?.status !== 'RESOLVED') {
+        ElMessage.warning('当前互助状态不允许评价');
+        return;
+    }
+
+    // 确保获取到有效的publisherId
+    const publisherId = row.helpInfo?.publisherId;
+    if (!publisherId) {
+        ElMessage.warning('无法获取发布者信息，请稍后重试');
+        return;
+    }
+
+    currentSelectedInfo.value = {
+        helpInfoId: row.infoId,
+        reviewedUserId: publisherId,
+        reviewerUserId: authStore.user?.userId,
+        reviewType: 'HELPER_TO_PUBLISHER',
+        title: '评价发布者',
+        applicationId: row.id
+    }
+    reviewDialogVisible.value = true
+}
+
+// 处理评价提交
+async function handleReviewSubmitted() {
+    reviewDialogVisible.value = false
+
+    if (currentSelectedInfo.value) {
+        if (currentSelectedInfo.value.reviewType === 'PUBLISHER_TO_HELPER' && currentSelectedInfo.value.helpInfoId) {
+            ElMessage.success('你已成功评价帮助者');
+            // 重新加载发布的互助数据（从后端获取最新评价状态）
+            await loadMyPublishedHelpInfo();
+        } else if (currentSelectedInfo.value.reviewType === 'HELPER_TO_PUBLISHER' && currentSelectedInfo.value.applicationId) {
+            ElMessage.success('你已成功评价发布者');
+            // 重新加载申请的互助数据（从后端获取最新评价状态）
+            await loadMyApplications();
+        }
+    }
+
+    currentSelectedInfo.value = null
+}
+
+// 监听弹窗关闭，重置 currentSelectedInfo，防止数据残留
+watch(
+    () => reviewDialogVisible.value,
+    (val) => {
+        if (!val) currentSelectedInfo.value = null
+    }
+)
+
+// 监听Tab切换，重新加载对应数据
+watch(
+    () => activeTab.value,
+    (newTab) => {
+        if (newTab === 'published') {
+            loadMyPublishedHelpInfo();
+        } else if (newTab === 'applied') {
+            loadMyApplications();
+        }
+    }
+)
 </script>
 
 <style scoped>

@@ -141,6 +141,28 @@
             :closable="false">
           </el-alert>
         </div>
+
+        <!-- 评价入口：支持双向评价 -->
+        <div class="review-section" v-if="reviewInfo.showPublisherReview || reviewInfo.showHelperReview">
+          <h3>评价中心</h3>
+          <div class="review-buttons">
+            <!-- 发布者评价帮助者 -->
+            <el-button v-if="reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview">
+              评价帮助者
+            </el-button>
+            <el-button v-if="reviewInfo.publisherHasReviewed" type="info" disabled>
+              已评价帮助者
+            </el-button>
+
+            <!-- 帮助者评价发布者 -->
+            <el-button v-if="reviewInfo.showHelperReview" type="success" @click="openHelperReview">
+              评价发布者
+            </el-button>
+            <el-button v-if="reviewInfo.helperHasReviewed" type="info" disabled>
+              已评价发布者
+            </el-button>
+          </div>
+        </div>
       </div>
     </el-card>
 
@@ -167,6 +189,12 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 评价对话框 -->
+    <ReviewDialog v-if="info && reviewDialogVisible" :visible="reviewDialogVisible" :help-info-id="info.infoId"
+      :reviewed-user-id="reviewedUserId || 0" :reviewer-user-id="authStore.user?.userId || 0"
+      :review-type="currentReviewType" :title="reviewDialogTitle" @update:visible="reviewDialogVisible = $event"
+      @review-submitted="onReviewSubmitted" />
   </div>
 </template>
 
@@ -189,6 +217,8 @@ import {
 import { deleteHelpInfo, incrementHelpInfoViewCount, updateHelpInfo } from '../api/helpinfo'
 import { getUserById } from '../api/user'; // 新增导入
 import ApplyHelpDialog from '../components/ApplyHelpDialog.vue'
+import ReviewDialog from '../components/ReviewDialog.vue'
+import { canReview, getHelpInfoReviewStatus } from '../api/review'
 
 const route = useRoute()
 const router = useRouter()
@@ -204,6 +234,21 @@ const newStatus = ref('')
 const updateLoading = ref(false)
 const hasApplied = ref(false)
 const myApplication = ref<any>(null)
+const reviewDialogVisible = ref(false)
+const hasReviewedFlag = ref(false)
+const reviewedUserId = ref<number | null>(null)
+const reviewDialogTitle = ref('提交评价')
+const currentReviewType = ref<'PUBLISHER_TO_HELPER' | 'HELPER_TO_PUBLISHER'>('PUBLISHER_TO_HELPER')
+
+// 双向评价状态
+const reviewInfo = ref({
+  showPublisherReview: false,
+  showHelperReview: false,
+  publisherHasReviewed: false,
+  helperHasReviewed: false,
+  helperId: null as number | null,
+  helperName: ''
+})
 
 // 检查用户是否有token
 const hasToken = computed(() => {
@@ -244,6 +289,7 @@ const availableStatuses = computed(() => {
       statuses.push({ label: '关闭', value: 'CLOSED' })
     } else if (info.value.status === 'IN_PROGRESS') {
       statuses.push({ label: '已解决', value: 'RESOLVED' })
+      statuses.push({ label: '不满意', value: 'UNSATISFIED' })
       statuses.push({ label: '关闭', value: 'CLOSED' })
     }
   }
@@ -292,6 +338,9 @@ onMounted(async () => {
     } catch (e) {
       console.error('增加浏览量失败', e)
     }
+
+    // 加载评价状态
+    await loadReviewStatus()
   } catch (e: any) {
     error.value = e.message || '获取详情失败'
   }
@@ -304,6 +353,11 @@ watch(() => info.value, async (newInfo) => {
     await checkUserApplication()
   }
 }, { deep: true })
+
+// 监听info变化和用户变化，自动检查评价状态
+watch([info, () => authStore.user?.userId], () => {
+  loadReviewStatus()
+})
 
 // 获取申请列表
 async function fetchApplications() {
@@ -619,6 +673,70 @@ async function checkUserApplication() {
   }
 }
 
+// 加载评价状态
+async function loadReviewStatus() {
+  if (!info.value || !authStore.user?.userId) return
+
+  try {
+    const helpInfoId = info.value.infoId
+    const res = await getHelpInfoReviewStatus(helpInfoId)
+
+    if (res.data.code === 200 && res.data.data) {
+      const statusData = res.data.data
+
+      // 更新评价状态
+      reviewInfo.value = {
+        showPublisherReview: statusData.canPublisherReview || false,
+        showHelperReview: statusData.canHelperReview || false,
+        publisherHasReviewed: statusData.publisherHasReviewed || false,
+        helperHasReviewed: statusData.helperHasReviewed || false,
+        helperId: statusData.helperId || null,
+        helperName: statusData.helperName || ''
+      }
+
+      console.log('评价状态已更新:', reviewInfo.value)
+    }
+  } catch (e) {
+    console.error('获取评价状态失败:', e)
+  }
+}
+
+// 打开发布者评价对话框
+function openPublisherReview() {
+  if (!info.value || !authStore.user?.userId) return
+
+  currentReviewType.value = 'PUBLISHER_TO_HELPER'
+  reviewedUserId.value = reviewInfo.value.helperId
+  reviewDialogTitle.value = '评价帮助者'
+  reviewDialogVisible.value = true
+}
+
+// 打开帮助者评价对话框
+function openHelperReview() {
+  if (!info.value || !authStore.user?.userId) return
+
+  currentReviewType.value = 'HELPER_TO_PUBLISHER'
+  reviewedUserId.value = info.value.publisherId
+  reviewDialogTitle.value = '评价发布者'
+  reviewDialogVisible.value = true
+}
+
+// 评价提交后刷新状态
+function onReviewSubmitted() {
+  reviewDialogVisible.value = false
+  ElMessage.success('评价成功！')
+
+  // 根据当前评价类型更新状态
+  if (currentReviewType.value === 'PUBLISHER_TO_HELPER') {
+    reviewInfo.value.publisherHasReviewed = true
+  } else {
+    reviewInfo.value.helperHasReviewed = true
+  }
+
+  // 重新获取评价状态
+  loadReviewStatus()
+}
+
 // 处理取消申请
 async function handleCancelApplication() {
   if (!myApplication.value) {
@@ -690,6 +808,7 @@ function getStatusLabel(status: string) {
     'OPEN': '进行中',
     'IN_PROGRESS': '处理中',
     'RESOLVED': '已解决',
+    'UNSATISFIED': '不满意',
     'CLOSED': '已关闭',
     'EXPIRED': '已过期'
   }
@@ -701,6 +820,7 @@ function getStatusType(status: string) {
     'OPEN': 'success',
     'IN_PROGRESS': 'warning',
     'RESOLVED': 'info',
+    'UNSATISFIED': 'danger',
     'CLOSED': '',
     'EXPIRED': 'danger'
   }

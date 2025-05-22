@@ -14,6 +14,15 @@ public interface HelpInfoService extends IService<HelpInfo> {
     HelpInfoDetailVO getHelpInfoDetail(Long infoId);
 
     /**
+     * 获取互助信息详情，包含发布者信息和用户评价状态
+     * 
+     * @param infoId        互助信息ID
+     * @param currentUserId 当前用户ID
+     * @return 互助信息详情VO
+     */
+    HelpInfoDetailVO getHelpInfoDetail(Long infoId, Long currentUserId);
+
+    /**
      * 增加互助信息浏览量
      * 
      * @param infoId 互助信息ID

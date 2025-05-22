@@ -111,8 +111,18 @@ public class HelpInfoController {
 
     @GetMapping("/{id}")
     @Operation(summary = "查看互助信息详情")
-    public R<HelpInfoDetailVO> detail(@PathVariable Long id) {
-        HelpInfoDetailVO info = helpInfoService.getHelpInfoDetail(id);
+    public R<HelpInfoDetailVO> detail(@PathVariable Long id, HttpServletRequest request) {
+        // 尝试获取当前用户ID
+        Long userId = (Long) request.getAttribute("userId");
+
+        // 根据是否有当前用户ID调用不同的方法
+        HelpInfoDetailVO info;
+        if (userId != null) {
+            info = helpInfoService.getHelpInfoDetail(id, userId);
+        } else {
+            info = helpInfoService.getHelpInfoDetail(id);
+        }
+
         return R.ok("获取互助信息详情成功", info);
     }
 

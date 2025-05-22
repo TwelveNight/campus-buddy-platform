@@ -82,3 +82,11 @@ export function getMyApplications() {
 export function getReceivedApplications() {
   return axios.get('/api/help-application/received')
 }
+
+// 获取单个申请的详细信息
+export function getApplicationById(id: number) {
+  return axios({
+    url: `/api/help-application/${id}`,
+    method: 'get'
+  });
+}
