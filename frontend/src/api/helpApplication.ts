@@ -68,6 +68,11 @@ export function closeHelpInfo(helpInfoId: number) {
   return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=CLOSED`)
 }
 
+// 重新打开互助信息
+export function reopenHelpInfo(helpInfoId: number) {
+  return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=OPEN`)
+}
+
 // 获取当前用户发出的申请列表
 export function getMyApplications() {
   return axios.get('/api/help-application/my')

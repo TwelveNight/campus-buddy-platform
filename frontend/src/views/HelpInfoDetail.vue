@@ -182,11 +182,14 @@ import {
   acceptApplication,
   rejectApplication,
   completeHelpInfo,
-  closeHelpInfo,
+  reopenHelpInfo,
   getMyApplications,
-  cancelApplication
+  cancelApplication,
+  closeHelpInfo // Ensure closeHelpInfo is imported
 } from '../api/helpApplication'
-import { deleteHelpInfo, updateHelpInfo, incrementHelpInfoViewCount } from '../api/helpinfo'
+// Remove updateHelpInfo as it's unused and caused a compile error
+import { deleteHelpInfo, incrementHelpInfoViewCount } from '../api/helpinfo'
+import { getUserById } from '../api/user'; // 新增导入
 import ApplyHelpDialog from '../components/ApplyHelpDialog.vue'
 
 const route = useRoute()
@@ -306,16 +309,37 @@ watch(() => info.value, async (newInfo) => {
 
 // 获取申请列表
 async function fetchApplications() {
-  if (!isPublisher.value) return
+  if (!isPublisher.value && info.value?.status !== 'IN_PROGRESS') return;
 
   try {
-    const id = Number(route.params.id)
-    const res = await getApplications(id)
+    const id = Number(route.params.id);
+    const res = await getApplications(id);
     if (res.data.code === 200) {
-      applications.value = res.data.data || []
+      let apps = res.data.data || [];
+      // 如果是发布者，或者互助信息在进行中，则需要获取申请人昵称
+      if (isPublisher.value || info.value?.status === 'IN_PROGRESS') {
+        const userPromises = apps.map(async (app: any) => {
+          if (app.applicantId && !app.applicantNickname) {
+            try {
+              const userRes = await getUserById(app.applicantId);
+              if (userRes.data.code === 200 && userRes.data.data) {
+                app.applicantNickname = userRes.data.data.nickname;
+                app.applicantAvatar = userRes.data.data.avatarUrl; // 同时获取头像
+              }
+            } catch (e) {
+              console.error(`获取用户 ${app.applicantId} 信息失败:`, e);
+              app.applicantNickname = '未知用户';
+            }
+          }
+          return app;
+        });
+        applications.value = await Promise.all(userPromises);
+      } else {
+        applications.value = apps;
+      }
     }
   } catch (e: any) {
-    ElMessage.error('获取申请列表失败')
+    ElMessage.error('获取申请列表失败');
   }
 }
 
@@ -334,6 +358,10 @@ async function handleAcceptApplication(application: any) {
       ElMessage.success('已接受申请')
       await helpInfoStore.fetchDetail(id) // 刷新互助信息状态
       await fetchApplications() // 刷新申请列表
+      // 如果接受成功，并且当前用户是发布者，则重新检查用户（自己）的申请状态，以更新视图
+      if (isPublisher.value) {
+        await checkUserApplication();
+      }
     }
   } catch (e: any) {
     ElMessage.error(e.message || '操作失败')
@@ -354,6 +382,10 @@ async function handleRejectApplication(application: any) {
     if (res.data.code === 200) {
       ElMessage.success('已拒绝申请')
       await fetchApplications() // 刷新申请列表
+      // 如果拒绝成功，并且当前用户是发布者，则重新检查用户（自己）的申请状态
+      if (isPublisher.value) {
+        await checkUserApplication();
+      }
     }
   } catch (e: any) {
     ElMessage.error(e.message || '操作失败')
@@ -366,8 +398,9 @@ async function handleComplete() {
     const id = Number(route.params.id)
     const res = await completeHelpInfo(id)
     if (res.data.code === 200) {
-      ElMessage.success('互助已完成')
-      await helpInfoStore.fetchDetail(id)
+      ElMessage.success('已标记为已解决')
+      await helpInfoStore.fetchDetail(id) // 刷新互助信息状态
+      await fetchApplications() // 刷新申请列表
     }
   } catch (e: any) {
     ElMessage.error(e.message || '操作失败')
@@ -375,29 +408,59 @@ async function handleComplete() {
 }
 
 // 确认取消合作
-function confirmCancel() {
+async function confirmCancel() {
   ElMessageBox.confirm(
-    '确定要取消当前合作吗？这将重新开放互助信息。',
-    '警告',
+    '确定要取消与当前帮助者的合作吗？取消后，该互助信息将重新开放接受申请，原帮助者的申请状态将变为已拒绝。',
+    '确认取消',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
     }
-  ).then(async () => {
-    try {
-      const id = Number(route.params.id)
-      // 将状态重置为OPEN
-      const res = await updateHelpInfo(id, { status: 'OPEN' })
-      if (res.data.code === 200) {
-        ElMessage.success('已取消合作')
-        await helpInfoStore.fetchDetail(id)
-        await fetchApplications()
+  )
+    .then(async () => {
+      try {
+        const id = Number(route.params.id)
+        const currentAcceptedApp = acceptedApplication.value // Store before state changes
+
+        // 1. 重新开放互助信息
+        const reopenRes = await reopenHelpInfo(id)
+        if (reopenRes.data.code === 200) {
+          ElMessage.success('已取消合作，互助信息重新开放')
+          // 重新拉取互助信息详情，确保 acceptedApplicationId 变为 null
+          await helpInfoStore.fetchDetail(id)
+          // 不直接赋值 info.value，依赖响应式
+
+          // 2. 将原接受的申请标记为已拒绝
+          if (currentAcceptedApp && (currentAcceptedApp.applicationId || currentAcceptedApp.id)) {
+            const originalAcceptedAppId = currentAcceptedApp.applicationId || currentAcceptedApp.id
+            try {
+              const rejectRes = await rejectApplication(id, originalAcceptedAppId)
+              if (rejectRes.data.code === 200) {
+                ElMessage.info('原帮助者的申请已标记为已拒绝。')
+              } else {
+                ElMessage.error(rejectRes.data.message || '更新原帮助者申请状态失败。')
+              }
+            } catch (rejectError: any) {
+              ElMessage.error(rejectError.message || '更新原帮助者申请状态时出错。')
+            }
+          }
+          await fetchApplications() // 重新获取申请列表以更新视图
+          if (!isPublisher.value) {
+            await checkUserApplication();
+          }
+
+        } else {
+          ElMessage.error(reopenRes.data.message || '取消合作失败')
+        }
+      } catch (e: any) {
+        ElMessage.error(e.message || '取消合作失败')
       }
-    } catch (e: any) {
-      ElMessage.error('操作失败')
-    }
-  }).catch(() => { })
+    })
+    .catch(() => {
+      // 用户取消操作
+      ElMessage.info('已取消操作')
+    })
 }
 
 // 确认删除

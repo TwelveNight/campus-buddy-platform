@@ -21,6 +21,8 @@ public class HelpInfo {
     private String imageUrls; // JSON字符串
     private String status; // OPEN, IN_PROGRESS, RESOLVED, EXPIRED, CLOSED
     private Integer viewCount;
+
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private Long acceptedApplicationId; // 已接受的申请ID
 
     @TableField(fill = FieldFill.INSERT)

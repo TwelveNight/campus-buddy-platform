@@ -154,9 +154,12 @@ public class HelpApplicationController {
             return R.fail("只有发布者才能执行此操作");
         }
 
-        // 对于非取消操作，检查是否是待处理状态
+        // 对于非取消操作，检查是否是待处理状态或可被拒绝的已接受状态
         if (!"PENDING".equals(application.getStatus())) {
-            return R.fail("只能更新待处理的申请");
+            // 如果目标状态是REJECTED，且当前状态是ACCEPTED，也允许操作（用于取消合作后拒绝原申请）
+            if (!("REJECTED".equals(newStatus) && "ACCEPTED".equals(application.getStatus()))) {
+                return R.fail("只能更新待处理的申请，或将已接受的申请更新为已拒绝");
+            }
         }
         
         // 验证状态是否合法（只能是ACCEPTED或REJECTED）
@@ -168,23 +171,29 @@ public class HelpApplicationController {
         application.setStatus(newStatus);
         helpApplicationService.updateById(application);
 
-        // 如果是接受申请，则将互助信息状态更新为"处理中"，并记录已接受的申请ID
-        if ("ACCEPTED".equals(newStatus)) {
-            HelpInfo helpInfo = helpInfoService.getById(application.getInfoId());
-            if (helpInfo != null) {
+        HelpInfo helpInfo = helpInfoService.getById(application.getInfoId());
+        if (helpInfo != null) {
+            if ("ACCEPTED".equals(newStatus)) {
                 // 更新状态为处理中并记录已接受的申请ID
                 helpInfo.setStatus("IN_PROGRESS");
                 helpInfo.setAcceptedApplicationId(applicationId);
                 helpInfoService.updateById(helpInfo);
-            }
 
-            // 拒绝该互助信息下的其他待处理申请
-            helpApplicationService.lambdaUpdate()
-                    .eq(HelpApplication::getInfoId, application.getInfoId())
-                    .eq(HelpApplication::getStatus, "PENDING")
-                    .ne(HelpApplication::getApplicationId, applicationId)
-                    .set(HelpApplication::getStatus, "REJECTED")
-                    .update();
+                // 拒绝该互助信息下的其他待处理申请
+                helpApplicationService.lambdaUpdate()
+                        .eq(HelpApplication::getInfoId, application.getInfoId())
+                        .eq(HelpApplication::getStatus, "PENDING")
+                        .ne(HelpApplication::getApplicationId, applicationId)
+                        .set(HelpApplication::getStatus, "REJECTED")
+                        .update();
+            } else if ("REJECTED".equals(newStatus)) {
+                // 如果被拒绝的申请是当前已接受的申请，则清空 helpInfo 的 acceptedApplicationId 并将状态设为 OPEN
+                if (applicationId.equals(helpInfo.getAcceptedApplicationId())) {
+                    helpInfo.setAcceptedApplicationId(null);
+                    helpInfo.setStatus("OPEN"); // 确保互助信息重新开放
+                    helpInfoService.updateById(helpInfo);
+                }
+            }
         }
 
         return R.ok("申请状态更新成功", application);
