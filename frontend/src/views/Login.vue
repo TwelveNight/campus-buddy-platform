@@ -1,25 +1,75 @@
 <template>
     <div class="login-page">
-        <el-card class="login-card">
-            <template #header>
-                <h2>登录</h2>
-            </template>
-            <el-form :model="form" :rules="rules" ref="loginForm" @submit.prevent="onSubmit">
-                <el-form-item label="用户名" prop="username">
-                    <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
-                </el-form-item>
-                <el-form-item label="密码" prop="password">
-                    <el-input v-model="form.password" type="password" placeholder="请输入密码"></el-input>
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" native-type="submit" :loading="loading" style="width: 100%">登录</el-button>
-                </el-form-item>
-                <div class="text-center">
-                    <span>还没有账号？</span>
-                    <router-link to="/register">去注册</router-link>
+        <div class="auth-container">
+            <div class="auth-welcome">
+                <h1>欢迎回到 <span class="highlight">学伴</span></h1>
+                <p>校园互助与资源共享平台</p>
+                <div class="auth-features">
+                    <div class="feature">
+                        <el-icon size="24"><ChatLineRound /></el-icon>
+                        <span>互助合作</span>
+                    </div>
+                    <div class="feature">
+                        <el-icon size="24"><Share /></el-icon>
+                        <span>资源共享</span>
+                    </div>
+                    <div class="feature">
+                        <el-icon size="24"><Trophy /></el-icon>
+                        <span>共同成长</span>
+                    </div>
                 </div>
-            </el-form>
-        </el-card>
+            </div>
+            
+            <el-card class="auth-card login-card">
+                <div class="auth-header">
+                    <h2>登录账号</h2>
+                    <p>快速登录开始使用学伴平台</p>
+                </div>
+                
+                <el-form :model="form" :rules="rules" ref="loginForm" @submit.prevent="onSubmit">
+                    <el-form-item prop="username">
+                        <el-input 
+                            v-model="form.username" 
+                            placeholder="请输入用户名"
+                            prefix-icon="User"
+                            size="large">
+                        </el-input>
+                    </el-form-item>
+                    
+                    <el-form-item prop="password">
+                        <el-input 
+                            v-model="form.password" 
+                            type="password" 
+                            placeholder="请输入密码"
+                            prefix-icon="Lock"
+                            size="large"
+                            show-password>
+                        </el-input>
+                    </el-form-item>
+                    
+                    <div class="remember-me">
+                        <el-checkbox v-model="rememberMe">记住我</el-checkbox>
+                        <a href="#" class="forgot-password">忘记密码?</a>
+                    </div>
+                    
+                    <el-form-item>
+                        <el-button 
+                            type="primary" 
+                            native-type="submit" 
+                            :loading="loading" 
+                            class="submit-btn"
+                            round>
+                            登录账号
+                        </el-button>
+                    </el-form-item>
+                    
+                    <div class="auth-footer">
+                        <span>还没有账号？</span>
+                        <router-link to="/register" class="register-link">立即注册</router-link>
+                    </div>
+                </el-form>
+            </el-card>
+        </div>
     </div>
 </template>
 
@@ -29,11 +79,13 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '../store/auth'
+import { User, Lock, ChatLineRound, Share, Trophy } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const auth = useAuthStore()
 const loginForm = ref<FormInstance>()
 const loading = ref(false)
+const rememberMe = ref(false)
 
 const form = reactive({
     username: '',
@@ -51,6 +103,21 @@ const rules: FormRules = {
     ]
 }
 
+// 检查是否有保存的用户名密码
+function checkSavedCredentials() {
+    const savedUsername = localStorage.getItem('savedUsername')
+    const savedPassword = localStorage.getItem('savedPassword')
+    
+    if (savedUsername && savedPassword) {
+        form.username = savedUsername
+        form.password = atob(savedPassword) // 使用Base64解码密码
+        rememberMe.value = true
+    }
+}
+
+// 初始化时检查保存的凭据
+checkSavedCredentials()
+
 async function onSubmit() {
     if (!loginForm.value) return
 
@@ -58,6 +125,16 @@ async function onSubmit() {
         if (valid) {
             loading.value = true
             try {
+                // 保存用户名密码（如果勾选了记住我）
+                if (rememberMe.value) {
+                    localStorage.setItem('savedUsername', form.username)
+                    localStorage.setItem('savedPassword', btoa(form.password)) // 使用Base64编码密码
+                } else {
+                    // 如果不记住，则清除保存的凭据
+                    localStorage.removeItem('savedUsername')
+                    localStorage.removeItem('savedPassword')
+                }
+                
                 await auth.loginAction({
                     username: form.username,
                     password: form.password
@@ -87,15 +164,133 @@ async function onSubmit() {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: calc(100vh - 200px);
+    min-height: 100vh;
+    padding: 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
 }
 
-.login-card {
-    width: 400px;
+.auth-container {
+    display: flex;
+    width: 900px;
+    min-height: 550px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
 }
 
-.text-center {
+.auth-welcome {
+    flex: 1;
+    padding: 40px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #2c65dd 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.auth-welcome h1 {
+    font-size: 2.4rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.auth-welcome .highlight {
+    color: #ffeb3b;
+}
+
+.auth-welcome p {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 40px;
+}
+
+.auth-features {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: auto;
+}
+
+.feature {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.auth-card {
+    flex: 1;
+    border: none;
+    box-shadow: none;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.auth-card :deep(.el-card__body) {
+    padding: 30px;
+}
+
+.auth-header {
     text-align: center;
-    margin-top: 15px;
+    margin-bottom: 30px;
+}
+
+.auth-header h2 {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.submit-btn {
+    width: 100%;
+    height: 50px;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+.remember-me {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.forgot-password {
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.register-link {
+    color: var(--primary-color);
+    font-weight: 500;
+    margin-left: 5px;
+}
+
+/* 适配移动设备 */
+@media (max-width: 768px) {
+    .auth-container {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .auth-welcome {
+        padding: 30px;
+    }
 }
 </style>

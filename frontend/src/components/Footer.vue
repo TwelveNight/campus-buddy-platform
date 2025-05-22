@@ -20,33 +20,55 @@
 
 <style scoped>
 .footer {
-    background-color: #f5f7fa;
-    padding: 20px 0;
-    margin-top: 40px;
+    background-color: var(--card-bg);
+    padding: 30px 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .container {
     max-width: 1200px;
     margin: 0 auto;
-  padding: 0 20px;
+    padding: 0 20px;
 }
+
 .footer-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #606266;
-  font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-secondary);
+    font-size: 14px;
 }
+
 .links {
-  display: flex;
-  gap: 15px;
+    display: flex;
+    gap: 20px;
 }
+
 .links a {
-  color: #606266;
-  text-decoration: none;
-  transition: color 0.3s;
+    color: var(--text-secondary);
+    text-decoration: none;
+    position: relative;
+    padding: 5px 0;
+    transition: color 0.3s;
 }
+
 .links a:hover {
-  color: #409EFF;
+    color: var(--primary-color);
+}
+
+/* 添加美观的下划线效果 */
+.links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+}
+
+.links a:hover::after {
+    width: 100%;
 }
 </style>
