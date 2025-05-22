@@ -116,7 +116,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { fetchHelpInfoList, deleteHelpInfo } from '../api/helpinfo'
-import { getMyApplications } from '../api/helpApplication'
+import { useApplicationStore } from '../store/application'
 
 const router = useRouter()
 const loading = ref(false)
@@ -128,11 +128,13 @@ const publishedPage = ref(1)
 const publishedPageSize = ref(10)
 const publishedTotal = ref(0)
 
-// 已申请互助信息
+// 已申请互助信息（由store管理）
 const appliedList = ref<any[]>([])
 const appliedPage = ref(1)
 const appliedPageSize = ref(10)
 const appliedTotal = ref(0)
+
+const applicationStore = useApplicationStore()
 
 onMounted(() => {
     loadMyPublishedHelpInfo()
@@ -161,17 +163,13 @@ async function loadMyPublishedHelpInfo() {
     }
 }
 
-// 获取我的申请列表
+// 获取我的申请列表（用store自动补全helpInfo）
 async function loadMyApplications() {
     loading.value = true
     try {
-        const res = await getMyApplications()
-        if (res.data.code === 200) {
-            appliedList.value = res.data.data.records || res.data.data || []
-            appliedTotal.value = res.data.data.total || appliedList.value.length
-        } else {
-            ElMessage.error(res.data.message || '获取数据失败')
-        }
+        await applicationStore.fetchMyApplications()
+        appliedList.value = applicationStore.myApplications
+        appliedTotal.value = appliedList.value.length
     } catch (e: any) {
         ElMessage.error(e.message || '获取数据失败')
     } finally {

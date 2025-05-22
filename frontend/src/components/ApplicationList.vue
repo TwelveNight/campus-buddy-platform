@@ -6,46 +6,31 @@
 
         <div v-else>
             <el-table :data="applications" style="width: 100%">
-                <!-- 互助信息 -->
-                <el-table-column label="互助信息" min-width="180">
-                    <template #default="scope">
-                        <div class="helpinfo-column" v-if="scope.row.helpInfo">
-                            <!-- 当互助信息处于加载状态时 -->
-                            <div v-if="scope.row.helpInfo.title === '加载中...'" class="loading-info">
-                                <el-skeleton :rows="2" animated />
-                            </div>
-                            <!-- 当互助信息加载完成时 -->
-                            <template v-else>
-                                <!-- 使用router-link包装标题，确保可点击 -->
-                                <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
-                                    class="title-link">
-                                    {{ scope.row.helpInfo.title || scope.row.title || '无标题' }}
-                                </router-link>
-                                <div class="helpinfo-meta">
-                                    <el-tag size="small">{{ getTypeLabel(scope.row.helpInfo.type || scope.row.type)
-                                        }}</el-tag>
-                                    <el-tag size="small"
-                                        :type="getStatusType(scope.row.helpInfo.status || scope.row.status)">
-                                        {{ getStatusLabel(scope.row.helpInfo.status || scope.row.status) }}
-                                    </el-tag>
-                                </div>
-                            </template>
-                        </div>
-                        <div class="helpinfo-column" v-else-if="scope.row.title">
-                            <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.id}`" class="title-link">
-                                {{ scope.row.title }}
-                            </router-link>
-                            <div class="helpinfo-meta">
-                                <el-tag size="small">{{ getTypeLabel(scope.row.type) }}</el-tag>
-                                <el-tag size="small" :type="getStatusType(scope.row.status)">
-                                    {{ getStatusLabel(scope.row.status) }}
-                                </el-tag>
-                            </div>
-                        </div>
-                        <div class="helpinfo-column" v-else>
-                            <span class="no-data">互助信息不存在或已删除</span>
-                        </div>
-                    </template>
+                <!-- 互助信息标题 -->
+                <el-table-column label="互助信息标题" min-width="180">
+                  <template #default="scope">
+                    <div class="helpinfo-column">
+                      <template v-if="scope.row.helpInfo">
+                        <template v-if="scope.row.helpInfo.title === '加载中...'">
+                          <el-skeleton :rows="1" animated style="width: 80px;" />
+                        </template>
+                        <template v-else-if="scope.row.helpInfo.title === '无法获取互助信息'">
+                          <span class="no-data">互助信息不存在或已删除</span>
+                        </template>
+                        <template v-else>
+                          <router-link
+                            :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
+                            class="title-link"
+                          >
+                            {{ scope.row.helpInfo.title }}
+                          </router-link>
+                        </template>
+                      </template>
+                      <template v-else>
+                        <span class="no-data">互助信息不存在或已删除</span>
+                      </template>
+                    </div>
+                  </template>
                 </el-table-column>
 
                 <!-- 发布者/申请者 -->
