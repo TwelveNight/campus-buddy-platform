@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @TableName("help_info")
@@ -30,4 +32,8 @@ public class HelpInfo {
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date updatedAt;
+    
+    // 非数据库字段，存储临时参数
+    @TableField(exist = false)
+    private Map<String, Object> params = new HashMap<>();
 }

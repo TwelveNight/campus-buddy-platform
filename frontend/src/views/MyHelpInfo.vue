@@ -222,10 +222,12 @@ function handleCurrentChange(type: 'published' | 'applied') {
 }
 
 // 格式化日期
-function formatDate(dateString: string | Date) {
+function formatDate(dateString: string | Date | number) {
     if (!dateString) return ''
     try {
-        const date = typeof dateString === 'string' ? new Date(dateString) : dateString
+        // 处理数字类型的时间戳（毫秒）
+        const date = typeof dateString === 'number' ? new Date(dateString) : 
+                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
         return date.toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',
@@ -235,6 +237,7 @@ function formatDate(dateString: string | Date) {
             second: '2-digit'
         })
     } catch (error) {
+        console.error('日期格式化错误:', error, dateString)
         return String(dateString)
     }
 }

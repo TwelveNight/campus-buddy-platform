@@ -7,10 +7,14 @@ import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.common.ResultCode;
 import com.example.campusbuddy.dto.HelpInfoDTO;
 import com.example.campusbuddy.entity.HelpInfo;
+import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.exception.ForbiddenException;
 import com.example.campusbuddy.exception.InvalidParameterException;
 import com.example.campusbuddy.exception.ResourceNotFoundException;
 import com.example.campusbuddy.exception.UnauthorizedException;
+import com.example.campusbuddy.mapper.UserMapper;
+import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +33,10 @@ import java.util.List;
 public class HelpInfoController {
     @Autowired
     private HelpInfoService helpInfoService;
-
+    
+    @Autowired
+    private UserMapper userMapper;
+    
     @PostMapping
     @Operation(summary = "发布互助信息")
     public R<HelpInfo> create(@Valid @RequestBody HelpInfoDTO helpInfoDTO, HttpServletRequest request) {
@@ -89,6 +96,16 @@ public class HelpInfoController {
         }
 
         IPage<HelpInfo> result = helpInfoService.page(new Page<>(page, size), wrapper);
+        
+        // 处理结果，添加发布者名称信息
+        for (HelpInfo info : result.getRecords()) {
+            User publisher = userMapper.selectById(info.getPublisherId());
+            if (publisher != null) {
+                info.getParams().put("publisherName", publisher.getNickname());
+                info.getParams().put("publisherAvatar", publisher.getAvatarUrl());
+            }
+        }
+        
         return R.ok("获取互助信息列表成功", result);
     }
 

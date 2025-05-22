@@ -59,8 +59,17 @@
                     :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="expectedLocation" label="地点" width="120"
                     :show-overflow-tooltip="true"></el-table-column>
-                <el-table-column prop="publisherName" label="发布者" width="100"></el-table-column>
-                <el-table-column prop="createdAt" label="发布时间" width="180"></el-table-column>
+                <el-table-column prop="publisherId" label="发布者" width="100">
+                    <template #default="scope">
+                        <span v-if="scope.row.params && scope.row.params.publisherName">{{ scope.row.params.publisherName }}</span>
+                        <span v-else>用户{{ scope.row.publisherId }}</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="createdAt" label="发布时间" width="180">
+                    <template #default="scope">
+                        {{ formatDate(scope.row.createdAt) }}
+                    </template>
+                </el-table-column>
                 <el-table-column prop="viewCount" label="浏览数" width="80" align="center"></el-table-column>
                 <el-table-column label="操作" width="100" fixed="right">
                     <template #default="scope">
@@ -165,6 +174,27 @@ function getTypeLabel(type: string) {
         'TEAM_UP': '组队合作'
     }
     return typeMap[type] || type
+}
+
+// 格式化日期
+function formatDate(dateString: string | Date | number) {
+    if (!dateString) return ''
+    try {
+        // 处理数字类型的时间戳（毫秒）
+        const date = typeof dateString === 'number' ? new Date(dateString) : 
+                    (typeof dateString === 'string' ? new Date(dateString) : dateString)
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        })
+    } catch (error) {
+        console.error('日期格式化错误:', error, dateString)
+        return String(dateString)
+    }
 }
 </script>
 
