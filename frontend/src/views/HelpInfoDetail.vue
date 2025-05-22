@@ -8,7 +8,7 @@
             <el-button-group>
               <el-button size="small" type="primary" :disabled="!canChangeStatus"
                 @click="statusDialogVisible = true">修改状态</el-button>
-              <el-button size="small" :disabled="!canEdit">编辑</el-button>
+              <el-button size="small" :disabled="!canEdit" @click="handleEdit">编辑</el-button>
               <el-button size="small" type="danger" :disabled="!canDelete" @click="confirmDelete">删除</el-button>
             </el-button-group>
           </div>
@@ -186,8 +186,7 @@ import {
   cancelApplication,
   closeHelpInfo // Ensure closeHelpInfo is imported
 } from '../api/helpApplication'
-// Remove updateHelpInfo as it's unused and caused a compile error
-import { deleteHelpInfo, incrementHelpInfoViewCount } from '../api/helpinfo'
+import { deleteHelpInfo, incrementHelpInfoViewCount, updateHelpInfo } from '../api/helpinfo'
 import { getUserById } from '../api/user'; // 新增导入
 import ApplyHelpDialog from '../components/ApplyHelpDialog.vue'
 
@@ -484,6 +483,21 @@ function confirmDelete() {
       ElMessage.error('删除失败')
     }
   }).catch(() => { })
+}
+
+// 处理编辑按钮点击
+function handleEdit() {
+  if (!info.value) return
+  
+  // 检查状态，只有当状态为OPEN时才能编辑
+  if (info.value.status !== 'OPEN') {
+    ElMessage.warning('只有处于"进行中"状态的互助信息才能被编辑')
+    return
+  }
+  
+  const id = Number(route.params.id)
+  // 跳转到编辑页面，将当前互助信息ID传递过去
+  router.push(`/helpinfo/edit/${id}`)
 }
 
 // 更新互助信息状态

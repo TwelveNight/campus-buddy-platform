@@ -49,6 +49,12 @@ const routes: RouteRecordRaw[] = [
         props: true,
         meta: { requiresAuth: true }
       },
+      { 
+        path: 'helpinfo/edit/:id', 
+        component: HelpInfoPublish,
+        props: true,
+        meta: { requiresAuth: true }
+      },
       {
         path: 'applications',
         component: MyApplications,
