@@ -8,29 +8,27 @@
             <el-table :data="applications" style="width: 100%">
                 <!-- 互助信息标题 -->
                 <el-table-column label="互助信息标题" min-width="180">
-                  <template #default="scope">
-                    <div class="helpinfo-column">
-                      <template v-if="scope.row.helpInfo">
-                        <template v-if="scope.row.helpInfo.title === '加载中...'">
-                          <el-skeleton :rows="1" animated style="width: 80px;" />
-                        </template>
-                        <template v-else-if="scope.row.helpInfo.title === '无法获取互助信息'">
-                          <span class="no-data">互助信息不存在或已删除</span>
-                        </template>
-                        <template v-else>
-                          <router-link
-                            :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
-                            class="title-link"
-                          >
-                            {{ scope.row.helpInfo.title }}
-                          </router-link>
-                        </template>
-                      </template>
-                      <template v-else>
-                        <span class="no-data">互助信息不存在或已删除</span>
-                      </template>
-                    </div>
-                  </template>
+                    <template #default="scope">
+                        <div class="helpinfo-column">
+                            <template v-if="scope.row.helpInfo">
+                                <template v-if="scope.row.helpInfo.title === '加载中...'">
+                                    <el-skeleton :rows="1" animated style="width: 80px;" />
+                                </template>
+                                <template v-else-if="scope.row.helpInfo.title === '无法获取互助信息'">
+                                    <span class="no-data">互助信息不存在或已删除</span>
+                                </template>
+                                <template v-else>
+                                    <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
+                                        class="title-link">
+                                        {{ scope.row.helpInfo.title }}
+                                    </router-link>
+                                </template>
+                            </template>
+                            <template v-else>
+                                <span class="no-data">互助信息不存在或已删除</span>
+                            </template>
+                        </div>
+                    </template>
                 </el-table-column>
 
                 <!-- 发布者/申请者 -->

@@ -59,8 +59,8 @@ const editorConfig = computed<IEditorConfig>(() => ({
     maxLength: props.maxLength,
     MENU_CONF: {},
     customAlert: (info: string, type: string) => {
-      // 你可以根据需要自定义弹窗，这里用 alert 兜底
-      alert(`${type}: ${info}`)
+        // 你可以根据需要自定义弹窗，这里用 alert 兜底
+        alert(`${type}: ${info}`)
     },
     scroll: true,
     readOnly: false,

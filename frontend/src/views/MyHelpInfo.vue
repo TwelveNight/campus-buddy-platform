@@ -26,7 +26,7 @@
                         <el-table-column prop="status" label="状态" width="120">
                             <template #default="scope">
                                 <el-tag :type="getStatusType(scope.row.status)">{{ getStatusLabel(scope.row.status)
-                                }}</el-tag>
+                                    }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column prop="createdAt" label="发布时间" width="180">
