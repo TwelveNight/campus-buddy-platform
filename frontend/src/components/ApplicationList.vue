@@ -66,16 +66,16 @@
                 </el-table-column>
 
                 <!-- 操作 -->
-                <el-table-column label="操作" width="160" v-if="showActions">
+                <el-table-column label="操作" width="160">
                     <template #default="scope">
                         <div class="action-buttons">
-                            <template v-if="props.type === 'received' && props.status === 'pending'">
-                                <el-button size="small" type="success" @click="handleAccept(scope.row)">
-                                    接受
-                                </el-button>
-                                <el-button size="small" type="danger" @click="handleReject(scope.row)">
-                                    拒绝
-                                </el-button>
+                            <template v-if="canReview(scope.row)">
+                                <el-button size="small" type="primary" @click="handleReview(scope.row)">去评价</el-button>
+                            </template>
+                            <template
+                                v-else-if="props.type === 'received' && scope.row.status?.toUpperCase() === 'PENDING'">
+                                <el-button size="small" type="success" @click="handleAccept(scope.row)">接受</el-button>
+                                <el-button size="small" type="danger" @click="handleReject(scope.row)">拒绝</el-button>
                             </template>
                             <template v-else>
                                 <span>-</span>
@@ -85,16 +85,23 @@
                 </el-table-column>
             </el-table>
         </div>
+
+        <!-- 评价弹窗 -->
+        <ReviewDialog v-model:visible="reviewDialogVisible" :helpInfoId="selectedApplication?.infoId || 0"
+            :reviewedUserId="getReviewedUserId()" :reviewerUserId="userId" @review-submitted="onReviewSubmitted" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, defineEmits } from 'vue'
+import { computed, defineProps, defineEmits, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useAuthStore } from '../store/auth'
 import {
     acceptApplication,
     rejectApplication
 } from '../api/helpApplication'
+import { hasReviewed } from '../api/review'
+import ReviewDialog from './ReviewDialog.vue'
 
 const props = defineProps({
     applications: {
@@ -274,25 +281,82 @@ function formatDate(dateString: string | Date | number) {
 // 获取申请状态类型
 function getApplicationStatusType(status: string): string {
     const statusTypeMap: Record<string, string> = {
-        'pending': 'warning',
-        'accepted': 'success',
-        'rejected': 'danger',
-        'processing': 'info',
-        'completed': 'success'
+        'PENDING': 'warning',
+        'ACCEPTED': 'success',
+        'REJECTED': 'danger',
+        'PROCESSING': 'info',
+        'COMPLETED': 'success',
+        'CANCELED': 'info'
     }
-    return statusTypeMap[status] || 'default'
+    return statusTypeMap[status?.toUpperCase()] || 'default'
 }
 
 // 获取申请状态标签
 function getApplicationStatusLabel(status: string): string {
     const statusLabelMap: Record<string, string> = {
-        'pending': '待处理',
-        'accepted': '已接受',
-        'rejected': '已拒绝',
-        'processing': '处理中',
-        'completed': '已完成'
+        'PENDING': '待处理',
+        'ACCEPTED': '已接受',
+        'REJECTED': '已拒绝',
+        'PROCESSING': '处理中',
+        'COMPLETED': '已完成',
+        'CANCELED': '已取消'
     }
-    return statusLabelMap[status] || '未知状态'
+    return statusLabelMap[status?.toUpperCase()] || '未知状态'
+}
+
+// 打开评价弹窗
+const reviewDialogVisible = ref(false)
+const selectedApplication = ref<any>(null)
+const authStore = useAuthStore()
+const userId = computed(() => authStore.user?.userId || 0)
+
+function openReviewDialog(application: any) {
+    selectedApplication.value = application
+    reviewDialogVisible.value = true
+}
+
+function getReviewedUserId() {
+    if (!selectedApplication.value) return 0;
+    
+    if (props.type === 'sent') {
+        // 如果是我发出的申请，评价对象是互助发布者
+        const applicantId = selectedApplication.value.applicantId;
+        return applicantId || 0;
+    } else {
+        // 如果是我收到的申请，评价对象是申请人
+        const publisherId = selectedApplication.value.helpInfo?.publisherId;
+        return publisherId || 0;
+    }
+}
+
+async function handleReview(application: any) {
+    try {
+        const res = await hasReviewed(userId.value, application.infoId)
+        // 兼容 axios 返回结构，后端直接返回true/false
+        const reviewed = (res && typeof res.data === 'boolean') ? res.data : !!res
+        if (!reviewed) {
+            openReviewDialog(application)
+        } else {
+            ElMessage.warning('您已评价过该互助')
+        }
+    } catch (e) {
+        ElMessage.error('校验评价状态失败')
+    }
+}
+
+function onReviewSubmitted() {
+    reviewDialogVisible.value = false
+    emit('refresh')
+}
+
+// 评价按钮显示逻辑：互助已完成，且当前用户为申请人或发布人，且未评价
+function canReview(row: any) {
+    const statusCompleted = row.status?.toUpperCase() === 'COMPLETED';
+    if (!statusCompleted || row.isReviewed) return false;
+    // 当前登录用户
+    const uid = userId.value;
+    // 申请人或发布人都可评价
+    return row.applicantId === uid || row.helpInfo?.publisherId === uid;
 }
 </script>
 

@@ -7,8 +7,12 @@ axios.defaults.timeout = 10000
 // 请求拦截器 - 添加token到header
 axios.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token')
+    // 优先从 localStorage 获取 token
+    let token = localStorage.getItem('token')
+    // 如果你用 pinia/vuex 也可以加一行：
+    // if (!token && window.__PINIA__?.authStore?.token) token = window.__PINIA__.authStore.token
     if (token) {
+      config.headers = config.headers || {}
       config.headers.Authorization = `Bearer ${token}`
     }
     return config

@@ -10,6 +10,7 @@ import HelpInfoPublish from '../views/HelpInfoPublish.vue'
 import MyApplications from '../views/MyApplications.vue'
 import MyHelpInfo from '../views/MyHelpInfo.vue'
 import Profile from '../views/Profile.vue'
+import Reviews from '../views/Reviews.vue'
 import AdminHelpInfo from '../views/AdminHelpInfo.vue'
 import { useAuthStore } from '../store/auth'
 
@@ -68,6 +69,11 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'profile',
         component: Profile,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'reviews',
+        component: Reviews,
         meta: { requiresAuth: true }
       },
       {

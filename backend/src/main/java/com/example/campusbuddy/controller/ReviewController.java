@@ -4,6 +4,7 @@ import com.example.campusbuddy.entity.Review;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.ReviewService;
 import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.vo.ReviewVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,13 +29,13 @@ public class ReviewController {
 
     @Operation(summary = "查询某个互助的评价")
     @GetMapping("/byHelp/{helpId}")
-    public List<Review> getReviewsByHelpId(@PathVariable Long helpId) {
+    public List<ReviewVO> getReviewsByHelpId(@PathVariable Long helpId) {
         return reviewService.getReviewsByHelpId(helpId);
     }
 
     @Operation(summary = "查询某个用户收到的评价")
     @GetMapping("/byUser/{userId}")
-    public List<Review> getReviewsByUserId(@PathVariable Long userId) {
+    public List<ReviewVO> getReviewsByUserId(@PathVariable Long userId) {
         return reviewService.getReviewsByUserId(userId);
     }
 
@@ -48,5 +49,17 @@ public class ReviewController {
     @GetMapping("/check")
     public boolean hasReviewed(@RequestParam Long reviewerId, @RequestParam Long helpInfoId) {
         return reviewService.hasReviewed(reviewerId, helpInfoId);
+    }
+
+    @Operation(summary = "分页&多条件查询评价列表")
+    @GetMapping("/list")
+    public com.example.campusbuddy.vo.PageResult<ReviewVO> getReviewList(
+            @RequestParam Long userId,
+            @RequestParam(required = false) String type, // received/given
+            @RequestParam(required = false) Integer score,
+            @RequestParam(required = false) String moduleType,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        return reviewService.getReviewList(userId, type, score, moduleType, page, size);
     }
 }

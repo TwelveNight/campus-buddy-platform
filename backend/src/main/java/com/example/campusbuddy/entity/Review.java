@@ -17,4 +17,5 @@ public class Review {
     private Integer score;
     private String content;
     private Date createdAt;
+    private String moduleType;
 }

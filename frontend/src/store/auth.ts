@@ -5,7 +5,7 @@ import axios from 'axios'
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: localStorage.getItem('token') || '',
-    user: null as null | { 
+    user: JSON.parse(localStorage.getItem('user') || 'null') as null | { 
       username: string;
       nickname: string;
       userId?: number;
@@ -35,13 +35,16 @@ export const useAuthStore = defineStore('auth', {
               username: payloadData.sub, // 'sub' usually holds the username
               nickname: payloadData.sub // 暂时使用用户名作为昵称，会在获取完整信息时更新
             };
+            localStorage.setItem('user', JSON.stringify(this.user));
           } else {
             console.error('Invalid JWT structure: cannot decode user info.');
             this.user = null; 
+            localStorage.removeItem('user');
           }
         } catch (e) {
           console.error('Error decoding JWT payload:', e);
           this.user = null; 
+          localStorage.removeItem('user');
         }
 
       } else {
@@ -68,6 +71,7 @@ export const useAuthStore = defineStore('auth', {
         if (res.data && res.data.code === 200 && res.data.data) {
           this.user = res.data.data;
           this.isAuthenticated = true;
+          localStorage.setItem('user', JSON.stringify(this.user));
           return this.user;
         } else {
           throw new Error(res.data?.message || '获取用户信息失败');
@@ -86,6 +90,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.isAuthenticated = false
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
     }
   }
 })

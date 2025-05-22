@@ -42,6 +42,7 @@
                         </template>
                         <el-menu-item index="/my/helpinfo">我的互助</el-menu-item>
                         <el-menu-item index="/applications">我的申请</el-menu-item>
+                        <el-menu-item index="/reviews">我的评价</el-menu-item>
                         <el-menu-item index="/profile">个人资料</el-menu-item>
                     </el-sub-menu>
 
@@ -62,7 +63,7 @@
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="getUserAvatar()"></el-avatar>
                                 <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
-                                    }}</span>
+                                }}</span>
                             </div>
                             <template #dropdown>
                                 <el-dropdown-menu>
