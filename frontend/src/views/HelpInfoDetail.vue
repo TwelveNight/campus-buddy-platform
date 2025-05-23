@@ -745,7 +745,6 @@ function openHelperReview() {
 // 评价提交后刷新状态
 async function onReviewSubmitted() {
   reviewDialogVisible.value = false
-  ElMessage.success('评价成功！')
 
   // 重新获取互助详情和评价状态，确保最新
   const id = Number(route.params.id)

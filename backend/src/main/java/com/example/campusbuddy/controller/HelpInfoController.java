@@ -8,12 +8,10 @@ import com.example.campusbuddy.common.ResultCode;
 import com.example.campusbuddy.dto.HelpInfoDTO;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.entity.User;
-import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.exception.ForbiddenException;
 import com.example.campusbuddy.exception.InvalidParameterException;
 import com.example.campusbuddy.exception.ResourceNotFoundException;
 import com.example.campusbuddy.exception.UnauthorizedException;
-import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
@@ -68,12 +66,22 @@ public class HelpInfoController {
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String publisherId,
+            @RequestParam(required = false) String keyword,
             HttpServletRequest request) {
         QueryWrapper<HelpInfo> wrapper = new QueryWrapper<>();
         if (type != null)
             wrapper.eq("type", type);
         if (status != null)
             wrapper.eq("status", status);
+
+        // 处理关键词搜索
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.and(w -> w
+                .like("title", keyword)
+                .or()
+                .like("description", keyword)
+            );
+        }
 
         // 处理 publisherId 参数，如果为 'my' 则表示获取当前用户发布的互助信息
         if (publisherId != null) {

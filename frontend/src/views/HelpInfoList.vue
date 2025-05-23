@@ -10,14 +10,19 @@
         <el-card class="main-card animate-enter">
             <template #header>
                 <div class="filter-section">
-                    <el-input v-model="searchKeyword" placeholder="搜索关键词" clearable class="search-input"
-                        @keyup.enter="fetchData">
-                        <template #prefix>
-                            <el-icon>
-                                <search />
-                            </el-icon>
-                        </template>
-                    </el-input>
+                    <div class="search-container">
+                        <el-input v-model="searchKeyword" placeholder="搜索关键词" clearable class="search-input"
+                            @keyup.enter="fetchData">
+                            <template #prefix>
+                                <el-icon>
+                                    <search />
+                                </el-icon>
+                            </template>
+                            <template #append>
+                                <el-button @click="fetchData">搜索</el-button>
+                            </template>
+                        </el-input>
+                    </div>
 
                     <el-select v-model="filterType" placeholder="类型" clearable class="filter-select"
                         @change="fetchData">
@@ -249,6 +254,11 @@ function formatDate(dateString: string | Date | number) {
     display: flex;
     gap: 15px;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+.search-container {
+    display: flex;
     align-items: center;
 }
 
