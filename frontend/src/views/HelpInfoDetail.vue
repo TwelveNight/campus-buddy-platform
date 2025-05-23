@@ -143,7 +143,7 @@
 
         <!-- 评价入口：支持双向评价 - 只有发布者或帮助者才能看到 -->
         <div class="review-section animate-enter"
-          v-if="(isPublisher || (reviewInfo.helperId === authStore.user?.userId)) && (reviewInfo.showPublisherReview || reviewInfo.showHelperReview || reviewInfo.publisherHasReviewed || reviewInfo.helperHasReviewed)">
+          v-if="(isPublisher || isHelper) && (reviewInfo.showPublisherReview || reviewInfo.showHelperReview || reviewInfo.publisherHasReviewed || reviewInfo.helperHasReviewed)">
           <h3>评价中心</h3>
 
           <div class="reviewer-info" v-if="info.status === 'RESOLVED' && reviewInfo.helperId">
@@ -276,6 +276,12 @@ const hasToken = computed(() => {
 const isPublisher = computed(() => {
   if (!info.value || !authStore.user || !authStore.user.userId) return false
   return info.value.publisherId === authStore.user.userId
+})
+
+// 判断当前用户是否为帮助者
+const isHelper = computed(() => {
+  if (!info.value || !authStore.user || !authStore.user.userId) return false
+  return info.value.acceptedApplicationId && info.value.acceptedApplicantNickname && info.value.acceptedApplicantNickname === authStore.user.nickname
 })
 
 // 获取已接受的申请
