@@ -40,8 +40,7 @@
           <el-descriptions-item label="联系方式">{{ info.contactMethod }}</el-descriptions-item>
           <el-descriptions-item label="悬赏金额" v-if="info.rewardAmount">{{ info.rewardAmount }} 元</el-descriptions-item>
           <el-descriptions-item label="浏览次数">{{ info.viewCount }}</el-descriptions-item>
-          <el-descriptions-item label="帮助者"
-            v-if="info.acceptedApplicantNickname">
+          <el-descriptions-item label="帮助者" v-if="info.acceptedApplicantNickname">
             <div class="helper-info">
               <span>{{ info.acceptedApplicantNickname }}</span>
               <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
@@ -162,20 +161,22 @@
 
           <div class="review-buttons">
             <!-- 发布者评价帮助者 -->
-            <el-button v-if="reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview"
+            <el-button v-if="isPublisher && reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview"
               class="review-btn" icon="Star">
               评价帮助者
             </el-button>
-            <el-button v-if="reviewInfo.publisherHasReviewed" type="info" disabled class="reviewed-btn" icon="Check">
+            <el-button v-if="isPublisher && reviewInfo.publisherHasReviewed" type="info" disabled class="reviewed-btn"
+              icon="Check">
               已评价帮助者
             </el-button>
 
             <!-- 帮助者评价发布者 -->
-            <el-button v-if="reviewInfo.showHelperReview" type="success" @click="openHelperReview" class="review-btn"
-              icon="Star">
+            <el-button v-if="!isPublisher && reviewInfo.showHelperReview" type="success" @click="openHelperReview"
+              class="review-btn" icon="Star">
               评价发布者
             </el-button>
-            <el-button v-if="reviewInfo.helperHasReviewed" type="info" disabled class="reviewed-btn" icon="Check">
+            <el-button v-if="!isPublisher && reviewInfo.helperHasReviewed" type="info" disabled class="reviewed-btn"
+              icon="Check">
               已评价发布者
             </el-button>
           </div>
@@ -689,17 +690,24 @@ async function loadReviewStatus() {
       let helperId = null
       let helperName = ''
 
-      // 如果是已解决状态，获取帮助者信息
+      // 优先：如果是已解决/不满意，且 applications 有 ACCEPTED
       if (info.value.status === 'RESOLVED' || info.value.status === 'UNSATISFIED') {
-        // 尝试从应用列表中获取接受的申请
         const acceptedApp = applications.value.find(app => app.status === 'ACCEPTED')
         if (acceptedApp) {
           helperId = acceptedApp.applicantId
           helperName = acceptedApp.applicantNickname || '未知用户'
         }
       }
+      // 补充：如果当前用户就是帮助者（即 acceptedApplicationId 对应的申请人）
+      if (!helperId && info.value.acceptedApplicationId && info.value.acceptedApplicantNickname) {
+        // acceptedApplicantNickname 一定有，acceptedApplicationId 也有
+        // 只要当前用户是帮助者，就赋值
+        if (info.value.acceptedApplicantNickname && userId) {
+          helperId = userId
+          helperName = info.value.acceptedApplicantNickname
+        }
+      }
 
-      // 更新评价状态
       reviewInfo.value = {
         showPublisherReview: statusData.canPublisherReview || false,
         showHelperReview: statusData.canHelperReview || false,
@@ -707,18 +715,6 @@ async function loadReviewStatus() {
         helperHasReviewed: statusData.helperHasReviewed || false,
         helperId: helperId,
         helperName: helperName || ''
-      }
-
-      // 如果有帮助者ID，获取帮助者的头像
-      if (reviewInfo.value.helperId) {
-        try {
-          const userRes = await getUserById(reviewInfo.value.helperId)
-          if (userRes.data.code === 200 && userRes.data.data) {
-            // 可以在这里添加头像信息到reviewInfo中
-          }
-        } catch {
-          console.error('获取帮助者信息失败')
-        }
       }
     }
   } catch (e) {
