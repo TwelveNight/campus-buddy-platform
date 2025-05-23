@@ -14,21 +14,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -131,88 +122,41 @@ public class GroupFileController {
     /**
      * 删除文件
      */
-    @Operation(summary = "删除文件", description = "删除文件记录并尝试删除物理文件，仅上传者或小组管理员可操作")
+    @Operation(summary = "删除文件", description = "删除文件记录并尝试删除七牛云对象，仅上传者或小组管理员可操作")
     @DeleteMapping("/{fileId}")
     public R<Void> deleteFile(@Parameter(description = "文件ID") @PathVariable Long fileId) {
         User currentUser = getCurrentUser();
         GroupFile file = groupFileService.getFileDetail(fileId);
-        
         if (file == null) {
             return R.fail("文件不存在");
         }
-        
         boolean success = groupFileService.deleteFile(fileId, currentUser.getUserId());
-        if (success) {
-            // 尝试物理删除文件（如果存在）
-            try {
-                // 从文件URL中提取文件名
-                String fileUrl = file.getFileUrl(); 
-                String[] parts = fileUrl.split("/");
-                String fileName = parts[parts.length - 1];
-                
-                // 构建文件路径并尝试删除
-                Path filePath = groupFileService.getPhysicalFilePath(file.getGroupId(), fileName);
-                if (Files.exists(filePath)) {
-                    Files.delete(filePath);
-                }
-            } catch (Exception e) {
-                // 记录错误但不影响逻辑删除结果
-                e.printStackTrace();
-            }
-            
-            return R.ok("文件删除成功", null);
-        } else {
-            return R.fail("删除失败，请确认您有权限删除该文件");
-        }
+        return success ? R.ok("文件删除成功", null) : R.fail("删除失败，请确认您有权限删除该文件");
     }
 
     /**
      * 下载文件
      */
-    @Operation(summary = "下载文件", description = "根据groupId和文件名下载文件")
-    @ApiResponse(responseCode = "200", description = "文件下载成功", content = @Content(mediaType = "application/octet-stream"))
+    @Operation(summary = "下载文件", description = "返回七牛云外链，前端可直接跳转或下载")
+    @ApiResponse(responseCode = "200", description = "文件下载成功，返回重定向到七牛云外链")
     @GetMapping("/{groupId}/{fileName:.+}")
-    public ResponseEntity<Resource> downloadFile(
+    public ResponseEntity<Void> downloadFile(
             @Parameter(description = "小组ID") @PathVariable Long groupId,
             @Parameter(description = "文件名") @PathVariable String fileName) {
-        try {
-            // 获取文件物理路径
-            Path filePath = groupFileService.getPhysicalFilePath(groupId, fileName);
-            Resource resource = new UrlResource(filePath.toUri());
-            
-            // 检查文件是否存在
-            if (!resource.exists()) {
-                return ResponseEntity.notFound().build();
+        // 查找文件信息
+        String keyPrefix = "group-" + groupId + "/";
+        GroupFile fileInfo = null;
+        for (GroupFile f : groupFileService.queryGroupFiles(groupId, 1, 100, null).getRecords()) {
+            if (f.getFileUrl() != null && f.getFileUrl().contains(fileName)) {
+                fileInfo = f;
+                break;
             }
-            
-            // 查找文件信息
-            String fileUrl = "/api/group-files/" + groupId + "/" + fileName;
-            GroupFile fileInfo = groupFileService.getByFileUrl(fileUrl);
-            
-            // 如果找到了文件记录，更新下载计数
-            if (fileInfo != null) {
-                groupFileService.increaseDownloadCount(fileInfo.getFileId());
-            }
-            
-            // 获取文件原始名称（如果有文件信息，使用原始文件名，否则使用当前文件名）
-            String originalFilename = (fileInfo != null) ? fileInfo.getFileName() : fileName;
-            
-            // 获取文件的MIME类型
-            String contentType = Files.probeContentType(filePath);
-            MediaType mediaType = (contentType != null) ? 
-                MediaType.parseMediaType(contentType) : MediaType.APPLICATION_OCTET_STREAM;
-            
-            // 构建响应头
-            return ResponseEntity.ok()
-                    .contentType(mediaType)
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + originalFilename + "\"")
-                    .body(resource);
-            
-        } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().build();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).build();
         }
+        if (fileInfo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        groupFileService.increaseDownloadCount(fileInfo.getFileId());
+        // 302重定向到七牛云外链
+        return ResponseEntity.status(302).header("Location", fileInfo.getFileUrl()).build();
     }
 }

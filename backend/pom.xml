@@ -101,6 +101,12 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- 七牛云对象存储 Java SDK -->
+		<dependency>
+			<groupId>com.qiniu</groupId>
+			<artifactId>qiniu-java-sdk</artifactId>
+			<version>7.13.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

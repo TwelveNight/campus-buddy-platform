@@ -38,3 +38,9 @@ springdoc:
 file:
   upload:
     path: ${user.dir}/tmp/uploads
+
+qiniu:
+  access-key: 5bELhkZ5FX4vGjdfH5S9OwTDghKkLQ-IGZSwhduG
+  secret-key: OOCCkj59LkxH13V9b1DNjq_s_Y6mwqIdhi4GPaOi
+  bucket: campus-buddy-platform
+  domain: http://swpyovvlr.hn-bkt.clouddn.com # 请替换为你的七牛云空间外链域名
