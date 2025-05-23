@@ -16,7 +16,7 @@
                     text-color="#909399" />
             </div>
             <div class="review-list">
-                <div v-for="review in displayedReviews" :key="review.reviewId" class="review-item">
+                <div v-for="review in props.reviews" :key="review.reviewId" class="review-item">
                     <div class="review-header">
                         <div class="reviewer-info">
                             <el-avatar :size="42" :src="review.reviewerAvatar || defaultAvatar"></el-avatar>
@@ -24,7 +24,7 @@
                                 <div class="name-role-row">
                                     <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' +
                                         review.reviewerUserId)
-                                        }}</span>
+                                    }}</span>
                                     <div class="role-badge"
                                         :class="getRoleClass(review.reviewType, review.reviewerUserId)">
                                         <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)"
@@ -34,7 +34,7 @@
                                                 class="user-role-tag">
                                                 <span class="role-icon">{{ getRoleIcon(review.reviewType,
                                                     review.reviewerUserId)
-                                                    }}</span>
+                                                }}</span>
                                                 {{ getUserRoleLabel(review.reviewType, review.reviewerUserId) }}
                                             </el-tag>
                                         </el-tooltip>
@@ -125,10 +125,6 @@
                     </div>
                 </div>
             </div>
-            <div class="pagination" v-if="reviews.length > pageSize">
-                <el-pagination background layout="prev, pager, next" :total="reviews.length" :page-size="pageSize"
-                    :current-page="currentPage" @current-change="handlePageChange" />
-            </div>
         </div>
     </div>
 </template>
@@ -183,14 +179,6 @@ const authStore = useAuthStore();
 const currentUserId = computed(() => authStore.user?.userId || 0);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
-// 分页相关
-const currentPage = ref(1);
-const pageSize = ref(5);
-const displayedReviews = computed(() => {
-    const start = (currentPage.value - 1) * pageSize.value;
-    return filteredReviews.value.slice(start, start + pageSize.value);
-});
-
 // 筛选相关
 const filterType = ref('');
 const filterScore = ref(0);
@@ -198,21 +186,20 @@ const filterScore = ref(0);
 const scoreColors = ['#99A9BF', '#F7BA2A', '#FF9900'];
 const scoreTexts = ['很差', '较差', '一般', '满意', '非常满意'];
 
-const filteredReviews = computed(() => {
-    let result = props.reviews;
-    if (filterType.value === 'received') {
-        result = result.filter(r => r.reviewedUserId === currentUserId.value);
-    } else if (filterType.value === 'given') {
-        result = result.filter(r => r.reviewerUserId === currentUserId.value);
-    }
-    if (filterScore.value > 0) {
-        result = result.filter(r => r.score === filterScore.value);
-    }
-    return result;
-});
+// const filteredReviews = computed(() => {
+//     let result = props.reviews;
+//     if (filterType.value === 'received') {
+//         result = result.filter(r => r.reviewedUserId === currentUserId.value);
+//     } else if (filterType.value === 'given') {
+//         result = result.filter(r => r.reviewerUserId === currentUserId.value);
+//     }
+//     if (filterScore.value > 0) {
+//         result = result.filter(r => r.score === filterScore.value);
+//     }
+//     return result;
+// });
 
 function handleFilterChange() {
-    currentPage.value = 1;
     emit('filter', { type: filterType.value, score: filterScore.value });
 }
 
@@ -230,7 +217,6 @@ function formatDate(date: string | number) {
 
 // 获取被评价者的昵称
 function getReviewedNickname(review: ReviewItem): string {
-    console.log('getReviewedNickname', review);
     if (!review) return '昵称未知';
     return review.reviewedNickname || '昵称未知';
 }
@@ -369,10 +355,6 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
     }
 
     return '用户角色';
-}
-
-function handlePageChange(page: number) {
-    currentPage.value = page;
 }
 
 </script>
