@@ -220,11 +220,19 @@
                                     <div class="reviewer-info">
                                         <el-avatar :size="42" :src="review.reviewerAvatar || defaultAvatar"></el-avatar>
                                         <div class="reviewer-details">
-                                            <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' +
-                                                review.reviewerUserId) }}</span>
+                                            <div class="name-role-row">
+                                                <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}</span>
+                                                <div class="role-badge" :class="getRoleClass(review.reviewType, review.reviewerUserId)">
+                                                    <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)" placement="top" effect="light">
+                                                        <el-tag size="small" effect="dark" :type="getUserRoleType(review.reviewType, review.reviewerUserId)" class="user-role-tag">
+                                                            <span class="role-icon">{{ getRoleIcon(review.reviewType, review.reviewerUserId) }}</span>
+                                                            {{ getUserRoleLabel(review.reviewType, review.reviewerUserId) }}
+                                                        </el-tag>
+                                                    </el-tooltip>
+                                                </div>
+                                            </div>
                                             <div class="review-module" :class="getModuleClass(review.moduleType)">
-                                                <el-tag size="small" effect="light"
-                                                    :type="getModuleTagType(review.moduleType)">
+                                                <el-tag size="small" effect="light" :type="getModuleTagType(review.moduleType)">
                                                     <el-icon>
                                                         <MessageBox />
                                                     </el-icon>
@@ -242,11 +250,9 @@
                                         </div>
                                         <div class="review-score">
                                             <div class="score-indicator">
-                                                <div class="score-value">{{ review.score }}<span
-                                                        class="score-max">/5</span></div>
+                                                <div class="score-value">{{ review.score }}<span class="score-max">/5</span></div>
                                                 <div class="score-stars">
-                                                    <el-rate v-model="review.score" disabled :max="5"
-                                                        :colors="['#F7BA2A', '#F7BA2A', '#67C23A']" />
+                                                    <el-rate v-model="review.score" disabled :max="5" :colors="['#F7BA2A', '#F7BA2A', '#67C23A']" />
                                                 </div>
                                                 <div class="score-label">{{ getScoreLabel(review.score) }}</div>
                                             </div>
@@ -327,7 +333,7 @@ import { updateUserProfile, changePassword } from '../api/user'
 import { getUserReviews } from '../api/review'
 import {
     User, UserFilled, Avatar, Key, Lock, Check,
-    RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View
+    RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View, MessageBox, ChatRound, Document, Collection, Promotion
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -368,6 +374,8 @@ interface ReviewItem {
     score: number;
     content?: string;
     createdAt: string | number;
+    reviewType?: string;
+    moduleType?: string;
 }
 
 const reviews = ref<ReviewItem[]>([])
@@ -491,6 +499,66 @@ async function fetchUserReviews() {
     } finally {
         reviewsLoading.value = false;
     }
+}
+
+// 获取用户角色的标签类型
+function getUserRoleType(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return 'info';
+    const currentUserId = form.userId;
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? 'primary' : 'success';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? 'success' : 'primary';
+    }
+    return 'info';
+}
+
+// 获取用户角色的显示名称
+function getUserRoleLabel(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return '用户';
+    const currentUserId = form.userId;
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? '求助方' : '帮助方';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? '帮助方' : '求助方';
+    }
+    return '用户';
+}
+
+// 获取用户角色的CSS类名
+function getRoleClass(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return 'role-default';
+    const currentUserId = form.userId;
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? 'role-publisher' : 'role-helper';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? 'role-helper' : 'role-publisher';
+    }
+    return 'role-default';
+}
+
+// 获取用户角色的图标
+function getRoleIcon(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return '👤';
+    const currentUserId = form.userId;
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? '📢' : '🤝';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? '🤝' : '📢';
+    }
+    return '👤';
+}
+
+// 获取用户角色的提示信息
+function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return '用户角色';
+    const currentUserId = form.userId;
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? '您是求助方' : '对方是帮助方';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? '您是帮助方' : '对方是求助方';
+    }
+    return '用户角色';
 }
 
 // 组件挂载时执行
@@ -940,11 +1008,37 @@ async function handleChangePassword() {
     gap: 6px;
 }
 
+.name-role-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .reviewer-name {
     font-weight: 600;
     color: var(--el-text-color-primary);
     font-size: 1.05rem;
     line-height: 1.2;
+}
+
+.role-badge {
+    display: flex;
+    align-items: center;
+}
+
+.user-role-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    padding: 0 8px;
+    height: 22px;
+    border-radius: 4px;
+    margin-right: 6px;
+}
+
+.role-icon {
+    font-size: 1rem;
 }
 
 .review-module {
