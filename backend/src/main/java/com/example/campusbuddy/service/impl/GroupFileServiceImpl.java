@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.campusbuddy.config.QiniuConfig;
 import com.example.campusbuddy.entity.GroupFile;
 import com.example.campusbuddy.entity.GroupMember;
 import com.example.campusbuddy.mapper.GroupFileMapper;
@@ -38,14 +39,8 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
     @Autowired
     private GroupMemberMapper groupMemberMapper;
 
-    @Value("${qiniu.access-key}")
-    private String qiniuAccessKey;
-    @Value("${qiniu.secret-key}")
-    private String qiniuSecretKey;
-    @Value("${qiniu.bucket}")
-    private String qiniuBucket;
-    @Value("${qiniu.domain}")
-    private String qiniuDomain;
+    @Autowired
+    private QiniuConfig.QiniuProperties qiniuProperties;
 
     private UploadManager getUploadManager() {
         Configuration cfg = new Configuration(Region.autoRegion());
@@ -53,7 +48,7 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
     }
 
     private Auth getAuth() {
-        return Auth.create(qiniuAccessKey, qiniuSecretKey);
+        return Auth.create(qiniuProperties.getAccessKey(), qiniuProperties.getSecretKey());
     }
 
     private BucketManager getBucketManager() {
@@ -95,7 +90,7 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
             // 上传到七牛云
             UploadManager uploadManager = getUploadManager();
             Auth auth = getAuth();
-            String upToken = auth.uploadToken(qiniuBucket);
+            String upToken = auth.uploadToken(qiniuProperties.getBucket());
             Response response = uploadManager.put(file.getBytes(), uniqueFileName, upToken);
             if (!response.isOK()) {
                 throw new RuntimeException("七牛云上传失败: " + response.bodyString());
@@ -103,7 +98,7 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
             // 解析返回
             ObjectMapper mapper = new ObjectMapper();
             DefaultPutRet putRet = mapper.readValue(response.bodyString(), DefaultPutRet.class);
-            String fileUrl = qiniuDomain + "/" + putRet.key;
+            String fileUrl = qiniuProperties.getDomain() + "/" + putRet.key;
 
             // 保存文件信息
             GroupFile groupFile = new GroupFile();
@@ -160,8 +155,8 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
         boolean dbResult = updateById(file);
         // 七牛云物理删除
         try {
-            String key = file.getFileUrl().replace(qiniuDomain + "/", "");
-            getBucketManager().delete(qiniuBucket, key);
+            String key = file.getFileUrl().replace(qiniuProperties.getDomain() + "/", "");
+            getBucketManager().delete(qiniuProperties.getBucket(), key);
         } catch (QiniuException e) {
             // 记录错误但不影响逻辑删除
             e.printStackTrace();
