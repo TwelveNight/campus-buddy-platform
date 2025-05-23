@@ -188,7 +188,7 @@
 
     <!-- 申请帮助对话框 -->
     <ApplyHelpDialog v-if="info" v-model:visible="applyDialogVisible" :help-info-id="Number(route.params.id)"
-      @success="handleApplySuccess" />
+       />
 
     <!-- 状态修改对话框 -->
     <el-dialog v-model="statusDialogVisible" title="修改状态" width="400px">
@@ -794,14 +794,6 @@ async function handleCancelApplication() {
       ElMessage.error(e.message || '取消申请失败')
     }
   }).catch(() => { })
-}
-
-// 申请成功后的处理
-async function handleApplySuccess() {
-  applyDialogVisible.value = false
-  ElMessage.success('申请已提交')
-  // 重新检查用户申请状态以更新按钮显示
-  await checkUserApplication()
 }
 
 // 获取申请状态标签
