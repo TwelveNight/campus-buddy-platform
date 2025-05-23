@@ -402,7 +402,7 @@ async function fetchApplications() {
       }
     }
   } catch (e: any) {
-    ElMessage.error('获取申请列表失败');
+    console.error('获取申请列表失败');
   }
 }
 
