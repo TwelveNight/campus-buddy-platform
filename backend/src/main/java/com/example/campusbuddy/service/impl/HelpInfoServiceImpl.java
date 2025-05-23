@@ -46,6 +46,13 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             vo.setPublisherAvatar(publisher.getAvatarUrl());
         }
 
+        // 新增：如果有已接受的申请，查出帮助者昵称
+        Long acceptedAppId = helpInfo.getAcceptedApplicationId();
+        if (acceptedAppId != null) {
+            String nickname = helpApplicationMapper.getApplicantNicknameByApplicationId(acceptedAppId);
+            vo.setAcceptedApplicantNickname(nickname);
+        }
+
         return vo;
     }
 
@@ -63,7 +70,10 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         // 检查是否有被接受的申请
         Long acceptedAppId = helpInfo.getAcceptedApplicationId();
         if (acceptedAppId != null) {
-            // 获取帮助者信息
+            // 新增：补充帮助者昵称
+            String nickname = helpApplicationMapper.getApplicantNicknameByApplicationId(acceptedAppId);
+            vo.setAcceptedApplicantNickname(nickname);
+
             HelpApplication application = helpApplicationMapper.selectById(acceptedAppId);
             if (application != null) {
                 vo.setHelperId(application.getApplicantId());

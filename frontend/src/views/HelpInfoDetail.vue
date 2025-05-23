@@ -1,32 +1,31 @@
 <template>
   <div class="helpinfo-detail-page">
-    <el-card v-loading="loading" class="main-card animate-enter">
+    <el-card v-loading="loading">
       <template #header>
         <div class="card-header">
-          <h2 class="info-title">📄 {{ info?.title || '互助信息详情' }}</h2>
+          <h2>{{ info?.title || '互助信息详情' }}</h2>
           <div class="header-actions" v-if="info && isPublisher">
             <el-button-group>
-              <el-button size="small" type="primary" :disabled="!canChangeStatus" @click="statusDialogVisible = true"
-                icon="Edit">修改状态</el-button>
-              <el-button size="small" :disabled="!canEdit" @click="handleEdit" icon="Edit">编辑</el-button>
-              <el-button size="small" type="danger" :disabled="!canDelete" @click="confirmDelete"
-                icon="Delete">删除</el-button>
+              <el-button size="small" type="primary" :disabled="!canChangeStatus"
+                @click="statusDialogVisible = true">修改状态</el-button>
+              <el-button size="small" :disabled="!canEdit" @click="handleEdit">编辑</el-button>
+              <el-button size="small" type="danger" :disabled="!canDelete" @click="confirmDelete">删除</el-button>
             </el-button-group>
           </div>
         </div>
       </template>
 
-      <div v-if="error" class="error-container animate-enter">
+      <div v-if="error" class="error-container">
         <el-alert :title="error" type="error" :closable="false" />
       </div>
 
-      <div v-else-if="info" class="info-content animate-enter">
-        <el-descriptions :column="2" border class="info-descriptions">
+      <div v-else-if="info" class="info-content">
+        <el-descriptions :column="2" border>
           <el-descriptions-item label="发布者">
             <div class="publisher-info">
-              <el-avatar :size="36" class="publisher-avatar"
+              <el-avatar :size="30"
                 :src="info.publisherAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-              <span class="publisher-name">{{ info.publisherName }}</span>
+              <span>{{ info.publisherName }}</span>
             </div>
           </el-descriptions-item>
           <el-descriptions-item label="发布时间">{{ formatDate(info.createdAt) }}</el-descriptions-item>
@@ -41,6 +40,13 @@
           <el-descriptions-item label="联系方式">{{ info.contactMethod }}</el-descriptions-item>
           <el-descriptions-item label="悬赏金额" v-if="info.rewardAmount">{{ info.rewardAmount }} 元</el-descriptions-item>
           <el-descriptions-item label="浏览次数">{{ info.viewCount }}</el-descriptions-item>
+          <el-descriptions-item label="帮助者"
+            v-if="info.acceptedApplicantNickname">
+            <div class="helper-info">
+              <span>{{ info.acceptedApplicantNickname }}</span>
+              <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
+            </div>
+          </el-descriptions-item>
           <el-descriptions-item label="描述" :span="2">
             <div class="description" v-html="info.description"></div>
           </el-descriptions-item>
@@ -54,14 +60,10 @@
         </el-descriptions>
 
         <!-- 申请列表 - 仅发布者可见 -->
-        <div class="applications-section animate-enter" v-if="isPublisher && applications.length > 0">
+        <div class="applications-section" v-if="isPublisher && applications.length > 0">
           <h3>申请列表</h3>
-          <el-table :data="applications" style="width: 100%" class="app-table">
-            <el-table-column prop="applicantNickname" label="申请人" width="120">
-              <template #default="scope">
-                <div class="applicant-name">{{ scope.row.applicantNickname }}</div>
-              </template>
-            </el-table-column>
+          <el-table :data="applications" style="width: 100%">
+            <el-table-column prop="applicantNickname" label="申请人" width="120"></el-table-column>
             <el-table-column prop="message" label="申请消息" min-width="220">
               <template #default="scope">
                 <div class="message-content" v-html="formatMessage(scope.row.message)"></div>
@@ -69,7 +71,7 @@
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="scope">
-                <el-tag :type="getApplicationStatusType(scope.row.status)" class="status-tag">
+                <el-tag :type="getApplicationStatusType(scope.row.status)">
                   {{ getApplicationStatusLabel(scope.row.status) }}
                 </el-tag>
               </template>
@@ -91,58 +93,45 @@
         </div>
 
         <!-- 进度信息 - 当互助信息状态为处理中时显示 -->
-        <div class="progress-section animate-enter" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
+        <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
           <h3>处理进度</h3>
           <el-alert title="此互助信息正在处理中" type="warning" :closable="false"
             :description="`由 ${acceptedApplication.applicantNickname} 提供帮助`">
           </el-alert>
-          
-          <div class="helper-info" v-if="acceptedApplication">
-            <div class="helper-profile">
-              <el-avatar :size="40" class="helper-avatar"
-                :src="acceptedApplication.applicantAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-              <div class="helper-details">
-                <div class="helper-name">帮助者：{{ acceptedApplication.applicantNickname }}</div>
-                <div class="helper-status"><el-tag size="small" type="success">当前帮助中</el-tag></div>
-              </div>
-            </div>
-          </div>
 
           <div class="action-buttons" v-if="isPublisher">
-            <el-button type="success" @click="handleComplete" class="action-btn" icon="Check">标记为已解决</el-button>
-            <el-button @click="confirmCancel" class="action-btn" icon="Close">取消合作</el-button>
+            <el-button type="success" @click="handleComplete">标记为已解决</el-button>
+            <el-button @click="confirmCancel">取消合作</el-button>
           </div>
         </div>
 
         <!-- 操作按钮 - 非发布者且互助信息状态为进行中可见 -->
-        <div class="action-container animate-enter" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
+        <div class="action-container" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
           <!-- 错误信息 -->
           <el-alert v-if="!hasToken" title="请先登录" type="warning" show-icon :closable="false"
             style="margin-bottom: 10px" />
 
           <template v-if="hasApplied && myApplication">
-            <el-button-group class="action-group">
+            <el-button-group>
               <template v-if="myApplication.status === 'PENDING'">
-                <el-button type="info" class="status-btn" icon="InfoFilled">申请处理中</el-button>
-                <el-button @click="handleCancelApplication" class="action-btn" icon="Close">取消申请</el-button>
+                <el-button type="info">申请处理中</el-button>
+                <el-button @click="handleCancelApplication">取消申请</el-button>
               </template>
               <template v-else-if="myApplication.status === 'ACCEPTED'">
-                <el-button type="success" class="status-btn" icon="Check">已被接受</el-button>
+                <el-button type="success">已被接受</el-button>
               </template>
               <template v-else-if="myApplication.status === 'REJECTED'">
-                <el-button type="danger" class="status-btn" icon="CircleClose">已被拒绝</el-button>
-                <el-button @click="applyDialogVisible = true" class="action-btn" icon="Refresh">重新申请</el-button>
+                <el-button type="danger">已被拒绝</el-button>
+                <el-button @click="applyDialogVisible = true">重新申请</el-button>
               </template>
               <template v-else-if="myApplication.status === 'CANCELED'">
-                <el-button type="info" disabled class="status-btn" style="margin-right: 10px;"
-                  icon="InfoFilled">已取消</el-button>
-                <el-button type="primary" @click="applyDialogVisible = true" class="action-btn"
-                  icon="Refresh">重新申请</el-button>
+                <el-button type="info" disabled style="margin-right: 10px;">已取消</el-button>
+                <el-button type="primary" @click="applyDialogVisible = true">重新申请</el-button>
               </template>
             </el-button-group>
           </template>
           <template v-else>
-            <el-button type="primary" @click="handleApplyClick" class="apply-btn" icon="Connection">申请帮助</el-button>
+            <el-button type="primary" @click="handleApplyClick">申请帮助</el-button>
           </template>
         </div>
 
@@ -153,16 +142,24 @@
           </el-alert>
         </div>
 
-        <!-- 提示信息 - 发布者查看自己发布的互助信息时显示 -->
-        <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
-          <el-alert title="这是您发布的互助信息" type="info" description="您不能申请自己发布的互助信息，请等待其他用户申请帮助。" show-icon
-            :closable="false">
-          </el-alert>
-        </div>
-
-        <!-- 评价入口：支持双向评价 -->
-        <div class="review-section animate-enter" v-if="reviewInfo.showPublisherReview || reviewInfo.showHelperReview">
+        <!-- 评价入口：支持双向评价 - 只有发布者或帮助者才能看到 -->
+        <div class="review-section animate-enter"
+          v-if="(isPublisher || (reviewInfo.helperId === authStore.user?.userId)) && (reviewInfo.showPublisherReview || reviewInfo.showHelperReview || reviewInfo.publisherHasReviewed || reviewInfo.helperHasReviewed)">
           <h3>评价中心</h3>
+
+          <div class="reviewer-info" v-if="info.status === 'RESOLVED' && reviewInfo.helperId">
+            <div class="publisher-helper-info">
+              <div class="info-row">
+                <strong>发布者：</strong> {{ info.publisherName }}
+                <el-tag size="small" type="primary" class="role-tag">求助方</el-tag>
+              </div>
+              <div class="info-row">
+                <strong>帮助者：</strong> {{ reviewInfo.helperName || '未知用户' }}
+                <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
+              </div>
+            </div>
+          </div>
+
           <div class="review-buttons">
             <!-- 发布者评价帮助者 -->
             <el-button v-if="reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview"
@@ -232,13 +229,13 @@ import {
   reopenHelpInfo,
   getMyApplications,
   cancelApplication,
-  closeHelpInfo // Ensure closeHelpInfo is imported
+  closeHelpInfo
 } from '../api/helpApplication'
 import { deleteHelpInfo, incrementHelpInfoViewCount } from '../api/helpinfo'
-import { getUserById } from '../api/user'; // 新增导入
+import { getUserById } from '../api/user'
 import ApplyHelpDialog from '../components/ApplyHelpDialog.vue'
 import ReviewDialog from '../components/ReviewDialog.vue'
-import { getHelpInfoReviewStatus } from '../api/review'
+import { getUserReviewStatus } from '../api/review'
 
 const route = useRoute()
 const router = useRouter()
@@ -329,10 +326,9 @@ onMounted(async () => {
     const token = localStorage.getItem('token')
     if (token && (!authStore.user || !authStore.user.userId)) {
       try {
-        console.log('检测到token存在但用户信息不完整，尝试获取用户信息...')
         await authStore.fetchCurrentUser()
-      } catch (err) {
-        console.error('获取当前用户信息失败:', err)
+      } catch {
+        console.error('获取当前用户信息失败')
       }
     }
 
@@ -340,15 +336,9 @@ onMounted(async () => {
     if (authStore.user && authStore.user.userId) {
       try {
         await checkUserApplication()
-        console.log('用户申请状态检查完成:', {
-          hasApplied: hasApplied.value,
-          myApplication: myApplication.value
-        })
-      } catch (err) {
-        console.error('检查用户申请状态失败:', err)
+      } catch {
+        console.error('检查用户申请状态失败')
       }
-    } else {
-      console.log('无法检查申请状态 - authStore.user:', authStore.user)
     }
 
     // 增加浏览量
@@ -368,7 +358,6 @@ onMounted(async () => {
 // 监听info变化，重新检查用户申请状态
 watch(() => info.value, async (newInfo) => {
   if (newInfo && !isPublisher.value) {
-    console.log('监测到info变化，重新检查用户申请状态')
     await checkUserApplication()
   }
 }, { deep: true })
@@ -619,8 +608,6 @@ function formatMessage(message: string): string {
 
 // 检查用户的申请状态
 async function checkUserApplication() {
-  console.log('正在检查用户申请状态...')
-
   // 重置状态
   hasApplied.value = false
   myApplication.value = null
@@ -629,27 +616,22 @@ async function checkUserApplication() {
   if (hasToken.value) {
     if (!authStore.user || !authStore.user.userId) {
       try {
-        console.log('检测到token存在但用户信息不完整，尝试先获取用户信息...')
         await authStore.fetchCurrentUser()
-      } catch (err) {
-        console.error('获取当前用户信息失败:', err)
+      } catch {
+        console.error('获取当前用户信息失败')
         return
       }
     }
   } else {
-    console.log('未找到token，用户未登录')
     return
   }
 
   if (!authStore.user || !authStore.user.userId) {
-    console.log('无法获取有效的用户信息，取消检查申请状态')
     return
   }
 
   try {
-    console.log('获取我的申请列表...当前用户ID:', authStore.user.userId)
     const res = await getMyApplications()
-    console.log('申请列表响应:', res.data)
 
     if (res.data.code === 200) {
       const apps = res.data.data || []
@@ -657,8 +639,6 @@ async function checkUserApplication() {
 
       // 筛选出针对当前互助信息的所有申请
       const userAppsForCurrentInfo = apps.filter((app: any) => app.infoId === currentInfoId || app.infoId === Number(currentInfoId))
-
-      console.log('当前互助ID:', currentInfoId, '该用户的所有相关申请:', userAppsForCurrentInfo)
 
       if (userAppsForCurrentInfo.length > 0) {
         // 定义状态优先级
@@ -678,11 +658,9 @@ async function checkUserApplication() {
 
         myApplication.value = userAppsForCurrentInfo[0]; // 选择优先级最高的申请
         hasApplied.value = true;
-        console.log('用户已申请此互助，选定的最高优先级申请状态:', myApplication.value.status)
       } else {
         hasApplied.value = false
         myApplication.value = null
-        console.log('用户未申请此互助')
       }
     }
   } catch (e) {
@@ -694,14 +672,32 @@ async function checkUserApplication() {
 
 // 加载评价状态
 async function loadReviewStatus() {
-  if (!info.value || !authStore.user?.userId) return
+  if (!info.value || !authStore.user?.userId) {
+    return
+  }
 
   try {
     const helpInfoId = info.value.infoId
-    const res = await getHelpInfoReviewStatus(helpInfoId)
+    const userId = authStore.user.userId
 
-    if (res.data.code === 200 && res.data.data) {
-      const statusData = res.data.data
+    const res = await getUserReviewStatus(userId, helpInfoId)
+
+    if (res.data && res.data.canPublisherReview !== undefined) {
+      const statusData = res.data
+
+      // 获取互助信息中的帮助者信息
+      let helperId = null
+      let helperName = ''
+
+      // 如果是已解决状态，获取帮助者信息
+      if (info.value.status === 'RESOLVED' || info.value.status === 'UNSATISFIED') {
+        // 尝试从应用列表中获取接受的申请
+        const acceptedApp = applications.value.find(app => app.status === 'ACCEPTED')
+        if (acceptedApp) {
+          helperId = acceptedApp.applicantId
+          helperName = acceptedApp.applicantNickname || '未知用户'
+        }
+      }
 
       // 更新评价状态
       reviewInfo.value = {
@@ -709,11 +705,21 @@ async function loadReviewStatus() {
         showHelperReview: statusData.canHelperReview || false,
         publisherHasReviewed: statusData.publisherHasReviewed || false,
         helperHasReviewed: statusData.helperHasReviewed || false,
-        helperId: statusData.helperId || null,
-        helperName: statusData.helperName || ''
+        helperId: helperId,
+        helperName: helperName || ''
       }
 
-      console.log('评价状态已更新:', reviewInfo.value)
+      // 如果有帮助者ID，获取帮助者的头像
+      if (reviewInfo.value.helperId) {
+        try {
+          const userRes = await getUserById(reviewInfo.value.helperId)
+          if (userRes.data.code === 200 && userRes.data.data) {
+            // 可以在这里添加头像信息到reviewInfo中
+          }
+        } catch {
+          console.error('获取帮助者信息失败')
+        }
+      }
     }
   } catch (e) {
     console.error('获取评价状态失败:', e)
@@ -782,7 +788,6 @@ async function handleCancelApplication() {
     }
   ).then(async () => {
     try {
-      console.log(`正在取消申请ID: ${applicationId}...`)
       const res = await cancelApplication(applicationId)
       if (res.data.code === 200) {
         ElMessage.success('申请已取消')
@@ -795,7 +800,6 @@ async function handleCancelApplication() {
         ElMessage.error(res.data.message || '取消申请失败')
       }
     } catch (e: any) {
-      console.error('取消申请失败:', e)
       ElMessage.error(e.message || '取消申请失败')
     }
   }).catch(() => { })
@@ -807,9 +811,6 @@ async function handleApplySuccess() {
   ElMessage.success('申请已提交')
   // 重新检查用户申请状态以更新按钮显示
   await checkUserApplication()
-  // 如果需要，也可以重新获取互助详情和申请列表，以防万一状态有变
-  // await helpInfoStore.fetchDetail(Number(route.params.id))
-  // await fetchApplications()
 }
 
 // 获取申请状态标签
@@ -884,7 +885,6 @@ function formatDate(dateString: string | Date | number) {
       second: '2-digit'
     });
   } catch (error) {
-    console.error('日期格式化错误:', error, dateString);
     return String(dateString);
   }
 }
@@ -903,8 +903,7 @@ function handleApplyClick() {
     authStore.fetchCurrentUser().then(() => {
       // 成功获取用户信息后显示申请对话框
       applyDialogVisible.value = true
-    }).catch(err => {
-      console.error('获取用户信息失败:', err)
+    }).catch(() => {
       ElMessage.error('获取用户信息失败，请重新登录')
     })
   } else {
@@ -921,17 +920,6 @@ function handleApplyClick() {
   padding: 0 20px;
 }
 
-.main-card {
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.main-card:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -941,18 +929,6 @@ function handleApplyClick() {
 .card-header h2 {
   margin: 0;
   font-size: 1.5rem;
-  display: flex;
-  align-items: center;
-  position: relative;
-  padding-left: 12px;
-}
-
-.info-title {
-  position: relative;
-  color: #303133;
-  font-weight: 600;
-  padding-left: 15px;
-  border-left: 4px solid #409EFF;
 }
 
 .error-container {
@@ -960,12 +936,7 @@ function handleApplyClick() {
 }
 
 .info-content {
-  margin-top: 20px;
-}
-
-.info-descriptions {
-  border-radius: 8px;
-  overflow: hidden;
+  margin-top: 10px;
 }
 
 .publisher-info {
@@ -974,22 +945,10 @@ function handleApplyClick() {
   gap: 10px;
 }
 
-.publisher-name {
-  font-weight: 500;
-}
-
-.publisher-avatar {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  border: 2px solid #fff;
-}
-
 .description {
   white-space: pre-line;
   line-height: 1.6;
   margin-top: 5px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 6px;
 }
 
 .message-content {
@@ -1000,13 +959,12 @@ function handleApplyClick() {
 
 .contact-info {
   margin-top: 5px;
-  padding: 6px 10px;
+  padding: 4px 8px;
   background-color: #f0f9eb;
   color: #67c23a;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.9em;
   display: inline-block;
-  box-shadow: 0 2px 4px rgba(103, 194, 58, 0.1);
 }
 
 .action-container {
@@ -1015,33 +973,16 @@ function handleApplyClick() {
   justify-content: center;
 }
 
-.action-btn {
-  transition: all 0.3s;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
 .applications-section,
-.progress-section,
-.review-section {
-  margin-top: 40px;
-  position: relative;
-  padding-top: 10px;
+.progress-section {
+  margin-top: 30px;
 }
 
 .applications-section h3,
-.progress-section h3,
-.review-section h3 {
+.progress-section h3 {
   margin-bottom: 15px;
   font-size: 1.2rem;
-  color: #303133;
-  font-weight: 600;
-  position: relative;
-  padding-left: 15px;
-  border-left: 4px solid #409EFF;
+  color: #606266;
 }
 
 .action-buttons {
@@ -1049,15 +990,6 @@ function handleApplyClick() {
   display: flex;
   gap: 10px;
   justify-content: center;
-}
-
-.action-buttons button {
-  transition: all 0.3s ease;
-}
-
-.action-buttons button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .info-section {
@@ -1073,150 +1005,148 @@ function handleApplyClick() {
 .image-gallery {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
   margin-top: 10px;
 }
 
 .gallery-image {
   width: 120px;
   height: 120px;
-  border-radius: 8px;
+  border-radius: 4px;
   object-fit: cover;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-.gallery-image:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+/* 评价中心相关样式 */
+.review-section {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.review-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: #303133;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-section h3::before {
+  content: "★";
+  color: #FFC107;
+  font-size: 1.1rem;
+}
+
+.reviewer-info {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #ebeef5;
+}
+
+.publisher-helper-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.role-tag {
+  font-size: 0.75rem;
+  padding: 0 8px;
+  height: 20px;
+  line-height: 18px;
+  transform: scale(0.9);
+  transform-origin: left center;
+  margin-left: 4px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  animation: fadeInRight 0.5s ease;
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(10px) scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(0.9);
+  }
 }
 
 .review-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
 }
 
-/* 表格相关样式 */
-.app-table {
-  border-radius: 8px;
+.review-btn,
+.reviewed-btn {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
-  margin-bottom: 20px;
-}
-
-.app-table :deep(th) {
-  background-color: #f5f7fa;
-  color: #303133;
-  font-weight: 600;
-}
-
-.app-table :deep(tr:hover) {
-  background-color: #f0f9ff;
-}
-
-.app-table :deep(.el-table__cell) {
-  padding: 12px 0;
-}
-
-.applicant-name {
-  font-weight: 500;
-  color: #303133;
-}
-
-.status-tag {
-  border-radius: 16px;
-  padding: 0 10px;
-  height: 26px;
-  line-height: 26px;
-  font-size: 12px;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* 按钮样式优化 */
-.status-btn {
-  font-weight: 500;
-  border-radius: 6px;
-}
-
-.apply-btn {
-  border-radius: 20px;
-  padding: 10px 24px;
-  font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
-}
-
-.apply-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-}
-
-.action-group {
-  margin: 0 auto;
-}
-
-.review-btn {
-  min-width: 120px;
-  border-radius: 20px;
-  padding: 10px 20px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .review-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.reviewed-btn {
-  min-width: 120px;
-  border-radius: 20px;
-  padding: 10px 20px;
+.review-btn:hover::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 0.6s ease-out;
 }
 
-/* 响应式样式 */
-@media (max-width: 768px) {
-  .helpinfo-detail-page {
-    padding: 0 15px;
+@keyframes ripple {
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
   }
+}
 
-  .card-header {
+@media screen and (max-width: 576px) {
+  .review-buttons {
     flex-direction: column;
-    gap: 15px;
-    align-items: flex-start;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    align-items: center;
     gap: 10px;
   }
 
-  .review-buttons {
+  .reviewer-info {
+    padding: 10px;
+  }
+
+  .info-row {
     flex-direction: column;
-    align-items: center;
-  }
-}
-
-/* 动画相关样式 */
-.animate-enter {
-  animation: fadeIn 0.5s ease-out;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
+    align-items: flex-start;
+    gap: 5px;
   }
 }
 </style>

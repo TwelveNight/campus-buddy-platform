@@ -26,6 +26,7 @@ public class HelpInfoDetailVO {
     private String status;
     private Integer viewCount;
     private Long acceptedApplicationId; // 已接受的申请ID
+    private String acceptedApplicantNickname; // 已接受申请的申请人昵称
     private Date createdAt;
     private Date updatedAt;
 
@@ -59,7 +60,7 @@ public class HelpInfoDetailVO {
         vo.setAcceptedApplicationId(helpInfo.getAcceptedApplicationId());
         vo.setCreatedAt(helpInfo.getCreatedAt());
         vo.setUpdatedAt(helpInfo.getUpdatedAt());
-
+        // acceptedApplicantNickname 需要在Service层补充赋值
         return vo;
     }
 }

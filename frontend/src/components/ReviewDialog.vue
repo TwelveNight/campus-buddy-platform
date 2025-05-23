@@ -118,8 +118,6 @@ export default defineComponent({
                 }
 
             } catch (error) {
-                console.error('检查评价状态失败', error);
-
                 // 备用方案：使用原有的canReview API
                 try {
                     const canReviewResult = await canReview(
@@ -134,7 +132,6 @@ export default defineComponent({
                         return;
                     }
                 } catch (fallbackError) {
-                    console.error('备用评价状态检查也失败', fallbackError);
                     handleClose();
                 }
             }
@@ -203,31 +200,22 @@ export default defineComponent({
                     moduleType: '互助' // 设置固定值，确保数据完整
                 };
 
-                console.log('提交评价数据:', reviewData);
-
                 const result = await submitReviewApi(reviewData);
 
-                // 适应后端新的响应格式
                 if (result && result.data) {
                     if (result.status === 200 || result.data.success === true) {
                         ElMessage.success('评价提交成功');
                         handleClose();
-                        // 重置表单
                         formData.score = 5;
                         formData.content = '';
-                        // 通知父组件评价已提交
                         emit('review-submitted');
                     } else {
-                        console.error('评价提交失败，服务器响应:', result);
                         ElMessage.error(result.data.message || '评价提交失败，请检查必填字段');
                     }
                 } else {
-                    console.error('评价提交失败，服务器无响应');
                     ElMessage.error('评价提交失败，服务器无响应');
                 }
             } catch (error: any) {
-                console.error('提交评价失败', error);
-                // 显示更详细的错误信息
                 const errorMsg = error.response ?
                     `提交评价失败: ${error.response.status} ${error.response.statusText}` :
                     '提交评价失败，请稍后重试';

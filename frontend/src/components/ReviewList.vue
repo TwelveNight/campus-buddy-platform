@@ -4,24 +4,16 @@
             <el-skeleton :rows="3" animated />
         </div>
         <div v-else-if="reviews.length === 0" class="empty-reviews">
-            <el-empty description="暂无评价" :image-size="100">
-                <template #description>
-                    <div class="empty-text">
-                        <p>暂无评价记录</p>
-                        <p class="empty-tip">完成更多互助任务，获取用户评价</p>
-                    </div>
-                </template>
-            </el-empty>
+            <el-empty description="暂无评价" :image-size="100" />
         </div>
         <div v-else>
             <div class="review-filter" v-if="showFilter">
                 <el-select v-model="filterType" placeholder="评价类型" clearable @change="handleFilterChange">
-                    <el-option label="我收到的评价" value="received"></el-option>
-                    <el-option label="我发出的评价" value="given"></el-option>
+                    <el-option label="我收到的评价" value="received" />
+                    <el-option label="我发出的评价" value="given" />
                 </el-select>
-                <el-rate v-model="filterScore" :colors="scoreColors" :texts="scoreTexts" show-text text-color="#909399"
-                    @change="handleFilterChange" clearable>
-                </el-rate>
+                <el-rate v-model="filterScore" :colors="scoreColors" :texts="scoreTexts" show-text
+                    text-color="#909399" />
             </div>
             <div class="review-list">
                 <div v-for="review in displayedReviews" :key="review.reviewId" class="review-item">
@@ -29,9 +21,26 @@
                         <div class="reviewer-info">
                             <el-avatar :size="42" :src="review.reviewerAvatar || defaultAvatar"></el-avatar>
                             <div class="reviewer-details">
-                                <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' +
-                                    review.reviewerUserId)
-                                }}</span>
+                                <div class="name-role-row">
+                                    <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' +
+                                        review.reviewerUserId)
+                                    }}</span>
+                                    <div class="role-badge"
+                                        :class="getRoleClass(review.reviewType, review.reviewerUserId)">
+                                        <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)"
+                                            placement="top" effect="light">
+                                            <el-tag size="small" effect="dark"
+                                                :type="getUserRoleType(review.reviewType, review.reviewerUserId)"
+                                                class="user-role-tag">
+                                                <span class="role-icon">{{ getRoleIcon(review.reviewType,
+                                                    review.reviewerUserId)
+                                                }}</span>
+                                                {{ getUserRoleLabel(review.reviewType, review.reviewerUserId) }}
+                                            </el-tag>
+                                        </el-tooltip>
+                                        <span class="pulse-dot" v-if="review.reviewerUserId === currentUserId"></span>
+                                    </div>
+                                </div>
                                 <div class="review-module" :class="getModuleClass(review.moduleType)">
                                     <el-tag size="small" effect="light" :type="getModuleTagType(review.moduleType)">
                                         {{ getModuleLabel(review.moduleType) }}
@@ -77,8 +86,6 @@
                         </div>
                     </div>
 
-
-
                     <div class="review-footer">
                         <div class="review-info">
                             <div class="related-task">
@@ -106,26 +113,21 @@
                                     </el-icon>
                                     查看详情
                                 </router-link>
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="pagination" v-if="reviews.length > pageSize">
                 <el-pagination background layout="prev, pager, next" :total="reviews.length" :page-size="pageSize"
-                    :current-page="currentPage" @current-change="handlePageChange"></el-pagination>
+                    :current-page="currentPage" @current-change="handlePageChange" />
             </div>
         </div>
-
-
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineProps, defineEmits, watch } from 'vue';
-import { ElMessage } from 'element-plus';
+import { ref, computed, defineProps, defineEmits } from 'vue';
 import { Clock, ChatRound, Document, Link, View } from '@element-plus/icons-vue';
 import { useAuthStore } from '../store/auth';
 
@@ -142,7 +144,9 @@ interface ReviewItem {
     score: number;
     content?: string;
     createdAt: string | number;
-
+    reviewType?: string; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
+    relatedInfoTitle?: string; // 相关互助信息标题
+    relatedInfoSummary?: string; // 相关互助信息摘要
 }
 
 const props = defineProps({
@@ -275,7 +279,81 @@ function getRelatedLink(review: ReviewItem) {
     return '';
 }
 
+// 获取用户角色类型（标签样式）
+function getUserRoleType(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return 'info';
+    // 判断当前用户是发布者还是帮助者
+    const currentUserId = useAuthStore().user?.userId;
 
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        // 如果是发布者评价帮助者
+        return reviewerUserId === currentUserId ? 'primary' : 'success';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        // 如果是帮助者评价发布者
+        return reviewerUserId === currentUserId ? 'success' : 'primary';
+    }
+
+    return 'info';
+}
+
+// 获取用户角色标签文本
+function getUserRoleLabel(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return '用户';
+
+    const currentUserId = useAuthStore().user?.userId;
+
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        // 发布者评价帮助者的场景
+        return reviewerUserId === currentUserId ? '求助方' : '帮助方';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        // 帮助者评价发布者的场景
+        return reviewerUserId === currentUserId ? '帮助方' : '求助方';
+    }
+
+    return '用户';
+}
+
+// 获取用户角色的CSS类名
+function getRoleClass(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return 'role-default';
+    const currentUserId = useAuthStore().user?.userId;
+
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? 'role-publisher' : 'role-helper';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? 'role-helper' : 'role-publisher';
+    }
+
+    return 'role-default';
+}
+
+// 获取用户角色的图标
+function getRoleIcon(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return '👤';
+    const currentUserId = useAuthStore().user?.userId;
+
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? '📢' : '🤝';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? '🤝' : '📢';
+    }
+
+    return '👤';
+}
+
+// 获取用户角色的提示信息
+function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number): string {
+    if (!reviewType) return '用户角色';
+    const currentUserId = useAuthStore().user?.userId;
+
+    if (reviewType === 'PUBLISHER_TO_HELPER') {
+        return reviewerUserId === currentUserId ? '您是求助方' : '对方是帮助方';
+    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
+        return reviewerUserId === currentUserId ? '您是帮助方' : '对方是求助方';
+    }
+
+    return '用户角色';
+}
 
 function handlePageChange(page: number) {
     currentPage.value = page;
@@ -352,6 +430,13 @@ function handlePageChange(page: number) {
     color: var(--el-text-color-primary);
     font-size: 1.05rem;
     line-height: 1.2;
+}
+
+.name-role-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .review-module {
@@ -472,8 +557,6 @@ function handlePageChange(page: number) {
     padding: 10px;
 }
 
-
-
 .review-footer {
     margin-top: 16px;
 }
@@ -548,8 +631,6 @@ function handlePageChange(page: number) {
     border-radius: 8px;
 }
 
-
-
 /* 模块类型颜色主题 */
 .module-help .el-tag {
     color: #67c23a;
@@ -587,6 +668,95 @@ function handlePageChange(page: number) {
     background-color: rgba(245, 108, 108, 0.1);
 }
 
+/* 角色标签样式 */
+.role-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.role-badge .user-role-tag {
+    padding: 3px 8px;
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.role-icon {
+    font-size: 1rem;
+    line-height: 1;
+    margin-right: 2px;
+}
+
+.role-publisher .user-role-tag {
+    background-color: rgba(64, 158, 255, 0.15);
+    color: #409EFF;
+}
+
+.role-helper .user-role-tag {
+    background-color: rgba(103, 194, 58, 0.15);
+    color: #67C23A;
+}
+
+.role-publisher .user-role-tag:hover,
+.role-helper .user-role-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.role-default .user-role-tag {
+    background-color: rgba(144, 147, 153, 0.15);
+    color: #909399;
+}
+
+.pulse-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    background-color: #67C23A;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(103, 194, 58, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 5px rgba(103, 194, 58, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(103, 194, 58, 0);
+    }
+}
+
 .pagination {
     margin-top: 24px;
     display: flex;
@@ -620,8 +790,6 @@ function handlePageChange(page: number) {
     justify-content: flex-end;
     gap: 10px;
 }
-
-
 
 .dialog-footer {
     display: flex;
@@ -674,5 +842,35 @@ function handlePageChange(page: number) {
         flex-direction: column;
         align-items: flex-start;
     }
+}
+
+/* 用户角色样式 */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.role-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.role-publisher {
+    color: #409eff;
+}
+
+.role-helper {
+    color: #67c23a;
+}
+
+.role-default {
+    color: #909399;
+}
+
+.role-icon {
+    font-size: 1rem;
+    margin-right: 4px;
 }
 </style>
