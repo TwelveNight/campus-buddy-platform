@@ -6,11 +6,18 @@ import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "学习小组帖子接口", description = "学习小组讨论区帖子相关操作")
 @RestController
 @RequestMapping("/api/group-posts")
 public class GroupPostController {
@@ -33,11 +40,12 @@ public class GroupPostController {
     /**
      * 获取小组帖子列表
      */
+    @Operation(summary = "获取小组帖子列表", description = "分页获取指定小组的帖子")
     @GetMapping
     public R<IPage<GroupPost>> getGroupPosts(
-            @RequestParam Long groupId,
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @Parameter(description = "小组ID") @RequestParam Long groupId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize) {
         
         IPage<GroupPost> posts = groupPostService.queryGroupPosts(groupId, pageNum, pageSize);
         return R.ok(posts);
@@ -46,8 +54,9 @@ public class GroupPostController {
     /**
      * 获取帖子详情
      */
+    @Operation(summary = "获取帖子详情")
     @GetMapping("/{postId}")
-    public R<GroupPost> getPostDetail(@PathVariable Long postId) {
+    public R<GroupPost> getPostDetail(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         GroupPost post = groupPostService.getPostDetail(postId);
         if (post == null) {
             return R.fail("帖子不存在");
@@ -58,6 +67,8 @@ public class GroupPostController {
     /**
      * 发表帖子
      */
+    @Operation(summary = "发表帖子", description = "在小组内发表新帖子")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "帖子内容", required = true, content = @Content(schema = @Schema(implementation = GroupPost.class)))
     @PostMapping
     public R<Long> createPost(@RequestBody GroupPost post) {
         User currentUser = getCurrentUser();
@@ -70,8 +81,11 @@ public class GroupPostController {
     /**
      * 更新帖子
      */
+    @Operation(summary = "更新帖子", description = "仅作者可更新帖子内容")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "帖子内容", required = true, content = @Content(schema = @Schema(implementation = GroupPost.class)))
     @PutMapping("/{postId}")
-    public R<Void> updatePost(@PathVariable Long postId, @RequestBody GroupPost post) {
+    public R<Void> updatePost(@Parameter(description = "帖子ID") @PathVariable Long postId,
+                              @RequestBody GroupPost post) {
         User currentUser = getCurrentUser();
         post.setPostId(postId);
         post.setAuthorId(currentUser.getUserId());
@@ -83,8 +97,9 @@ public class GroupPostController {
     /**
      * 删除帖子
      */
+    @Operation(summary = "删除帖子", description = "仅作者可删除帖子")
     @DeleteMapping("/{postId}")
-    public R<Void> deletePost(@PathVariable Long postId) {
+    public R<Void> deletePost(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         User currentUser = getCurrentUser();
         boolean success = groupPostService.deletePost(postId, currentUser.getUserId());
         
@@ -94,8 +109,9 @@ public class GroupPostController {
     /**
      * 点赞帖子
      */
+    @Operation(summary = "点赞帖子")
     @PostMapping("/{postId}/like")
-    public R<Void> likePost(@PathVariable Long postId) {
+    public R<Void> likePost(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         User currentUser = getCurrentUser();
         boolean success = groupPostService.likePost(postId, currentUser.getUserId());
         
@@ -105,8 +121,9 @@ public class GroupPostController {
     /**
      * 取消点赞
      */
+    @Operation(summary = "取消点赞")
     @PostMapping("/{postId}/unlike")
-    public R<Void> unlikePost(@PathVariable Long postId) {
+    public R<Void> unlikePost(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         User currentUser = getCurrentUser();
         boolean success = groupPostService.unlikePost(postId, currentUser.getUserId());
         

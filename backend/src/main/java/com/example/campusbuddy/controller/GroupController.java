@@ -9,6 +9,9 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupMemberService;
 import com.example.campusbuddy.service.GroupService;
 import com.example.campusbuddy.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "学习小组接口", description = "学习小组相关操作")
 @RestController
 @RequestMapping("/api/groups")
 public class GroupController {
@@ -44,8 +48,9 @@ public class GroupController {
     /**
      * 创建学习小组
      */
+    @Operation(summary = "创建学习小组", description = "创建一个新的学习小组，当前用户为创建者。返回新建小组ID。")
     @PostMapping
-    public R<Long> createGroup(@RequestBody Group group) {
+    public R<Long> createGroup(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "小组信息（JSON）", required = true) @RequestBody Group group) {
         User currentUser = getCurrentUser();
         group.setCreatorId(currentUser.getUserId());
         
@@ -56,13 +61,14 @@ public class GroupController {
     /**
      * 获取小组列表（分页）
      */
+    @Operation(summary = "获取小组列表", description = "分页获取小组列表，可按分类、标签、关键字过滤。返回分页数据。\n参数说明：\n- category: 小组分类\n- tag: 小组标签\n- keyword: 搜索关键字\n- pageNum: 页码\n- pageSize: 每页数量")
     @GetMapping
     public R<IPage<Group>> getGroups(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) String tag,
-            @RequestParam(required = false) String keyword) {
+            @Parameter(description = "页码，默认1") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页数量，默认10") @RequestParam(defaultValue = "10") Integer pageSize,
+            @Parameter(description = "小组分类，可选") @RequestParam(required = false) String category,
+            @Parameter(description = "小组标签，可选") @RequestParam(required = false) String tag,
+            @Parameter(description = "搜索关键字，可选") @RequestParam(required = false) String keyword) {
         
         IPage<Group> groupPage = groupService.queryGroups(pageNum, pageSize, category, tag, keyword);
         return R.ok(groupPage);
@@ -71,8 +77,9 @@ public class GroupController {
     /**
      * 获取小组详情
      */
+    @Operation(summary = "获取小组详情", description = "根据小组ID获取详细信息。返回Group对象。")
     @GetMapping("/{groupId}")
-    public R<Group> getGroupDetail(@PathVariable Long groupId) {
+    public R<Group> getGroupDetail(@Parameter(description = "小组ID") @PathVariable Long groupId) {
         Group group = groupService.getGroupDetail(groupId);
         if (group == null) {
             return R.fail("小组不存在");
@@ -83,8 +90,11 @@ public class GroupController {
     /**
      * 更新小组信息
      */
+    @Operation(summary = "更新小组信息", description = "仅小组创建者可更新小组信息。传入Group对象，groupId为路径参数。")
     @PutMapping("/{groupId}")
-    public R<Void> updateGroup(@PathVariable Long groupId, @RequestBody Group group) {
+    public R<Void> updateGroup(
+            @Parameter(description = "小组ID") @PathVariable Long groupId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "小组信息（JSON）", required = true) @RequestBody Group group) {
         User currentUser = getCurrentUser();
         
         // 验证是否有权限更新
@@ -106,8 +116,9 @@ public class GroupController {
     /**
      * 解散小组
      */
+    @Operation(summary = "解散小组", description = "仅小组创建者可解散小组。操作成功后小组及成员关系将被删除。")
     @DeleteMapping("/{groupId}")
-    public R<Void> disbandGroup(@PathVariable Long groupId) {
+    public R<Void> disbandGroup(@Parameter(description = "小组ID") @PathVariable Long groupId) {
         User currentUser = getCurrentUser();
         boolean success = groupService.disbandGroup(groupId, currentUser.getUserId());
         
@@ -115,8 +126,9 @@ public class GroupController {
     }
 
     /**
-     * 获取用户创建的小组
+     * 获取当前用户创建的小组列表
      */
+    @Operation(summary = "获取当前用户创建的小组列表", description = "返回当前用户作为创建者的小组列表。")
     @GetMapping("/created")
     public R<List<Group>> getCreatedGroups() {
         User currentUser = getCurrentUser();
@@ -125,8 +137,9 @@ public class GroupController {
     }
 
     /**
-     * 获取用户加入的小组
+     * 获取当前用户加入的小组列表
      */
+    @Operation(summary = "获取当前用户加入的小组列表", description = "返回当前用户已加入的小组列表。")
     @GetMapping("/joined")
     public R<List<Group>> getJoinedGroups() {
         User currentUser = getCurrentUser();
@@ -137,8 +150,9 @@ public class GroupController {
     /**
      * 加入小组
      */
+    @Operation(summary = "加入小组", description = "当前用户申请加入指定小组。公开小组直接加入，私有小组需审批。\n返回：\n- 公开小组：成功加入\n- 私有小组：等待审核")
     @PostMapping("/{groupId}/join")
-    public R<Void> joinGroup(@PathVariable Long groupId) {
+    public R<Void> joinGroup(@Parameter(description = "小组ID") @PathVariable Long groupId) {
         User currentUser = getCurrentUser();
         
         // 检查小组是否存在
@@ -181,8 +195,9 @@ public class GroupController {
     /**
      * 退出小组
      */
+    @Operation(summary = "退出小组", description = "当前用户退出指定小组。小组创建者不能直接退出。")
     @PostMapping("/{groupId}/quit")
-    public R<Void> quitGroup(@PathVariable Long groupId) {
+    public R<Void> quitGroup(@Parameter(description = "小组ID") @PathVariable Long groupId) {
         User currentUser = getCurrentUser();
         
         // 检查是否是小组成员
@@ -217,8 +232,11 @@ public class GroupController {
     /**
      * 审批加入申请
      */
+    @Operation(summary = "审批加入申请", description = "小组创建者或管理员审批用户加入小组的申请。\n参数：groupId-小组ID，userId-申请用户ID")
     @PostMapping("/{groupId}/members/{userId}/approve")
-    public R<Void> approveJoinRequest(@PathVariable Long groupId, @PathVariable Long userId) {
+    public R<Void> approveJoinRequest(
+            @Parameter(description = "小组ID") @PathVariable Long groupId,
+            @Parameter(description = "用户ID") @PathVariable Long userId) {
         User currentUser = getCurrentUser();
         
         // 检查当前用户是否有权限审批（创建者或管理员）
@@ -259,8 +277,11 @@ public class GroupController {
     /**
      * 拒绝加入申请
      */
+    @Operation(summary = "拒绝加入申请", description = "小组创建者或管理员拒绝用户加入小组的申请。\n参数：groupId-小组ID，userId-申请用户ID")
     @PostMapping("/{groupId}/members/{userId}/reject")
-    public R<Void> rejectJoinRequest(@PathVariable Long groupId, @PathVariable Long userId) {
+    public R<Void> rejectJoinRequest(
+            @Parameter(description = "小组ID") @PathVariable Long groupId,
+            @Parameter(description = "用户ID") @PathVariable Long userId) {
         User currentUser = getCurrentUser();
         
         // 检查当前用户是否有权限审批
@@ -288,8 +309,9 @@ public class GroupController {
     /**
      * 获取小组成员列表
      */
+    @Operation(summary = "获取小组成员列表", description = "根据小组ID获取成员列表。返回GroupMember列表。")
     @GetMapping("/{groupId}/members")
-    public R<List<GroupMember>> getGroupMembers(@PathVariable Long groupId) {
+    public R<List<GroupMember>> getGroupMembers(@Parameter(description = "小组ID") @PathVariable Long groupId) {
         LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupMember::getGroupId, groupId);
         
@@ -300,8 +322,11 @@ public class GroupController {
     /**
      * 设置小组管理员
      */
+    @Operation(summary = "设置小组管理员", description = "仅小组创建者可将成员设为管理员。\n参数：groupId-小组ID，userId-成员ID")
     @PostMapping("/{groupId}/members/{userId}/set-admin")
-    public R<Void> setAdmin(@PathVariable Long groupId, @PathVariable Long userId) {
+    public R<Void> setAdmin(
+            @Parameter(description = "小组ID") @PathVariable Long groupId,
+            @Parameter(description = "用户ID") @PathVariable Long userId) {
         User currentUser = getCurrentUser();
         
         // 检查当前用户是否是创建者
@@ -335,8 +360,11 @@ public class GroupController {
     /**
      * 取消小组管理员
      */
+    @Operation(summary = "取消小组管理员", description = "仅小组创建者可取消管理员身份。\n参数：groupId-小组ID，userId-成员ID")
     @PostMapping("/{groupId}/members/{userId}/cancel-admin")
-    public R<Void> cancelAdmin(@PathVariable Long groupId, @PathVariable Long userId) {
+    public R<Void> cancelAdmin(
+            @Parameter(description = "小组ID") @PathVariable Long groupId,
+            @Parameter(description = "用户ID") @PathVariable Long userId) {
         User currentUser = getCurrentUser();
         
         // 检查当前用户是否是创建者
@@ -370,8 +398,11 @@ public class GroupController {
     /**
      * 移除小组成员
      */
+    @Operation(summary = "移除小组成员", description = "小组创建者或管理员移除指定成员。\n参数：groupId-小组ID，userId-成员ID。管理员不能移除其他管理员。")
     @DeleteMapping("/{groupId}/members/{userId}")
-    public R<Void> removeMember(@PathVariable Long groupId, @PathVariable Long userId) {
+    public R<Void> removeMember(
+            @Parameter(description = "小组ID") @PathVariable Long groupId,
+            @Parameter(description = "用户ID") @PathVariable Long userId) {
         User currentUser = getCurrentUser();
         
         // 检查当前用户是否有权限（创建者或管理员）
@@ -423,6 +454,7 @@ public class GroupController {
     /**
      * 获取小组统计信息
      */
+    @Operation(summary = "获取小组统计信息", description = "返回当前用户的小组相关统计数据，包括创建数、加入数、各状态数量等。")
     @GetMapping("/stats")
     public R<Map<String, Object>> getGroupStats() {
         User currentUser = getCurrentUser();
