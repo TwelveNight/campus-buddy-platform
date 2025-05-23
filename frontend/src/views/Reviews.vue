@@ -167,9 +167,10 @@
                     <div v-else>
                         <ReviewList :reviews="displayedReviews.map(r => ({
                             reviewId: r.reviewId || 0,
-                            reviewedUserId: r.reviewedUserId,
                             reviewerUserId: r.reviewerUserId,
                             reviewerNickname: r.reviewerNickname,
+                            reviewedUserId: r.reviewedUserId,
+                            reviewedNickname: r.reviewedNickname,
                             reviewerAvatar: r.reviewerAvatar,
                             relatedInfoId: r.relatedInfoId,
                             relatedInfoTitle: r.relatedInfoTitle,
@@ -177,7 +178,8 @@
                             moduleType: r.moduleType,
                             score: r.score,
                             content: r.content,
-                            createdAt: r.createdAt || Date.now()
+                            createdAt: r.createdAt || Date.now(),
+                            reviewType: r.reviewType,
                         }))" :loading="loading" :showFilter="false" />
 
                         <div class="pagination" v-if="totalItems > 0">

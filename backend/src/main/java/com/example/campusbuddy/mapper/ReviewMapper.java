@@ -10,10 +10,6 @@ import java.util.List;
 
 @Mapper
 public interface ReviewMapper extends BaseMapper<Review> {
-    List<ReviewVO> selectReviewVOsByHelpId(@Param("helpId") Long helpId);
-
-    List<ReviewVO> selectReviewVOsByUserId(@Param("userId") Long userId);
-
     List<ReviewVO> selectReviewVOsForPage(@Param("userId") Long userId,
             @Param("type") String type,
             @Param("score") Integer score,

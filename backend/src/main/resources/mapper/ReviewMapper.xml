@@ -3,10 +3,22 @@
 <mapper namespace="com.example.campusbuddy.mapper.ReviewMapper">
 
     <select id="selectReviewVOsForPage" resultType="com.example.campusbuddy.vo.ReviewVO">
-        SELECT r.*, u.nickname AS reviewer_nickname, u.avatar_url AS reviewer_avatar,
-               h.title AS related_info_title, h.description AS related_info_summary
+        SELECT r.*, 
+               u1.nickname AS reviewer_nickname, u1.avatar_url AS reviewer_avatar,
+               u2.nickname AS reviewed_nickname,
+               h.title AS related_info_title, h.description AS related_info_summary,
+               CASE 
+                 WHEN r.reviewer_user_id = #{userId} THEN u2.nickname  -- 如果是我发出的评价，对方是被评价者
+                 WHEN r.reviewed_user_id = #{userId} THEN u1.nickname  -- 如果是我收到的评价，对方是评价者  
+                 ELSE '昵称未知'
+               END AS opposite_nickname,
+               CASE 
+                 WHEN r.reviewer_user_id = #{userId} THEN r.reviewed_user_id
+                 ELSE r.reviewer_user_id
+               END AS opposite_user_id
         FROM review r
-        LEFT JOIN user u ON r.reviewer_user_id = u.user_id
+        LEFT JOIN user u1 ON r.reviewer_user_id = u1.user_id
+        LEFT JOIN user u2 ON r.reviewed_user_id = u2.user_id
         LEFT JOIN help_info h ON r.related_info_id = h.info_id
         <where>
             <choose>

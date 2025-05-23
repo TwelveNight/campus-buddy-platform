@@ -3,16 +3,20 @@ import request from '../utils/request';
 // 评价对象的类型定义
 export interface Review {
   reviewId?: number;
-  reviewedUserId: number;
+  reviewerNickname?: string;
+  reviewerAvatar?: string;
   reviewerUserId: number;
+  reviewedUserId: number;
+  reviewedNickname?: string;
+  reviewedAvatar?: string;
   relatedInfoId: number;
   score: number;
   content?: string;
   createdAt?: string;
-  reviewerNickname?: string;
-  reviewerAvatar?: string;
   moduleType?: string; // 例如：'互助', '学习小组', '资源共享'
   reviewType?: string; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
+  relatedInfoTitle?: string; // 相关互助信息标题
+  relatedInfoSummary?: string; // 相关互助信息摘要
 }
 
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="review-list-component">
+    <div class="review-list-comp">
         <div v-if="loading" class="loading-container">
             <el-skeleton :rows="3" animated />
         </div>
@@ -24,7 +24,7 @@
                                 <div class="name-role-row">
                                     <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' +
                                         review.reviewerUserId)
-                                    }}</span>
+                                        }}</span>
                                     <div class="role-badge"
                                         :class="getRoleClass(review.reviewType, review.reviewerUserId)">
                                         <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)"
@@ -34,12 +34,19 @@
                                                 class="user-role-tag">
                                                 <span class="role-icon">{{ getRoleIcon(review.reviewType,
                                                     review.reviewerUserId)
-                                                }}</span>
+                                                    }}</span>
                                                 {{ getUserRoleLabel(review.reviewType, review.reviewerUserId) }}
                                             </el-tag>
                                         </el-tooltip>
                                         <span class="pulse-dot" v-if="review.reviewerUserId === currentUserId"></span>
                                     </div>
+                                </div>
+                                <div class="review-opposite-info">
+                                    <el-tag size="small" effect="plain" type="info">
+                                        <span>
+                                            评价对象：<b>{{ getReviewedNickname(review) }}</b>
+                                        </span>
+                                    </el-tag>
                                 </div>
                                 <div class="review-module" :class="getModuleClass(review.moduleType)">
                                     <el-tag size="small" effect="light" :type="getModuleTagType(review.moduleType)">
@@ -138,6 +145,7 @@ interface ReviewItem {
     reviewerUserId: number;
     reviewerNickname?: string;
     reviewerAvatar?: string;
+    reviewedNickname?: string; // 被评价者昵称
     relatedInfoId: number;
     moduleType?: string; // 例如：'互助', '学习小组', '资源共享'
     helpInfo?: any;
@@ -167,6 +175,7 @@ const props = defineProps({
         default: true
     }
 });
+
 
 const emit = defineEmits(['filter']);
 
@@ -217,6 +226,13 @@ function formatDate(date: string | number) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+// 获取被评价者的昵称
+function getReviewedNickname(review: ReviewItem): string {
+    console.log('getReviewedNickname', review);
+    if (!review) return '昵称未知';
+    return review.reviewedNickname || '昵称未知';
 }
 
 // 获取模块类型对应的标签类型
@@ -437,6 +453,10 @@ function handlePageChange(page: number) {
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.review-opposite-info {
+    margin-top: 8px;
 }
 
 .review-module {
@@ -801,7 +821,7 @@ function handlePageChange(page: number) {
 /* 确保对话框正确显示 */
 :deep(.el-overlay) {
     position: fixed;
-    /* 固定定位，防止对页面布局产生影响 */
+    /* 固定定位，防止对话框位置偏移 */
     z-index: 2000;
     /* 确保在其他元素之上 */
 }

@@ -10,6 +10,7 @@ public class ReviewVO {
     private Long reviewerUserId;
     private String reviewerNickname;
     private String reviewerAvatar;
+    private String reviewedNickname; // 被评价者昵称
     private Long relatedInfoId;
     private String relatedInfoTitle; // 互助标题
     private String relatedInfoSummary; // 互助简介
@@ -17,4 +18,5 @@ public class ReviewVO {
     private String content;
     private String moduleType;
     private Date createdAt;
+    private String reviewType; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
 }

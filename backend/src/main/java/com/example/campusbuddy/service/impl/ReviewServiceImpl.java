@@ -264,9 +264,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (items != null && !items.isEmpty()) {
             log.info("查询到{}条评价", items.size());
             ReviewVO first = items.get(0);
-            log.info("第一条评价: reviewId={}, reviewerUserId={}, reviewedUserId={}, reviewType={}, oppositeNickname={}", 
+            log.info("第一条评价: reviewId={}, reviewerUserId={}, reviewedUserId={}, reviewType={}, reviewedNickname={}",
                      first.getReviewId(), first.getReviewerUserId(), first.getReviewedUserId(),
-                     first.getReviewType(), first.getOppositeNickname());
+                     first.getReviewType(), first.getReviewedNickname());
             
             // 关键检查: 当type=received时，检查评价人是否正确
             if ("received".equals(type)) {
