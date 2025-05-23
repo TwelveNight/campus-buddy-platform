@@ -30,6 +30,7 @@
                         <el-menu-item index="/helpinfo/publish" v-if="authStore.isAuthenticated">
                             发布互助
                         </el-menu-item>
+                        <el-menu-item index="/my/helpinfo">我的互助</el-menu-item>
                     </el-sub-menu>
 
                     <!-- 我的中心 -->
@@ -81,6 +82,11 @@
                                         <el-icon>
                                             <Document />
                                         </el-icon>我的申请
+                                    </el-dropdown-item>
+                                    <el-dropdown-item @click="$router.push('/reviews')">
+                                        <el-icon>
+                                            <Document />
+                                        </el-icon>我的评价
                                     </el-dropdown-item>
                                     <el-dropdown-item divided @click="handleLogout">
                                         <el-icon>
