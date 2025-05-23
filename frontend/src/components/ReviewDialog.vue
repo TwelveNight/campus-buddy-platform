@@ -197,7 +197,7 @@ export default defineComponent({
                     score: formData.score,
                     content: formData.content || '',  // 确保不为undefined
                     reviewType: props.reviewType,
-                    moduleType: '互助' // 设置固定值，确保数据完整
+                    moduleType: 'HELP' // 设置固定值，确保数据完整
                 };
 
                 const result = await submitReviewApi(reviewData);

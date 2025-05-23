@@ -116,7 +116,7 @@
                                     <span class="filter-label">模块类型：</span>
                                     <el-select v-model="moduleFilter" placeholder="选择模块类型" clearable
                                         @change="applyFilters" style="width: 100%">
-                                        <el-option label="互助信息" value="HELP"></el-option>
+                                        <el-option label="互助服务" value="HELP"></el-option>
                                         <el-option label="学习小组" value="GROUP"></el-option>
                                         <el-option label="资源共享" value="RESOURCE"></el-option>
                                     </el-select>
