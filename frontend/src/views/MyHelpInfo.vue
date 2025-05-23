@@ -581,13 +581,24 @@ async function handleReviewSubmitted() {
 
     if (currentSelectedInfo.value) {
         if (currentSelectedInfo.value.reviewType === 'PUBLISHER_TO_HELPER' && currentSelectedInfo.value.helpInfoId) {
-            ElMessage.success('你已成功评价帮助者');
             // 重新加载发布的互助数据（从后端获取最新评价状态）
             await loadMyPublishedHelpInfo();
-        } else if (currentSelectedInfo.value.reviewType === 'HELPER_TO_PUBLISHER' && currentSelectedInfo.value.applicationId) {
-            ElMessage.success('你已成功评价发布者');
+        } else if (currentSelectedInfo.value.reviewType === 'HELPER_TO_PUBLISHER' && currentSelectedInfo.value.helpInfoId) {
             // 重新加载申请的互助数据（从后端获取最新评价状态）
+            // 先清空列表，确保UI显示加载状态
+            appliedList.value = [];
+            // 强制重新获取评价状态
             await loadMyApplications();
+
+            // 立即更新当前项的评价状态，提供更好的用户体验
+            if (currentSelectedInfo.value.applicationId) {
+                const appId = currentSelectedInfo.value.applicationId;
+                const updatedApp = appliedList.value.find(item => (item.id === appId || item.applicationId === appId));
+                if (updatedApp) {
+                    updatedApp.helperHasReviewed = true;
+                    updatedApp.canHelperReview = false;
+                }
+            }
         }
     }
 
