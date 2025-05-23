@@ -743,19 +743,14 @@ function openHelperReview() {
 }
 
 // 评价提交后刷新状态
-function onReviewSubmitted() {
+async function onReviewSubmitted() {
   reviewDialogVisible.value = false
   ElMessage.success('评价成功！')
 
-  // 根据当前评价类型更新状态
-  if (currentReviewType.value === 'PUBLISHER_TO_HELPER') {
-    reviewInfo.value.publisherHasReviewed = true
-  } else {
-    reviewInfo.value.helperHasReviewed = true
-  }
-
-  // 重新获取评价状态
-  loadReviewStatus()
+  // 重新获取互助详情和评价状态，确保最新
+  const id = Number(route.params.id)
+  await helpInfoStore.fetchDetail(id)
+  await loadReviewStatus()
 }
 
 // 处理取消申请
