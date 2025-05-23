@@ -11,6 +11,7 @@ import com.example.campusbuddy.mapper.GroupMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
 import com.example.campusbuddy.mapper.GroupPostMapper;
 import com.example.campusbuddy.service.GroupPostService;
+import com.example.campusbuddy.service.PostLikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -121,31 +122,54 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         return getById(postId);
     }
 
+    @Autowired
+    private PostLikeService postLikeService;
+    
     @Override
     public boolean likePost(Long postId, Long userId) {
-        // 在实际应用中，这里应该先检查用户是否已经点过赞
-        // 为简化代码，这里直接增加点赞数
+        // 检查帖子是否存在
         GroupPost post = getById(postId);
         if (post == null) {
             return false;
         }
         
-        post.setLikeCount(post.getLikeCount() + 1);
-        post.setUpdatedAt(new Date());
-        return updateById(post);
+        // 检查用户是否已经点赞过
+        if (postLikeService.isLiked(postId, userId)) {
+            return false; // 已经点赞过，不能重复点赞
+        }
+        
+        // 添加点赞记录
+        boolean success = postLikeService.addLike(postId, userId);
+        if (success) {
+            // 更新帖子的点赞数
+            post.setLikeCount(post.getLikeCount() + 1);
+            post.setUpdatedAt(new Date());
+            updateById(post);
+        }
+        return success;
     }
 
     @Override
     public boolean unlikePost(Long postId, Long userId) {
-        // 在实际应用中，这里应该先检查用户是否已经点过赞
-        // 为简化代码，这里直接减少点赞数
+        // 检查帖子是否存在
         GroupPost post = getById(postId);
         if (post == null || post.getLikeCount() <= 0) {
             return false;
         }
         
-        post.setLikeCount(post.getLikeCount() - 1);
-        post.setUpdatedAt(new Date());
-        return updateById(post);
+        // 检查用户是否点赞过
+        if (!postLikeService.isLiked(postId, userId)) {
+            return false; // 没有点赞过，不能取消点赞
+        }
+        
+        // 移除点赞记录
+        boolean success = postLikeService.removeLike(postId, userId);
+        if (success) {
+            // 更新帖子的点赞数
+            post.setLikeCount(post.getLikeCount() - 1);
+            post.setUpdatedAt(new Date());
+            updateById(post);
+        }
+        return success;
     }
 }

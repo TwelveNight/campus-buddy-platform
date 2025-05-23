@@ -5,6 +5,7 @@ import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostService;
+import com.example.campusbuddy.service.PostLikeService;
 import com.example.campusbuddy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +30,9 @@ public class GroupPostController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private PostLikeService postLikeService;
 
     private static final Logger log = LoggerFactory.getLogger(GroupPostController.class);
 
@@ -148,9 +152,7 @@ public class GroupPostController {
         boolean success = groupPostService.deletePost(postId, currentUser.getUserId());
 
         return success ? R.ok("帖子删除成功", null) : R.fail("删除失败，请确认您有权限删除该帖子");
-    }
-
-    /**
+    }    /**
      * 点赞帖子
      */
     @Operation(summary = "点赞帖子")
@@ -158,8 +160,10 @@ public class GroupPostController {
     public R<Void> likePost(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         User currentUser = getCurrentUser();
         boolean success = groupPostService.likePost(postId, currentUser.getUserId());
-
-        return success ? R.ok("点赞成功", null) : R.fail("点赞失败");
+        
+        return success ? 
+            R.ok("点赞成功", null) : 
+            R.fail("点赞失败，可能您已经点过赞或帖子不存在");
     }
 
     /**
@@ -170,7 +174,21 @@ public class GroupPostController {
     public R<Void> unlikePost(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         User currentUser = getCurrentUser();
         boolean success = groupPostService.unlikePost(postId, currentUser.getUserId());
+        
+        return success ? 
+            R.ok("已取消点赞", null) : 
+            R.fail("取消点赞失败，可能您未曾点赞或帖子不存在");
+    }
 
-        return success ? R.ok("已取消点赞", null) : R.fail("取消点赞失败");
+    /**
+     * 获取用户对帖子的点赞状态
+     */
+    @Operation(summary = "获取点赞状态", description = "检查当前用户是否已点赞该帖子")
+    @GetMapping("/{postId}/like-status")
+    public R<Boolean> getLikeStatus(@Parameter(description = "帖子ID") @PathVariable Long postId) {
+        User currentUser = getCurrentUser();
+        boolean isLiked = postLikeService.isLiked(postId, currentUser.getUserId());
+        
+        return R.ok(isLiked);
     }
 }
