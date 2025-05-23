@@ -1,31 +1,32 @@
 <template>
   <div class="helpinfo-detail-page">
-    <el-card v-loading="loading">
+    <el-card v-loading="loading" class="main-card animate-enter">
       <template #header>
         <div class="card-header">
-          <h2>{{ info?.title || '互助信息详情' }}</h2>
+          <h2 class="info-title">📄 {{ info?.title || '互助信息详情' }}</h2>
           <div class="header-actions" v-if="info && isPublisher">
             <el-button-group>
-              <el-button size="small" type="primary" :disabled="!canChangeStatus"
-                @click="statusDialogVisible = true">修改状态</el-button>
-              <el-button size="small" :disabled="!canEdit" @click="handleEdit">编辑</el-button>
-              <el-button size="small" type="danger" :disabled="!canDelete" @click="confirmDelete">删除</el-button>
+              <el-button size="small" type="primary" :disabled="!canChangeStatus" @click="statusDialogVisible = true"
+                icon="Edit">修改状态</el-button>
+              <el-button size="small" :disabled="!canEdit" @click="handleEdit" icon="Edit">编辑</el-button>
+              <el-button size="small" type="danger" :disabled="!canDelete" @click="confirmDelete"
+                icon="Delete">删除</el-button>
             </el-button-group>
           </div>
         </div>
       </template>
 
-      <div v-if="error" class="error-container">
+      <div v-if="error" class="error-container animate-enter">
         <el-alert :title="error" type="error" :closable="false" />
       </div>
 
-      <div v-else-if="info" class="info-content">
-        <el-descriptions :column="2" border>
+      <div v-else-if="info" class="info-content animate-enter">
+        <el-descriptions :column="2" border class="info-descriptions">
           <el-descriptions-item label="发布者">
             <div class="publisher-info">
-              <el-avatar :size="30"
+              <el-avatar :size="36" class="publisher-avatar"
                 :src="info.publisherAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-              <span>{{ info.publisherName }}</span>
+              <span class="publisher-name">{{ info.publisherName }}</span>
             </div>
           </el-descriptions-item>
           <el-descriptions-item label="发布时间">{{ formatDate(info.createdAt) }}</el-descriptions-item>
@@ -53,10 +54,14 @@
         </el-descriptions>
 
         <!-- 申请列表 - 仅发布者可见 -->
-        <div class="applications-section" v-if="isPublisher && applications.length > 0">
+        <div class="applications-section animate-enter" v-if="isPublisher && applications.length > 0">
           <h3>申请列表</h3>
-          <el-table :data="applications" style="width: 100%">
-            <el-table-column prop="applicantNickname" label="申请人" width="120"></el-table-column>
+          <el-table :data="applications" style="width: 100%" class="app-table">
+            <el-table-column prop="applicantNickname" label="申请人" width="120">
+              <template #default="scope">
+                <div class="applicant-name">{{ scope.row.applicantNickname }}</div>
+              </template>
+            </el-table-column>
             <el-table-column prop="message" label="申请消息" min-width="220">
               <template #default="scope">
                 <div class="message-content" v-html="formatMessage(scope.row.message)"></div>
@@ -64,7 +69,7 @@
             </el-table-column>
             <el-table-column prop="status" label="状态" width="100">
               <template #default="scope">
-                <el-tag :type="getApplicationStatusType(scope.row.status)">
+                <el-tag :type="getApplicationStatusType(scope.row.status)" class="status-tag">
                   {{ getApplicationStatusLabel(scope.row.status) }}
                 </el-tag>
               </template>
@@ -86,45 +91,58 @@
         </div>
 
         <!-- 进度信息 - 当互助信息状态为处理中时显示 -->
-        <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
+        <div class="progress-section animate-enter" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
           <h3>处理进度</h3>
           <el-alert title="此互助信息正在处理中" type="warning" :closable="false"
             :description="`由 ${acceptedApplication.applicantNickname} 提供帮助`">
           </el-alert>
+          
+          <div class="helper-info" v-if="acceptedApplication">
+            <div class="helper-profile">
+              <el-avatar :size="40" class="helper-avatar"
+                :src="acceptedApplication.applicantAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
+              <div class="helper-details">
+                <div class="helper-name">帮助者：{{ acceptedApplication.applicantNickname }}</div>
+                <div class="helper-status"><el-tag size="small" type="success">当前帮助中</el-tag></div>
+              </div>
+            </div>
+          </div>
 
           <div class="action-buttons" v-if="isPublisher">
-            <el-button type="success" @click="handleComplete">标记为已解决</el-button>
-            <el-button @click="confirmCancel">取消合作</el-button>
+            <el-button type="success" @click="handleComplete" class="action-btn" icon="Check">标记为已解决</el-button>
+            <el-button @click="confirmCancel" class="action-btn" icon="Close">取消合作</el-button>
           </div>
         </div>
 
         <!-- 操作按钮 - 非发布者且互助信息状态为进行中可见 -->
-        <div class="action-container" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
+        <div class="action-container animate-enter" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
           <!-- 错误信息 -->
           <el-alert v-if="!hasToken" title="请先登录" type="warning" show-icon :closable="false"
             style="margin-bottom: 10px" />
 
           <template v-if="hasApplied && myApplication">
-            <el-button-group>
+            <el-button-group class="action-group">
               <template v-if="myApplication.status === 'PENDING'">
-                <el-button type="info">申请处理中</el-button>
-                <el-button @click="handleCancelApplication">取消申请</el-button>
+                <el-button type="info" class="status-btn" icon="InfoFilled">申请处理中</el-button>
+                <el-button @click="handleCancelApplication" class="action-btn" icon="Close">取消申请</el-button>
               </template>
               <template v-else-if="myApplication.status === 'ACCEPTED'">
-                <el-button type="success">已被接受</el-button>
+                <el-button type="success" class="status-btn" icon="Check">已被接受</el-button>
               </template>
               <template v-else-if="myApplication.status === 'REJECTED'">
-                <el-button type="danger">已被拒绝</el-button>
-                <el-button @click="applyDialogVisible = true">重新申请</el-button>
+                <el-button type="danger" class="status-btn" icon="CircleClose">已被拒绝</el-button>
+                <el-button @click="applyDialogVisible = true" class="action-btn" icon="Refresh">重新申请</el-button>
               </template>
               <template v-else-if="myApplication.status === 'CANCELED'">
-                <el-button type="info" disabled style="margin-right: 10px;">已取消</el-button>
-                <el-button type="primary" @click="applyDialogVisible = true">重新申请</el-button>
+                <el-button type="info" disabled class="status-btn" style="margin-right: 10px;"
+                  icon="InfoFilled">已取消</el-button>
+                <el-button type="primary" @click="applyDialogVisible = true" class="action-btn"
+                  icon="Refresh">重新申请</el-button>
               </template>
             </el-button-group>
           </template>
           <template v-else>
-            <el-button type="primary" @click="handleApplyClick">申请帮助</el-button>
+            <el-button type="primary" @click="handleApplyClick" class="apply-btn" icon="Connection">申请帮助</el-button>
           </template>
         </div>
 
@@ -143,22 +161,24 @@
         </div>
 
         <!-- 评价入口：支持双向评价 -->
-        <div class="review-section" v-if="reviewInfo.showPublisherReview || reviewInfo.showHelperReview">
+        <div class="review-section animate-enter" v-if="reviewInfo.showPublisherReview || reviewInfo.showHelperReview">
           <h3>评价中心</h3>
           <div class="review-buttons">
             <!-- 发布者评价帮助者 -->
-            <el-button v-if="reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview">
+            <el-button v-if="reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview"
+              class="review-btn" icon="Star">
               评价帮助者
             </el-button>
-            <el-button v-if="reviewInfo.publisherHasReviewed" type="info" disabled>
+            <el-button v-if="reviewInfo.publisherHasReviewed" type="info" disabled class="reviewed-btn" icon="Check">
               已评价帮助者
             </el-button>
 
             <!-- 帮助者评价发布者 -->
-            <el-button v-if="reviewInfo.showHelperReview" type="success" @click="openHelperReview">
+            <el-button v-if="reviewInfo.showHelperReview" type="success" @click="openHelperReview" class="review-btn"
+              icon="Star">
               评价发布者
             </el-button>
-            <el-button v-if="reviewInfo.helperHasReviewed" type="info" disabled>
+            <el-button v-if="reviewInfo.helperHasReviewed" type="info" disabled class="reviewed-btn" icon="Check">
               已评价发布者
             </el-button>
           </div>
@@ -214,11 +234,11 @@ import {
   cancelApplication,
   closeHelpInfo // Ensure closeHelpInfo is imported
 } from '../api/helpApplication'
-import { deleteHelpInfo, incrementHelpInfoViewCount, updateHelpInfo } from '../api/helpinfo'
+import { deleteHelpInfo, incrementHelpInfoViewCount } from '../api/helpinfo'
 import { getUserById } from '../api/user'; // 新增导入
 import ApplyHelpDialog from '../components/ApplyHelpDialog.vue'
 import ReviewDialog from '../components/ReviewDialog.vue'
-import { canReview, getHelpInfoReviewStatus } from '../api/review'
+import { getHelpInfoReviewStatus } from '../api/review'
 
 const route = useRoute()
 const router = useRouter()
@@ -235,7 +255,6 @@ const updateLoading = ref(false)
 const hasApplied = ref(false)
 const myApplication = ref<any>(null)
 const reviewDialogVisible = ref(false)
-const hasReviewedFlag = ref(false)
 const reviewedUserId = ref<number | null>(null)
 const reviewDialogTitle = ref('提交评价')
 const currentReviewType = ref<'PUBLISHER_TO_HELPER' | 'HELPER_TO_PUBLISHER'>('PUBLISHER_TO_HELPER')
@@ -902,6 +921,17 @@ function handleApplyClick() {
   padding: 0 20px;
 }
 
+.main-card {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.main-card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -911,6 +941,18 @@ function handleApplyClick() {
 .card-header h2 {
   margin: 0;
   font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 12px;
+}
+
+.info-title {
+  position: relative;
+  color: #303133;
+  font-weight: 600;
+  padding-left: 15px;
+  border-left: 4px solid #409EFF;
 }
 
 .error-container {
@@ -918,7 +960,12 @@ function handleApplyClick() {
 }
 
 .info-content {
-  margin-top: 10px;
+  margin-top: 20px;
+}
+
+.info-descriptions {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .publisher-info {
@@ -927,10 +974,22 @@ function handleApplyClick() {
   gap: 10px;
 }
 
+.publisher-name {
+  font-weight: 500;
+}
+
+.publisher-avatar {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid #fff;
+}
+
 .description {
   white-space: pre-line;
   line-height: 1.6;
   margin-top: 5px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
 }
 
 .message-content {
@@ -941,12 +1000,13 @@ function handleApplyClick() {
 
 .contact-info {
   margin-top: 5px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   background-color: #f0f9eb;
   color: #67c23a;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.9em;
   display: inline-block;
+  box-shadow: 0 2px 4px rgba(103, 194, 58, 0.1);
 }
 
 .action-container {
@@ -955,16 +1015,33 @@ function handleApplyClick() {
   justify-content: center;
 }
 
+.action-btn {
+  transition: all 0.3s;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 .applications-section,
-.progress-section {
-  margin-top: 30px;
+.progress-section,
+.review-section {
+  margin-top: 40px;
+  position: relative;
+  padding-top: 10px;
 }
 
 .applications-section h3,
-.progress-section h3 {
+.progress-section h3,
+.review-section h3 {
   margin-bottom: 15px;
   font-size: 1.2rem;
-  color: #606266;
+  color: #303133;
+  font-weight: 600;
+  position: relative;
+  padding-left: 15px;
+  border-left: 4px solid #409EFF;
 }
 
 .action-buttons {
@@ -972,6 +1049,15 @@ function handleApplyClick() {
   display: flex;
   gap: 10px;
   justify-content: center;
+}
+
+.action-buttons button {
+  transition: all 0.3s ease;
+}
+
+.action-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .info-section {
@@ -987,15 +1073,150 @@ function handleApplyClick() {
 .image-gallery {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   margin-top: 10px;
 }
 
 .gallery-image {
   width: 120px;
   height: 120px;
-  border-radius: 4px;
+  border-radius: 8px;
   object-fit: cover;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-image:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.review-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* 表格相关样式 */
+.app-table {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
+  margin-bottom: 20px;
+}
+
+.app-table :deep(th) {
+  background-color: #f5f7fa;
+  color: #303133;
+  font-weight: 600;
+}
+
+.app-table :deep(tr:hover) {
+  background-color: #f0f9ff;
+}
+
+.app-table :deep(.el-table__cell) {
+  padding: 12px 0;
+}
+
+.applicant-name {
+  font-weight: 500;
+  color: #303133;
+}
+
+.status-tag {
+  border-radius: 16px;
+  padding: 0 10px;
+  height: 26px;
+  line-height: 26px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 按钮样式优化 */
+.status-btn {
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.apply-btn {
+  border-radius: 20px;
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+}
+
+.apply-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.action-group {
+  margin: 0 auto;
+}
+
+.review-btn {
+  min-width: 120px;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.review-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.reviewed-btn {
+  min-width: 120px;
+  border-radius: 20px;
+  padding: 10px 20px;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .helpinfo-detail-page {
+    padding: 0 15px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .review-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* 动画相关样式 */
+.animate-enter {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

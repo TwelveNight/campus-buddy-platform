@@ -5,9 +5,10 @@
                 <el-card>
                     <template #header>
                         <div class="card-header">
-                            <h3>我发布的互助信息</h3>
+                            <h3 class="section-title">我发布的互助信息</h3>
                             <div>
-                                <el-button type="primary" @click="$router.push('/helpinfo/publish')">发布新互助</el-button>
+                                <el-button type="primary" icon="Plus"
+                                    @click="$router.push('/helpinfo/publish')">发布新互助</el-button>
                             </div>
                         </div>
                     </template>
@@ -28,7 +29,7 @@
                         <el-table-column prop="status" label="状态" width="120">
                             <template #default="scope">
                                 <el-tag :type="getStatusType(scope.row.status)">{{ getStatusLabel(scope.row.status)
-                                }}</el-tag>
+                                    }}</el-tag>
                             </template>
                         </el-table-column>
                         <el-table-column prop="createdAt" label="发布时间" width="180">
@@ -80,7 +81,9 @@
             <el-tab-pane label="我申请的互助" name="applied">
                 <el-card>
                     <template #header>
-                        <h3>我申请的互助</h3>
+                        <div class="card-header">
+                            <h3 class="section-title">我申请的互助</h3>
+                        </div>
                     </template>
 
                     <el-table v-loading="loading" :data="appliedList" row-key="id" style="width: 100%">
@@ -617,38 +620,114 @@ watch(
     max-width: 1200px;
     margin: 30px auto;
     padding: 0 20px;
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .tabbed-section {
     margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+.el-tabs__nav-wrap::after {
+    height: 1px;
+    background-color: #ebeef5;
+}
+
+.el-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0,0.05);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.el-card:hover {
+    box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 10px 0;
 }
 
-.card-header h3 {
+.section-title {
     margin: 0;
+    font-size: 18px;
+    color: #303133;
+    font-weight: 600;
+    position: relative;
+    padding-left: 12px;
+}
+
+.section-title::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    background-color: #409EFF;
+    border-radius: 2px;
 }
 
 .title-link {
     color: #409EFF;
     text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
 }
 
 .title-link:hover {
+    color: #66b1ff;
     text-decoration: underline;
 }
 
+.el-table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
 .empty-block {
-    padding: 30px 0;
+    padding: 40px 0;
+    background-color: #fafafa;
+    border-radius: 8px;
 }
 
 .pagination-container {
     margin-top: 20px;
     display: flex;
     justify-content: flex-end;
+    padding: 10px 0;
+}
+
+.el-tag {
+    border-radius: 4px;
+    padding: 0 8px;
+    height: 24px;
+    line-height: 22px;
+    font-size: 12px;
+}
+
+.el-button-group .el-button {
+    margin-right: 8px;
+}
+
+.el-button-group .el-button:last-child {
+    margin-right: 0;
 }
 </style>
