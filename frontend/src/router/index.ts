@@ -81,6 +81,11 @@ const routes: RouteRecordRaw[] = [
         component: AdminHelpInfo,
         meta: { requiresAuth: true }
       },
+      {
+        path: 'user/:userId',
+        name: 'UserProfile',
+        component: () => import('../views/UserProfile.vue')
+      }
     ]
   }
 ]

@@ -22,9 +22,9 @@
                             <el-avatar :size="42" :src="review.reviewerAvatar || defaultAvatar"></el-avatar>
                             <div class="reviewer-details">
                                 <div class="name-role-row">
-                                    <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' +
-                                        review.reviewerUserId)
-                                    }}</span>
+                                    <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name">
+                                        {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
+                                    </router-link>
                                     <div class="role-badge"
                                         :class="getRoleClass(review.reviewType, review.reviewerUserId)">
                                         <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)"
@@ -44,7 +44,9 @@
                                 <div class="review-opposite-info">
                                     <el-tag size="small" effect="plain" type="info">
                                         <span>
-                                            评价对象：<b>{{ getReviewedNickname(review) }}</b>
+                                            评价对象：<router-link :to="`/user/${review.reviewedUserId}`" class="reviewed-name">
+                                                {{ getReviewedNickname(review) }}
+                                            </router-link>
                                         </span>
                                     </el-tag>
                                 </div>

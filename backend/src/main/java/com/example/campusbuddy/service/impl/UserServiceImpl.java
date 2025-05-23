@@ -86,6 +86,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (dto.getAvatarUrl() != null) {
             user.setAvatarUrl(dto.getAvatarUrl());
         }
+        
+        // 更新新增字段
+        if (dto.getGender() != null) {
+            user.setGender(dto.getGender());
+        }
+        
+        if (dto.getMajor() != null) {
+            user.setMajor(dto.getMajor());
+        }
+        
+        if (dto.getGrade() != null) {
+            user.setGrade(dto.getGrade());
+        }
+        
+        if (dto.getContactInfo() != null) {
+            user.setContactInfo(dto.getContactInfo());
+        }
+        
+        if (dto.getSkillTags() != null) {
+            user.setSkillTags(dto.getSkillTags());
+        }
 
         // 保存更新
         this.updateById(user);

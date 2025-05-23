@@ -25,7 +25,7 @@
             <div class="publisher-info">
               <el-avatar :size="30"
                 :src="info.publisherAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-              <span>{{ info.publisherName }}</span>
+              <router-link :to="`/user/${info.publisherId}`" class="user-link">{{ info.publisherName }}</router-link>
             </div>
           </el-descriptions-item>
           <el-descriptions-item label="发布时间">{{ formatDate(info.createdAt) }}</el-descriptions-item>
@@ -42,7 +42,7 @@
           <el-descriptions-item label="浏览次数">{{ info.viewCount }}</el-descriptions-item>
           <el-descriptions-item label="帮助者" v-if="info.acceptedApplicantNickname">
             <div class="helper-info">
-              <span>{{ info.acceptedApplicantNickname }}</span>
+              <router-link :to="`/user/${info.helperId}`" class="user-link">{{ info.acceptedApplicantNickname }}</router-link>
               <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
             </div>
           </el-descriptions-item>
@@ -149,11 +149,13 @@
           <div class="reviewer-info" v-if="info.status === 'RESOLVED' && reviewInfo.helperId">
             <div class="publisher-helper-info">
               <div class="info-row">
-                <strong>发布者：</strong> {{ info.publisherName }}
+                <strong>发布者：</strong>
+                <router-link :to="`/user/${info.publisherId}`" class="user-link">{{ info.publisherName }}</router-link>
                 <el-tag size="small" type="primary" class="role-tag">求助方</el-tag>
               </div>
               <div class="info-row">
-                <strong>帮助者：</strong> {{ reviewInfo.helperName || '未知用户' }}
+                <strong>帮助者：</strong>
+                <router-link :to="`/user/${reviewInfo.helperId}`" class="user-link">{{ reviewInfo.helperName || '未知用户' }}</router-link>
                 <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
               </div>
             </div>
@@ -701,9 +703,8 @@ async function loadReviewStatus() {
       // 补充：如果当前用户就是帮助者（即 acceptedApplicationId 对应的申请人）
       if (!helperId && info.value.acceptedApplicationId && info.value.acceptedApplicantNickname) {
         // acceptedApplicantNickname 一定有，acceptedApplicationId 也有
-        // 只要当前用户是帮助者，就赋值
-        if (info.value.acceptedApplicantNickname && userId) {
-          helperId = userId
+        if (info.value.acceptedApplicantNickname) {
+          helperId = info.value.helperId
           helperName = info.value.acceptedApplicantNickname
         }
       }
@@ -933,6 +934,15 @@ function handleApplyClick() {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.user-link {
+  color: #409eff;
+  text-decoration: none;
+}
+
+.user-link:hover {
+  text-decoration: underline;
 }
 
 .description {

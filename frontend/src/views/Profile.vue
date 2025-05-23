@@ -12,7 +12,11 @@
                         <div class="avatar-container">
                             <AvatarUploader v-model="form.avatarUrl" :size="120" />
                         </div>
-                        <h2>{{ form.nickname || form.username }}</h2>
+                        <h2>
+                            <router-link :to="`/user/${form.userId}`" class="profile-nickname">
+                                {{ form.nickname || form.username }}
+                            </router-link>
+                        </h2>
                         <div class="user-credit">
                             <el-progress type="dashboard" :percentage="getCreditPercentage()" :color="creditColors"
                                 :stroke-width="8">
@@ -83,7 +87,82 @@
                                 </template>
                             </el-input>
                         </el-form-item>
-
+                        
+                        <el-form-item label="性别">
+                            <el-radio-group v-model="form.gender">
+                                <el-radio label="MALE">男</el-radio>
+                                <el-radio label="FEMALE">女</el-radio>
+                                <el-radio label="UNKNOWN">保密</el-radio>
+                            </el-radio-group>
+                        </el-form-item>
+                        
+                        <el-row :gutter="20">
+                            <el-col :span="12">
+                                <el-form-item label="专业" prop="major">
+                                    <el-input v-model="form.major" placeholder="请输入专业">
+                                        <template #prefix>
+                                            <el-icon>
+                                                <Document />
+                                            </el-icon>
+                                        </template>
+                                    </el-input>
+                                </el-form-item>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-form-item label="年级" prop="grade">
+                                    <el-select v-model="form.grade" placeholder="请选择年级" style="width: 100%">
+                                        <el-option label="大一" value="大一"></el-option>
+                                        <el-option label="大二" value="大二"></el-option>
+                                        <el-option label="大三" value="大三"></el-option>
+                                        <el-option label="大四" value="大四"></el-option>
+                                        <el-option label="研一" value="研一"></el-option>
+                                        <el-option label="研二" value="研二"></el-option>
+                                        <el-option label="研三" value="研三"></el-option>
+                                        <el-option label="博士" value="博士"></el-option>
+                                        <el-option label="其他" value="其他"></el-option>
+                                    </el-select>
+                                </el-form-item>
+                            </el-col>
+                        </el-row>
+                        
+                        <el-form-item label="联系方式" prop="contactInfo">
+                            <el-input v-model="form.contactInfo" placeholder="请输入联系方式，如微信、QQ、邮箱等">
+                                <template #prefix>
+                                    <el-icon>
+                                        <Promotion />
+                                    </el-icon>
+                                </template>
+                            </el-input>
+                        </el-form-item>
+                        
+                        <el-form-item label="技能标签" prop="parsedSkillTags">
+                            <div class="skill-tags-section">
+                                <el-tag
+                                    v-for="tag in form.parsedSkillTags"
+                                    :key="tag"
+                                    closable
+                                    :disable-transitions="false"
+                                    @close="handleTagClose(tag)"
+                                    class="skill-tag"
+                                >
+                                    {{ tag }}
+                                </el-tag>
+                                <el-input
+                                    v-if="inputTagVisible"
+                                    ref="tagInputRef"
+                                    v-model="inputTagValue"
+                                    class="tag-input"
+                                    size="small"
+                                    @keyup.enter="handleTagConfirm"
+                                    @blur="handleTagConfirm"
+                                />
+                                <el-button v-else class="button-new-tag" size="small" @click="showTagInput">
+                                    + 添加技能标签
+                                </el-button>
+                            </div>
+                            <div class="form-tips">添加您擅长的技能标签，最多可添加10个，每个标签不超过20个字符</div>
+                        </el-form-item>
+                        
                         <el-form-item>
                             <el-button type="primary" @click="handleSubmit" :loading="loading" round>
                                 <el-icon>
@@ -221,7 +300,11 @@
                                         <el-avatar :size="42" :src="review.reviewerAvatar || defaultAvatar"></el-avatar>
                                         <div class="reviewer-details">
                                             <div class="name-role-row">
-                                                <span class="reviewer-name">{{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}</span>
+                                                <span class="reviewer-name">
+                                                    <router-link :to="`/user/${review.reviewerUserId}`">
+                                                        {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
+                                                    </router-link>
+                                                </span>
                                                 <div class="role-badge" :class="getRoleClass(review.reviewType, review.reviewerUserId)">
                                                     <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)" placement="top" effect="light">
                                                         <el-tag size="small" effect="dark" :type="getUserRoleType(review.reviewType, review.reviewerUserId)" class="user-role-tag">
@@ -323,13 +406,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
 import { useAuthStore } from '../store/auth'
 import AvatarUploader from '../components/AvatarUploader.vue'
-import { updateUserProfile, changePassword } from '../api/user'
+import { getUserProfile, updateUserProfile, changePassword } from '../api/user'
 import { getUserReviews } from '../api/review'
 import {
     User, UserFilled, Avatar, Key, Lock, Check,
@@ -344,13 +427,64 @@ const loading = ref(false)
 const pwdLoading = ref(false)
 const reviewsLoading = ref(false)
 
+// 技能标签相关
+const inputTagValue = ref('')
+const inputTagVisible = ref(false)
+const tagInputRef = ref<HTMLInputElement>()
+
+// 显示标签输入框
+const showTagInput = () => {
+    inputTagVisible.value = true
+    nextTick(() => {
+        tagInputRef.value?.focus()
+    })
+}
+
+// 删除标签
+const handleTagClose = (tag: string) => {
+    form.parsedSkillTags = form.parsedSkillTags.filter(t => t !== tag)
+}
+
+// 确认添加标签
+const handleTagConfirm = () => {
+    const tag = inputTagValue.value.trim()
+    if (tag) {
+        // 检查是否已存在
+        if (form.parsedSkillTags.includes(tag)) {
+            ElMessage.warning('该技能标签已存在')
+        } 
+        // 检查标签长度
+        else if (tag.length > 20) {
+            ElMessage.warning('标签不能超过20个字符')
+        } 
+        // 检查标签数量
+        else if (form.parsedSkillTags.length >= 10) {
+            ElMessage.warning('最多只能添加10个标签')
+        } 
+        else {
+            form.parsedSkillTags.push(tag)
+        }
+    }
+    inputTagVisible.value = false
+    inputTagValue.value = ''
+}
+
 // 个人信息表单数据
 const form = reactive({
     userId: 0,
     username: '',
     nickname: '',
     avatarUrl: '',
-    creditScore: 0
+    gender: 'UNKNOWN',
+    major: '',
+    grade: '',
+    contactInfo: '',
+    skillTags: '',
+    parsedSkillTags: [] as string[],
+    creditScore: 0,
+    status: 'ACTIVE',
+    createdAt: '',
+    updatedAt: ''
 })
 
 // 修改密码表单数据
@@ -574,6 +708,67 @@ onMounted(async () => {
             form.nickname = authStore.user.nickname || '';
             form.avatarUrl = authStore.user.avatarUrl || '';
             form.creditScore = authStore.user.creditScore || 0;
+            form.gender = authStore.user.gender || 'UNKNOWN';
+            form.major = authStore.user.major || '';
+            form.grade = authStore.user.grade || '';
+            form.contactInfo = authStore.user.contactInfo || '';
+            form.status = authStore.user.status || 'ACTIVE';
+            form.createdAt = authStore.user.createdAt || '';
+            form.updatedAt = authStore.user.updatedAt || '';
+            
+            // 解析技能标签
+            if (authStore.user.skillTags) {
+                try {
+                    const tags = JSON.parse(authStore.user.skillTags);
+                    form.skillTags = authStore.user.skillTags;
+                    form.parsedSkillTags = Array.isArray(tags) ? tags : [];
+                } catch (e) {
+                    console.error('解析技能标签失败:', e);
+                    form.parsedSkillTags = [];
+                }
+            }
+        }
+        
+        // 从后端获取最新的用户信息
+        try {
+            const res = await getUserProfile();
+            if (res.data && res.data.data) {
+                const userData = res.data.data;
+                
+                // 更新表单数据
+                form.userId = userData.userId;
+                form.username = userData.username || form.username;
+                form.nickname = userData.nickname || form.nickname;
+                form.avatarUrl = userData.avatarUrl || form.avatarUrl;
+                form.gender = userData.gender || form.gender;
+                form.major = userData.major || form.major;
+                form.grade = userData.grade || form.grade;
+                form.contactInfo = userData.contactInfo || form.contactInfo;
+                form.creditScore = userData.creditScore || form.creditScore;
+                form.status = userData.status || form.status;
+                form.createdAt = userData.createdAt || form.createdAt;
+                form.updatedAt = userData.updatedAt || form.updatedAt;
+                
+                // 解析技能标签
+                if (userData.skillTags) {
+                    try {
+                        const tags = JSON.parse(userData.skillTags);
+                        form.skillTags = userData.skillTags;
+                        form.parsedSkillTags = Array.isArray(tags) ? tags : [];
+                    } catch (e) {
+                        console.error('解析技能标签失败:', e);
+                    }
+                }
+                
+                // 更新存储中的用户信息
+                authStore.user = {
+                    ...authStore.user,
+                    ...userData
+                };
+                localStorage.setItem('user', JSON.stringify(authStore.user));
+            }
+        } catch (e) {
+            console.error('获取用户资料失败:', e);
         }
 
         // 获取用户收到的评价
@@ -628,9 +823,17 @@ async function handleSubmit() {
         if (valid) {
             loading.value = true
             try {
+                // 将技能标签数组转换为JSON字符串
+                const skillTagsJson = form.parsedSkillTags.length > 0 ? JSON.stringify(form.parsedSkillTags) : ''
+                
                 const res = await updateUserProfile({
                     nickname: form.nickname,
-                    avatarUrl: form.avatarUrl
+                    avatarUrl: form.avatarUrl,
+                    gender: form.gender,
+                    major: form.major,
+                    grade: form.grade,
+                    contactInfo: form.contactInfo,
+                    skillTags: skillTagsJson
                 })
 
                 if (res.data.code === 200) {
@@ -642,8 +845,20 @@ async function handleSubmit() {
 
                     // 更新存储中的用户信息
                     if (authStore.user) {
-                        authStore.user.nickname = form.nickname
-                        authStore.user.avatarUrl = form.avatarUrl
+                        // 更新本地存储的用户信息
+                        authStore.user = {
+                            ...authStore.user,
+                            nickname: form.nickname,
+                            avatarUrl: form.avatarUrl,
+                            gender: form.gender,
+                            major: form.major,
+                            grade: form.grade,
+                            contactInfo: form.contactInfo,
+                            skillTags: skillTagsJson
+                        };
+                        
+                        // 保存到本地存储
+                        localStorage.setItem('user', JSON.stringify(authStore.user));
                     }
                 } else {
                     ElMessage.error(res.data.message || '更新失败')
@@ -1258,8 +1473,30 @@ async function handleChangePassword() {
 }
 
 /* 技能标签样式 */
-.skill-tags {
-    max-width: 350px;
+.skill-tags-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.skill-tag {
+    margin-right: 0;
+    background-color: var(--el-color-primary-light-9);
+    border-color: var(--el-color-primary-light-8);
+    color: var(--el-color-primary);
+}
+
+.tag-input {
+    width: 90px;
+    margin-left: 8px;
+    vertical-align: bottom;
+}
+
+.button-new-tag {
+    height: 32px;
+    padding: 0 10px;
 }
 
 /* 响应式调整 */

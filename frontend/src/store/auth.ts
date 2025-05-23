@@ -12,6 +12,14 @@ export const useAuthStore = defineStore('auth', {
       avatarUrl?: string;
       creditScore?: number;
       roles?: string[];
+      gender?: string;
+      major?: string;
+      grade?: string;
+      contactInfo?: string;
+      skillTags?: string;
+      status?: string;
+      createdAt?: string;
+      updatedAt?: string;
     },
     isAuthenticated: !!localStorage.getItem('token'),
   }),

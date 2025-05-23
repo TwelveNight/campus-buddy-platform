@@ -180,7 +180,18 @@
                             content: r.content,
                             createdAt: r.createdAt || Date.now(),
                             reviewType: r.reviewType,
-                        }))" :loading="loading" :showFilter="false" />
+                        }))" :loading="loading" :showFilter="false">
+                            <template #reviewer-name="{ review }">
+                                <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name">
+                                    {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
+                                </router-link>
+                            </template>
+                            <template #reviewed-name="{ review }">
+                                <router-link :to="`/user/${review.reviewedUserId}`" class="reviewed-name">
+                                    {{ review.reviewedNickname || ('用户 #' + review.reviewedUserId) }}
+                                </router-link>
+                            </template>
+                        </ReviewList>
 
                         <div class="pagination" v-if="totalItems > 0">
                             <el-pagination background layout="prev, pager, next" :total="totalItems"

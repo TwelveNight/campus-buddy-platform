@@ -36,7 +36,7 @@
                     <template #default="scope">
                         <div class="user-info">
                             <el-avatar :size="30" :src="getUserAvatar(scope)"></el-avatar>
-                            <span>{{ getUserName(scope) }}</span>
+                            <router-link :to="`/user/${getUserId(scope)}`" class="user-link">{{ getUserName(scope) }}</router-link>
                         </div>
                     </template>
                 </el-table-column>
@@ -181,6 +181,27 @@ function getUserName(scope: any) {
     }
 
     return '未知用户'
+}
+
+// 获取用户ID
+function getUserId(scope: any) {
+    try {
+        if (props.type === 'sent') {
+            // 获取发布者ID
+            if (scope.row.helpInfo?.publisherId) {
+                return scope.row.helpInfo.publisherId
+            }
+        } else {
+            // 获取申请者ID
+            if (scope.row.applicantId) {
+                return scope.row.applicantId
+            }
+        }
+    } catch (error) {
+        console.error('获取用户ID时出错:', error)
+    }
+
+    return ''
 }
 
 // 处理接受申请
@@ -341,6 +362,18 @@ function getApplicationStatusLabel(status: string): string {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.user-link {
+    color: #409EFF;
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.user-link:hover {
+    text-decoration: underline;
+    color: #66b1ff;
 }
 
 .message-content {

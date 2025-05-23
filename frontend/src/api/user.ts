@@ -14,6 +14,11 @@ export function getUserById(userId: number) {
 export function updateUserProfile(data: {
   nickname?: string;
   avatarUrl?: string;
+  gender?: string;
+  major?: string;
+  grade?: string;
+  contactInfo?: string;
+  skillTags?: string;
 }) {
   return axios.put('/api/user/profile', data)
 }
