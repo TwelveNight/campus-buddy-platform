@@ -188,7 +188,7 @@
 
     <!-- 申请帮助对话框 -->
     <ApplyHelpDialog v-if="info" v-model:visible="applyDialogVisible" :help-info-id="Number(route.params.id)"
-       />
+      @success="handleApplySuccess" />
 
     <!-- 状态修改对话框 -->
     <el-dialog v-model="statusDialogVisible" title="修改状态" width="400px">
@@ -893,6 +893,12 @@ function handleApplyClick() {
     // 已有用户信息，直接显示申请对话框
     applyDialogVisible.value = true
   }
+}
+
+// 处理申请成功
+async function handleApplySuccess() {
+  applyDialogVisible.value = false;
+  await checkUserApplication();
 }
 </script>
 
