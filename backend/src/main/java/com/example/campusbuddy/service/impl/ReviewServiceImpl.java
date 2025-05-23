@@ -1,7 +1,6 @@
 package com.example.campusbuddy.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.entity.Review;
 import com.example.campusbuddy.entity.User;
@@ -89,12 +88,31 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                         new QueryWrapper<Review>().eq("reviewed_user_id", review.getReviewedUserId()));
 
                 if (!userReviews.isEmpty()) {
-                    int avgScore = userReviews.stream().mapToInt(Review::getScore).sum() / userReviews.size();
+                    // 计算平均分（1-5分制）
+                    double avgRawScore = userReviews.stream().mapToInt(Review::getScore).sum() / (double)userReviews.size();
+                    log.info("用户收到的评价平均分（1-5分制）：{}", avgRawScore);
+
+                    // 将1-5分制转换为0-100分制
+                    // 转换公式: 0-100分 = (平均分 - 1) / 4 * 100
+                    // 这样 1分->0分，3分->50分，5分->100分
+                    int creditScoreValue = (int)Math.round((avgRawScore - 1) / 4.0 * 100);
+
+                    // 确保分数在0-100范围内
+                    creditScoreValue = Math.max(0, Math.min(100, creditScoreValue));
+
+                    log.info("转换后的信用分（0-100分制）：{}", creditScoreValue);
+
                     User user = userMapper.selectById(review.getReviewedUserId());
                     if (user != null) {
-                        user.setCreditScore(avgScore);
+                        // 记录旧分数，用于日志
+                        Integer oldScore = user.getCreditScore();
+
+                        // 更新用户信用分
+                        user.setCreditScore(creditScoreValue);
                         userMapper.updateById(user);
-                        log.info("用户信用分更新成功，用户ID: {}，新信用分: {}", user.getUserId(), avgScore);
+
+                        log.info("用户信用分更新成功，用户ID: {}，旧分数: {}，新信用分: {}",
+                                user.getUserId(), oldScore, creditScoreValue);
                     } else {
                         log.warn("未找到用户信息，无法更新信用分，用户ID: {}", review.getReviewedUserId());
                     }
@@ -112,24 +130,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
     }
 
-    @Override
-    public List<ReviewVO> getReviewsByHelpId(Long helpId) {
-        return reviewMapper.selectReviewVOsByHelpId(helpId);
-    }
-
-    @Override
-    public List<ReviewVO> getReviewsByUserId(Long userId) {
-        return reviewMapper.selectReviewVOsByUserId(userId);
-    }
-
-    @Override
-    public boolean hasReviewed(Long reviewerUserId, Long helpId) {
-        // 检查是否已有该用户对该互助的评价记录
-        Long count = reviewMapper.selectCount(new QueryWrapper<Review>()
-                .eq("reviewer_user_id", reviewerUserId)
-                .eq("related_info_id", helpId));
-        return count > 0;
-    }
 
     @Override
     public boolean canReview(Long userId, Long helpInfoId, String reviewType) {
@@ -245,8 +245,45 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     @Override
     public PageResult<ReviewVO> getReviewList(Long userId, String type, Integer score, String moduleType, Integer page,
             Integer size) {
+        log.info("Service层: 获取评价列表: userId={}, type={}, score={}, moduleType={}, page={}, size={}", 
+                userId, type, score, moduleType, page, size);
+        
+        // 先检查数据库中是否有自评价数据（reviewer_user_id = reviewed_user_id）
+        Long selfReviewCount = reviewMapper.selectCount(
+            new QueryWrapper<Review>().eq("reviewer_user_id", userId).eq("reviewed_user_id", userId)
+        );
+        
+        if (selfReviewCount > 0) {
+            log.warn("警告: 数据库中存在自评价记录，用户ID={}, 数量={}", userId, selfReviewCount);
+        }
+        
         int offset = (page - 1) * size;
         List<ReviewVO> items = reviewMapper.selectReviewVOsForPage(userId, type, score, moduleType, offset, size);
+        
+        // 打印SQL查询结果
+        if (items != null && !items.isEmpty()) {
+            log.info("查询到{}条评价", items.size());
+            ReviewVO first = items.get(0);
+            log.info("第一条评价: reviewId={}, reviewerUserId={}, reviewedUserId={}, reviewType={}, oppositeNickname={}", 
+                     first.getReviewId(), first.getReviewerUserId(), first.getReviewedUserId(),
+                     first.getReviewType(), first.getOppositeNickname());
+            
+            // 关键检查: 当type=received时，检查评价人是否正确
+            if ("received".equals(type)) {
+                for (ReviewVO review : items) {
+                    if (review.getReviewerUserId().equals(review.getReviewedUserId())) {
+                        log.error("错误: 评价人和被评价人是同一个人! reviewId={}", review.getReviewId());
+                    }
+                    if (!review.getReviewedUserId().equals(userId)) {
+                        log.error("错误: 收到的评价中，被评价人不是当前用户! reviewId={}, reviewedUserId={}, userId={}", 
+                                 review.getReviewId(), review.getReviewedUserId(), userId);
+                    }
+                }
+            }
+        } else {
+            log.info("没有查询到评价记录");
+        }
+        
         long total = reviewMapper.countReviewVOsForPage(userId, type, score, moduleType);
         return new PageResult<>(items, total, page, size);
     }
