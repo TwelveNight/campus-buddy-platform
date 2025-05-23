@@ -131,4 +131,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
         this.updateById(user);
     }
+    
+    @Override
+    public User getUserByUsername(String username) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("username", username);
+        return userMapper.selectOne(queryWrapper);
+    }
 }

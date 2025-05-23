@@ -18,4 +18,6 @@ public interface UserService extends IService<User> {
     UserVO updateProfile(Long userId, ProfileUpdateDTO dto);
 
     void updatePassword(Long userId, PasswordUpdateDTO dto);
+    
+    User getUserByUsername(String username);
 }
