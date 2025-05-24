@@ -60,12 +60,14 @@
             </div>
             <div class="group-actions">
               <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
-              <el-button v-else type="primary" size="small" plain @click.stop="handleJoinGroup(group)" v-if="!isUserInGroup(group)">
-                加入小组
-              </el-button>
-              <el-button v-else type="success" size="small" plain disabled>
-                已加入
-              </el-button>
+              <template v-else>
+                <el-button v-if="!isUserInGroup(group)" type="primary" size="small" plain @click.stop="handleJoinGroup(group)">
+                  加入小组
+                </el-button>
+                <el-button v-else type="success" size="small" plain disabled>
+                  已加入
+                </el-button>
+              </template>
             </div>
           </el-card>
         </div>
@@ -312,7 +314,28 @@ const userJoinedGroups = ref([]);
 
 // 判断用户是否已加入某小组
 const isUserInGroup = (group) => {
-  return userJoinedGroups.value.some(g => g.groupId === group.groupId);
+  // 首先验证输入参数
+  if (!group || !group.groupId) {
+    console.warn('isUserInGroup: 无效的小组数据', group);
+    return false;
+  }
+  
+  // 确保userJoinedGroups是数组
+  if (!Array.isArray(userJoinedGroups.value)) {
+    console.warn('isUserInGroup: userJoinedGroups不是数组');
+    return false;
+  }
+  
+  // 转为字符串进行比较，避免类型不匹配问题
+  const groupId = String(group.groupId);
+  const result = userJoinedGroups.value.some(g => String(g.groupId) === groupId);
+  
+  // 调试信息
+  if (result) {
+    console.log(`用户已加入小组: ${group.name} (ID: ${groupId})`);
+  }
+  
+  return result;
 };
 
 // 兼容后端返回的tags为字符串的情况
@@ -367,6 +390,12 @@ onMounted(() => {
 
 // 加载小组列表
 const loadGroups = async () => {
+  // 如果是"所有小组"标签页，确保先刷新用户已加入的小组信息
+  if (activeTab.value === 'all' && authStore.isAuthenticated) {
+    await loadUserJoinedGroups();
+    console.log('已刷新用户加入的小组信息:', userJoinedGroups.value);
+  }
+
   loading.value = true;
   try {
     let response;
@@ -418,9 +447,16 @@ const loadUserJoinedGroups = async () => {
     const response = await getJoinedGroups();
     if (response.data && response.data.code === 200) {
       userJoinedGroups.value = response.data.data || [];
+      console.log('已加载用户加入的小组:', userJoinedGroups.value.length, '个');
+      
+      // 调试信息：打印每个已加入小组的ID
+      if (userJoinedGroups.value.length > 0) {
+        console.log('已加入小组ID列表:', userJoinedGroups.value.map(g => g.groupId));
+      }
     }
   } catch (error) {
     console.error('加载用户已加入小组失败:', error);
+    userJoinedGroups.value = []; // 确保在出错时重置数组
   }
 };
 
@@ -437,7 +473,7 @@ const handleCurrentChange = (val) => {
   loadGroups();
 };
 
-// 处理标签切换
+// 修改handleTabChange函数，确保在标签切换时更新相关数据
 const handleTabChange = (tab) => {
   console.log('Tab changed to:', tab);
   // 重置页面状态
@@ -449,6 +485,11 @@ const handleTabChange = (tab) => {
   if (tab === 'created' || tab === 'joined') {
     searchKeyword.value = '';
     selectedCategory.value = '';
+  }
+
+  // 如果是切换到"所有小组"标签，确保刷新用户已加入的小组信息
+  if (tab === 'all' && authStore.isAuthenticated) {
+    // loadUserJoinedGroups会在loadGroups中调用
   }
   
   loadGroups();
@@ -542,6 +583,7 @@ const handleJoinGroup = async (group) => {
     if (response.data && response.data.code === 200) {
       // 更新加入状态
       await loadUserJoinedGroups();
+      console.log('加入小组后更新状态:', userJoinedGroups.value);
 
       // 根据小组类型显示不同的提示信息
       if (group.joinType === 'PRIVATE') {
