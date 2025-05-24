@@ -20,7 +20,16 @@ export function updateUserProfile(data: {
   contactInfo?: string;
   skillTags?: string;
 }) {
-  return axios.put('/api/user/profile', data)
+  // 对于仅包含头像URL的更新，使用特定格式
+  if (Object.keys(data).length === 1 && data.avatarUrl) {
+    // 尝试使用后端可能期望的格式
+    return axios.put('/api/user/profile', { 
+      "avatarUrl": data.avatarUrl 
+    });
+  }
+  
+  // 其他情况使用原始格式
+  return axios.put('/api/user/profile', data);
 }
 
 // 修改密码

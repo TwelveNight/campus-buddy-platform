@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import './style.css'
+import './styles/dialog-fix.css' // 引入对话框修复样式
 import App from './App.vue'
 import router from './router/index'
 import { createPinia } from 'pinia'

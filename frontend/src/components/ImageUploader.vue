@@ -24,6 +24,7 @@ import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useAuthStore } from '../store/auth'
+import { uploadApi } from '../api/upload'
 
 // 定义组件的属性
 const props = defineProps({
@@ -50,6 +51,10 @@ const props = defineProps({
     acceptTypes: {
         type: Array,
         default: () => ['image/jpeg', 'image/png', 'image/gif']
+    },
+    useDirectUpload: {
+        type: Boolean,
+        default: false // 是否使用自定义上传方法而不是action
     }
 })
 
@@ -98,6 +103,20 @@ const handleRemove = (file: any, fileList: any[]) => {
     emit('remove', file, fileList)
 }
 
+// 自定义上传方法
+const handleCustomUpload = async (file: File) => {
+    try {
+        const response = await uploadApi.uploadImage(file)
+        if (response.code === 200) {
+            handleSuccess({ code: 200, data: response.data }, file, fileList.value)
+        } else {
+            handleError(new Error(response.message || '上传失败'), file)
+        }
+    } catch (error) {
+        handleError(error, file)
+    }
+}
+
 // 上传成功
 const handleSuccess = (response: any, file: any, fileList: any[]) => {
     if (response.code === 200) {
@@ -130,6 +149,12 @@ const beforeUpload = (file: any) => {
     if (!isLtMaxSize) {
         ElMessage.error(`文件大小不能超过 ${props.maxSize}MB`)
         return false
+    }
+
+    // 如果使用自定义上传
+    if (props.useDirectUpload) {
+        handleCustomUpload(file)
+        return false // 阻止默认上传
     }
 
     return true
