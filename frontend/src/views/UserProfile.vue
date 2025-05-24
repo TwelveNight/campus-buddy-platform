@@ -32,32 +32,32 @@
         <h3><el-icon>
             <User />
           </el-icon> 详细信息</h3>
-        <el-row :gutter="20">
+        <el-row :gutter="24" class="details-row">
           <el-col :span="12">
             <div class="detail-item">
-              <span class="detail-label">用户名:</span>
+              <span class="detail-label">用户名</span>
               <span class="detail-value">{{ userInfo.username }}</span>
             </div>
             <div class="detail-item" v-if="userInfo.contactInfo">
-              <span class="detail-label">联系方式:</span>
+              <span class="detail-label">联系方式</span>
               <span class="detail-value">{{ userInfo.contactInfo }}</span>
             </div>
             <div class="detail-item">
-              <span class="detail-label">注册时间:</span>
+              <span class="detail-label">注册时间</span>
               <span class="detail-value">{{ formatDateTime(userInfo.createdAt) }}</span>
             </div>
           </el-col>
           <el-col :span="12">
             <div class="detail-item">
-              <span class="detail-label">账号状态:</span>
+              <span class="detail-label">账号状态</span>
               <el-tag :type="getStatusType(userInfo.status)">{{ formatStatus(userInfo.status) }}</el-tag>
             </div>
             <div class="detail-item" v-if="userInfo.major">
-              <span class="detail-label">专业:</span>
+              <span class="detail-label">专业</span>
               <span class="detail-value">{{ userInfo.major }}</span>
             </div>
             <div class="detail-item" v-if="userInfo.grade">
-              <span class="detail-label">年级:</span>
+              <span class="detail-label">年级</span>
               <span class="detail-value">{{ userInfo.grade }}</span>
             </div>
           </el-col>
@@ -85,7 +85,6 @@
           <h2>收到的评价</h2>
         </div>
       </template>
-      
       <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId" :showReviewTarget="false" />
     </el-card>
   </div>
@@ -250,11 +249,18 @@ watch(userId, (newId) => {
   padding: 30px 10px 60px;
 }
 
+.user-profile-card {
+  border-radius: 18px;
+  box-shadow: 0 2px 16px 0 rgba(60, 60, 60, 0.06);
+  overflow: hidden;
+}
+
 .user-profile-header {
   display: flex;
   align-items: center;
   gap: 32px;
   flex-wrap: wrap;
+  padding-bottom: 12px;
 }
 
 .user-profile-info {
@@ -264,18 +270,21 @@ watch(userId, (newId) => {
 
 .user-profile-info h2 {
   margin: 0 0 12px 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #222;
 }
 
 .user-basic-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
 .user-credit {
   margin-top: 8px;
+  min-width: 120px;
 }
 
 .credit-label {
@@ -286,46 +295,70 @@ watch(userId, (newId) => {
 }
 
 .credit-value {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 700;
-  color: var(--primary-color);
+  color: #409eff;
 }
 
 .credit-title {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  color: #909399;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.user-details-section {
+  margin-top: 24px;
+  background: #f8fafd;
+  border-radius: 12px;
+  padding: 18px 20px 10px 20px;
+  box-shadow: 0 1px 6px 0 rgba(60, 60, 60, 0.04);
 }
 
-.user-details-section,
-.user-skills-section {
-  margin-top: 20px;
+.details-row {
+  margin-top: 10px;
 }
 
-.user-details-section h3,
-.user-skills-section h3 {
+.user-details-section h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
-  font-size: 16px;
-  color: var(--el-color-primary);
+  margin-bottom: 18px;
+  font-size: 17px;
+  color: #409eff;
+  font-weight: 600;
 }
 
 .detail-item {
-  margin-bottom: 12px;
-  line-height: 1.5;
+  margin-bottom: 14px;
+  line-height: 1.7;
+  display: flex;
+  align-items: center;
 }
 
 .detail-label {
   font-weight: 600;
-  color: var(--el-text-color-secondary);
-  margin-right: 8px;
+  color: #666;
+  margin-right: 10px;
+  min-width: 70px;
+  display: inline-block;
+}
+
+.detail-value {
+  color: #333;
+  font-size: 15px;
+}
+
+.user-skills-section {
+  margin-top: 22px;
+}
+
+.user-skills-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 16px;
+  color: #67c23a;
+  font-weight: 600;
 }
 
 .skill-tags {
@@ -336,9 +369,11 @@ watch(userId, (newId) => {
 
 .skill-tag {
   margin-right: 0;
+  font-size: 14px;
+  padding: 4px 14px;
+  border-radius: 16px;
 }
 
-/* 卡片头部样式 */
 .card-header {
   display: flex;
   align-items: center;
