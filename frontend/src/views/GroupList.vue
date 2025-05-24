@@ -429,7 +429,23 @@ const handleCreateGroup = async () => {
 
     submitting.value = true;
     try {
-      const response = await createGroup(groupForm.value);
+      // 格式化数据以匹配后端期望的格式
+      const createData = {
+        name: groupForm.value.name,
+        description: groupForm.value.description,
+        category: groupForm.value.category,
+        joinType: groupForm.value.joinType,
+        // 将标签数组转换为逗号分隔的字符串
+        tags: Array.isArray(groupForm.value.tags) 
+          ? groupForm.value.tags.join(',') 
+          : groupForm.value.tags,
+        avatarUrl: '', // 暂时设为空，后续可以添加头像上传功能
+        status: 'ACTIVE'
+      };
+
+      console.log('Creating group with data:', createData);
+      
+      const response = await createGroup(createData);
       if (response.data && response.data.code === 200) {
         ElMessage.success('创建小组成功');
         createGroupDialogVisible.value = false;

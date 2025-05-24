@@ -289,7 +289,23 @@ const handleUpdateGroup = async () => {
 
         submitting.value = true;
         try {
-            const response = await updateGroup(groupId.value, groupForm.value);
+            // 格式化数据以匹配后端期望的格式
+            const updateData = {
+                name: groupForm.value.name,
+                description: groupForm.value.description,
+                category: groupForm.value.category,
+                joinType: groupForm.value.joinType,
+                // 将标签数组转换为逗号分隔的字符串
+                tags: Array.isArray(groupForm.value.tags) 
+                    ? groupForm.value.tags.join(',') 
+                    : groupForm.value.tags,
+                avatarUrl: group.value.avatarUrl || '',
+                status: group.value.status || 'ACTIVE'
+            };
+
+            console.log('Updating group with data:', updateData);
+            
+            const response = await updateGroup(groupId.value, updateData);
             if (response.data && response.data.code === 200) {
                 ElMessage.success('更新小组信息成功');
                 editGroupDialogVisible.value = false;
