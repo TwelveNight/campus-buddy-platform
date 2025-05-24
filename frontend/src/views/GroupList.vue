@@ -199,8 +199,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Plus, Search, User } from '@element-plus/icons-vue';
 import {
@@ -213,6 +213,7 @@ import {
 import { useAuthStore } from '@/store/auth';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 
 // 数据状态
@@ -305,7 +306,40 @@ const normalizeTags = (tags) => {
 };
 
 // 生命周期钩子
+// 监听路由变化，处理参数变化
+watch(() => route.query, (newQuery) => {
+  console.log('GroupList - 路由查询参数变化:', newQuery);
+  handleRouteQuery();
+}, { deep: true });
+
+// 处理路由查询参数
+const handleRouteQuery = () => {
+  const { tab, action } = router.currentRoute.value.query;
+  
+  console.log('GroupList - 处理路由参数:', { tab, action });
+  
+  // 处理标签参数
+  if (tab) {
+    const tabValue = tab.toString();
+    if (['all', 'joined', 'created'].includes(tabValue)) {
+      activeTab.value = tabValue;
+      console.log('GroupList - 设置活动标签:', activeTab.value);
+    }
+  }
+  
+  // 处理动作参数
+  if (action === 'create') {
+    console.log('GroupList - 显示创建小组对话框');
+    createGroupDialogVisible.value = true;
+  }
+};
+
+// 生命周期钩子
 onMounted(() => {
+  // 处理路由查询参数
+  handleRouteQuery();
+
+  // 加载小组列表
   loadGroups();
 
   // 加载用户已加入的小组（用于判断加入状态）
@@ -489,12 +523,10 @@ const handleJoinGroup = async (group) => {
   try {
     const response = await joinGroup(group.groupId);
     if (response.data && response.data.code === 200) {
-      ElMessage.success(response.data.message || '已申请加入小组');
-
       // 更新加入状态
       await loadUserJoinedGroups();
 
-      // 如果是私有小组，提示用户等待审核
+      // 根据小组类型显示不同的提示信息
       if (group.joinType === 'PRIVATE') {
         ElMessage.info('小组需要审核，请等待管理员批准');
       } else {
