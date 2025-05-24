@@ -89,7 +89,7 @@
                                             <el-icon><Delete /></el-icon>
                                         </el-button>
                                     </div>
-                                    <div class="comment-content">{{ comment.content }}</div>
+                                    <div class="comment-content" v-html="renderCommentContent(comment)"></div>
                                 </div>
                             </div>
                             <el-empty v-else-if="!post.loadingComments" description="暂无评论" />
@@ -109,15 +109,8 @@
                             
                             <!-- 评论输入框 -->
                             <div class="comment-input">
-                                <el-input 
-                                    v-model="post.newComment" 
-                                    placeholder="发表你的评论..." 
-                                    :disabled="!authStore.isAuthenticated"
-                                    @keyup.enter="submitComment(post)">
-                                    <template #append>
-                                        <el-button @click="submitComment(post)" :disabled="!authStore.isAuthenticated || !post.newComment">发送</el-button>
-                                    </template>
-                                </el-input>
+                                <RichEditor v-model="post.newComment" placeholder="请输入评论内容（支持Markdown和图片）" style="width:100%;margin-bottom:8px;" />
+                                <el-button type="primary" size="small" @click="submitComment(post)" :disabled="!authStore.isAuthenticated || !post.newComment || !post.newComment.trim()">发表评论</el-button>
                                 <div v-if="!authStore.isAuthenticated" class="login-tip">请先登录后再评论</div>
                             </div>
                         </div>
@@ -535,6 +528,16 @@ const renderContent = (post: Post) => {
     }
 };
 
+// 渲染评论内容
+const renderCommentContent = (comment: any) => {
+    if (!comment.content) return '';
+    try {
+        return `<div class='markdown-content'>${marked(comment.content)}</div>`;
+    } catch (e) {
+        return comment.content.replace(/\n/g, '<br>');
+    }
+};
+
 // 显示/加载评论
 const showComments = async (post: Post) => {
     // 切换评论显示状态
@@ -840,10 +843,13 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px dashed #e0e0e0;
+    text-align: left; /* 评论输入区整体靠左 */
 }
 
-.comment-input .el-input {
-    transition: all 0.3s ease;
+.comment-input .el-input,
+.comment-input :deep(.md-editor),
+.comment-input :deep(.md-editor-input) {
+    text-align: left;
 }
 
 .comment-input .el-input:focus-within {
