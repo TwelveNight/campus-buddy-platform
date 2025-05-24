@@ -862,6 +862,7 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 :deep(.markdown-content) {
     line-height: 1.6;
     word-break: break-word;
+    text-align: left;
 }
 
 :deep(.markdown-content h1) {
