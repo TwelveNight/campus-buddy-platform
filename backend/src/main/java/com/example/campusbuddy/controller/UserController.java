@@ -95,4 +95,16 @@ public class UserController {
             return R.fail(e.getMessage());
         }
     }
+    
+    @Operation(summary = "检查当前用户是否为管理员")
+    @GetMapping("/is-admin")
+    public R<Boolean> checkIsAdmin(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        if (userId == null) {
+            return R.fail(ResultCode.UNAUTHORIZED, "未登录");
+        }
+        
+        boolean isAdmin = userService.isAdmin(userId);
+        return R.ok("检查成功", isAdmin);
+    }
 }

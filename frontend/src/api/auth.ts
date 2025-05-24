@@ -14,3 +14,8 @@ export function register(data: { username: string; password: string; nickname: s
 export function getCurrentUser() {
   return axios.get('/api/user/me')
 }
+
+// 检查当前用户是否为管理员
+export function checkIsAdmin() {
+  return axios.get('/api/user/is-admin')
+}

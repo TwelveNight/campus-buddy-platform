@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -68,6 +69,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return null;
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
+        
+        // 获取用户角色信息并设置到VO对象中
+        List<String> roles = userRoleService.getUserRoles(userId);
+        vo.setRoles(roles);
+        
         return vo;
     }
 
@@ -137,5 +143,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         return userMapper.selectOne(queryWrapper);
+    }
+    
+    @Override
+    public boolean isAdmin(Long userId) {
+        return userRoleService.hasRole(userId, "ROLE_ADMIN");
     }
 }

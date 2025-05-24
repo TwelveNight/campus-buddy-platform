@@ -20,4 +20,12 @@ public interface UserService extends IService<User> {
     void updatePassword(Long userId, PasswordUpdateDTO dto);
     
     User getUserByUsername(String username);
+    
+    /**
+     * 检查用户是否为管理员
+     * 
+     * @param userId 用户ID
+     * @return 是否为管理员
+     */
+    boolean isAdmin(Long userId);
 }

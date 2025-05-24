@@ -137,8 +137,23 @@ const statusOptions = [
 
 onMounted(async () => {
     // 检查用户角色是否为管理员
-    if (!authStore.user || !(authStore.user.roles || []).includes('ROLE_ADMIN')) {
-        ElMessage.error('权限不足，请使用管理员账号登录')
+    console.log('AdminHelpInfo - 当前用户信息:', authStore.user);
+    console.log('AdminHelpInfo - 用户角色:', authStore.user?.roles);
+    console.log('AdminHelpInfo - isAdmin值:', authStore.isAdmin);
+    
+    try {
+        // 直接从后端获取管理员状态
+        const isAdmin = await authStore.checkAdminStatus();
+        console.log('AdminHelpInfo - 从后端获取的管理员状态:', isAdmin);
+        
+        if (!isAdmin) {
+            ElMessage.error('权限不足，请使用管理员账号登录')
+            router.push('/')
+            return
+        }
+    } catch (error) {
+        console.error('管理员状态检查失败:', error);
+        ElMessage.error('管理员权限验证失败，请重新登录')
         router.push('/')
         return
     }

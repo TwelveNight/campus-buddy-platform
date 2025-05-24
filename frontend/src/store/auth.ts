@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, register, getCurrentUser } from '../api/auth'
+import { login, register, getCurrentUser, checkIsAdmin } from '../api/auth'
 import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', {
@@ -23,6 +23,12 @@ export const useAuthStore = defineStore('auth', {
     },
     isAuthenticated: !!localStorage.getItem('token'),
   }),
+  getters: {
+    // 判断当前用户是否为管理员
+    isAdmin(): boolean {
+      return !!(this.user?.roles && this.user.roles.includes('ROLE_ADMIN'));
+    }
+  },
   actions: {
     async loginAction(payload: { username: string; password: string }) {
       const res = await login(payload)
@@ -44,6 +50,14 @@ export const useAuthStore = defineStore('auth', {
               nickname: payloadData.sub // 暂时使用用户名作为昵称，会在获取完整信息时更新
             };
             localStorage.setItem('user', JSON.stringify(this.user));
+            
+            // 立即获取完整的用户信息，包括角色信息
+            try {
+              await this.fetchCurrentUser();
+              console.log('完整用户信息获取成功，包含角色信息:', this.user);
+            } catch (fetchError) {
+              console.error('获取完整用户信息失败:', fetchError);
+            }
           } else {
             console.error('Invalid JWT structure: cannot decode user info.');
             this.user = null; 
@@ -99,6 +113,42 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = false
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+    },
+
+    // 从后端获取用户是否为管理员
+    async checkAdminStatus() {
+      try {
+        const res = await checkIsAdmin();
+        if (res.data && res.data.code === 200) {
+          // 如果用户不存在，创建一个空的用户对象
+          if (!this.user) {
+            this.user = {
+              username: '',
+              nickname: ''
+            };
+          }
+          
+          // 如果roles不存在，创建一个空数组
+          if (!this.user.roles) {
+            this.user.roles = [];
+          }
+          
+          // 如果后端确认用户是管理员但前端状态中没有ROLE_ADMIN角色，则添加
+          if (res.data.data === true && !this.user.roles.includes('ROLE_ADMIN')) {
+            this.user.roles.push('ROLE_ADMIN');
+            localStorage.setItem('user', JSON.stringify(this.user));
+            console.log('已更新用户角色，添加管理员权限');
+          }
+          
+          return res.data.data;
+        } else {
+          console.error('获取管理员状态失败:', res.data);
+          return false;
+        }
+      } catch (error) {
+        console.error('检查管理员状态出错:', error);
+        return false;
+      }
     }
   }
 })

@@ -3,6 +3,7 @@ package com.example.campusbuddy.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Schema(description = "用户信息展示对象")
@@ -20,4 +21,7 @@ public class UserVO {
     private String status; // 账号状态: ACTIVE, INACTIVE, BANNED
     private Date createdAt; // 创建时间
     private Date updatedAt; // 更新时间
+    
+    @Schema(description = "用户角色列表")
+    private List<String> roles; // 用户角色列表
 }
