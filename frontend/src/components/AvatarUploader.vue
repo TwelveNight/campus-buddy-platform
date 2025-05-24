@@ -185,22 +185,84 @@ const handleFileChange = (file: any) => {
 
 // 向左旋转
 const rotateLeft = () => {
-  cropperRef.value.rotateLeft();
+  if (cropperRef.value) {
+    try {
+      // 尝试使用不同的旋转方法，vue-cropper可能使用不同名称的方法
+      if (typeof cropperRef.value.rotateLeft === 'function') {
+        cropperRef.value.rotateLeft();
+      } else if (typeof cropperRef.value.rotate === 'function') {
+        cropperRef.value.rotate(-90); // 逆时针旋转90度
+      } else {
+        console.warn('裁剪组件不支持旋转操作');
+      }
+    } catch (e) {
+      console.error('旋转操作出错:', e);
+    }
+  } else {
+    console.warn('裁剪组件实例不存在');
+  }
 };
 
 // 向右旋转
 const rotateRight = () => {
-  cropperRef.value.rotateRight();
+  if (cropperRef.value) {
+    try {
+      // 尝试使用不同的旋转方法，vue-cropper可能使用不同名称的方法
+      if (typeof cropperRef.value.rotateRight === 'function') {
+        cropperRef.value.rotateRight();
+      } else if (typeof cropperRef.value.rotate === 'function') {
+        cropperRef.value.rotate(90); // 顺时针旋转90度
+      } else {
+        console.warn('裁剪组件不支持旋转操作');
+      }
+    } catch (e) {
+      console.error('旋转操作出错:', e);
+    }
+  } else {
+    console.warn('裁剪组件实例不存在');
+  }
 };
 
 // 放大
 const zoomIn = () => {
-  cropperRef.value.zoomIn();
+  if (cropperRef.value) {
+    try {
+      // 尝试使用不同的缩放方法
+      if (typeof cropperRef.value.zoomIn === 'function') {
+        cropperRef.value.zoomIn();
+      } else if (typeof cropperRef.value.changeScale === 'function') {
+        // 当前比例基础上放大20%
+        cropperRef.value.changeScale(0.2);
+      } else {
+        console.warn('裁剪组件不支持放大操作');
+      }
+    } catch (e) {
+      console.error('放大操作出错:', e);
+    }
+  } else {
+    console.warn('裁剪组件实例不存在');
+  }
 };
 
 // 缩小
 const zoomOut = () => {
-  cropperRef.value.zoomOut();
+  if (cropperRef.value) {
+    try {
+      // 尝试使用不同的缩放方法
+      if (typeof cropperRef.value.zoomOut === 'function') {
+        cropperRef.value.zoomOut();
+      } else if (typeof cropperRef.value.changeScale === 'function') {
+        // 当前比例基础上缩小20%
+        cropperRef.value.changeScale(-0.2);
+      } else {
+        console.warn('裁剪组件不支持缩小操作');
+      }
+    } catch (e) {
+      console.error('缩小操作出错:', e);
+    }
+  } else {
+    console.warn('裁剪组件实例不存在');
+  }
 };
 
 // 取消裁剪
@@ -221,6 +283,13 @@ const confirmCrop = () => {
   uploading.value = true;
 
   // 使用回调方式获取裁剪数据
+  // 这里我们确保 getCropData 被正确调用并接受一个回调函数
+  if (typeof cropperRef.value.getCropData !== 'function') {
+    ElMessage.error('裁剪组件不支持获取裁剪数据');
+    uploading.value = false;
+    return;
+  }
+
   cropperRef.value.getCropData((base64Data: string) => {
     if (!base64Data) {
       ElMessage.error('获取裁剪图片失败');
@@ -246,21 +315,39 @@ const confirmCrop = () => {
       dialogVisible.value = false;
       
       // 上传头像
-      uploadApi.uploadAvatar(file).then(response => {
-        // 根据后端API响应格式获取头像URL
-        let avatarUrl;
-        if (response.data && typeof response.data === 'string') {
-          // 如果直接返回字符串URL
-          avatarUrl = response.data;
-        } else if (response.data && response.data.data && typeof response.data.data === 'string') {
-          // 如果返回 { code: 200, data: "url", message: "success" } 格式
-          avatarUrl = response.data.data;
-        } else if (response.data && response.data.url && typeof response.data.url === 'string') {
-          // 如果返回 { url: "url" } 格式
-          avatarUrl = response.data.url;
-        } else {
-          console.error('无法从响应中解析头像URL:', response);
-          throw new Error('上传头像失败：服务器返回格式不正确');
+      uploadApi.uploadAvatar(file).then((response: any) => {
+        // 确保响应有效
+        if (!response) {
+          throw new Error('上传头像失败：服务器没有响应');
+        }
+        
+        // 尝试从不同格式的响应中提取URL
+        let avatarUrl = '';
+        
+        try {
+          // 检查响应结构
+          if (typeof response === 'string') {
+            // 直接返回字符串URL
+            avatarUrl = response;
+          } else if (response.data) {
+            const data = response.data;
+            
+            if (typeof data === 'string') {
+              // 响应数据直接是字符串URL
+              avatarUrl = data;
+            } else if (data && data.data && typeof data.data === 'string') {
+              // 嵌套的data字段
+              avatarUrl = data.data;
+            } else if (data && data.url && typeof data.url === 'string') {
+              // url字段
+              avatarUrl = data.url;
+            }
+          }
+          
+          console.log('头像上传响应:', response);
+          console.log('解析的头像URL:', avatarUrl);
+        } catch (e) {
+          console.error('解析头像URL时出错:', e);
         }
         
         if (avatarUrl) {
@@ -270,6 +357,7 @@ const confirmCrop = () => {
           emit('update:modelValue', avatarUrl);
           emit('upload-success', avatarUrl, file);
         } else {
+          console.error('无法从响应中解析头像URL:', response);
           throw new Error('上传头像失败：服务器未返回有效的头像URL');
         }
       }).catch(uploadError => {
