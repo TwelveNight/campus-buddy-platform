@@ -258,13 +258,25 @@ const loadFiles = async () => {
     try {
         const response = await getGroupFiles({ groupId: props.groupId });
         if (response.data && response.data.code === 200) {
-            files.value = response.data.data || [];
+            // 处理可能的分页数据结构
+            if (response.data.data && response.data.data.records !== undefined) {
+                // 服务器返回分页对象，取records字段
+                files.value = response.data.data.records || [];
+                total.value = response.data.data.total || 0;
+            } else {
+                // 服务器直接返回数组
+                files.value = response.data.data || [];
+                total.value = files.value.length;
+            }
+            console.log('文件列表加载成功:', files.value);
         } else {
             ElMessage.error(response.data?.message || '加载文件列表失败');
+            files.value = [];
         }
     } catch (error) {
         console.error('加载文件列表失败:', error);
         ElMessage.error('加载文件列表失败，请稍后重试');
+        files.value = [];
     } finally {
         loading.value = false;
     }

@@ -217,8 +217,20 @@ const loadPosts = async () => {
         });
 
         if (response.data && response.data.code === 200) {
-            const postList = response.data.data.records || [];
-            total.value = response.data.data.total || 0;
+            let postList = [];
+            
+            // 处理可能的分页数据结构
+            if (response.data.data && response.data.data.records !== undefined) {
+                // 服务器返回分页对象
+                postList = response.data.data.records || [];
+                total.value = response.data.data.total || 0;
+            } else {
+                // 服务器直接返回数组
+                postList = response.data.data || [];
+                total.value = postList.length;
+            }
+            
+            console.log('帖子列表加载成功:', postList);
 
             // 检查用户是否对每个帖子点赞
             if (authStore.isAuthenticated && postList.length > 0) {

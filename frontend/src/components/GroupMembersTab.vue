@@ -232,14 +232,24 @@ const loadMembers = async () => {
     try {
         const response = await getGroupMembers(props.groupId);
         if (response.data && response.data.code === 200) {
-            members.value = response.data.data || [];
+            // 处理可能的分页数据结构
+            if (response.data.data && response.data.data.records !== undefined) {
+                // 服务器返回分页对象
+                members.value = response.data.data.records || [];
+            } else {
+                // 服务器直接返回数组
+                members.value = response.data.data || [];
+            }
+            console.log('成员列表加载成功:', members.value);
             filterMembers();
         } else {
             ElMessage.error(response.data?.message || '加载小组成员失败');
+            members.value = [];
         }
     } catch (error) {
         console.error('加载小组成员失败:', error);
         ElMessage.error('加载小组成员失败，请稍后重试');
+        members.value = [];
     } finally {
         loading.value = false;
     }
@@ -251,15 +261,25 @@ const loadJoinRequests = async () => {
 
     requestsLoading.value = true;
     try {
-        const response = await getGroupMembers(props.groupId);
+        const response = await getGroupMembers(props.groupId, 'PENDING');
         if (response.data && response.data.code === 200) {
-            joinRequests.value = response.data.data || [];
+            // 处理可能的分页数据结构
+            if (response.data.data && response.data.data.records !== undefined) {
+                // 服务器返回分页对象
+                joinRequests.value = response.data.data.records || [];
+            } else {
+                // 服务器直接返回数组
+                joinRequests.value = response.data.data || [];
+            }
+            console.log('加入申请加载成功:', joinRequests.value);
         } else {
             ElMessage.error(response.data?.message || '加载加入申请失败');
+            joinRequests.value = [];
         }
     } catch (error) {
         console.error('加载加入申请失败:', error);
         ElMessage.error('加载加入申请失败，请稍后重试');
+        joinRequests.value = [];
     } finally {
         requestsLoading.value = false;
     }
