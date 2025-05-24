@@ -5,6 +5,7 @@ import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.entity.GroupFile;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupFileService;
+import com.example.campusbuddy.service.UploadService;
 import com.example.campusbuddy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -34,6 +35,9 @@ public class GroupFileController {
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private UploadService uploadService;
+
     @Value("${file.upload.path:${user.dir}/tmp/uploads}")
     private String uploadPath;
 
@@ -76,8 +80,9 @@ public class GroupFileController {
 
     /**
      * 上传文件
+     * @deprecated 请使用 /api/upload/group-file 接口，此接口将在未来版本移除
      */
-    @Operation(summary = "上传文件到学习小组", description = "上传文件并保存到服务器，需要当前用户是小组成员")
+    @Operation(summary = "上传文件到学习小组", description = "上传文件并保存到服务器，需要当前用户是小组成员。推荐使用统一的 /api/upload/group-file 接口")
     @PostMapping("/upload")
     public R<Map<String, Object>> uploadFile(
             @Parameter(description = "学习小组ID") @RequestParam Long groupId,
@@ -90,12 +95,18 @@ public class GroupFileController {
         
         try {
             User currentUser = getCurrentUser();
+
+            // 调用统一上传服务
+            String fileUrl = uploadService.uploadGroupFile(groupId, currentUser.getUserId(), file, "group-files");
+
+            // 保存文件信息到数据库
             Long fileId = groupFileService.uploadFile(groupId, currentUser.getUserId(), file, description);
             
             Map<String, Object> data = new HashMap<>();
             data.put("fileId", fileId);
             data.put("fileName", file.getOriginalFilename());
-            
+            data.put("fileUrl", fileUrl);
+
             return R.ok("文件上传成功", data);
         } catch (Exception e) {
             return R.fail("文件上传失败: " + e.getMessage());

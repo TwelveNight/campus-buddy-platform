@@ -39,38 +39,27 @@ public class QiniuConfig {
         // 如果环境变量存在，则使用环境变量值
         if (accessKey != null && !accessKey.isEmpty()) {
             properties.setAccessKey(accessKey);
-            log.info("使用环境变量的accessKey");
         } else {
             log.warn("未找到环境变量QINIU_ACCESS_KEY，使用默认值");
         }
 
         if (secretKey != null && !secretKey.isEmpty()) {
             properties.setSecretKey(secretKey);
-            log.info("使用环境变量的secretKey");
         } else {
             log.warn("未找到环境变量QINIU_SECRET_KEY，使用默认值");
         }
 
         if (bucket != null && !bucket.isEmpty()) {
             properties.setBucket(bucket);
-            log.info("使用环境变量的bucket: {}", bucket);
         } else {
             log.warn("未找到环境变量QINIU_BUCKET，使用默认值: {}", properties.getBucket());
         }
 
         if (domain != null && !domain.isEmpty()) {
             properties.setDomain(domain);
-            log.info("使用环境变量的domain: {}", domain);
         } else {
             log.warn("未找到环境变量QINIU_DOMAIN，使用默认值: {}", properties.getDomain());
         }
-
-        // 记录最终使用的属性值
-        log.info("最终使用的七牛云配置:");
-        log.info("qiniuProperties.accessKey: {}", maskString(properties.getAccessKey()));
-        log.info("qiniuProperties.secretKey: {}", maskString(properties.getSecretKey()));
-        log.info("qiniuProperties.bucket: {}", properties.getBucket());
-        log.info("qiniuProperties.domain: {}", properties.getDomain());
 
         return properties;
     }

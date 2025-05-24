@@ -4,23 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.campusbuddy.config.QiniuConfig;
 import com.example.campusbuddy.entity.GroupFile;
 import com.example.campusbuddy.entity.GroupMember;
 import com.example.campusbuddy.mapper.GroupFileMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
 import com.example.campusbuddy.service.GroupFileService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.qiniu.common.QiniuException;
-import com.qiniu.http.Response;
-import com.qiniu.storage.BucketManager;
-import com.qiniu.storage.Configuration;
-import com.qiniu.storage.Region;
-import com.qiniu.storage.UploadManager;
-import com.qiniu.storage.model.DefaultPutRet;
-import com.qiniu.util.Auth;
+import com.example.campusbuddy.service.UploadService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,7 +18,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
 import java.util.Date;
-import java.util.UUID;
 
 /**
  * 学习小组文件服务实现类
@@ -40,21 +29,7 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
     private GroupMemberMapper groupMemberMapper;
 
     @Autowired
-    private QiniuConfig.QiniuProperties qiniuProperties;
-
-    private UploadManager getUploadManager() {
-        Configuration cfg = new Configuration(Region.autoRegion());
-        return new UploadManager(cfg);
-    }
-
-    private Auth getAuth() {
-        return Auth.create(qiniuProperties.getAccessKey(), qiniuProperties.getSecretKey());
-    }
-
-    private BucketManager getBucketManager() {
-        Configuration cfg = new Configuration(Region.autoRegion());
-        return new BucketManager(getAuth(), cfg);
-    }
+    private UploadService uploadService;
 
     @Override
     public IPage<GroupFile> queryGroupFiles(Long groupId, Integer pageNum, Integer pageSize, String fileType) {
@@ -81,24 +56,14 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
             if (originalFilename == null) {
                 originalFilename = "unnamed-file";
             }
+
             String fileExtension = "";
             if (originalFilename.contains(".")) {
                 fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             }
-            String uniqueFileName = "group-" + groupId + "/" + UUID.randomUUID() + fileExtension;
 
-            // 上传到七牛云
-            UploadManager uploadManager = getUploadManager();
-            Auth auth = getAuth();
-            String upToken = auth.uploadToken(qiniuProperties.getBucket());
-            Response response = uploadManager.put(file.getBytes(), uniqueFileName, upToken);
-            if (!response.isOK()) {
-                throw new RuntimeException("七牛云上传失败: " + response.bodyString());
-            }
-            // 解析返回
-            ObjectMapper mapper = new ObjectMapper();
-            DefaultPutRet putRet = mapper.readValue(response.bodyString(), DefaultPutRet.class);
-            String fileUrl = qiniuProperties.getDomain() + "/" + putRet.key;
+            // 使用UploadService进行文件上传
+            String fileUrl = uploadService.uploadGroupFile(groupId, uploaderId, file, "group-files");
 
             // 保存文件信息
             GroupFile groupFile = new GroupFile();
@@ -153,14 +118,10 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
         file.setStatus("DELETED");
         file.setUpdatedAt(new Date());
         boolean dbResult = updateById(file);
-        // 七牛云物理删除
-        try {
-            String key = file.getFileUrl().replace(qiniuProperties.getDomain() + "/", "");
-            getBucketManager().delete(qiniuProperties.getBucket(), key);
-        } catch (QiniuException e) {
-            // 记录错误但不影响逻辑删除
-            e.printStackTrace();
-        }
+
+        // 使用UploadService删除七牛云中的文件
+        uploadService.deleteFromQiniu(file.getFileUrl());
+
         return dbResult;
     }
 
