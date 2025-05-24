@@ -247,15 +247,28 @@ const confirmCrop = () => {
       
       // 上传头像
       uploadApi.uploadAvatar(file).then(response => {
-        const responseData = response.data;
+        // 根据后端API响应格式获取头像URL
+        let avatarUrl;
+        if (response.data && typeof response.data === 'string') {
+          // 如果直接返回字符串URL
+          avatarUrl = response.data;
+        } else if (response.data && response.data.data && typeof response.data.data === 'string') {
+          // 如果返回 { code: 200, data: "url", message: "success" } 格式
+          avatarUrl = response.data.data;
+        } else if (response.data && response.data.url && typeof response.data.url === 'string') {
+          // 如果返回 { url: "url" } 格式
+          avatarUrl = response.data.url;
+        } else {
+          console.error('无法从响应中解析头像URL:', response);
+          throw new Error('上传头像失败：服务器返回格式不正确');
+        }
         
-        if (responseData) {
-          // 立即显示成功提示
-          ElMessage.success('头像上传成功');
+        if (avatarUrl) {
+          // 不在这里显示成功消息，留给父组件处理
           
           // 直接使用返回的URL，这会触发父组件的更新
-          emit('update:modelValue', responseData);
-          emit('upload-success', responseData, file);
+          emit('update:modelValue', avatarUrl);
+          emit('upload-success', avatarUrl, file);
         } else {
           throw new Error('上传头像失败：服务器未返回有效的头像URL');
         }

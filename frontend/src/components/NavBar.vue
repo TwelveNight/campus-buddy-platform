@@ -42,8 +42,8 @@
                             学习小组
                         </template>
                         <el-menu-item index="/groups">浏览小组</el-menu-item>
-                        <el-menu-item index="/groups/my" v-if="authStore.isAuthenticated">我加入的小组</el-menu-item>
-                        <el-menu-item index="/groups/create" v-if="authStore.isAuthenticated">创建小组</el-menu-item>
+                        <el-menu-item index="/groups?tab=joined" v-if="authStore.isAuthenticated">我加入的小组</el-menu-item>
+                        <el-menu-item index="/groups?tab=created" v-if="authStore.isAuthenticated">我创建的小组</el-menu-item>
                     </el-sub-menu>
 
                     <!-- 管理后台 -->
@@ -61,7 +61,7 @@
                     <div class="user-avatar-container">
                         <el-dropdown trigger="hover">
                             <div class="avatar-wrapper">
-                                <el-avatar :size="36" :src="getUserAvatar()"></el-avatar>
+                                <el-avatar :size="36" :src="avatarUrl"></el-avatar>
                                 <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
                                     }}</span>
                             </div>
@@ -72,7 +72,7 @@
                                             <User />
                                         </el-icon>个人中心
                                     </el-dropdown-item>
-                                    <el-dropdown-item @click="$router.push('/groups/my')">
+                                    <el-dropdown-item @click="$router.push('/groups?tab=joined')">
                                         <el-icon>
                                             <UserFilled />
                                         </el-icon>我的小组
@@ -112,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import {
@@ -158,9 +158,20 @@ const isAuthPage = computed(() => {
     return route.path === '/login' || route.path === '/register'
 })
 
-// 获取用户头像
+// 创建计算属性，当avatarUpdateTime变化时会自动更新
+const avatarUrl = computed(() => {
+    const url = authStore.user?.avatarUrl;
+    if (!url) return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+    
+    // 使用avatarUpdateTime属性作为时间戳，确保头像更新时刷新缓存
+    const timestamp = authStore.avatarUpdateTime || Date.now();
+    console.log('导航栏获取头像URL:', `${url}?v=${timestamp}`);
+    return `${url}?v=${timestamp}`;
+});
+
+// 获取用户头像 - 保留这个方法用于兼容
 const getUserAvatar = () => {
-    return authStore.user?.avatarUrl || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+    return avatarUrl.value;
 }
 
 const handleLogout = () => {

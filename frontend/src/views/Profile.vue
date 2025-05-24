@@ -11,7 +11,7 @@
                     <div class="user-summary">
                         <div class="avatar-container">
                             <AvatarUploader 
-                                v-model="form.avatarUrl" 
+                                v-model="avatarUrlWithTimestamp" 
                                 :size="120" 
                                 @upload-success="handleAvatarUploadSuccess"
                                 tip="点击更换头像" 
@@ -411,7 +411,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance } from 'element-plus'
@@ -474,6 +474,19 @@ const handleTagConfirm = () => {
     inputTagValue.value = ''
 }
 
+// 添加一个时间戳控制变量，用于刷新头像
+const avatarRefreshTimestamp = ref(Date.now());
+
+// 为头像URL添加时间戳，避免缓存问题
+const avatarUrlWithTimestamp = computed(() => {
+  const baseUrl = form.avatarUrl;
+  if (!baseUrl) return '';
+  
+  // 如果URL已经有查询参数，使用&连接，否则使用?开始
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${separator}t=${avatarRefreshTimestamp.value}`;
+});
+
 // 处理头像上传成功的回调
 const handleAvatarUploadSuccess = async (url: string) => {
   if (!url) {
@@ -484,33 +497,46 @@ const handleAvatarUploadSuccess = async (url: string) => {
   try {
     loading.value = true;
     
+    // 确保URL没有时间戳参数，避免重复添加
+    const cleanUrl = url.split('?')[0];
+    
     // 立即更新表单中的头像URL
-    form.avatarUrl = url;
+    form.avatarUrl = cleanUrl;
+    
+    // 更新时间戳，强制刷新头像
+    avatarRefreshTimestamp.value = Date.now();
     
     // 调用API更新用户头像
     try {
       const res = await updateUserProfile({
-        avatarUrl: url
+        avatarUrl: cleanUrl
       });
       
-      if (res.data.code === 200) {
+      if (res.data && res.data.code === 200) {
         ElMessage.success('头像更新成功');
       }
     } catch (error) {
-      console.warn('头像更新API返回错误，但头像可能已经上传成功');
+      console.warn('头像更新API返回错误，但头像可能已经上传成功:', error);
       // 即使API返回错误，我们也假设头像已经更新成功
       // 这里不显示错误消息，因为实际上头像已经更新了
     }
+    
+    console.log('更新头像URL:', cleanUrl);
+    console.log('更新时间戳:', avatarRefreshTimestamp.value);
+    console.log('计算后的带时间戳URL:', avatarUrlWithTimestamp.value);
     
     // 无论API调用成功与否，都更新本地状态
     if (authStore.user) {
       authStore.user = {
         ...authStore.user,
-        avatarUrl: url
+        avatarUrl: cleanUrl
       };
       
       // 保存到本地存储
       localStorage.setItem('user', JSON.stringify(authStore.user));
+      
+      // 强制通知其他组件刷新头像
+      authStore.$patch({ avatarUpdateTime: Date.now() });
     }
   } catch (error: any) {
     console.error('更新头像失败:', error);

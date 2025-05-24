@@ -22,6 +22,7 @@ export const useAuthStore = defineStore('auth', {
       updatedAt?: string;
     },
     isAuthenticated: !!localStorage.getItem('token'),
+    avatarUpdateTime: Date.now(), // 添加头像更新时间属性，用于刷新缓存
   }),
   getters: {
     // 判断当前用户是否为管理员
