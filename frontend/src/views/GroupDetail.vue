@@ -219,6 +219,16 @@ const loadGroupDetail = async () => {
 
             // 加载小组成员
             await loadGroupMembers();
+            
+            // 检查当前路径，确保它是 /groups/:id/detail
+            const isDetailPath = route.path.includes(`/groups/${groupId.value}/detail`);
+            
+            // 只有在详情页路径且用户不是小组成员时才重定向
+            if (isDetailPath && authStore.isAuthenticated && !userRole.value) {
+                console.log('用户不是小组成员，重定向到预览页面');
+                router.replace(`/groups/${groupId.value}`);
+                return;
+            }
         } else {
             ElMessage.error(response.data?.message || '加载小组详情失败');
         }
@@ -239,7 +249,7 @@ const loadGroupMembers = async () => {
 
             // 确定当前用户在小组中的角色
             if (authStore.isAuthenticated) {
-                const currentUserId = authStore.userId;
+                const currentUserId = authStore.user?.userId;
                 const userMember = members.value.find(m =>
                     m.userId === currentUserId && m.status === 'ACTIVE'
                 );

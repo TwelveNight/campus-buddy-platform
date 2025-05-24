@@ -16,6 +16,7 @@ import Debug from '../views/Debug.vue' // 添加调试页面
 // 动态导入组件
 const GroupList = () => import('../views/GroupList.vue')
 const GroupDetail = () => import('../views/GroupDetail.vue')
+const GroupPreview = () => import('../views/GroupPreview.vue')
 import { useAuthStore } from '../store/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -97,6 +98,12 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'groups/:id',
+        component: GroupPreview,
+        props: true,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'groups/:id/detail',
         component: GroupDetail,
         props: true,
         meta: { requiresAuth: true }

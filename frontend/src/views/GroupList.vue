@@ -547,7 +547,15 @@ const handleJoinGroup = async (group) => {
 
 // 跳转到小组详情页
 const goToGroupDetail = (groupId) => {
-  router.push(`/groups/${groupId}`);
+  // 检查用户是否已经是小组成员
+  const isMember = userJoinedGroups.value.some(g => g.groupId === groupId);
+  
+  // 如果是小组成员，直接跳转到详情页；否则跳转到预览页
+  if (isMember) {
+    router.push(`/groups/${groupId}/detail`);
+  } else {
+    router.push(`/groups/${groupId}`);
+  }
 };
 </script>
 
