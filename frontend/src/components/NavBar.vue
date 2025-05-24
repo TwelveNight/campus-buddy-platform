@@ -34,25 +34,16 @@
                     </el-sub-menu>
 
                     <!-- 学习小组 -->
-                    <el-menu-item index="/groups">
-                        <el-icon>
-                            <UserFilled />
-                        </el-icon>
-                        学习小组
-                    </el-menu-item>
-
-                    <!-- 我的中心 -->
-                    <el-sub-menu index="my" v-if="authStore.isAuthenticated">
+                    <el-sub-menu index="/groups">
                         <template #title>
                             <el-icon>
-                                <User />
+                                <UserFilled />
                             </el-icon>
-                            个人中心
+                            学习小组
                         </template>
-                        <el-menu-item index="/my/helpinfo">我的互助</el-menu-item>
-                        <el-menu-item index="/applications">我的申请</el-menu-item>
-                        <el-menu-item index="/reviews">我的评价</el-menu-item>
-                        <el-menu-item index="/profile">个人资料</el-menu-item>
+                        <el-menu-item index="/groups">浏览小组</el-menu-item>
+                        <el-menu-item index="/groups/my" v-if="authStore.isAuthenticated">我加入的小组</el-menu-item>
+                        <el-menu-item index="/groups/create" v-if="authStore.isAuthenticated">创建小组</el-menu-item>
                     </el-sub-menu>
 
                     <!-- 管理后台 -->
@@ -68,7 +59,7 @@
             <div class="user-actions">
                 <template v-if="authStore.isAuthenticated">
                     <div class="user-avatar-container">
-                        <el-dropdown trigger="click">
+                        <el-dropdown trigger="hover">
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="getUserAvatar()"></el-avatar>
                                 <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
@@ -80,6 +71,11 @@
                                         <el-icon>
                                             <User />
                                         </el-icon>个人中心
+                                    </el-dropdown-item>
+                                    <el-dropdown-item @click="$router.push('/groups/my')">
+                                        <el-icon>
+                                            <UserFilled />
+                                        </el-icon>我的小组
                                     </el-dropdown-item>
                                     <el-dropdown-item @click="$router.push('/my/helpinfo')">
                                         <el-icon>
