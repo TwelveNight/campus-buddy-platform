@@ -153,6 +153,8 @@ interface ReviewItem {
     reviewType?: string; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
     relatedInfoTitle?: string; // 相关互助信息标题
     relatedInfoSummary?: string; // 相关互助信息摘要
+    reviewerRole?: string; // PUBLISHER (求助方) 或 HELPER (帮助方)
+    reviewedRole?: string; // PUBLISHER (求助方) 或 HELPER (帮助方)
 }
 
 const props = defineProps({
@@ -171,9 +173,14 @@ const props = defineProps({
     showActionButtons: {
         type: Boolean,
         default: true
+    },
+    // 新增：明确传入页面用户ID，便于角色判断
+    targetUserId: {
+        type: Number,
+        required: false,
+        default: 0
     }
 });
-
 
 const emit = defineEmits(['filter']);
 
@@ -286,77 +293,104 @@ function getRelatedLink(review: ReviewItem) {
 // 获取用户角色类型（标签样式）
 function getUserRoleType(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return 'info';
-    // 判断当前用户是发布者还是帮助者
-    const currentUserId = useAuthStore().user?.userId;
-
-    if (reviewType === 'PUBLISHER_TO_HELPER') {
-        // 如果是发布者评价帮助者
-        return reviewerUserId === currentUserId ? 'primary' : 'success';
-    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
-        // 如果是帮助者评价发布者
-        return reviewerUserId === currentUserId ? 'success' : 'primary';
+    
+    // 直接基于reviewType字段判断角色
+    // 首先，判断当前人是评价者还是被评价者
+    const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
+    if (!review) return 'info';
+    
+    const isReviewer = reviewerUserId === review.reviewerUserId;
+    
+    if (isReviewer) {
+        // 当前用户是评价者
+        return reviewType === 'PUBLISHER_TO_HELPER' ? 'primary' : 'success';
+    } else {
+        // 当前用户是被评价者
+        return reviewType === 'HELPER_TO_PUBLISHER' ? 'primary' : 'success';
     }
-
-    return 'info';
 }
 
 // 获取用户角色标签文本
 function getUserRoleLabel(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return '用户';
-
-    const currentUserId = useAuthStore().user?.userId;
-
-    if (reviewType === 'PUBLISHER_TO_HELPER') {
-        // 发布者评价帮助者的场景
-        return reviewerUserId === currentUserId ? '求助方' : '帮助方';
-    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
-        // 帮助者评价发布者的场景
-        return reviewerUserId === currentUserId ? '帮助方' : '求助方';
+    
+    // 直接基于reviewType字段判断角色
+    // 首先，判断当前人是评价者还是被评价者
+    const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
+    if (!review) return '用户';
+    
+    const isReviewer = reviewerUserId === review.reviewerUserId;
+    
+    if (isReviewer) {
+        // 当前用户是评价者
+        return reviewType === 'PUBLISHER_TO_HELPER' ? '求助方' : '帮助方';
+    } else {
+        // 当前用户是被评价者
+        return reviewType === 'HELPER_TO_PUBLISHER' ? '求助方' : '帮助方';
     }
-
-    return '用户';
 }
 
 // 获取用户角色的CSS类名
 function getRoleClass(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return 'role-default';
-    const currentUserId = useAuthStore().user?.userId;
-
-    if (reviewType === 'PUBLISHER_TO_HELPER') {
-        return reviewerUserId === currentUserId ? 'role-publisher' : 'role-helper';
-    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
-        return reviewerUserId === currentUserId ? 'role-helper' : 'role-publisher';
+    
+    // 直接基于reviewType字段判断角色
+    // 首先，判断当前人是评价者还是被评价者
+    const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
+    if (!review) return 'role-default';
+    
+    const isReviewer = reviewerUserId === review.reviewerUserId;
+    
+    if (isReviewer) {
+        // 当前用户是评价者
+        return reviewType === 'PUBLISHER_TO_HELPER' ? 'role-publisher' : 'role-helper';
+    } else {
+        // 当前用户是被评价者
+        return reviewType === 'HELPER_TO_PUBLISHER' ? 'role-publisher' : 'role-helper';
     }
-
-    return 'role-default';
 }
 
 // 获取用户角色的图标
 function getRoleIcon(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return '👤';
-    const currentUserId = useAuthStore().user?.userId;
-
-    if (reviewType === 'PUBLISHER_TO_HELPER') {
-        return reviewerUserId === currentUserId ? '📢' : '🤝';
-    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
-        return reviewerUserId === currentUserId ? '🤝' : '📢';
+    
+    // 直接基于reviewType字段判断角色
+    // 首先，判断当前人是评价者还是被评价者
+    const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
+    if (!review) return '👤';
+    
+    const isReviewer = reviewerUserId === review.reviewerUserId;
+    
+    if (isReviewer) {
+        // 当前用户是评价者
+        return reviewType === 'PUBLISHER_TO_HELPER' ? '📢' : '🤝';
+    } else {
+        // 当前用户是被评价者
+        return reviewType === 'HELPER_TO_PUBLISHER' ? '📢' : '🤝';
     }
-
-    return '👤';
 }
 
 // 获取用户角色的提示信息
 function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return '用户角色';
-    const currentUserId = useAuthStore().user?.userId;
-
-    if (reviewType === 'PUBLISHER_TO_HELPER') {
-        return reviewerUserId === currentUserId ? '您是求助方' : '对方是帮助方';
-    } else if (reviewType === 'HELPER_TO_PUBLISHER') {
-        return reviewerUserId === currentUserId ? '您是帮助方' : '对方是求助方';
+    
+    // 直接基于reviewType字段判断角色
+    // 首先，判断当前人是评价者还是被评价者
+    const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
+    if (!review) return '用户角色';
+    
+    const isReviewer = reviewerUserId === review.reviewerUserId;
+    const isCurrentUser = reviewerUserId === currentUserId.value;
+    
+    if (isReviewer) {
+        // 当前用户是评价者
+        const roleText = reviewType === 'PUBLISHER_TO_HELPER' ? '求助方' : '帮助方';
+        return isCurrentUser ? `您是${roleText}` : `该用户是${roleText}`;
+    } else {
+        // 当前用户是被评价者
+        const roleText = reviewType === 'HELPER_TO_PUBLISHER' ? '求助方' : '帮助方';
+        return isCurrentUser ? `您是${roleText}` : `该用户是${roleText}`;
     }
-
-    return '用户角色';
 }
 
 </script>

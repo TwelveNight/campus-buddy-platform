@@ -85,7 +85,14 @@
           <h2>收到的评价</h2>
         </div>
       </template>
-      <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" />
+      <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId">
+        <template #reviewer-name="{ review }">
+          <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name">
+            {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
+          </router-link>
+        </template>
+        <template #reviewed-name></template>
+      </ReviewList>
     </el-card>
   </div>
 </template>

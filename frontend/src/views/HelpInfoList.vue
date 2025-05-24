@@ -69,9 +69,20 @@
                     :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="publisherId" label="发布者" width="100">
                     <template #default="scope">
-                        <span v-if="scope.row.params && scope.row.params.publisherName">{{
-                            scope.row.params.publisherName }}</span>
-                        <span v-else>用户{{ scope.row.publisherId }}</span>
+                        <router-link
+                            v-if="scope.row.params && scope.row.params.publisherName"
+                            :to="`/user/${scope.row.publisherId}`"
+                            class="publisher-link"
+                        >
+                            {{ scope.row.params.publisherName }}
+                        </router-link>
+                        <router-link
+                            v-else
+                            :to="`/user/${scope.row.publisherId}`"
+                            class="publisher-link"
+                        >
+                            用户{{ scope.row.publisherId }}
+                        </router-link>
                     </template>
                 </el-table-column>
                 <el-table-column prop="createdAt" label="发布时间" width="180">
@@ -303,6 +314,18 @@ function formatDate(dateString: string | Date | number) {
     text-decoration: underline;
     color: #337ecc;
     transform: translateX(2px);
+}
+
+.publisher-link {
+    color: #409EFF;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.publisher-link:hover {
+    color: #337ecc;
+    text-decoration: underline;
 }
 
 .pagination-container {

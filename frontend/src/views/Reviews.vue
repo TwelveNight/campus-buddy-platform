@@ -180,7 +180,7 @@
                             content: r.content,
                             createdAt: r.createdAt || Date.now(),
                             reviewType: r.reviewType,
-                        }))" :loading="loading" :showFilter="false">
+                        }))" :loading="loading" :showFilter="false" :targetUserId="currentUserId">
                             <template #reviewer-name="{ review }">
                                 <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name">
                                     {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
@@ -208,8 +208,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import {
-    Star, ChatRound, MessageBox, Document, View, Link,
-    Trophy, Medal, Calendar, Collection, Filter, RefreshRight
+    Star, ChatRound, Document,
+    Trophy, Medal, Collection, Filter, RefreshRight
 } from '@element-plus/icons-vue';
 import ReviewList from '../components/ReviewList.vue';
 import { getUserReviews, getUserCreditScore } from '../api/review';
