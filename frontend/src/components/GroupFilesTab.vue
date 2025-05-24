@@ -14,51 +14,51 @@
             <el-table v-else :data="files" style="width: 100%"
                 :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#606266' }">
                 <el-table-column label="文件名" min-width="220">
-                    <template #default="{ row }">
+                    <template #default="scope">
                         <div class="file-name-cell">
                             <el-icon :size="24" class="file-icon">
-                                <Document v-if="isDocumentFile(row.fileName)" />
-                                <Picture v-else-if="isImageFile(row.fileName)" />
-                                <VideoPlay v-else-if="isVideoFile(row.fileName)" />
+                                <Document v-if="isDocumentFile(scope.row.fileName)" />
+                                <Picture v-else-if="isImageFile(scope.row.fileName)" />
+                                <VideoPlay v-else-if="isVideoFile(scope.row.fileName)" />
                                 <Files v-else />
                             </el-icon>
-                            <span class="file-name">{{ row.fileName }}</span>
+                            <span class="file-name">{{ scope.row.fileName }}</span>
                         </div>
                     </template>
                 </el-table-column>
 
                 <el-table-column label="大小" width="120">
-                    <template #default="{ row }">
-                        {{ formatFileSize(row.fileSize) }}
+                    <template #default="scope">
+                        {{ formatFileSize(scope.row.fileSize) }}
                     </template>
                 </el-table-column>
 
                 <el-table-column label="上传者" width="150">
-                    <template #default="{ row }">
-                        {{ row.uploaderName }}
+                    <template #default="scope">
+                        {{ scope.row.uploaderName }}
                     </template>
                 </el-table-column>
 
                 <el-table-column label="上传时间" width="180">
-                    <template #default="{ row }">
-                        {{ formatTime(row.createdAt) }}
+                    <template #default="scope">
+                        {{ formatTime(scope.row.createdAt) }}
                     </template>
                 </el-table-column>
 
                 <el-table-column label="描述" min-width="200">
-                    <template #default="{ row }">
-                        {{ row.description || '无' }}
+                    <template #default="scope">
+                        {{ scope.row.description || '无' }}
                     </template>
                 </el-table-column>
 
                 <el-table-column label="操作" width="200" fixed="right">
-                    <template #default="{ row }">
-                        <el-button type="primary" size="small" @click="handleDownload(row)" plain>
+                    <template #default="scope">
+                        <el-button type="primary" size="small" @click="handleDownload(scope.row)" plain>
                             <el-icon>
                                 <Download />
                             </el-icon> 下载
                         </el-button>
-                        <el-dropdown v-if="canManageFile(row)" trigger="click">
+                        <el-dropdown v-if="canManageFile(scope.row)" trigger="click">
                             <el-button type="primary" size="small" plain>
                                 <el-icon>
                                     <MoreFilled />
@@ -66,12 +66,12 @@
                             </el-button>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item @click="showEditFileDialog(row)">
+                                    <el-dropdown-item @click="showEditFileDialog(scope.row)">
                                         <el-icon>
                                             <Edit />
                                         </el-icon> 编辑描述
                                     </el-dropdown-item>
-                                    <el-dropdown-item @click="confirmDeleteFile(row)" class="danger-item">
+                                    <el-dropdown-item @click="confirmDeleteFile(scope.row)" class="danger-item">
                                         <el-icon>
                                             <Delete />
                                         </el-icon> 删除文件
@@ -154,8 +154,7 @@ import {
     uploadFile,
     updateFileInfo,
     deleteFile,
-    getFileDownloadUrl,
-    type FileData
+    getFileDownloadUrl
 } from '@/api/groupFile';
 import {
     Document,
@@ -168,6 +167,18 @@ import {
     MoreFilled,
     UploadFilled
 } from '@element-plus/icons-vue';
+
+// 类型定义补充
+interface FileData {
+    id?: number;
+    fileId?: number;
+    fileName: string;
+    size?: number;
+    uploaderId?: number;
+    uploaderName?: string;
+    uploadTime?: string;
+    description?: string;
+}
 
 // 属性定义
 const props = defineProps({
@@ -245,7 +256,7 @@ watch(() => props.groupId, (newVal) => {
 const loadFiles = async () => {
     loading.value = true;
     try {
-        const response = await getGroupFiles(props.groupId);
+        const response = await getGroupFiles({ groupId: props.groupId });
         if (response.data && response.data.code === 200) {
             files.value = response.data.data || [];
         } else {
@@ -293,10 +304,10 @@ const handleUploadFile = async () => {
     }
 };
 
-// 删除文件
-const handleDeleteFile = (file) => {
+// 删除文件（合并了 handleDeleteFile 和 confirmDeleteFile 函数）
+const confirmDeleteFile = (file: FileData) => {
     ElMessageBox.confirm(
-        `确定要删除文件 "${file.fileName}" 吗？`,
+        `确定要删除文件 "${file.fileName}" 吗？删除后将无法恢复。`,
         '删除文件',
         {
             confirmButtonText: '确定',
@@ -305,18 +316,26 @@ const handleDeleteFile = (file) => {
         }
     ).then(async () => {
         try {
-            const response = await deleteFile(file.fileId);
+            const fileId = file.id || file.fileId;
+            if (fileId === undefined) {
+                ElMessage.error('文件ID未定义');
+                return;
+            }
+            
+            const response = await deleteFile(fileId);
             if (response.data && response.data.code === 200) {
-                ElMessage.success('文件已删除');
-                loadFiles();
+                ElMessage.success('文件已成功删除');
+                loadFiles(); // 重新加载文件列表
             } else {
                 ElMessage.error(response.data?.message || '删除文件失败');
             }
         } catch (error) {
-            console.error('删除文件失败:', error);
-            ElMessage.error('删除文件失败，请稍后重试');
+            console.error('文件删除失败:', error);
+            ElMessage.error('文件删除失败，请稍后重试');
         }
-    }).catch(() => {});
+    }).catch(() => {
+        // 取消操作
+    });
 };
 
 // 显示上传对话框
@@ -335,7 +354,7 @@ const showUploadDialog = () => {
 };
 
 // 文件上传相关处理
-const handleFileChange = (file: any) => {
+const handleFileChange = (file: { raw: File }) => {
     fileForm.value.file = file.raw;
 };
 
@@ -374,39 +393,6 @@ const handleUpdateFileInfo = async () => {
     } finally {
         submitting.value = false;
     }
-};
-
-// 确认删除文件
-const confirmDeleteFile = (file: FileData) => {
-    ElMessageBox.confirm(
-        '确定要删除该文件吗？删除后将无法恢复。',
-        '删除文件',
-        {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-        }
-    ).then(async () => {
-        try {
-            if (!file.id) {
-                ElMessage.error('文件ID不存在');
-                return;
-            }
-
-            const response = await deleteFile(file.id);
-            if (response.data && response.data.code === 200) {
-                ElMessage.success('文件删除成功');
-                loadFiles(); // 重新加载文件列表
-            } else {
-                ElMessage.error(response.data?.message || '文件删除失败');
-            }
-        } catch (error) {
-            console.error('文件删除失败:', error);
-            ElMessage.error('文件删除失败，请稍后重试');
-        }
-    }).catch(() => {
-        // 取消操作
-    });
 };
 
 // 下载文件
@@ -467,6 +453,19 @@ const isImageFile = (fileName: string): boolean => {
 const isVideoFile = (fileName: string): boolean => {
     const videoExts = ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv', '.webm'];
     return videoExts.some(ext => fileName.toLowerCase().endsWith(ext));
+};
+
+// 处理分页大小变化
+const handleSizeChange = (val: number) => {
+    pageSize.value = val;
+    currentPage.value = 1;
+    loadFiles();
+};
+
+// 处理页码变化
+const handleCurrentChange = (val: number) => {
+    currentPage.value = val;
+    loadFiles();
 };
 </script>
 

@@ -20,16 +20,8 @@
                         <el-table v-else :data="filteredMembers" style="width: 100%"
                             :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#606266' }">
                             <el-table-column label="成员" min-width="220">
-                                <template #default="{ row }">
-                                    <div class="member-info">
-                                        <el-avatar :size="32" :src="row.avatar || defaultAvatar">
-                                            {{ row.username?.substring(0, 1) }}
-                                        </el-avatar>
-                                        <div class="member-name">
-                                            <div>{{ row.username || '未知用户' }}</div>
-                                            <div class="member-detail">{{ row.realName || '' }}</div>
-                                        </div>
-                                    </div>
+                                <template #default="scope">
+                                    {{ scope.row.username }}
                                 </template>
                             </el-table-column>
 
@@ -198,7 +190,7 @@ const activeTab = ref('members');
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
 // 计算属性
-const currentUserId = computed(() => authStore.userId);
+const currentUserId = computed(() => authStore.user?.userId);
 
 // 是否为创建者
 const isCreator = computed(() => props.userRole === 'CREATOR');
@@ -287,14 +279,14 @@ const filterMembers = () => {
 };
 
 // 标签页切换处理
-const handleTabChange = (tab) => {
+const handleTabChange = (tab: string) => {
     if (tab === 'requests' && canApproveRequests.value) {
         loadJoinRequests();
     }
 };
 
 // 设置为管理员
-const handleSetAdmin = async (member) => {
+const handleSetAdmin = async (member: GroupMember) => {
     try {
         const response = await setAdmin(props.groupId, member.userId);
         if (response.data && response.data.code === 200) {
@@ -311,7 +303,7 @@ const handleSetAdmin = async (member) => {
 };
 
 // 取消管理员
-const handleCancelAdmin = async (member) => {
+const handleCancelAdmin = async (member: GroupMember) => {
     try {
         const response = await cancelAdmin(props.groupId, member.userId);
         if (response.data && response.data.code === 200) {
@@ -328,7 +320,7 @@ const handleCancelAdmin = async (member) => {
 };
 
 // 确认移除成员
-const handleRemoveMember = (member) => {
+const handleRemoveMember = (member: GroupMember) => {
     ElMessageBox.confirm(
         `确定要将 ${member.username} 移出小组吗？`,
         '移出成员',
@@ -357,7 +349,7 @@ const handleRemoveMember = (member) => {
 };
 
 // 通过加入申请
-const handleApproveRequest = async (request) => {
+const handleApproveRequest = async (request: GroupMember) => {
     try {
         const response = await approveJoinRequest(props.groupId, request.userId);
         if (response.data && response.data.code === 200) {
@@ -375,7 +367,7 @@ const handleApproveRequest = async (request) => {
 };
 
 // 拒绝加入申请
-const handleRejectRequest = async (request) => {
+const handleRejectRequest = async (request: GroupMember) => {
     try {
         const response = await rejectJoinRequest(props.groupId, request.userId);
         if (response.data && response.data.code === 200) {
@@ -391,7 +383,7 @@ const handleRejectRequest = async (request) => {
 };
 
 // 工具函数 - 获取角色标签类型
-const getRoleTagType = (role) => {
+const getRoleTagType = (role: string) => {
     switch (role) {
         case 'CREATOR': return 'danger';
         case 'ADMIN': return 'warning';
@@ -401,7 +393,7 @@ const getRoleTagType = (role) => {
 };
 
 // 工具函数 - 获取角色标签文本
-const getRoleLabel = (role) => {
+const getRoleLabel = (role: string) => {
     switch (role) {
         case 'CREATOR': return '创建者';
         case 'ADMIN': return '管理员';
@@ -411,7 +403,7 @@ const getRoleLabel = (role) => {
 };
 
 // 工具函数 - 格式化时间
-const formatTime = (timestamp) => {
+const formatTime = (timestamp: string | undefined) => {
     if (!timestamp) return '';
 
     const date = new Date(timestamp);
