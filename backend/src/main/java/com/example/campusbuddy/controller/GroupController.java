@@ -71,7 +71,6 @@ public class GroupController {
             @Parameter(description = "小组分类，可选") @RequestParam(required = false) String category,
             @Parameter(description = "小组标签，可选") @RequestParam(required = false) String tag,
             @Parameter(description = "搜索关键字，可选") @RequestParam(required = false) String keyword) {
-        
         IPage<Group> groupPage = groupService.queryGroups(pageNum, pageSize, category, tag, keyword);
         return R.ok(groupPage);
     }

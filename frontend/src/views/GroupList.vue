@@ -29,15 +29,20 @@
       <el-tab-pane label="所有小组" name="all">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="暂无小组" />
-          <el-card v-for="group in groups" :key="group.groupId" class="group-card"
-            @click="goToGroupDetail(group.groupId)">
+          <el-card v-for="group in groups" :key="group.groupId" 
+            class="group-card"
+            :class="{'group-card-disbanded': group.status === 'DISBANDED'}"
+            @click="group.status === 'DISBANDED' ? null : goToGroupDetail(group.groupId)">
             <div class="group-avatar">
               <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
             </div>
             <div class="group-info">
-              <h3 class="group-name">{{ group.name }}</h3>
+              <h3 class="group-name">
+                {{ group.name }}
+                <el-tag v-if="group.status === 'DISBANDED'" type="danger" size="small" style="margin-left:8px;">已解散</el-tag>
+              </h3>
               <div class="group-meta">
                 <span>
                   <el-icon>
@@ -54,11 +59,11 @@
               </div>
             </div>
             <div class="group-actions">
-              <el-button type="primary" size="small" plain @click.stop="handleJoinGroup(group)"
-                v-if="!isUserInGroup(group)">
+              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
+              <el-button v-else type="primary" size="small" plain @click.stop="handleJoinGroup(group)" v-if="!isUserInGroup(group)">
                 加入小组
               </el-button>
-              <el-button type="success" size="small" plain disabled v-else>
+              <el-button v-else type="success" size="small" plain disabled>
                 已加入
               </el-button>
             </div>
@@ -75,15 +80,20 @@
       <el-tab-pane label="我创建的" name="created">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="您暂未创建任何小组" />
-          <el-card v-for="group in groups" :key="group.groupId" class="group-card"
-            @click="goToGroupDetail(group.groupId)">
+          <el-card v-for="group in groups" :key="group.groupId" 
+            class="group-card"
+            :class="{'group-card-disbanded': group.status === 'DISBANDED'}"
+            @click="group.status === 'DISBANDED' ? null : goToGroupDetail(group.groupId)">
             <div class="group-avatar">
               <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
             </div>
             <div class="group-info">
-              <h3 class="group-name">{{ group.name }}</h3>
+              <h3 class="group-name">
+                {{ group.name }}
+                <el-tag v-if="group.status === 'DISBANDED'" type="danger" size="small" style="margin-left:8px;">已解散</el-tag>
+              </h3>
               <div class="group-meta">
                 <span>
                   <el-icon>
@@ -100,7 +110,8 @@
               </div>
             </div>
             <div class="group-actions">
-              <el-button type="success" size="small" plain disabled>
+              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
+              <el-button v-else type="success" size="small" plain disabled>
                 我创建的
               </el-button>
             </div>
@@ -115,15 +126,20 @@
       <el-tab-pane label="我加入的" name="joined">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="您暂未加入任何小组" />
-          <el-card v-for="group in groups" :key="group.groupId" class="group-card"
-            @click="goToGroupDetail(group.groupId)">
+          <el-card v-for="group in groups" :key="group.groupId" 
+            class="group-card"
+            :class="{'group-card-disbanded': group.status === 'DISBANDED'}"
+            @click="group.status === 'DISBANDED' ? null : goToGroupDetail(group.groupId)">
             <div class="group-avatar">
               <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
             </div>
             <div class="group-info">
-              <h3 class="group-name">{{ group.name }}</h3>
+              <h3 class="group-name">
+                {{ group.name }}
+                <el-tag v-if="group.status === 'DISBANDED'" type="danger" size="small" style="margin-left:8px;">已解散</el-tag>
+              </h3>
               <div class="group-meta">
                 <span>
                   <el-icon>
@@ -140,7 +156,8 @@
               </div>
             </div>
             <div class="group-actions">
-              <el-button type="success" size="small" plain disabled>
+              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
+              <el-button v-else type="success" size="small" plain disabled>
                 已加入
               </el-button>
             </div>
@@ -603,6 +620,20 @@ const goToGroupDetail = (groupId) => {
 .group-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.group-card-disbanded {
+  background: #f5f5f5 !important;
+  filter: grayscale(0.7);
+  pointer-events: none;
+  opacity: 0.7;
+  border: 1.5px dashed #e57373;
+}
+
+.group-card-disbanded .el-tag[type="danger"] {
+  background: #e57373;
+  color: #fff;
+  border: none;
 }
 
 .group-avatar {
