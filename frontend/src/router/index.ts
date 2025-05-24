@@ -12,6 +12,10 @@ import MyHelpInfo from '../views/MyHelpInfo.vue'
 import Profile from '../views/Profile.vue'
 import Reviews from '../views/Reviews.vue'
 import AdminHelpInfo from '../views/AdminHelpInfo.vue'
+import Debug from '../views/Debug.vue' // 添加调试页面
+// 动态导入组件
+const GroupList = () => import('../views/GroupList.vue')
+const GroupDetail = () => import('../views/GroupDetail.vue')
 import { useAuthStore } from '../store/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -85,6 +89,23 @@ const routes: RouteRecordRaw[] = [
         path: 'user/:userId',
         name: 'UserProfile',
         component: () => import('../views/UserProfile.vue')
+      },
+      {
+        path: 'groups',
+        component: GroupList,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'groups/:id',
+        component: GroupDetail,
+        props: true,
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'debug',
+        component: Debug,
+        name: 'Debug',
+        meta: { requiresAuth: true }
       }
     ]
   }

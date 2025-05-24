@@ -33,6 +33,14 @@
                         <el-menu-item index="/my/helpinfo">我的互助</el-menu-item>
                     </el-sub-menu>
 
+                    <!-- 学习小组 -->
+                    <el-menu-item index="/groups">
+                        <el-icon>
+                            <UserFilled />
+                        </el-icon>
+                        学习小组
+                    </el-menu-item>
+
                     <!-- 我的中心 -->
                     <el-sub-menu index="my" v-if="authStore.isAuthenticated">
                         <template #title>
@@ -64,7 +72,7 @@
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="getUserAvatar()"></el-avatar>
                                 <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
-                                }}</span>
+                                    }}</span>
                             </div>
                             <template #dropdown>
                                 <el-dropdown-menu>
@@ -108,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import {
@@ -118,7 +126,8 @@ import {
     Setting,
     Document,
     List,
-    SwitchButton
+    SwitchButton,
+    UserFilled
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -127,11 +136,25 @@ const authStore = useAuthStore()
 
 const activeIndex = computed(() => route.path)
 
-// 判断当前用户是否是管理员
+// 使用authStore中的isAdmin getter
 const isAdmin = computed(() => {
-    return authStore.user &&
-        authStore.user.roles &&
-        authStore.user.roles.includes('ROLE_ADMIN')
+    // 添加调试日志
+    console.log('NavBar - 当前用户信息:', authStore.user);
+    console.log('NavBar - 用户角色:', authStore.user?.roles);
+    console.log('NavBar - isAdmin值:', authStore.isAdmin);
+    return authStore.isAdmin;
+})
+
+// 组件挂载时检查管理员状态
+onMounted(async () => {
+    if (authStore.isAuthenticated) {
+        try {
+            const isAdmin = await authStore.checkAdminStatus();
+            console.log('NavBar组件中检查管理员状态:', isAdmin);
+        } catch (error) {
+            console.error('NavBar组件中检查管理员状态失败:', error);
+        }
+    }
 })
 
 // 判断是否为认证页面（登录/注册）

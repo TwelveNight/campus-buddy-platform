@@ -1,0 +1,502 @@
+<template>
+  <div class="group-list-page">
+    <h1 class="page-title">学习小组</h1>
+
+    <div class="group-actions">
+      <el-button type="primary" @click="showCreateGroupDialog">
+        <el-icon>
+          <Plus />
+        </el-icon> 创建小组
+      </el-button>
+
+      <div class="group-filters">
+        <el-input v-model="searchKeyword" placeholder="搜索小组名称或描述" class="search-input" clearable
+          @keyup.enter="loadGroups">
+          <template #prefix>
+            <el-icon>
+              <Search />
+            </el-icon>
+          </template>
+        </el-input>
+
+        <el-select v-model="selectedCategory" placeholder="选择分类" clearable @change="loadGroups">
+          <el-option v-for="category in categories" :key="category" :label="category" :value="category" />
+        </el-select>
+      </div>
+    </div>
+
+    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+      <el-tab-pane label="所有小组" name="all">
+        <div class="group-grid" v-loading="loading">
+          <el-empty v-if="groups.length === 0 && !loading" description="暂无小组" />
+          <el-card v-for="group in groups" :key="group.groupId" class="group-card"
+            @click="goToGroupDetail(group.groupId)">
+            <div class="group-avatar">
+              <el-avatar :size="64" :src="group.avatar || defaultAvatar">
+                {{ group.name?.substring(0, 1) }}
+              </el-avatar>
+            </div>
+            <div class="group-info">
+              <h3 class="group-name">{{ group.name }}</h3>
+              <div class="group-meta">
+                <span>
+                  <el-icon>
+                    <User />
+                  </el-icon> {{ group.memberCount }} 成员
+                </span>
+                <span>
+                  <el-tag size="small">{{ group.category }}</el-tag>
+                </span>
+              </div>
+              <p class="group-description">{{ truncateText(group.description, 60) }}</p>
+            </div>
+            <div class="group-actions">
+              <el-button type="primary" size="small" plain @click.stop="handleJoinGroup(group)"
+                v-if="!isUserInGroup(group)">
+                加入小组
+              </el-button>
+              <el-button type="success" size="small" plain disabled v-else>
+                已加入
+              </el-button>
+            </div>
+          </el-card>
+        </div>
+
+        <div class="pagination">
+          <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize" :page-sizes="[8, 16, 24, 32]"
+            layout="total, sizes, prev, pager, next, jumper" :total="total" @size-change="handleSizeChange"
+            @current-change="handleCurrentChange" background />
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="我创建的" name="created">
+        <div class="group-grid" v-loading="loading">
+          <el-empty v-if="groups.length === 0 && !loading" description="您暂未创建任何小组" />
+          <!-- 内容与所有小组一致，通过切换标签加载不同数据 -->
+        </div>
+      </el-tab-pane>
+
+      <el-tab-pane label="我加入的" name="joined">
+        <div class="group-grid" v-loading="loading">
+          <el-empty v-if="groups.length === 0 && !loading" description="您暂未加入任何小组" />
+          <!-- 内容与所有小组一致，通过切换标签加载不同数据 -->
+        </div>
+      </el-tab-pane>
+    </el-tabs>
+
+    <!-- 创建小组对话框 -->
+    <el-dialog v-model="createGroupDialogVisible" title="创建学习小组" width="50%">
+      <el-form :model="groupForm" :rules="groupRules" ref="groupFormRef" label-width="80px"
+        @submit.prevent="handleCreateGroup">
+        <el-form-item label="名称" prop="name">
+          <el-input v-model="groupForm.name" placeholder="请输入小组名称" />
+        </el-form-item>
+
+        <el-form-item label="分类" prop="category">
+          <el-select v-model="groupForm.category" placeholder="选择小组分类">
+            <el-option v-for="category in categories" :key="category" :label="category" :value="category" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="标签" prop="tags">
+          <el-select v-model="groupForm.tags" multiple filterable allow-create default-first-option
+            placeholder="请输入标签（可多选，最多5个）" :max-collapse-tags="2">
+            <el-option v-for="tag in commonTags" :key="tag" :label="tag" :value="tag" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="加入方式" prop="joinType">
+          <el-radio-group v-model="groupForm.joinType">
+            <el-radio label="PUBLIC">公开（任何人可加入）</el-radio>
+            <el-radio label="PRIVATE">私有（需要审批）</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="描述" prop="description">
+          <el-input v-model="groupForm.description" type="textarea" rows="4" placeholder="请输入小组描述" />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="createGroupDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleCreateGroup" :loading="submitting">
+            创建
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import { Plus, Search, User } from '@element-plus/icons-vue';
+import {
+  getGroups,
+  getCreatedGroups,
+  getJoinedGroups,
+  createGroup,
+  joinGroup
+} from '@/api/group';
+import { useAuthStore } from '@/store/auth';
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+// 数据状态
+const loading = ref(false);
+const submitting = ref(false);
+const groups = ref([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(16);
+const searchKeyword = ref('');
+const selectedCategory = ref('');
+const activeTab = ref('all');
+const createGroupDialogVisible = ref(false);
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+
+// 小组创建表单
+const groupFormRef = ref(null);
+const groupForm = ref({
+  name: '',
+  category: '',
+  tags: [],
+  joinType: 'PUBLIC',
+  description: ''
+});
+
+// 表单验证规则
+const groupRules = {
+  name: [
+    { required: true, message: '请输入小组名称', trigger: 'blur' },
+    { min: 2, max: 30, message: '长度在 2 到 30 个字符', trigger: 'blur' }
+  ],
+  category: [
+    { required: true, message: '请选择小组分类', trigger: 'change' }
+  ],
+  description: [
+    { required: true, message: '请输入小组描述', trigger: 'blur' },
+    { min: 10, max: 500, message: '长度在 10 到 500 个字符', trigger: 'blur' }
+  ]
+};
+
+// 选项数据
+const categories = [
+  '学科学习',
+  '考研考证',
+  '技能培训',
+  '课程讨论',
+  '竞赛组队',
+  '职业发展',
+  '兴趣爱好',
+  '其他'
+];
+
+const commonTags = [
+  '计算机',
+  '数学',
+  '英语',
+  '物理',
+  '化学',
+  '生物',
+  '经济',
+  '管理',
+  '文学',
+  '历史',
+  '哲学',
+  '艺术',
+  '体育',
+  '编程',
+  '设计',
+  '演讲',
+  '写作',
+  '考研',
+  '考证',
+  '实习',
+  '就业'
+];
+
+// 计算属性
+const userJoinedGroups = ref([]);
+
+// 判断用户是否已加入某小组
+const isUserInGroup = (group) => {
+  return userJoinedGroups.value.some(g => g.groupId === group.groupId);
+};
+
+// 生命周期钩子
+onMounted(() => {
+  loadGroups();
+
+  // 加载用户已加入的小组（用于判断加入状态）
+  if (authStore.isAuthenticated) {
+    loadUserJoinedGroups();
+  }
+});
+
+// 加载小组列表
+const loadGroups = async () => {
+  loading.value = true;
+  try {
+    let response;
+    const params = {
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+      category: selectedCategory.value || undefined,
+      keyword: searchKeyword.value || undefined
+    };
+
+    if (activeTab.value === 'all') {
+      response = await getGroups(params);
+    } else if (activeTab.value === 'created') {
+      response = await getCreatedGroups();
+    } else if (activeTab.value === 'joined') {
+      response = await getJoinedGroups();
+    }
+
+    if (response.data && response.data.code === 200) {
+      if (activeTab.value === 'all') {
+        groups.value = response.data.data.records || [];
+        total.value = response.data.data.total || 0;
+      } else {
+        groups.value = response.data.data || [];
+        total.value = response.data.data.length || 0;
+      }
+    } else {
+      ElMessage.error(response.data?.message || '加载小组列表失败');
+    }
+  } catch (error) {
+    console.error('加载小组列表失败:', error);
+    ElMessage.error('加载小组列表失败，请稍后重试');
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 加载用户已加入的小组
+const loadUserJoinedGroups = async () => {
+  try {
+    const response = await getJoinedGroups();
+    if (response.data && response.data.code === 200) {
+      userJoinedGroups.value = response.data.data || [];
+    }
+  } catch (error) {
+    console.error('加载用户已加入小组失败:', error);
+  }
+};
+
+// 处理分页大小变化
+const handleSizeChange = (val) => {
+  pageSize.value = val;
+  currentPage.value = 1;
+  loadGroups();
+};
+
+// 处理页码变化
+const handleCurrentChange = (val) => {
+  currentPage.value = val;
+  loadGroups();
+};
+
+// 处理标签切换
+const handleTabChange = (tab) => {
+  currentPage.value = 1;
+  loadGroups();
+};
+
+// 截断文本
+const truncateText = (text, length) => {
+  if (!text) return '';
+  return text.length > length ? text.substring(0, length) + '...' : text;
+};
+
+// 显示创建小组对话框
+const showCreateGroupDialog = () => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录');
+    router.push('/login');
+    return;
+  }
+
+  createGroupDialogVisible.value = true;
+};
+
+// 创建小组
+const handleCreateGroup = async () => {
+  if (!groupFormRef.value) return;
+
+  await groupFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const response = await createGroup(groupForm.value);
+      if (response.data && response.data.code === 200) {
+        ElMessage.success('创建小组成功');
+        createGroupDialogVisible.value = false;
+
+        // 重置表单
+        groupForm.value = {
+          name: '',
+          category: '',
+          tags: [],
+          joinType: 'PUBLIC',
+          description: ''
+        };
+
+        // 如果当前是"我创建的"标签页，重新加载数据
+        if (activeTab.value === 'created') {
+          loadGroups();
+        }
+
+        // 跳转到新创建的小组详情页
+        router.push(`/groups/${response.data.data}`);
+      } else {
+        ElMessage.error(response.data?.message || '创建小组失败');
+      }
+    } catch (error) {
+      console.error('创建小组失败:', error);
+      ElMessage.error('创建小组失败，请稍后重试');
+    } finally {
+      submitting.value = false;
+    }
+  });
+};
+
+// 加入小组
+const handleJoinGroup = async (group) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录');
+    router.push('/login');
+    return;
+  }
+
+  try {
+    const response = await joinGroup(group.groupId);
+    if (response.data && response.data.code === 200) {
+      ElMessage.success(response.data.message || '已申请加入小组');
+
+      // 更新加入状态
+      await loadUserJoinedGroups();
+
+      // 如果是私有小组，提示用户等待审核
+      if (group.joinType === 'PRIVATE') {
+        ElMessage.info('小组需要审核，请等待管理员批准');
+      } else {
+        ElMessage.success('已成功加入小组');
+        // 如果是公开小组，刷新当前页面数据
+        if (activeTab.value === 'joined') {
+          loadGroups();
+        }
+      }
+    } else {
+      ElMessage.error(response.data?.message || '加入小组失败');
+    }
+  } catch (error) {
+    console.error('加入小组失败:', error);
+    ElMessage.error('加入小组失败，请稍后重试');
+  }
+};
+
+// 跳转到小组详情页
+const goToGroupDetail = (groupId) => {
+  router.push(`/groups/${groupId}`);
+};
+</script>
+
+<style scoped>
+.group-list-page {
+  padding: 20px;
+}
+
+.page-title {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.group-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.group-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input {
+  width: 250px;
+}
+
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.group-card {
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.group-avatar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.group-info {
+  flex: 1;
+}
+
+.group-name {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.group-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #666;
+  font-size: 14px;
+}
+
+.group-description {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 15px;
+  min-height: 40px;
+}
+
+.group-card .group-actions {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+</style>
