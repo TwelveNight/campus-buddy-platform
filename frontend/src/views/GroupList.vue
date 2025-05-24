@@ -63,6 +63,7 @@
                   <span>{{ group.creator.nickname }}</span>
                 </router-link>
               </div>
+              <div v-else style="color:#bbb;font-size:12px;">（仅在小组详情页可见创建者）</div>
               <p class="group-description">{{ truncateText(group.description, 60) }}</p>
               <div class="group-tags">
                 <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
@@ -71,13 +72,13 @@
             <div class="group-actions">
               <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
               <template v-else>
-                <el-button v-if="getUserGroupStatus(group) === 'not_joined'" type="primary" size="small" plain @click.stop="handleJoinGroup(group)">
+                <el-button v-if="!group.memberStatus" type="primary" size="small" plain @click.stop="handleJoinGroup(group)">
                   加入小组
                 </el-button>
-                <el-button v-else-if="getUserGroupStatus(group) === 'pending'" type="warning" size="small" plain disabled>
+                <el-button v-else-if="group.memberStatus === 'PENDING' || group.memberStatus === 'PENDING_APPROVAL'" type="warning" size="small" plain disabled>
                   等待审批
                 </el-button>
-                <el-button v-else type="success" size="small" plain disabled>
+                <el-button v-else-if="group.memberStatus === 'ACTIVE'" type="success" size="small" plain disabled>
                   已加入
                 </el-button>
               </template>
@@ -345,54 +346,6 @@ const commonTags = [
 // 计算属性
 const userJoinedGroups = ref([]);
 
-// 判断用户是否已加入某小组
-const isUserInGroup = (group) => {
-  // 首先验证输入参数
-  if (!group || !group.groupId) {
-    console.warn('isUserInGroup: 无效的小组数据', group);
-    return false;
-  }
-  
-  // 确保userJoinedGroups是数组
-  if (!Array.isArray(userJoinedGroups.value)) {
-    console.warn('isUserInGroup: userJoinedGroups不是数组');
-    return false;
-  }
-  
-  // 转为字符串进行比较，避免类型不匹配问题
-  const groupId = String(group.groupId);
-  const result = userJoinedGroups.value.some(g => String(g.groupId) === groupId);
-  
-  // 调试信息
-  if (result) {
-    console.log(`用户已加入小组: ${group.name} (ID: ${groupId})`);
-  }
-  
-  return result;
-};
-
-// 获取用户与小组的关系状态
-const getUserGroupStatus = (group) => {
-  if (!group || !group.groupId) return 'not_joined';
-  // 检查已加入
-  const joined = userJoinedGroups.value.find(g => String(g.groupId) === String(group.groupId));
-  if (joined) return 'joined';
-  // 检查审批中（需与后端数据结构对齐）
-  if (group._memberStatus) {
-    if (group._memberStatus === 'PENDING' || group._memberStatus === 'PENDING_APPROVAL') {
-      return 'pending';
-    }
-  }
-  if (Array.isArray(group.members)) {
-    const currentUserId = authStore.user?.userId;
-    const member = group.members.find(m => String(m.userId) === String(currentUserId));
-    if (member && (member.status === 'PENDING' || member.status === 'PENDING_APPROVAL')) {
-      return 'pending';
-    }
-  }
-  return 'not_joined';
-};
-
 // 兼容后端返回的tags为字符串的情况
 const normalizeTags = (tags) => {
   if (Array.isArray(tags)) return tags;
@@ -473,20 +426,6 @@ const loadGroups = async () => {
       if (activeTab.value === 'all') {
         groups.value = response.data.data.records || [];
         total.value = response.data.data.total || 0;
-        // 补充每个group的成员状态（如审批中）
-        if (authStore.isAuthenticated && userJoinedGroups.value.length > 0) {
-          const currentUserId = authStore.user?.userId;
-          groups.value.forEach(g => {
-            // 如果后端未返回members，则尝试从userJoinedGroups补充
-            const joined = userJoinedGroups.value.find(jg => String(jg.groupId) === String(g.groupId));
-            if (joined) {
-              g._memberStatus = 'ACTIVE';
-            } else if (Array.isArray(g.members)) {
-              const member = g.members.find(m => String(m.userId) === String(currentUserId));
-              if (member) g._memberStatus = member.status;
-            }
-          });
-        }
       } else {
         // 对于创建的和加入的小组，直接使用数组数据
         const groupList = response.data.data || [];
@@ -652,14 +591,14 @@ const handleJoinGroup = async (group) => {
     if (response.data && response.data.code === 200) {
       // 更新加入状态
       await loadUserJoinedGroups();
+      // 加入后强制刷新小组列表，确保审批状态及时更新
+      await loadGroups();
       console.log('加入小组后更新状态:', userJoinedGroups.value);
-
       // 根据小组类型显示不同的提示信息
       if (group.joinType === 'APPROVAL') {
         ElMessage.info('小组需要审核，请等待管理员批准');
       } else {
         ElMessage.success('已成功加入小组');
-        // 如果是公开小组，刷新当前页面数据
         if (activeTab.value === 'joined') {
           loadGroups();
         }
