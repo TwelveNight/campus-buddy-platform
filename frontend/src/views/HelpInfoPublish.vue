@@ -20,10 +20,6 @@
                     </el-select>
                 </el-form-item>
 
-                <el-form-item label="描述" prop="description">
-                    <RichEditor v-model="form.description" placeholder="请详细描述您的互助需求" :maxLength="500" />
-                </el-form-item>
-
                 <el-form-item label="预期时间" prop="expectedTime">
                     <el-input v-model="form.expectedTime" placeholder="例如：周一至周五18:00-20:00，或具体日期"></el-input>
                 </el-form-item>
@@ -47,12 +43,18 @@
                     <div class="form-tips">可选，上传相关图片，最多5张</div>
                 </el-form-item>
 
-                <el-form-item>
-                    <el-button type="primary" @click="onSubmit" :loading="loading" style="width: 100%">
-                        {{ isEditMode ? '更新' : '发布' }}
-                    </el-button>
-                </el-form-item>
             </el-form>
+
+            <!-- 独立描述编辑器区域 -->
+            <div class="description-section">
+                <label class="desc-label">描述 <span style="color: #f56c6c">*</span></label>
+                <RichEditor v-model="form.description" placeholder="请详细描述您的互助需求" style="width:100%;margin-top:8px;" />
+            </div>
+            <el-form-item>
+                <el-button type="primary" @click="onSubmit" :loading="loading" style="width: 100%">
+                    {{ isEditMode ? '更新' : '发布' }}
+                </el-button>
+            </el-form-item>
         </el-card>
     </div>
 </template>
@@ -100,8 +102,7 @@ const rules: FormRules = {
         { required: true, message: '请选择类型', trigger: 'change' }
     ],
     description: [
-        { required: true, message: '请输入描述', trigger: 'blur' },
-        { min: 10, max: 500, message: '描述长度应为10至500个字符', trigger: 'blur' }
+        { required: true, message: '请输入描述', trigger: 'blur' }
     ],
     expectedTime: [
         { required: true, message: '请输入预期时间', trigger: 'blur' }
@@ -208,14 +209,32 @@ async function onSubmit() {
 
 <style scoped>
 .helpinfo-publish-page {
-    max-width: 600px;
+    max-width: 900px;
     margin: 30px auto;
     padding: 0 20px;
+    /* 移除text-align:center，默认左对齐 */
 }
 
+.description-section {
+    margin-top: 32px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 24px 24px 16px 24px;
+    text-align: left; /* 强制左对齐 */
+}
+.desc-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+    display: inline-block;
+    text-align: left;
+}
 .form-tips {
     font-size: 12px;
     color: #909399;
     margin-top: 5px;
+    text-align: left;
 }
 </style>

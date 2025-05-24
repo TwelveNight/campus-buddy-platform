@@ -139,24 +139,20 @@
                 <el-form-item label="标题" prop="title">
                     <el-input v-model="postForm.title" placeholder="请输入帖子标题" />
                 </el-form-item>
-
-                <el-form-item label="内容" prop="content">
+                <el-form-item label="内容类型" prop="contentType">
                     <el-radio-group v-model="postForm.contentType" class="content-type-selector">
                         <el-radio-button label="TEXT">纯文本</el-radio-button>
-                        <el-radio-button label="HTML">富文本</el-radio-button>
+                        <el-radio-button label="MARKDOWN">Markdown</el-radio-button>
                     </el-radio-group>
-
-                    <div class="editor-container">
-                        <!-- 纯文本编辑器 -->
-                        <el-input v-if="postForm.contentType === 'TEXT'" v-model="postForm.content" type="textarea"
-                            :rows="10" placeholder="请输入帖子内容" />
-
-                        <!-- 富文本编辑器 -->
-                        <rich-editor v-else v-model="postForm.content" :height="'350'" @change="handleEditorChange" />
-                    </div>
                 </el-form-item>
             </el-form>
-
+            <!-- 独立内容编辑器区域 -->
+            <div class="post-content-section">
+                <label class="content-label">内容 <span style="color: #f56c6c">*</span></label>
+                <el-input v-if="postForm.contentType === 'TEXT'" v-model="postForm.content" type="textarea"
+                    :rows="12" placeholder="请输入帖子内容" style="width:100%;margin-top:8px;" />
+                <RichEditor v-else v-model="postForm.content" style="width:100%;margin-top:8px;" @change="handleEditorChange" />
+            </div>
             <template #footer>
                 <span class="dialog-footer">
                     <el-button @click="postDialogVisible = false">取消</el-button>
@@ -190,7 +186,7 @@ interface Post {
     postId?: number;
     title: string;
     content: string;
-    contentType?: 'TEXT' | 'HTML';
+    contentType?: 'TEXT' | 'HTML' | 'MARKDOWN';
     authorId?: number;
     authorName?: string;
     authorAvatar?: string;
@@ -249,8 +245,7 @@ const postRules = {
         { min: 2, max: 100, message: '长度在 2 到 100 个字符', trigger: 'blur' }
     ],
     content: [
-        { required: true, message: '请输入帖子内容', trigger: 'blur' },
-        { min: 5, max: 50000, message: '长度在 5 到 50000 个字符', trigger: 'blur' }
+        { required: true, message: '请输入帖子内容', trigger: 'blur' }
     ]
 };
 
@@ -352,7 +347,7 @@ const showCreatePostDialog = () => {
     postForm.value = {
         title: '',
         content: '',
-        contentType: 'TEXT',
+        contentType: 'MARKDOWN', // 默认使用Markdown
         groupId: props.groupId
     };
 
@@ -515,7 +510,10 @@ const formatTime = (time: string | undefined) => {
     }
 };
 
-// 渲染帖子内容（不使用 DOMPurify）
+// 导入marked库，用于Markdown转HTML
+import { marked } from 'marked';
+
+// 渲染帖子内容
 const renderContent = (post: Post) => {
     if (!post.content) return '';
 
@@ -523,6 +521,14 @@ const renderContent = (post: Post) => {
         // 注释: 这里应该使用 DOMPurify.sanitize(post.content),
         // 但由于类型问题我们暂时直接返回。在生产环境中应该解决此问题以保证安全性。
         return post.content;
+    } else if (post.contentType === 'MARKDOWN') {
+        // 如果内容是Markdown格式，使用marked库将Markdown转为HTML
+        try {
+            return `<div class="markdown-content">${marked(post.content)}</div>`;
+        } catch (e) {
+            console.error('Markdown解析错误:', e);
+            return post.content;
+        }
     } else {
         // 处理纯文本，保留换行
         return post.content.replace(/\n/g, '<br>');
@@ -850,5 +856,131 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     font-size: 12px;
     color: #909399;
     text-align: right;
+}
+
+/* Markdown内容样式 */
+:deep(.markdown-content) {
+    line-height: 1.6;
+    word-break: break-word;
+}
+
+:deep(.markdown-content h1) {
+    font-size: 2em;
+    margin-top: 0.67em;
+    margin-bottom: 0.67em;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+}
+
+:deep(.markdown-content h2) {
+    font-size: 1.5em;
+    margin-top: 0.83em;
+    margin-bottom: 0.83em;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+}
+
+:deep(.markdown-content h3) {
+    font-size: 1.17em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+:deep(.markdown-content h4) {
+    font-size: 1em;
+    margin-top: 1.33em;
+    margin-bottom: 1.33em;
+}
+
+:deep(.markdown-content p) {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+:deep(.markdown-content blockquote) {
+    padding: 0 1em;
+    color: #6a737d;
+    border-left: 0.25em solid #dfe2e5;
+    margin: 1em 0;
+}
+
+:deep(.markdown-content pre) {
+    padding: 16px;
+    overflow: auto;
+    font-size: 85%;
+    line-height: 1.45;
+    background-color: #f6f8fa;
+    border-radius: 6px;
+    margin: 1em 0;
+}
+
+:deep(.markdown-content code) {
+    padding: 0.2em 0.4em;
+    margin: 0;
+    font-size: 85%;
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
+}
+
+:deep(.markdown-content pre code) {
+    padding: 0;
+    background-color: transparent;
+}
+
+:deep(.markdown-content ul), 
+:deep(.markdown-content ol) {
+    padding-left: 2em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+:deep(.markdown-content li) {
+    margin: 0.25em 0;
+}
+
+:deep(.markdown-content table) {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+:deep(.markdown-content table th),
+:deep(.markdown-content table td) {
+    padding: 6px 13px;
+    border: 1px solid #dfe2e5;
+}
+
+:deep(.markdown-content table tr:nth-child(2n)) {
+    background-color: #f6f8fa;
+}
+
+:deep(.markdown-content img) {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+:deep(.markdown-content hr) {
+    height: 0.25em;
+    padding: 0;
+    margin: 24px 0;
+    background-color: #e1e4e8;
+    border: 0;
+}
+
+.post-content-section {
+    margin-top: 24px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    padding: 24px 24px 16px 24px;
+    text-align: left; /* 强制左对齐 */
+}
+.content-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+    display: inline-block;
+    text-align: left;
 }
 </style>

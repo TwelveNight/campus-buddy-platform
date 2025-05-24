@@ -46,17 +46,23 @@
               <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
             </div>
           </el-descriptions-item>
-          <el-descriptions-item label="描述" :span="2">
-            <div class="description" v-html="info.description"></div>
-          </el-descriptions-item>
-          <el-descriptions-item label="相关图片" :span="2" v-if="imageList.length > 0">
-            <div class="image-gallery">
-              <el-image v-for="(url, index) in imageList" :key="index" :src="url" :preview-src-list="imageList"
-                :initial-index="index" fit="cover" class="gallery-image">
-              </el-image>
-            </div>
-          </el-descriptions-item>
         </el-descriptions>
+
+        <!-- 描述部分单独占据一栏 -->
+        <div class="description-section">
+          <h3 class="description-title">详细描述</h3>
+          <div class="markdown-content description" v-html="renderMarkdown(info.description)"></div>
+        </div>
+        
+        <!-- 相关图片 -->
+        <div class="images-section" v-if="imageList.length > 0">
+          <h3 class="section-title">相关图片</h3>
+          <div class="image-gallery">
+            <el-image v-for="(url, index) in imageList" :key="index" :src="url" :preview-src-list="imageList"
+              :initial-index="index" fit="cover" class="gallery-image">
+            </el-image>
+          </div>
+        </div>
 
         <!-- 申请列表 - 仅发布者可见 -->
         <div class="applications-section" v-if="isPublisher && applications.length > 0">
@@ -224,6 +230,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useHelpInfoStore } from '../store/helpinfo'
 import { useAuthStore } from '../store/auth'
+import { marked } from 'marked'
 import {
   getApplications,
   acceptApplication,
@@ -609,6 +616,18 @@ function formatMessage(message: string): string {
   return message.replace(/\n/g, '<br>')
 }
 
+// 将Markdown转换为HTML
+function renderMarkdown(text: string): string {
+  if (!text) return ''
+  
+  try {
+    return `<div class="markdown-content">${marked(text)}</div>`
+  } catch (e) {
+    console.error('Markdown解析错误:', e)
+    return text.replace(/\n/g, '<br>')
+  }
+}
+
 // 检查用户的申请状态
 async function checkUserApplication() {
   // 重置状态
@@ -943,10 +962,33 @@ async function handleApplySuccess() {
   text-decoration: underline;
 }
 
+/* 描述部分样式 */
+.description-section, 
+.images-section {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.description-title,
+.section-title {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #606266;
+  border-bottom: 1px solid #ebeef5;
+  padding-bottom: 10px;
+}
+
 .description {
   white-space: pre-line;
   line-height: 1.6;
   margin-top: 5px;
+  max-height: none; /* 移除最大高度限制 */
+  overflow: visible; /* 允许内容完全显示 */
 }
 
 .message-content {
@@ -1146,5 +1188,114 @@ async function handleApplySuccess() {
     align-items: flex-start;
     gap: 5px;
   }
+}
+
+/* Markdown内容样式 */
+:deep(.markdown-content) {
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+:deep(.markdown-content h1) {
+  font-size: 2em;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+:deep(.markdown-content h2) {
+  font-size: 1.5em;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+}
+
+:deep(.markdown-content h3) {
+  font-size: 1.17em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+:deep(.markdown-content h4) {
+  font-size: 1em;
+  margin-top: 1.33em;
+  margin-bottom: 1.33em;
+}
+
+:deep(.markdown-content p) {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+:deep(.markdown-content blockquote) {
+  padding: 0 1em;
+  color: #6a737d;
+  border-left: 0.25em solid #dfe2e5;
+  margin: 1em 0;
+}
+
+:deep(.markdown-content pre) {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  margin: 1em 0;
+}
+
+:deep(.markdown-content code) {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+}
+
+:deep(.markdown-content pre code) {
+  padding: 0;
+  background-color: transparent;
+}
+
+:deep(.markdown-content ul), 
+:deep(.markdown-content ol) {
+  padding-left: 2em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+:deep(.markdown-content li) {
+  margin: 0.25em 0;
+}
+
+:deep(.markdown-content table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+:deep(.markdown-content table th),
+:deep(.markdown-content table td) {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+:deep(.markdown-content table tr:nth-child(2n)) {
+  background-color: #f6f8fa;
+}
+
+:deep(.markdown-content img) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+:deep(.markdown-content hr) {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #e1e4e8;
+  border: 0;
 }
 </style>
