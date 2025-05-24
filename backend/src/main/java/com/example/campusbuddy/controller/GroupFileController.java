@@ -170,4 +170,20 @@ public class GroupFileController {
         // 302重定向到七牛云外链
         return ResponseEntity.status(302).header("Location", fileInfo.getFileUrl()).build();
     }
+
+    /**
+     * 推荐：通过文件ID下载文件，避免文件名和groupId带来的问题
+     */
+    @Operation(summary = "通过文件ID下载文件", description = "返回七牛云外链，前端可直接跳转或下载")
+    @ApiResponse(responseCode = "200", description = "文件下载成功，返回重定向到七牛云外链")
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<Void> downloadFileById(
+            @Parameter(description = "文件ID") @PathVariable Long fileId) {
+        GroupFile fileInfo = groupFileService.getFileDetail(fileId);
+        if (fileInfo == null || !"AVAILABLE".equals(fileInfo.getStatus())) {
+            return ResponseEntity.notFound().build();
+        }
+        groupFileService.increaseDownloadCount(fileId);
+        return ResponseEntity.status(302).header("Location", fileInfo.getFileUrl()).build();
+    }
 }

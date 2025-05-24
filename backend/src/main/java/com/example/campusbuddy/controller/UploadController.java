@@ -2,6 +2,7 @@ package com.example.campusbuddy.controller;
 
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.service.GroupFileService;
 import com.example.campusbuddy.service.UploadService;
 import com.example.campusbuddy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 文件上传控制器
@@ -26,6 +30,9 @@ public class UploadController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private GroupFileService groupFileService;
 
     /**
      * 获取当前认证用户
@@ -64,13 +71,24 @@ public class UploadController {
      * 上传学习小组文件
      */
     @PostMapping("/group-file")
-    @Operation(summary = "上传学习小组文件", description = "上传学习小组文件，返回可访问的文件URL")
-    public R<String> uploadGroupFile(
+    @Operation(summary = "上传学习小组文件", description = "上传学习小组文件，返回可访问的文件URL和文件ID")
+    public R<Map<String, Object>> uploadGroupFile(
             @Parameter(description = "小组ID", required = true) @RequestParam("groupId") Long groupId,
             @Parameter(description = "文件", required = true) @RequestParam("file") MultipartFile file,
             @Parameter(description = "文件描述") @RequestParam(value = "description", required = false) String description) {
         User currentUser = getCurrentUser();
-        String fileUrl = uploadService.uploadGroupFile(groupId, currentUser.getUserId(), file, "group-files");
-        return R.ok(fileUrl);
+        try {
+            // 上传到七牛云
+            String fileUrl = uploadService.uploadGroupFile(groupId, currentUser.getUserId(), file, "group-files");
+            // 保存文件信息到数据库
+            Long fileId = groupFileService.uploadFile(groupId, currentUser.getUserId(), file, description);
+            Map<String, Object> data = new HashMap<>();
+            data.put("fileId", fileId);
+            data.put("fileUrl", fileUrl);
+            data.put("fileName", file.getOriginalFilename());
+            return R.ok("文件上传成功", data);
+        } catch (Exception e) {
+            return R.fail("文件上传失败: " + e.getMessage());
+        }
     }
 }

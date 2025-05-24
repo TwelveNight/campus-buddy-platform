@@ -66,7 +66,7 @@ export function uploadFile(groupId: number | string, file: File, description?: s
   }
   
   return request({
-    url: '/api/group-file/upload',
+    url: '/api/upload/group-file',
     method: 'post',
     data: formData,
     headers: {
@@ -92,7 +92,52 @@ export function deleteFile(fileId: number | string): Promise<ApiResponse> {
   });
 }
 
-// 下载文件（返回文件URL）
-export function getFileDownloadUrl(groupId: number | string, fileName: string): string {
-  return `${request.defaults.baseURL}/api/group-files/${groupId}/${fileName}`;
+// 下载文件（自动处理token和保存）
+export async function downloadFile(groupId: number | string, fileName: string): Promise<void> {
+  const response = await request({
+    url: `/api/group-files/${groupId}/${fileName}`,
+    method: 'get',
+    responseType: 'blob'
+  });
+  // 获取文件名
+  const disposition = response.headers?.['content-disposition'];
+  let downloadName = fileName;
+  if (disposition) {
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    if (match) downloadName = decodeURIComponent(match[1]);
+  }
+  // 创建下载链接
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', downloadName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}
+
+// 推荐：通过文件ID下载文件（自动处理token和保存）
+export async function downloadFileById(fileId: number | string, fileName: string): Promise<void> {
+  // 这里直接请求后端新接口，后端会302重定向到七牛云外链
+  const response = await request({
+    url: `/api/group-files/download/${fileId}`,
+    method: 'get',
+    responseType: 'blob'
+  });
+  // 获取文件名
+  let downloadName = fileName;
+  const disposition = response.headers?.['content-disposition'];
+  if (disposition) {
+    const match = disposition.match(/filename="?([^";]+)"?/);
+    if (match) downloadName = decodeURIComponent(match[1]);
+  }
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', downloadName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
 }

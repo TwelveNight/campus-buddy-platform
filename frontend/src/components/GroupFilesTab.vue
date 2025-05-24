@@ -154,7 +154,7 @@ import {
     uploadFile,
     updateFileInfo,
     deleteFile,
-    getFileDownloadUrl
+    downloadFileById
 } from '@/api/groupFile';
 import {
     Document,
@@ -408,18 +408,14 @@ const handleUpdateFileInfo = async () => {
 };
 
 // 下载文件
-const handleDownload = (file: FileData) => {
+const handleDownload = async (file: FileData) => {
     try {
-        const downloadUrl = getFileDownloadUrl(props.groupId, file.fileName);
-
-        // 创建一个临时链接并模拟点击下载
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = file.fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
+        const fileId = file.id || file.fileId;
+        if (fileId === undefined) {
+            ElMessage.error('文件ID不存在，无法下载');
+            return;
+        }
+        await downloadFileById(fileId, file.fileName);
         ElMessage.success('文件开始下载');
     } catch (error) {
         console.error('文件下载失败:', error);
