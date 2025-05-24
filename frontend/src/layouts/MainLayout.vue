@@ -11,12 +11,19 @@
             </div>
         </main>
         <Footer />
+        <!-- 添加调试面板 -->
+        <DebugPanel v-if="showDebugPanel" />
     </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import NavBar from '../components/NavBar.vue'
 import Footer from '../components/Footer.vue'
+import DebugPanel from '../components/DebugPanel.vue'
+
+// 通过 URL 参数控制是否显示调试面板
+const showDebugPanel = ref(window.location.search.includes('debug=true'))
 </script>
 
 <style scoped>
