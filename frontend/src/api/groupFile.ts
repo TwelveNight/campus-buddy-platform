@@ -66,7 +66,7 @@ export function uploadFile(groupId: number | string, file: File, description?: s
   }
   
   return request({
-    url: '/api/upload/group-file',
+    url: '/api/group-file/upload',
     method: 'post',
     data: formData,
     headers: {

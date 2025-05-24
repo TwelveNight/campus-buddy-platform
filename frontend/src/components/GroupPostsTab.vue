@@ -50,16 +50,79 @@
                         <el-button :type="post.liked ? 'primary' : 'default'" size="small" text
                             @click="handleLike(post)">
                             <el-icon>
-                                <GoodsFilled />
+                                <Pointer />
                             </el-icon> {{ post.likeCount || 0 }}
                         </el-button>
-                        <el-button type="text" size="small">
+                        <el-button 
+                            :type="post.showComments ? 'primary' : 'default'" 
+                            size="small" 
+                            text
+                            @click="showComments(post)">
                             <el-icon>
                                 <ChatDotRound />
                             </el-icon> {{ post.commentCount || 0 }}
                         </el-button>
                     </div>
                 </div>
+                
+                <!-- 评论区域 -->
+                <el-collapse-transition>
+                    <div v-if="post.showComments" class="post-comments">
+                        <div class="comments-container" v-loading="post.loadingComments">
+                            <div v-if="post.comments && post.comments.length > 0" class="comment-list">
+                                <div v-for="comment in post.comments" :key="comment.commentId" class="comment-item">
+                                    <div class="comment-header">
+                                        <div class="comment-author">
+                                            <el-avatar :size="32" :src="comment.avatar || defaultAvatar">
+                                                {{ comment.nickname?.substring(0, 1) || comment.username?.substring(0, 1) }}
+                                            </el-avatar>
+                                            <div>
+                                                <div class="comment-author-name">{{ comment.nickname || comment.username || '未知用户' }}</div>
+                                                <div class="comment-time">{{ formatTime(comment.createdAt) }}</div>
+                                            </div>
+                                        </div>
+                                        <el-button 
+                                            v-if="authStore.user?.userId === comment.userId" 
+                                            type="text" 
+                                            size="small"
+                                            @click="deleteCommentItem(post, comment)">
+                                            <el-icon><Delete /></el-icon>
+                                        </el-button>
+                                    </div>
+                                    <div class="comment-content">{{ comment.content }}</div>
+                                </div>
+                            </div>
+                            <el-empty v-else-if="!post.loadingComments" description="暂无评论" />
+                            
+                            <!-- 评论分页 -->
+                            <div class="comment-pagination" v-if="post.commentTotal > post.commentPageSize">
+                                <el-pagination 
+                                    v-model:current-page="post.commentCurrentPage" 
+                                    v-model:page-size="post.commentPageSize"
+                                    :page-sizes="[5, 10, 20]" 
+                                    layout="sizes, prev, pager, next" 
+                                    :total="post.commentTotal"
+                                    @size-change="(val) => handleCommentSizeChange(post, val)" 
+                                    @current-change="(val) => handleCommentPageChange(post, val)" 
+                                    small />
+                            </div>
+                            
+                            <!-- 评论输入框 -->
+                            <div class="comment-input">
+                                <el-input 
+                                    v-model="post.newComment" 
+                                    placeholder="发表你的评论..." 
+                                    :disabled="!authStore.isAuthenticated"
+                                    @keyup.enter="submitComment(post)">
+                                    <template #append>
+                                        <el-button @click="submitComment(post)" :disabled="!authStore.isAuthenticated || !post.newComment">发送</el-button>
+                                    </template>
+                                </el-input>
+                                <div v-if="!authStore.isAuthenticated" class="login-tip">请先登录后再评论</div>
+                            </div>
+                        </div>
+                    </div>
+                </el-collapse-transition>
             </div>
 
             <div class="pagination">
@@ -109,13 +172,14 @@
 <script setup lang="ts">
 import { ref, onMounted, defineProps, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, MoreFilled, GoodsFilled, ChatDotRound } from '@element-plus/icons-vue';
+import { Edit, MoreFilled, Pointer, ChatDotRound, Delete } from '@element-plus/icons-vue';
 
 // 注释掉有问题的导入
 // import DOMPurify from 'dompurify';
 // import moment from 'moment';
 
 import { getGroupPosts, createPost, updatePost, deletePost, likePost, unlikePost, getLikeStatus } from '../api/groupPost';
+import { getPostComments, addComment, deleteComment } from '../api/postComment';
 import { useAuthStore } from '../store/auth';
 import RichEditor from '../components/RichEditor.vue';
 
@@ -461,6 +525,140 @@ const renderContent = (post: Post) => {
         return post.content.replace(/\n/g, '<br>');
     }
 };
+
+// 显示/加载评论
+const showComments = async (post: Post) => {
+    // 切换评论显示状态
+    post.showComments = !post.showComments;
+    
+    // 如果是隐藏评论，则直接返回
+    if (!post.showComments) return;
+    
+    // 初始化评论相关属性
+    if (!post.comments) {
+        post.comments = [];
+        post.commentCurrentPage = 1;
+        post.commentPageSize = 5;
+        post.commentTotal = 0;
+        post.loadingComments = false;
+        post.newComment = '';
+    }
+    
+    // 加载评论
+    await loadComments(post);
+};
+
+// 加载评论列表
+const loadComments = async (post: Post) => {
+    if (!post.postId) return;
+    
+    post.loadingComments = true;
+    
+    try {
+        const response = await getPostComments({
+            postId: post.postId,
+            pageNum: post.commentCurrentPage,
+            pageSize: post.commentPageSize
+        });
+        
+        if (response.data && response.data.code === 200) {
+            post.comments = response.data.data.comments || [];
+            post.commentTotal = response.data.data.total || 0;
+            
+            // 更新评论数量显示
+            post.commentCount = post.commentTotal;
+        } else {
+            ElMessage.error(response.data?.message || '加载评论失败');
+        }
+    } catch (error) {
+        console.error('加载评论失败:', error);
+        ElMessage.error('加载评论失败，请稍后重试');
+    } finally {
+        post.loadingComments = false;
+    }
+};
+
+// 提交评论
+const submitComment = async (post: Post) => {
+    if (!authStore.isAuthenticated) {
+        ElMessage.warning('请先登录');
+        return;
+    }
+    
+    if (!post.newComment || !post.newComment.trim()) {
+        ElMessage.warning('评论内容不能为空');
+        return;
+    }
+    
+    try {
+        const response = await addComment({
+            postId: post.postId!,
+            content: post.newComment.trim()
+        });
+        
+        if (response.data && response.data.code === 200) {
+            ElMessage.success('评论成功');
+            post.newComment = ''; // 清空评论输入框
+            
+            // 重新加载评论列表，显示最新评论
+            post.commentCurrentPage = 1; // 重置到第一页
+            await loadComments(post);
+        } else {
+            ElMessage.error(response.data?.message || '评论失败');
+        }
+    } catch (error) {
+        console.error('提交评论失败:', error);
+        ElMessage.error('评论失败，请稍后重试');
+    }
+};
+
+// 删除评论
+const deleteCommentItem = async (post: Post, comment: any) => {
+    if (!authStore.isAuthenticated) {
+        ElMessage.warning('请先登录');
+        return;
+    }
+    
+    ElMessageBox.confirm(
+        '确定要删除该评论吗？此操作不可恢复。',
+        '删除评论',
+        {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        }
+    ).then(async () => {
+        try {
+            const response = await deleteComment(post.postId!, comment.commentId);
+            
+            if (response.data && response.data.code === 200) {
+                ElMessage.success('评论已成功删除');
+                
+                // 重新加载评论列表
+                await loadComments(post);
+            } else {
+                ElMessage.error(response.data?.message || '删除评论失败');
+            }
+        } catch (error) {
+            console.error('删除评论失败:', error);
+            ElMessage.error('删除评论失败，请稍后重试');
+        }
+    }).catch(() => {
+        // 取消操作
+    });
+};
+
+// 处理评论分页大小变化
+const handleCommentSizeChange = async (post: Post, val: number) => {
+    post.commentPageSize = val;
+    await loadComments(post);
+};
+
+// 处理评论页码变化
+const handleCommentPageChange = async (post: Post, val: number) => {
+    post.commentCurrentPage = val;
+    await loadComments(post);
+};
 </script>
 
 <style scoped>
@@ -549,5 +747,105 @@ const renderContent = (post: Post) => {
     margin-top: 30px;
     display: flex;
     justify-content: center;
+}
+
+/* 评论区域样式 */
+.post-comments {
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.post-comments {
+    margin-top: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.comments-container {
+    padding: 10px 0;
+}
+
+.comment-list {
+    margin-bottom: 15px;
+}
+
+.comment-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eaeaea;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.comment-item:hover {
+    background-color: #f5f5f5;
+    transform: translateX(3px);
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.comment-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comment-author-name {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+}
+
+.comment-time {
+    font-size: 12px;
+    color: #999;
+}
+
+.comment-content {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.6;
+    padding-left: 42px; /* 对齐头像右侧 */
+    word-break: break-word;
+    margin-top: 5px;
+}
+
+.comment-pagination {
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.comment-input {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #e0e0e0;
+}
+
+.comment-input .el-input {
+    transition: all 0.3s ease;
+}
+
+.comment-input .el-input:focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-tip {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #909399;
+    text-align: right;
 }
 </style>

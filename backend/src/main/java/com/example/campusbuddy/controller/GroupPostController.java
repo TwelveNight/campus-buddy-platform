@@ -3,8 +3,10 @@ package com.example.campusbuddy.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.entity.GroupPost;
+import com.example.campusbuddy.entity.PostComment;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostService;
+import com.example.campusbuddy.service.PostCommentService;
 import com.example.campusbuddy.service.PostLikeService;
 import com.example.campusbuddy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +20,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Tag(name = "学习小组帖子接口", description = "学习小组讨论区帖子相关操作")
 @RestController
@@ -33,6 +38,9 @@ public class GroupPostController {
     
     @Autowired
     private PostLikeService postLikeService;
+    
+    @Autowired
+    private PostCommentService commentService;
 
     private static final Logger log = LoggerFactory.getLogger(GroupPostController.class);
 
@@ -152,7 +160,9 @@ public class GroupPostController {
         boolean success = groupPostService.deletePost(postId, currentUser.getUserId());
 
         return success ? R.ok("帖子删除成功", null) : R.fail("删除失败，请确认您有权限删除该帖子");
-    }    /**
+    }
+
+    /**
      * 点赞帖子
      */
     @Operation(summary = "点赞帖子")
@@ -190,5 +200,123 @@ public class GroupPostController {
         boolean isLiked = postLikeService.isLiked(postId, currentUser.getUserId());
         
         return R.ok(isLiked);
+    }
+    
+    /**
+     * 获取帖子评论列表
+     */
+    @Operation(summary = "获取帖子评论列表", description = "分页获取指定帖子的评论")
+    @GetMapping("/{postId}/comments")
+    public R<Map<String, Object>> getPostComments(
+            @Parameter(description = "帖子ID") @PathVariable Long postId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize) {
+
+        IPage<PostComment> commentsPage = commentService.getPostComments(postId, pageNum, pageSize);
+        List<PostComment> comments = commentsPage.getRecords();
+        
+        // 获取评论用户信息
+        List<Long> userIds = comments.stream().map(PostComment::getUserId).collect(Collectors.toList());
+        Map<Long, User> userMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            userService.listByIds(userIds).forEach(user -> userMap.put(user.getUserId(), user));
+        }
+        
+        // 组装返回数据
+        List<Map<String, Object>> commentsList = comments.stream().map(comment -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("commentId", comment.getCommentId());
+            map.put("postId", comment.getPostId());
+            map.put("content", comment.getContent());
+            map.put("parentId", comment.getParentId());
+            map.put("createdAt", comment.getCreatedAt());
+            
+            // 添加用户信息
+            User user = userMap.get(comment.getUserId());
+            if (user != null) {
+                map.put("userId", user.getUserId());
+                map.put("username", user.getUsername());
+                map.put("nickname", user.getNickname());
+                map.put("avatar", user.getAvatarUrl());
+            }
+            
+            return map;
+        }).collect(Collectors.toList());
+        
+        // 返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("comments", commentsList);
+        result.put("total", commentsPage.getTotal());
+        result.put("pageNum", commentsPage.getCurrent());
+        result.put("pageSize", commentsPage.getSize());
+        
+        return R.ok(result);
+    }
+
+    /**
+     * 添加评论
+     */
+    @Operation(summary = "添加评论", description = "为帖子添加评论")
+    @PostMapping("/{postId}/comments")
+    public R<Long> addComment(
+            @Parameter(description = "帖子ID") @PathVariable Long postId,
+            @RequestBody Map<String, String> commentData) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return R.fail("用户未登录");
+        }
+        
+        String content = commentData.get("content");
+        if (content == null || content.trim().isEmpty()) {
+            return R.fail("评论内容不能为空");
+        }
+        
+        PostComment comment = new PostComment();
+        comment.setPostId(postId);
+        comment.setUserId(currentUser.getUserId());
+        comment.setContent(content.trim());
+        
+        Long commentId = commentService.addComment(comment);
+        
+        return R.ok(commentId);
+    }
+
+    /**
+     * 删除评论
+     */
+    @Operation(summary = "删除评论", description = "删除自己的评论")
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public R<Void> deleteComment(
+            @Parameter(description = "帖子ID") @PathVariable Long postId,
+            @Parameter(description = "评论ID") @PathVariable Long commentId) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return R.fail("用户未登录");
+        }
+        
+        boolean success = commentService.deleteComment(commentId, currentUser.getUserId());
+        
+        return success ? R.ok("删除成功", null) : R.fail("删除失败，可能没有权限或评论不存在");
+    }
+
+    /**
+     * 获取评论详情
+     */
+    @Operation(summary = "获取评论详情")
+    @GetMapping("/{postId}/comments/{commentId}")
+    public R<PostComment> getCommentDetail(
+            @Parameter(description = "帖子ID") @PathVariable Long postId,
+            @Parameter(description = "评论ID") @PathVariable Long commentId) {
+        PostComment comment = commentService.getCommentDetail(commentId);
+        if (comment == null) {
+            return R.fail("评论不存在");
+        }
+        
+        // 验证评论是否属于该帖子
+        if (!comment.getPostId().equals(postId)) {
+            return R.fail("评论不属于该帖子");
+        }
+        
+        return R.ok(comment);
     }
 }
