@@ -22,10 +22,20 @@
                             {{ group.joinType === 'PUBLIC' ? '公开小组' : '私有小组' }}
                         </span>
                     </div>
+                    <!-- 创建者信息展示 -->
+                    <div class="group-creator" v-if="group.creator">
+                        <span style="color:#888;font-size:13px;">创建者：</span>
+                        <router-link :to="`/user/${group.creator.userId}`" class="creator-link" style="display:inline-flex;align-items:center;gap:6px;">
+                            <el-avatar :size="22" :src="group.creator.avatarUrl || defaultAvatar" />
+                            <span>{{ group.creator.nickname }}</span>
+                        </router-link>
+                    </div>
                     <p class="group-description">{{ group.description }}</p>
                 </div>
                 <div class="group-actions">
-                    <el-button type="primary" @click="handleJoinGroup">加入小组</el-button>
+                    <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup">加入小组</el-button>
+                    <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
+                    <el-button v-else-if="joinStatus === 'joined'" type="success" disabled>已加入</el-button>
                     <el-button @click="goBack">返回列表</el-button>
                 </div>
             </div>
@@ -100,6 +110,7 @@ const loading = ref(false);
 const group = ref(null);
 const isGroupMember = ref(false);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+const joinStatus = ref('not_joined'); // 'not_joined' | 'pending' | 'joined'
 
 // 生命周期钩子
 onMounted(() => {
@@ -132,7 +143,7 @@ const loadGroupDetail = async () => {
     }
 };
 
-// 检查用户是否是小组成员
+// 检查用户是否是小组成员，并判断状态
 const checkGroupMembership = async () => {
     if (!authStore.isAuthenticated) return;
     
@@ -143,15 +154,18 @@ const checkGroupMembership = async () => {
             
             // 确定当前用户在小组中的角色
             const currentUserId = authStore.user?.userId;
-            const userMember = members.find(m => 
-                m.userId === currentUserId && m.status === 'ACTIVE'
-            );
+            const userMember = members.find(m => m.userId === currentUserId);
             
             if (userMember) {
-                isGroupMember.value = true;
-                // 如果用户已是小组成员且是通过预览页访问的，重定向到详情页
-                // 这里不使用 replace 避免导航历史问题
-                router.push(`/groups/${groupId.value}/detail`);
+                if (userMember.status === 'ACTIVE') {
+                    joinStatus.value = 'joined';
+                    // 如果用户已是小组成员且是通过预览页访问的，重定向到详情页
+                    router.push(`/groups/${groupId.value}/detail`);
+                } else if (userMember.status === 'PENDING' || userMember.status === 'PENDING_APPROVAL') {
+                    joinStatus.value = 'pending';
+                }
+            } else {
+                joinStatus.value = 'not_joined';
             }
         }
     } catch (error) {
@@ -183,12 +197,12 @@ const handleJoinGroup = async () => {
         const response = await joinGroup(groupId.value);
         if (response.data && response.data.code === 200) {
             // 根据小组类型显示不同的成功消息
-            if (group.value && group.value.joinType === 'PRIVATE') {
+            if (group.value && group.value.joinType === 'APPROVAL') {
                 ElMessage.info('小组需要审核，请等待管理员批准');
-                // 私有小组需要审核，暂时留在预览页面
+                joinStatus.value = 'pending';
             } else {
                 ElMessage.success('已成功加入小组');
-                // 公开小组可以直接进入详情页
+                joinStatus.value = 'joined';
                 router.push(`/groups/${groupId.value}/detail`);
             }
         } else {
@@ -251,6 +265,10 @@ const handleJoinGroup = async () => {
     gap: 4px;
     font-size: 14px;
     color: #666;
+}
+
+.group-creator {
+    margin-bottom: 15px;
 }
 
 .group-description {

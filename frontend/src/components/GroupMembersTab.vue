@@ -217,7 +217,7 @@ const canManageMembers = computed(() =>
 
 // 是否可以审批申请（创建者和管理员）
 const canApproveRequests = computed(() =>
-    ['CREATOR', 'ADMIN'].includes(props.userRole) && props.group.joinType === 'PRIVATE'
+    ['CREATOR', 'ADMIN'].includes(props.userRole) && props.group.joinType === 'APPROVAL'
 );
 
 // 监视属性变化
@@ -244,15 +244,14 @@ const loadMembers = async () => {
     try {
         const response = await getGroupMembers(props.groupId);
         if (response.data && response.data.code === 200) {
-            // 处理可能的分页数据结构
+            // 只保留ACTIVE成员
+            let allMembers = [];
             if (response.data.data && response.data.data.records !== undefined) {
-                // 服务器返回分页对象
-                members.value = response.data.data.records || [];
+                allMembers = response.data.data.records || [];
             } else {
-                // 服务器直接返回数组
-                members.value = response.data.data || [];
+                allMembers = response.data.data || [];
             }
-            console.log('成员列表加载成功:', members.value);
+            members.value = allMembers.filter(m => m.status === 'ACTIVE');
             filterMembers();
         } else {
             ElMessage.error(response.data?.message || '加载小组成员失败');
@@ -275,15 +274,14 @@ const loadJoinRequests = async () => {
     try {
         const response = await getGroupMembers(props.groupId, 'PENDING');
         if (response.data && response.data.code === 200) {
-            // 处理可能的分页数据结构
+            let allRequests = [];
             if (response.data.data && response.data.data.records !== undefined) {
-                // 服务器返回分页对象
-                joinRequests.value = response.data.data.records || [];
+                allRequests = response.data.data.records || [];
             } else {
-                // 服务器直接返回数组
-                joinRequests.value = response.data.data || [];
+                allRequests = response.data.data || [];
             }
-            console.log('加入申请加载成功:', joinRequests.value);
+            // 只保留PENDING_APPROVAL或PENDING状态的成员
+            joinRequests.value = allRequests.filter(m => m.status === 'PENDING_APPROVAL' || m.status === 'PENDING');
         } else {
             ElMessage.error(response.data?.message || '加载加入申请失败');
             joinRequests.value = [];

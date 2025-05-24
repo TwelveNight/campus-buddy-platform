@@ -19,14 +19,24 @@
                             </el-icon> {{ group.memberCount }} 成员
                         </span>
                         <span class="join-type">
-                            {{ group.joinType === 'PUBLIC' ? '公开小组' : '私有小组' }}
+                            <el-tag v-if="group.joinType === 'PUBLIC'" type="success">公开小组</el-tag>
+                            <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning">需审批</el-tag>
                         </span>
+                    </div>
+                    <!-- 创建者信息展示 -->
+                    <div class="group-creator" v-if="creator">
+                        <span style="color:#888;font-size:14px;">创建者：</span>
+                        <router-link :to="`/user/${creator.userId}`" class="creator-link" style="display:inline-flex;align-items:center;gap:6px;">
+                            <el-avatar :size="28" :src="creator.avatarUrl || defaultAvatar" />
+                            <span>{{ creator.nickname }}</span>
+                        </router-link>
                     </div>
                     <p class="group-description">{{ group.description }}</p>
                 </div>
                 <div class="group-actions">
                     <template v-if="!userRole">
-                        <el-button type="primary" @click="handleJoinGroup">加入小组</el-button>
+                        <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup">加入小组</el-button>
+                        <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
                     </template>
                     <template v-else>
                         <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog">
@@ -82,7 +92,7 @@
                     <el-form-item label="加入方式" prop="joinType">
                         <el-radio-group v-model="groupForm.joinType">
                             <el-radio label="PUBLIC">公开（任何人可加入）</el-radio>
-                            <el-radio label="PRIVATE">私有（需要审批）</el-radio>
+                            <el-radio label="APPROVAL">需审批（需管理员同意）</el-radio>
                         </el-radio-group>
                     </el-form-item>
 
@@ -130,6 +140,7 @@ const groupId = computed(() => route.params.id);
 const loading = ref(false);
 const submitting = ref(false);
 const group = ref(null);
+const creator = ref(null);
 const members = ref([]);
 const activeTab = ref('posts');
 const editGroupDialogVisible = ref(false);
@@ -198,6 +209,7 @@ const commonTags = [
 
 // 计算属性 - 用户在小组中的角色
 const userRole = ref(null);
+const joinStatus = ref('not_joined'); // 'not_joined' | 'pending' | 'joined'
 
 // 生命周期钩子
 onMounted(() => {
@@ -212,9 +224,9 @@ const loadGroupDetail = async () => {
     try {
         const response = await getGroupDetail(groupId.value);
         if (response.data && response.data.code === 200) {
-            group.value = response.data.data;
-
-            // 兼容后端返回的tags为字符串的情况
+            // 适配后端返回结构
+            group.value = response.data.data.group || response.data.data;
+            creator.value = response.data.data.creator || null;
             group.value.tags = normalizeTags(group.value.tags);
 
             // 加载小组成员
@@ -240,21 +252,27 @@ const loadGroupDetail = async () => {
     }
 };
 
-// 加载小组成员
+// 加载小组成员，判断当前用户状态
 const loadGroupMembers = async () => {
     try {
         const response = await getGroupMembers(groupId.value);
         if (response.data && response.data.code === 200) {
             members.value = response.data.data || [];
-
-            // 确定当前用户在小组中的角色
             if (authStore.isAuthenticated) {
                 const currentUserId = authStore.user?.userId;
-                const userMember = members.value.find(m =>
-                    m.userId === currentUserId && m.status === 'ACTIVE'
-                );
-
-                userRole.value = userMember ? userMember.role : null;
+                const userMember = members.value.find(m => m.userId === currentUserId);
+                if (userMember) {
+                    if (userMember.status === 'ACTIVE') {
+                        userRole.value = userMember.role;
+                        joinStatus.value = 'joined';
+                    } else if (userMember.status === 'PENDING' || userMember.status === 'PENDING_APPROVAL') {
+                        userRole.value = null;
+                        joinStatus.value = 'pending';
+                    }
+                } else {
+                    userRole.value = null;
+                    joinStatus.value = 'not_joined';
+                }
             }
         }
     } catch (error) {
@@ -339,16 +357,16 @@ const handleJoinGroup = async () => {
         router.push('/login');
         return;
     }
-
     try {
         const response = await joinGroup(groupId.value);
         if (response.data && response.data.code === 200) {
-            // 根据小组类型显示不同的成功消息
-            if (group.value && group.value.joinType === 'PRIVATE') {
+            if (group.value && group.value.joinType === 'APPROVAL') {
                 ElMessage.info('小组需要审核，请等待管理员批准');
+                joinStatus.value = 'pending';
             } else {
                 ElMessage.success('已成功加入小组');
-                loadGroupDetail(); // 重新加载小组信息
+                joinStatus.value = 'joined';
+                loadGroupDetail();
             }
         } else {
             ElMessage.error(response.data?.message || '加入小组失败');
@@ -466,6 +484,10 @@ const confirmDisbandGroup = () => {
     gap: 4px;
     font-size: 14px;
     color: #666;
+}
+
+.group-creator {
+    margin-bottom: 15px;
 }
 
 .group-description {

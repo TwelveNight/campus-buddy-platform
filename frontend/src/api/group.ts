@@ -19,7 +19,7 @@ export interface GroupData {
   category: string;
   tags?: string[];
   description: string;
-  joinType: 'PUBLIC' | 'PRIVATE';
+  joinType: 'PUBLIC' | 'APPROVAL'; // 只允许 PUBLIC 或 APPROVAL
   avatar?: string;
   [key: string]: any;
 }

@@ -78,14 +78,27 @@ public class GroupController {
     /**
      * 获取小组详情
      */
-    @Operation(summary = "获取小组详情", description = "根据小组ID获取详细信息。返回Group对象。")
+    @Operation(summary = "获取小组详情", description = "根据小组ID获取详细信息。返回Group对象和创建者信息。")
     @GetMapping("/{groupId}")
-    public R<Group> getGroupDetail(@Parameter(description = "小组ID") @PathVariable Long groupId) {
+    public R<Map<String, Object>> getGroupDetail(@Parameter(description = "小组ID") @PathVariable Long groupId) {
         Group group = groupService.getGroupDetail(groupId);
         if (group == null) {
             return R.fail("小组不存在");
         }
-        return R.ok(group);
+        // 查询创建者信息
+        Map<String, Object> result = new HashMap<>();
+        result.put("group", group);
+        User creator = userService.getById(group.getCreatorId());
+        if (creator != null) {
+            Map<String, Object> creatorInfo = new HashMap<>();
+            creatorInfo.put("userId", creator.getUserId());
+            creatorInfo.put("nickname", creator.getNickname() != null ? creator.getNickname() : creator.getUsername());
+            creatorInfo.put("avatarUrl", creator.getAvatarUrl());
+            result.put("creator", creatorInfo);
+        } else {
+            result.put("creator", null);
+        }
+        return R.ok(result);
     }
 
     /**
