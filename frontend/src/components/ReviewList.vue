@@ -41,8 +41,9 @@
                                         <span class="pulse-dot" v-if="review.reviewerUserId === currentUserId"></span>
                                     </div>
                                 </div>
-                                <!-- 仅在当前用户是评价者时显示评价对象 -->
-                                <div class="review-opposite-info" v-if="review.reviewerUserId === currentUserId">
+                                <!-- 仅在当前用户是评价者且允许显示评价对象时显示评价对象 -->
+                                <div class="review-opposite-info" 
+                                     v-if="props.showReviewTarget && review.reviewerUserId === currentUserId">
                                     <el-tag size="small" effect="plain" type="info">
                                         <span>
                                             评价对象：<router-link :to="`/user/${review.reviewedUserId}`" class="reviewed-name user-link">
@@ -180,6 +181,11 @@ const props = defineProps({
         type: Number,
         required: false,
         default: 0
+    },
+    // 控制是否显示评价对象信息
+    showReviewTarget: {
+        type: Boolean,
+        default: true
     }
 });
 

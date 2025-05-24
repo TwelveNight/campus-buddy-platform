@@ -85,19 +85,14 @@
           <h2>收到的评价</h2>
         </div>
       </template>
-      <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId">
-        <template #reviewer-name="{ review }">
-          <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name user-link">
-            {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
-          </router-link>
-        </template>
-      </ReviewList>
+      
+      <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId" :showReviewTarget="false" />
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import ReviewList from '../components/ReviewList.vue';
@@ -106,7 +101,7 @@ import { getUserById } from '../api/user';
 import { Star, User, List } from '@element-plus/icons-vue';
 
 const route = useRoute();
-const userId = Number(route.params.userId);
+const userId = ref(Number(route.params.userId));
 const loading = ref(false);
 const userInfo = ref<any>({ nickname: '', username: '', userId: '', creditScore: 0, avatarUrl: '', createdAt: '', status: 'ACTIVE', skillTags: '' });
 const reviews = ref<any[]>([]);
@@ -183,7 +178,7 @@ const getStatusType = (status: string) => {
 
 async function fetchUserInfo() {
   try {
-    const res = await getUserById(userId);
+    const res = await getUserById(userId.value);
     if (res.data && res.data.data) {
       // 正确从 res.data.data 获取用户信息
       userInfo.value = { ...userInfo.value, ...res.data.data };
@@ -200,7 +195,7 @@ async function fetchUserInfo() {
 async function fetchUserReviews() {
   loading.value = true;
   try {
-    const res = await getUserReviews({ userId, type: 'received', page: 1, size: 10 });
+    const res = await getUserReviews({ userId: userId.value, type: 'received', page: 1, size: 10 });
     console.log('获取到的评价数据：', res);
     
     if (res.data && Array.isArray(res.data.items)) {
@@ -212,7 +207,7 @@ async function fetchUserReviews() {
     }
     
     // 确保数据中的评价都是针对当前用户的
-    reviews.value = reviews.value.filter(review => review.reviewedUserId === userId);
+    reviews.value = reviews.value.filter(review => review.reviewedUserId === userId.value);
     
     console.log('过滤后的收到的评价：', reviews.value);
   } catch (e) {
@@ -223,7 +218,26 @@ async function fetchUserReviews() {
   }
 }
 
+
+
 onMounted(() => {
+  fetchUserInfo();
+  fetchUserReviews();
+});
+
+// 监听路由参数变化，当用户ID改变时重新加载数据
+watch(() => route.params.userId, (newUserId) => {
+  console.log('路由参数userId发生变化：', newUserId);
+  if (newUserId) {
+    userId.value = Number(newUserId);
+    fetchUserInfo();
+    fetchUserReviews();
+  }
+}, { immediate: true });
+
+// 监听用户ID变化，当用户ID改变时重新加载数据
+watch(userId, (newId) => {
+  console.log('用户ID变量发生变化：', newId);
   fetchUserInfo();
   fetchUserReviews();
 });
@@ -322,5 +336,16 @@ onMounted(() => {
 
 .skill-tag {
   margin-right: 0;
+}
+
+/* 卡片头部样式 */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-header h2 {
+  flex: 1;
 }
 </style>
