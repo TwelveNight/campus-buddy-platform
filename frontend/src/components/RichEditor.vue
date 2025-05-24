@@ -23,6 +23,7 @@
 import { ref, watch } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
+import { uploadApi } from '../api/upload'
 
 interface Props {
   modelValue: string
@@ -60,29 +61,27 @@ const handleChange = (content: string) => {
 
 // 处理图片上传
 const onUploadImg = async (files: Array<File>, callback: (urls: Array<string>) => void) => {
-  // 这里可以实现图片上传功能
-  // 暂时使用本地 URL 替代，实际项目中应该上传到服务器
-  const urls = files.map(file => URL.createObjectURL(file))
-  callback(urls)
-  
-  // 图片上传到服务器的示例代码:
-  /*
-  const formData = new FormData()
-  files.forEach(file => {
-    formData.append('file', file)
-  })
-  
-  try {
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    })
-    const urls = await response.json()
-    callback(urls)
-  } catch (error) {
-    console.error('图片上传失败', error)
+  // 调用后端上传接口，支持多图上传
+  const urls: string[] = []
+  for (const file of files) {
+    try {
+      const res = await uploadApi.uploadImage(file)
+      // 兼容 axios 响应结构
+      // res 可能是 AxiosResponse 或直接是 url 字符串
+      if (res && res.data && typeof res.data === 'object' && (res.data as any).code === 200) {
+        urls.push((res.data as any).data)
+      } else if (typeof res === 'string') {
+        urls.push(res)
+      } else if (res && res.data && typeof res.data === 'string') {
+        urls.push(res.data)
+      } else {
+        console.error('图片上传失败', res)
+      }
+    } catch (e) {
+      console.error('图片上传失败', e)
+    }
   }
-  */
+  callback(urls)
 }
 
 // 监听父组件传入的值变化

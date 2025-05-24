@@ -37,12 +37,7 @@
                         style="width: 100%"></el-input-number>
                     <div class="form-tips">可选，如需悬赏请输入金额</div>
                 </el-form-item>
-
-                <el-form-item label="上传图片">
-                    <ImageUploader v-model:value="form.imageUrlsList" />
-                    <div class="form-tips">可选，上传相关图片，最多5张</div>
-                </el-form-item>
-
+                
             </el-form>
 
             <!-- 独立描述编辑器区域 -->
@@ -67,7 +62,6 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { useHelpInfoStore } from '../store/helpinfo'
 import { useAuthStore } from '../store/auth'
 import { fetchHelpInfoDetail } from '../api/helpinfo'
-import ImageUploader from '../components/ImageUploader.vue'
 import RichEditor from '../components/RichEditor.vue'
 
 const router = useRouter()
@@ -87,9 +81,7 @@ const form = reactive({
     expectedTime: '',
     expectedLocation: '',
     contactMethod: '',
-    rewardAmount: 0,
-    imageUrls: '',
-    imageUrlsList: [] as string[]
+    rewardAmount: 0
 })
 
 // 表单验证规则
@@ -133,15 +125,6 @@ onMounted(async () => {
                 form.expectedLocation = info.expectedLocation
                 form.contactMethod = info.contactMethod
                 form.rewardAmount = info.rewardAmount || 0
-
-                // 解析图片URL列表
-                if (info.imageUrls) {
-                    try {
-                        form.imageUrlsList = JSON.parse(info.imageUrls)
-                    } catch (e) {
-                        console.error('解析图片URL列表失败', e)
-                    }
-                }
             } else {
                 ElMessage.error('加载数据失败')
                 router.push('/helpinfo')
@@ -169,11 +152,6 @@ async function onSubmit() {
         if (valid) {
             loading.value = true
             try {
-                // 如果有图片URL列表，转换成JSON字符串
-                if (form.imageUrlsList && form.imageUrlsList.length > 0) {
-                    form.imageUrls = JSON.stringify(form.imageUrlsList);
-                }
-
                 const formData = {
                     title: form.title,
                     type: form.type,
@@ -181,8 +159,7 @@ async function onSubmit() {
                     expectedTime: form.expectedTime,
                     expectedLocation: form.expectedLocation,
                     contactMethod: form.contactMethod,
-                    rewardAmount: form.rewardAmount > 0 ? form.rewardAmount : null,
-                    imageUrls: form.imageUrls || null
+                    rewardAmount: form.rewardAmount > 0 ? form.rewardAmount : null
                 };
 
                 if (isEditMode.value && infoId.value) {
