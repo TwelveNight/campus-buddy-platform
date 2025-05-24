@@ -10,12 +10,8 @@
                 <el-card class="profile-card summary-card" shadow="hover">
                     <div class="user-summary">
                         <div class="avatar-container">
-                            <AvatarUploader 
-                                v-model="avatarUrlWithTimestamp" 
-                                :size="120" 
-                                @upload-success="handleAvatarUploadSuccess"
-                                tip="点击更换头像" 
-                            />
+                            <AvatarUploader v-model="avatarUrlWithTimestamp" :size="120"
+                                @upload-success="handleAvatarUploadSuccess" tip="点击更换头像" />
                         </div>
                         <h2>
                             <router-link :to="`/user/${form.userId}`" class="profile-nickname">
@@ -92,7 +88,7 @@
                                 </template>
                             </el-input>
                         </el-form-item>
-                        
+
                         <el-form-item label="性别">
                             <el-radio-group v-model="form.gender">
                                 <el-radio label="MALE">男</el-radio>
@@ -100,7 +96,7 @@
                                 <el-radio label="UNKNOWN">保密</el-radio>
                             </el-radio-group>
                         </el-form-item>
-                        
+
                         <el-row :gutter="20">
                             <el-col :span="12">
                                 <el-form-item label="专业" prop="major">
@@ -129,7 +125,7 @@
                                 </el-form-item>
                             </el-col>
                         </el-row>
-                        
+
                         <el-form-item label="联系方式" prop="contactInfo">
                             <el-input v-model="form.contactInfo" placeholder="请输入联系方式，如微信、QQ、邮箱等">
                                 <template #prefix>
@@ -139,35 +135,23 @@
                                 </template>
                             </el-input>
                         </el-form-item>
-                        
+
                         <el-form-item label="技能标签" prop="parsedSkillTags">
                             <div class="skill-tags-section">
-                                <el-tag
-                                    v-for="tag in form.parsedSkillTags"
-                                    :key="tag"
-                                    closable
-                                    :disable-transitions="false"
-                                    @close="handleTagClose(tag)"
-                                    class="skill-tag"
-                                >
+                                <el-tag v-for="tag in form.parsedSkillTags" :key="tag" closable
+                                    :disable-transitions="false" @close="handleTagClose(tag)" class="skill-tag">
                                     {{ tag }}
                                 </el-tag>
-                                <el-input
-                                    v-if="inputTagVisible"
-                                    ref="tagInputRef"
-                                    v-model="inputTagValue"
-                                    class="tag-input"
-                                    size="small"
-                                    @keyup.enter="handleTagConfirm"
-                                    @blur="handleTagConfirm"
-                                />
+                                <el-input v-if="inputTagVisible" ref="tagInputRef" v-model="inputTagValue"
+                                    class="tag-input" size="small" @keyup.enter="handleTagConfirm"
+                                    @blur="handleTagConfirm" />
                                 <el-button v-else class="button-new-tag" size="small" @click="showTagInput">
                                     + 添加技能标签
                                 </el-button>
                             </div>
                             <div class="form-tips">添加您擅长的技能标签，最多可添加10个，每个标签不超过20个字符</div>
                         </el-form-item>
-                        
+
                         <el-form-item>
                             <el-button type="primary" @click="handleSubmit" :loading="loading" round>
                                 <el-icon>
@@ -306,21 +290,30 @@
                                         <div class="reviewer-details">
                                             <div class="name-role-row">
                                                 <span class="reviewer-name">
-                                                    <router-link :to="`/user/${review.reviewerUserId}`">
-                                                        {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
+                                                    <router-link :to="`/user/${review.reviewerUserId}`" class="user-link">
+                                                        {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId)
+                                                        }}
                                                     </router-link>
                                                 </span>
-                                                <div class="role-badge" :class="getRoleClass(review.reviewType, review.reviewerUserId)">
-                                                    <el-tooltip :content="getRoleTooltip(review.reviewType, review.reviewerUserId)" placement="top" effect="light">
-                                                        <el-tag size="small" effect="dark" :type="getUserRoleType(review.reviewType, review.reviewerUserId)" class="user-role-tag">
-                                                            <span class="role-icon">{{ getRoleIcon(review.reviewType, review.reviewerUserId) }}</span>
-                                                            {{ getUserRoleLabel(review.reviewType, review.reviewerUserId) }}
+                                                <div class="role-badge"
+                                                    :class="getRoleClass(review.reviewType, review.reviewerUserId)">
+                                                    <el-tooltip
+                                                        :content="getRoleTooltip(review.reviewType, review.reviewerUserId)"
+                                                        placement="top" effect="light">
+                                                        <el-tag size="small" effect="dark"
+                                                            :type="getUserRoleType(review.reviewType, review.reviewerUserId)"
+                                                            class="user-role-tag">
+                                                            <span class="role-icon">{{ getRoleIcon(review.reviewType,
+                                                                review.reviewerUserId) }}</span>
+                                                            {{ getUserRoleLabel(review.reviewType,
+                                                            review.reviewerUserId) }}
                                                         </el-tag>
                                                     </el-tooltip>
                                                 </div>
                                             </div>
                                             <div class="review-module" :class="getModuleClass(review.moduleType)">
-                                                <el-tag size="small" effect="light" :type="getModuleTagType(review.moduleType)">
+                                                <el-tag size="small" effect="light"
+                                                    :type="getModuleTagType(review.moduleType)">
                                                     <el-icon>
                                                         <MessageBox />
                                                     </el-icon>
@@ -338,9 +331,11 @@
                                         </div>
                                         <div class="review-score">
                                             <div class="score-indicator">
-                                                <div class="score-value">{{ review.score }}<span class="score-max">/5</span></div>
+                                                <div class="score-value">{{ review.score }}<span
+                                                        class="score-max">/5</span></div>
                                                 <div class="score-stars">
-                                                    <el-rate v-model="review.score" disabled :max="5" :colors="['#F7BA2A', '#F7BA2A', '#67C23A']" />
+                                                    <el-rate v-model="review.score" disabled :max="5"
+                                                        :colors="['#F7BA2A', '#F7BA2A', '#67C23A']" />
                                                 </div>
                                                 <div class="score-label">{{ getScoreLabel(review.score) }}</div>
                                             </div>
@@ -375,7 +370,7 @@
                                                     <Link />
                                                 </el-icon>
                                                 <span class="related-title">{{ review.relatedInfoTitle || '互助信息'
-                                                    }}</span>
+                                                }}</span>
                                             </span>
                                         </el-tooltip>
                                         <span v-else class="related-info">
@@ -457,15 +452,15 @@ const handleTagConfirm = () => {
         // 检查是否已存在
         if (form.parsedSkillTags.includes(tag)) {
             ElMessage.warning('该技能标签已存在')
-        } 
+        }
         // 检查标签长度
         else if (tag.length > 20) {
             ElMessage.warning('标签不能超过20个字符')
-        } 
+        }
         // 检查标签数量
         else if (form.parsedSkillTags.length >= 10) {
             ElMessage.warning('最多只能添加10个标签')
-        } 
+        }
         else {
             form.parsedSkillTags.push(tag)
         }
@@ -479,71 +474,71 @@ const avatarRefreshTimestamp = ref(Date.now());
 
 // 为头像URL添加时间戳，避免缓存问题
 const avatarUrlWithTimestamp = computed(() => {
-  const baseUrl = form.avatarUrl;
-  if (!baseUrl) return '';
-  
-  // 如果URL已经有查询参数，使用&连接，否则使用?开始
-  const separator = baseUrl.includes('?') ? '&' : '?';
-  return `${baseUrl}${separator}t=${avatarRefreshTimestamp.value}`;
+    const baseUrl = form.avatarUrl;
+    if (!baseUrl) return '';
+
+    // 如果URL已经有查询参数，使用&连接，否则使用?开始
+    const separator = baseUrl.includes('?') ? '&' : '?';
+    return `${baseUrl}${separator}t=${avatarRefreshTimestamp.value}`;
 });
 
 // 处理头像上传成功的回调
 const handleAvatarUploadSuccess = async (url: string) => {
-  if (!url) {
-    ElMessage.warning('头像URL为空，无法更新');
-    return;
-  }
-  
-  try {
-    loading.value = true;
-    
-    // 确保URL没有时间戳参数，避免重复添加
-    const cleanUrl = url.split('?')[0];
-    
-    // 立即更新表单中的头像URL
-    form.avatarUrl = cleanUrl;
-    
-    // 更新时间戳，强制刷新头像
-    avatarRefreshTimestamp.value = Date.now();
-    
-    // 调用API更新用户头像
+    if (!url) {
+        ElMessage.warning('头像URL为空，无法更新');
+        return;
+    }
+
     try {
-      const res = await updateUserProfile({
-        avatarUrl: cleanUrl
-      });
-      
-      if (res.data && res.data.code === 200) {
-        ElMessage.success('头像更新成功');
-      }
-    } catch (error) {
-      console.warn('头像更新API返回错误，但头像可能已经上传成功:', error);
-      // 即使API返回错误，我们也假设头像已经更新成功
-      // 这里不显示错误消息，因为实际上头像已经更新了
+        loading.value = true;
+
+        // 确保URL没有时间戳参数，避免重复添加
+        const cleanUrl = url.split('?')[0];
+
+        // 立即更新表单中的头像URL
+        form.avatarUrl = cleanUrl;
+
+        // 更新时间戳，强制刷新头像
+        avatarRefreshTimestamp.value = Date.now();
+
+        // 调用API更新用户头像
+        try {
+            const res = await updateUserProfile({
+                avatarUrl: cleanUrl
+            });
+
+            if (res.data && res.data.code === 200) {
+                ElMessage.success('头像更新成功');
+            }
+        } catch (error) {
+            console.warn('头像更新API返回错误，但头像可能已经上传成功:', error);
+            // 即使API返回错误，我们也假设头像已经更新成功
+            // 这里不显示错误消息，因为实际上头像已经更新了
+        }
+
+        console.log('更新头像URL:', cleanUrl);
+        console.log('更新时间戳:', avatarRefreshTimestamp.value);
+        console.log('计算后的带时间戳URL:', avatarUrlWithTimestamp.value);
+
+        // 无论API调用成功与否，都更新本地状态
+        if (authStore.user) {
+            authStore.user = {
+                ...authStore.user,
+                avatarUrl: cleanUrl
+            };
+
+            // 保存到本地存储
+            localStorage.setItem('user', JSON.stringify(authStore.user));
+
+            // 强制通知其他组件刷新头像
+            authStore.$patch({ avatarUpdateTime: Date.now() });
+        }
+    } catch (error: any) {
+        console.error('更新头像失败:', error);
+        ElMessage.error(error.message || '更新头像失败，请稍后重试');
+    } finally {
+        loading.value = false;
     }
-    
-    console.log('更新头像URL:', cleanUrl);
-    console.log('更新时间戳:', avatarRefreshTimestamp.value);
-    console.log('计算后的带时间戳URL:', avatarUrlWithTimestamp.value);
-    
-    // 无论API调用成功与否，都更新本地状态
-    if (authStore.user) {
-      authStore.user = {
-        ...authStore.user,
-        avatarUrl: cleanUrl
-      };
-      
-      // 保存到本地存储
-      localStorage.setItem('user', JSON.stringify(authStore.user));
-      
-      // 强制通知其他组件刷新头像
-      authStore.$patch({ avatarUpdateTime: Date.now() });
-    }
-  } catch (error: any) {
-    console.error('更新头像失败:', error);
-    ElMessage.error(error.message || '更新头像失败，请稍后重试');
-  } finally {
-    loading.value = false;
-  }
 };
 
 // 定义 ProfileForm 接口类型
@@ -810,7 +805,7 @@ onMounted(async () => {
             form.status = authStore.user.status || 'ACTIVE';
             form.createdAt = authStore.user.createdAt || '';
             form.updatedAt = authStore.user.updatedAt || '';
-            
+
             // 解析技能标签
             if (authStore.user.skillTags) {
                 try {
@@ -823,13 +818,13 @@ onMounted(async () => {
                 }
             }
         }
-        
+
         // 从后端获取最新的用户信息
         try {
             const res = await getUserProfile();
             if (res.data && res.data.data) {
                 const userData = res.data.data;
-                
+
                 // 更新表单数据
                 form.userId = userData.userId;
                 form.username = userData.username || form.username;
@@ -843,7 +838,7 @@ onMounted(async () => {
                 form.status = userData.status || form.status;
                 form.createdAt = userData.createdAt || form.createdAt;
                 form.updatedAt = userData.updatedAt || form.updatedAt;
-                
+
                 // 解析技能标签
                 if (userData.skillTags) {
                     try {
@@ -854,7 +849,7 @@ onMounted(async () => {
                         console.error('解析技能标签失败:', e);
                     }
                 }
-                
+
                 // 更新存储中的用户信息
                 authStore.user = {
                     ...authStore.user,
@@ -920,7 +915,7 @@ async function handleSubmit() {
             try {
                 // 将技能标签数组转换为JSON字符串
                 const skillTagsJson = form.parsedSkillTags.length > 0 ? JSON.stringify(form.parsedSkillTags) : ''
-                
+
                 const res = await updateUserProfile({
                     nickname: form.nickname,
                     avatarUrl: form.avatarUrl,
@@ -951,7 +946,7 @@ async function handleSubmit() {
                             contactInfo: form.contactInfo,
                             skillTags: skillTagsJson
                         };
-                        
+
                         // 保存到本地存储
                         localStorage.setItem('user', JSON.stringify(authStore.user));
                     }
@@ -1598,6 +1593,33 @@ async function handleChangePassword() {
 .button-new-tag {
     height: 32px;
     padding: 0 10px;
+}
+
+.user-link {
+    font-weight: 600;
+    color: var(--el-color-primary);
+    font-size: 1.05rem;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+.user-link:hover {
+    color: var(--el-color-primary-dark-2);
+}
+.user-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--el-color-primary);
+    transition: width 0.3s ease;
+}
+.user-link:hover::after {
+    width: 100%;
 }
 
 /* 响应式调整 */

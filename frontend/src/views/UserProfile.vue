@@ -29,7 +29,9 @@
       <el-divider />
 
       <div class="user-details-section">
-        <h3><el-icon><User /></el-icon> 详细信息</h3>
+        <h3><el-icon>
+            <User />
+          </el-icon> 详细信息</h3>
         <el-row :gutter="20">
           <el-col :span="12">
             <div class="detail-item">
@@ -63,15 +65,11 @@
       </div>
 
       <div class="user-skills-section" v-if="parsedSkillTags.length > 0">
-        <h3><el-icon><List /></el-icon> 技能标签</h3>
+        <h3><el-icon>
+            <List />
+          </el-icon> 技能标签</h3>
         <div class="skill-tags">
-          <el-tag
-            v-for="(tag, index) in parsedSkillTags"
-            :key="index"
-            class="skill-tag"
-            effect="light"
-            type="primary"
-          >
+          <el-tag v-for="(tag, index) in parsedSkillTags" :key="index" class="skill-tag" effect="light" type="primary">
             {{ tag }}
           </el-tag>
         </div>
@@ -81,17 +79,18 @@
     <el-card class="user-review-card" shadow="hover" style="margin-top: 24px;">
       <template #header>
         <div class="card-header">
-          <el-icon><Star /></el-icon>
+          <el-icon>
+            <Star />
+          </el-icon>
           <h2>收到的评价</h2>
         </div>
       </template>
       <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId">
         <template #reviewer-name="{ review }">
-          <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name">
+          <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name user-link">
             {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
           </router-link>
         </template>
-        <template #reviewed-name></template>
       </ReviewList>
     </el-card>
   </div>
@@ -202,6 +201,8 @@ async function fetchUserReviews() {
   loading.value = true;
   try {
     const res = await getUserReviews({ userId, type: 'received', page: 1, size: 10 });
+    console.log('获取到的评价数据：', res);
+    
     if (res.data && Array.isArray(res.data.items)) {
       reviews.value = res.data.items;
     } else if (Array.isArray(res.data)) {
@@ -209,7 +210,13 @@ async function fetchUserReviews() {
     } else {
       reviews.value = [];
     }
+    
+    // 确保数据中的评价都是针对当前用户的
+    reviews.value = reviews.value.filter(review => review.reviewedUserId === userId);
+    
+    console.log('过滤后的收到的评价：', reviews.value);
   } catch (e) {
+    console.error('获取评价失败：', e);
     ElMessage.error('获取评价失败');
   } finally {
     loading.value = false;
@@ -228,53 +235,66 @@ onMounted(() => {
   margin: 0 auto;
   padding: 30px 10px 60px;
 }
+
 .user-profile-header {
   display: flex;
   align-items: center;
   gap: 32px;
   flex-wrap: wrap;
 }
+
 .user-profile-info {
   flex: 1;
   min-width: 200px;
 }
+
 .user-profile-info h2 {
   margin: 0 0 12px 0;
   font-size: 1.5rem;
   font-weight: 600;
 }
+
 .user-basic-info {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
+
 .user-credit {
   margin-top: 8px;
 }
+
 .credit-label {
   display: flex;
   flex-direction: column;
   align-items: center;
   line-height: 1.2;
 }
+
 .credit-value {
   font-size: 22px;
   font-weight: 700;
   color: var(--primary-color);
 }
+
 .credit-title {
   font-size: 12px;
   color: var(--text-secondary);
 }
+
 .card-header {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.user-details-section, .user-skills-section {
+
+.user-details-section,
+.user-skills-section {
   margin-top: 20px;
 }
-.user-details-section h3, .user-skills-section h3 {
+
+.user-details-section h3,
+.user-skills-section h3 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -282,20 +302,24 @@ onMounted(() => {
   font-size: 16px;
   color: var(--el-color-primary);
 }
+
 .detail-item {
   margin-bottom: 12px;
   line-height: 1.5;
 }
+
 .detail-label {
   font-weight: 600;
   color: var(--el-text-color-secondary);
   margin-right: 8px;
 }
+
 .skill-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
+
 .skill-tag {
   margin-right: 0;
 }

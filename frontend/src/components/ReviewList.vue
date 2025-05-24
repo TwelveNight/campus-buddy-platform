@@ -22,7 +22,7 @@
                             <el-avatar :size="42" :src="review.reviewerAvatar || defaultAvatar"></el-avatar>
                             <div class="reviewer-details">
                                 <div class="name-role-row">
-                                    <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name">
+                                    <router-link :to="`/user/${review.reviewerUserId}`" class="reviewer-name user-link">
                                         {{ review.reviewerNickname || ('用户 #' + review.reviewerUserId) }}
                                     </router-link>
                                     <div class="role-badge"
@@ -34,17 +34,18 @@
                                                 class="user-role-tag">
                                                 <span class="role-icon">{{ getRoleIcon(review.reviewType,
                                                     review.reviewerUserId)
-                                                }}</span>
+                                                    }}</span>
                                                 {{ getUserRoleLabel(review.reviewType, review.reviewerUserId) }}
                                             </el-tag>
                                         </el-tooltip>
                                         <span class="pulse-dot" v-if="review.reviewerUserId === currentUserId"></span>
                                     </div>
                                 </div>
-                                <div class="review-opposite-info">
+                                <!-- 仅在当前用户是评价者时显示评价对象 -->
+                                <div class="review-opposite-info" v-if="review.reviewerUserId === currentUserId">
                                     <el-tag size="small" effect="plain" type="info">
                                         <span>
-                                            评价对象：<router-link :to="`/user/${review.reviewedUserId}`" class="reviewed-name">
+                                            评价对象：<router-link :to="`/user/${review.reviewedUserId}`" class="reviewed-name user-link">
                                                 {{ getReviewedNickname(review) }}
                                             </router-link>
                                         </span>
@@ -293,14 +294,14 @@ function getRelatedLink(review: ReviewItem) {
 // 获取用户角色类型（标签样式）
 function getUserRoleType(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return 'info';
-    
+
     // 直接基于reviewType字段判断角色
     // 首先，判断当前人是评价者还是被评价者
     const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
     if (!review) return 'info';
-    
+
     const isReviewer = reviewerUserId === review.reviewerUserId;
-    
+
     if (isReviewer) {
         // 当前用户是评价者
         return reviewType === 'PUBLISHER_TO_HELPER' ? 'primary' : 'success';
@@ -313,14 +314,14 @@ function getUserRoleType(reviewType: string | undefined, reviewerUserId: number)
 // 获取用户角色标签文本
 function getUserRoleLabel(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return '用户';
-    
+
     // 直接基于reviewType字段判断角色
     // 首先，判断当前人是评价者还是被评价者
     const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
     if (!review) return '用户';
-    
+
     const isReviewer = reviewerUserId === review.reviewerUserId;
-    
+
     if (isReviewer) {
         // 当前用户是评价者
         return reviewType === 'PUBLISHER_TO_HELPER' ? '求助方' : '帮助方';
@@ -333,14 +334,14 @@ function getUserRoleLabel(reviewType: string | undefined, reviewerUserId: number
 // 获取用户角色的CSS类名
 function getRoleClass(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return 'role-default';
-    
+
     // 直接基于reviewType字段判断角色
     // 首先，判断当前人是评价者还是被评价者
     const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
     if (!review) return 'role-default';
-    
+
     const isReviewer = reviewerUserId === review.reviewerUserId;
-    
+
     if (isReviewer) {
         // 当前用户是评价者
         return reviewType === 'PUBLISHER_TO_HELPER' ? 'role-publisher' : 'role-helper';
@@ -353,14 +354,14 @@ function getRoleClass(reviewType: string | undefined, reviewerUserId: number): s
 // 获取用户角色的图标
 function getRoleIcon(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return '👤';
-    
+
     // 直接基于reviewType字段判断角色
     // 首先，判断当前人是评价者还是被评价者
     const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
     if (!review) return '👤';
-    
+
     const isReviewer = reviewerUserId === review.reviewerUserId;
-    
+
     if (isReviewer) {
         // 当前用户是评价者
         return reviewType === 'PUBLISHER_TO_HELPER' ? '📢' : '🤝';
@@ -373,15 +374,15 @@ function getRoleIcon(reviewType: string | undefined, reviewerUserId: number): st
 // 获取用户角色的提示信息
 function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return '用户角色';
-    
+
     // 直接基于reviewType字段判断角色
     // 首先，判断当前人是评价者还是被评价者
     const review = props.reviews.find(r => r.reviewerUserId === reviewerUserId);
     if (!review) return '用户角色';
-    
+
     const isReviewer = reviewerUserId === review.reviewerUserId;
     const isCurrentUser = reviewerUserId === currentUserId.value;
-    
+
     if (isReviewer) {
         // 当前用户是评价者
         const roleText = reviewType === 'PUBLISHER_TO_HELPER' ? '求助方' : '帮助方';
@@ -471,10 +472,6 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-}
-
-.review-opposite-info {
-    margin-top: 8px;
 }
 
 .review-module {
@@ -910,5 +907,35 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
 .role-icon {
     font-size: 1rem;
     margin-right: 4px;
+}
+
+.user-link {
+    font-weight: 600;
+    color: var(--el-color-primary);
+    font-size: 1.05rem;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.user-link:hover {
+    color: var(--el-color-primary-dark-2);
+}
+
+.user-link::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--el-color-primary);
+    transition: width 0.3s ease;
+}
+
+.user-link:hover::after {
+    width: 100%;
 }
 </style>
