@@ -9,10 +9,9 @@ import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.PostCommentService;
 import com.example.campusbuddy.service.PostLikeService;
 import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.vo.GroupPostVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -58,13 +57,33 @@ public class GroupPostController {
      */
     @Operation(summary = "获取小组帖子列表", description = "分页获取指定小组的帖子")
     @GetMapping
-    public R<IPage<GroupPost>> getGroupPosts(
+    public R<IPage<GroupPostVO>> getGroupPosts(
             @Parameter(description = "小组ID") @RequestParam Long groupId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize) {
 
         IPage<GroupPost> posts = groupPostService.queryGroupPosts(groupId, pageNum, pageSize);
-        return R.ok(posts);
+        List<GroupPostVO> voList = posts.getRecords().stream().map(post -> {
+            GroupPostVO vo = new GroupPostVO();
+            vo.postId = post.getPostId();
+            vo.groupId = post.getGroupId();
+            vo.authorId = post.getAuthorId();
+            vo.title = post.getTitle();
+            vo.content = post.getContent();
+            vo.contentType = post.getContentType();
+            vo.likeCount = post.getLikeCount();
+            vo.commentCount = post.getCommentCount();
+            vo.status = post.getStatus();
+            vo.createdAt = post.getCreatedAt();
+            vo.updatedAt = post.getUpdatedAt();
+            // 查询作者昵称和头像
+            User user = userService.getById(post.getAuthorId());
+            vo.authorName = user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户";
+            vo.authorAvatar = user != null ? user.getAvatarUrl() : null;
+            return vo;
+        }).collect(Collectors.toList());
+        IPage<GroupPostVO> voPage = posts.convert(post -> voList.stream().filter(vo -> vo.postId.equals(post.getPostId())).findFirst().orElse(null));
+        return R.ok(voPage);
     }
 
     /**
@@ -72,12 +91,27 @@ public class GroupPostController {
      */
     @Operation(summary = "获取帖子详情")
     @GetMapping("/{postId}")
-    public R<GroupPost> getPostDetail(@Parameter(description = "帖子ID") @PathVariable Long postId) {
+    public R<GroupPostVO> getPostDetail(@Parameter(description = "帖子ID") @PathVariable Long postId) {
         GroupPost post = groupPostService.getPostDetail(postId);
         if (post == null) {
             return R.fail("帖子不存在");
         }
-        return R.ok(post);
+        GroupPostVO vo = new GroupPostVO();
+        vo.postId = post.getPostId();
+        vo.groupId = post.getGroupId();
+        vo.authorId = post.getAuthorId();
+        vo.title = post.getTitle();
+        vo.content = post.getContent();
+        vo.contentType = post.getContentType();
+        vo.likeCount = post.getLikeCount();
+        vo.commentCount = post.getCommentCount();
+        vo.status = post.getStatus();
+        vo.createdAt = post.getCreatedAt();
+        vo.updatedAt = post.getUpdatedAt();
+        User user = userService.getById(post.getAuthorId());
+        vo.authorName = user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户";
+        vo.authorAvatar = user != null ? user.getAvatarUrl() : null;
+        return R.ok(vo);
     }
 
     /**
@@ -278,6 +312,9 @@ public class GroupPostController {
         
         Long commentId = commentService.addComment(comment);
         
+        // 新增：更新帖子评论数
+        groupPostService.increaseCommentCount(postId);
+        
         return R.ok(commentId);
     }
 
@@ -295,6 +332,11 @@ public class GroupPostController {
         }
         
         boolean success = commentService.deleteComment(commentId, currentUser.getUserId());
+        
+        if (success) {
+            // 新增：减少帖子评论数
+            groupPostService.decreaseCommentCount(postId);
+        }
         
         return success ? R.ok("删除成功", null) : R.fail("删除失败，可能没有权限或评论不存在");
     }

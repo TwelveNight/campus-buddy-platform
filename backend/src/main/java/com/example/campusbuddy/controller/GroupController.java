@@ -9,6 +9,7 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupMemberService;
 import com.example.campusbuddy.service.GroupService;
 import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.vo.GroupMemberVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Tag(name = "学习小组接口", description = "学习小组相关操作")
 @RestController
@@ -307,16 +309,33 @@ public class GroupController {
     }
 
     /**
-     * 获取小组成员列表
+     * 获取小组成员列表（带昵称和头像）
      */
-    @Operation(summary = "获取小组成员列表", description = "根据小组ID获取成员列表。返回GroupMember列表。")
+    @Operation(summary = "获取小组成员列表", description = "根据小组ID获取成员列表，包含昵称和头像。")
     @GetMapping("/{groupId}/members")
-    public R<List<GroupMember>> getGroupMembers(@Parameter(description = "小组ID") @PathVariable Long groupId) {
-        LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(GroupMember::getGroupId, groupId);
-        
-        List<GroupMember> members = groupMemberService.list(queryWrapper);
-        return R.ok(members);
+    public R<List<GroupMemberVO>> getGroupMembers(@Parameter(description = "小组ID") @PathVariable Long groupId) {
+        List<GroupMember> members = groupMemberService.list(
+            new LambdaQueryWrapper<GroupMember>()
+                .eq(GroupMember::getGroupId, groupId)
+        );
+        List<Long> userIds = members.stream().map(GroupMember::getUserId).collect(Collectors.toList());
+        Map<Long, User> userMap = userService.listByIds(userIds)
+            .stream().collect(Collectors.toMap(User::getUserId, u -> u));
+        List<GroupMemberVO> voList = members.stream().map(m -> {
+            GroupMemberVO vo = new GroupMemberVO();
+            vo.userId = m.getUserId();
+            vo.role = m.getRole();
+            vo.status = m.getStatus();
+            vo.joinedAt = m.getJoinedAt();
+            User u = userMap.get(m.getUserId());
+            if (u != null) {
+                vo.username = u.getUsername();
+                vo.nickname = u.getNickname();
+                vo.avatarUrl = u.getAvatarUrl();
+            }
+            return vo;
+        }).collect(Collectors.toList());
+        return R.ok(voList);
     }
 
     /**

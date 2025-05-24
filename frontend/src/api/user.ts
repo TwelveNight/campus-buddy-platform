@@ -10,6 +10,11 @@ export function getUserById(userId: number) {
   return axios.get(`/api/user/${userId}`)
 }
 
+// 批量获取用户信息
+export function getUsersByIds(userIds: number[]): Promise<any> {
+  return axios.post('/api/user/batch', { userIds });
+}
+
 // 更新用户个人信息
 export function updateUserProfile(data: {
   nickname?: string;

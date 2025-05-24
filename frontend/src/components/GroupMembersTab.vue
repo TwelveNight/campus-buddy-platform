@@ -21,7 +21,14 @@
                             :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#606266' }">
                             <el-table-column label="成员" min-width="220">
                                 <template #default="scope">
-                                    {{ scope.row.username }}
+                                    <div class="member-info">
+                                        <el-avatar :size="32" :src="scope.row.avatarUrl || defaultAvatar" @click="goToUserProfile(scope.row.userId)" style="cursor:pointer">
+                                            {{ (scope.row.nickname || scope.row.username)?.substring(0, 1) }}
+                                        </el-avatar>
+                                        <div class="member-name">
+                                            <span class="nickname" @click="goToUserProfile(scope.row.userId)" style="cursor:pointer">{{ scope.row.nickname || scope.row.username || '未知用户' }}</span>
+                                        </div>
+                                    </div>
                                 </template>
                             </el-table-column>
 
@@ -35,7 +42,7 @@
 
                             <el-table-column label="加入时间" width="180">
                                 <template #default="{ row }">
-                                    {{ formatTime(row.joinTime) }}
+                                    {{ formatTime(row.joinedAt) }}
                                 </template>
                             </el-table-column>
 
@@ -92,12 +99,11 @@
                             <el-table-column label="申请人" min-width="220">
                                 <template #default="{ row }">
                                     <div class="member-info">
-                                        <el-avatar :size="32" :src="row.avatar || defaultAvatar">
-                                            {{ row.username?.substring(0, 1) }}
+                                        <el-avatar :size="32" :src="row.avatarUrl || defaultAvatar" @click="goToUserProfile(row.userId)" style="cursor:pointer">
+                                            {{ (row.nickname || row.username)?.substring(0, 1) }}
                                         </el-avatar>
                                         <div class="member-name">
-                                            <div>{{ row.username || '未知用户' }}</div>
-                                            <div class="member-detail">{{ row.realName || '' }}</div>
+                                            <span class="nickname" @click="goToUserProfile(row.userId)" style="cursor:pointer">{{ row.nickname || row.username || '未知用户' }}</span>
                                         </div>
                                     </div>
                                 </template>
@@ -140,6 +146,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { useRouter } from 'vue-router';
 import {
     getGroupMembers,
     setAdmin,
@@ -188,6 +195,11 @@ const searchQuery = ref('');
 const roleFilter = ref('');
 const activeTab = ref('members');
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+
+const router = useRouter();
+function goToUserProfile(userId) {
+    router.push(`/user/${userId}`);
+}
 
 // 计算属性
 const currentUserId = computed(() => authStore.user?.userId);

@@ -172,4 +172,25 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         }
         return success;
     }
+
+    @Override
+    public void increaseCommentCount(Long postId) {
+        GroupPost post = getById(postId);
+        if (post != null) {
+            int count = post.getCommentCount() == null ? 0 : post.getCommentCount();
+            post.setCommentCount(count + 1);
+            post.setUpdatedAt(new Date());
+            updateById(post);
+        }
+    }
+
+    @Override
+    public void decreaseCommentCount(Long postId) {
+        GroupPost post = getById(postId);
+        if (post != null && post.getCommentCount() != null && post.getCommentCount() > 0) {
+            post.setCommentCount(post.getCommentCount() - 1);
+            post.setUpdatedAt(new Date());
+            updateById(post);
+        }
+    }
 }

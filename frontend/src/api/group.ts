@@ -27,11 +27,12 @@ export interface GroupData {
 export interface GroupMember {
   userId: number;
   username: string;
+  nickname?: string;
   realName?: string;
-  avatar?: string;
+  avatarUrl?: string;
   role: 'CREATOR' | 'ADMIN' | 'MEMBER';
   status: 'ACTIVE' | 'PENDING' | 'REJECTED';
-  joinTime?: string;
+  joinedAt?: string;
   requestTime?: string;
   [key: string]: any;
 }

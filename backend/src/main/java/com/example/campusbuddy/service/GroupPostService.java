@@ -25,4 +25,10 @@ public interface GroupPostService extends IService<GroupPost> {
     
     // 取消点赞
     boolean unlikePost(Long postId, Long userId);
+    
+    // 增加评论数
+    void increaseCommentCount(Long postId);
+    
+    // 减少评论数
+    void decreaseCommentCount(Long postId);
 }

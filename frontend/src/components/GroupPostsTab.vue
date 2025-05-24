@@ -14,11 +14,11 @@
             <div v-for="post in posts" :key="post.postId" class="post-item">
                 <div class="post-header">
                     <div class="author-info">
-                        <el-avatar :size="40" :src="post.authorAvatar || defaultAvatar">
+                        <el-avatar :size="40" :src="post.authorAvatar || defaultAvatar" @click="goToUserProfile(post.authorId ?? '')" style="cursor:pointer">
                             {{ post.authorName?.substring(0, 1) }}
                         </el-avatar>
                         <div>
-                            <div class="author-name">{{ post.authorName || '未知用户' }}</div>
+                            <div class="author-name" @click="goToUserProfile(post.authorId ?? '')" style="cursor:pointer">{{ post.authorName || '未知用户' }}</div>
                             <div class="post-time">{{ formatTime(post.createdAt) }}</div>
                         </div>
                     </div>
@@ -32,8 +32,7 @@
                             <template #dropdown>
                                 <el-dropdown-menu>
                                     <el-dropdown-item command="edit" v-if="isPostAuthor(post)">编辑</el-dropdown-item>
-                                    <el-dropdown-item command="delete"
-                                        v-if="isPostAuthor(post) || isGroupAdmin">删除</el-dropdown-item>
+                                    <el-dropdown-item command="delete" v-if="isPostAuthor(post) || isGroupAdmin">删除</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -47,8 +46,7 @@
 
                 <div class="post-footer">
                     <div class="post-stats">
-                        <el-button :type="post.liked ? 'primary' : 'default'" size="small" text
-                            @click="handleLike(post)">
+                        <el-button :type="post.liked ? 'primary' : 'default'" size="small" text @click="handleLike(post)">
                             <el-icon>
                                 <Pointer />
                             </el-icon> {{ post.likeCount || 0 }}
@@ -73,11 +71,13 @@
                                 <div v-for="comment in post.comments" :key="comment.commentId" class="comment-item">
                                     <div class="comment-header">
                                         <div class="comment-author">
-                                            <el-avatar :size="32" :src="comment.avatar || defaultAvatar">
+                                            <el-avatar :size="32" :src="comment.avatar || defaultAvatar" @click="goToUserProfile(comment.userId)" style="cursor:pointer">
                                                 {{ comment.nickname?.substring(0, 1) || comment.username?.substring(0, 1) }}
                                             </el-avatar>
                                             <div>
-                                                <div class="comment-author-name">{{ comment.nickname || comment.username || '未知用户' }}</div>
+                                                <div class="comment-author-name">
+                                                    <span class="nickname" @click="goToUserProfile(comment.userId)" style="cursor:pointer">{{ comment.nickname || comment.username || '未知用户' }}</span>
+                                                </div>
                                                 <div class="comment-time">{{ formatTime(comment.createdAt) }}</div>
                                             </div>
                                         </div>
@@ -102,8 +102,8 @@
                                     :page-sizes="[5, 10, 20]" 
                                     layout="sizes, prev, pager, next" 
                                     :total="post.commentTotal"
-                                    @size-change="(val) => handleCommentSizeChange(post, val)" 
-                                    @current-change="(val) => handleCommentPageChange(post, val)" 
+                                    @size-change="(val: number) => handleCommentSizeChange(post, val)" 
+                                    @current-change="(val: number) => handleCommentPageChange(post, val)" 
                                     small />
                             </div>
                             
@@ -173,6 +173,7 @@
 import { ref, onMounted, defineProps, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Edit, MoreFilled, Pointer, ChatDotRound, Delete } from '@element-plus/icons-vue';
+import { useRouter } from 'vue-router';
 
 // 注释掉有问题的导入
 // import DOMPurify from 'dompurify';
@@ -214,6 +215,11 @@ const props = defineProps({
 });
 
 const authStore = useAuthStore();
+const router = useRouter();
+
+function goToUserProfile(userId: number|string) {
+  router.push(`/user/${userId}`);
+}
 
 // 数据状态
 const loading = ref(false);
@@ -285,22 +291,19 @@ const loadPosts = async () => {
             
             // 处理可能的分页数据结构
             if (response.data.data && response.data.data.records !== undefined) {
-                // 服务器返回分页对象
                 postList = response.data.data.records || [];
                 total.value = response.data.data.total || 0;
             } else {
-                // 服务器直接返回数组
                 postList = response.data.data || [];
                 total.value = postList.length;
             }
-            
-            console.log('帖子列表加载成功:', postList);
+
+            // 填充作者昵称和头像（已由后端VO返回，无需前端请求）
 
             // 检查用户是否对每个帖子点赞
             if (authStore.isAuthenticated && postList.length > 0) {
                 await Promise.all(postList.map(async (post: Post) => {
                     try {
-                        // 确保 postId 存在再调用 getLikeStatus
                         if (post.postId !== undefined) {
                             const likeResponse = await getLikeStatus(post.postId);
                             if (likeResponse.data && likeResponse.data.code === 200) {
