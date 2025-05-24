@@ -32,7 +32,7 @@
           <el-card v-for="group in groups" :key="group.groupId" class="group-card"
             @click="goToGroupDetail(group.groupId)">
             <div class="group-avatar">
-              <el-avatar :size="64" :src="group.avatar || defaultAvatar">
+              <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
             </div>
@@ -49,6 +49,9 @@
                 </span>
               </div>
               <p class="group-description">{{ truncateText(group.description, 60) }}</p>
+              <div class="group-tags">
+                <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
+              </div>
             </div>
             <div class="group-actions">
               <el-button type="primary" size="small" plain @click.stop="handleJoinGroup(group)"
@@ -72,14 +75,80 @@
       <el-tab-pane label="我创建的" name="created">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="您暂未创建任何小组" />
-          <!-- 内容与所有小组一致，通过切换标签加载不同数据 -->
+          <el-card v-for="group in groups" :key="group.groupId" class="group-card"
+            @click="goToGroupDetail(group.groupId)">
+            <div class="group-avatar">
+              <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
+                {{ group.name?.substring(0, 1) }}
+              </el-avatar>
+            </div>
+            <div class="group-info">
+              <h3 class="group-name">{{ group.name }}</h3>
+              <div class="group-meta">
+                <span>
+                  <el-icon>
+                    <User />
+                  </el-icon> {{ group.memberCount }} 成员
+                </span>
+                <span>
+                  <el-tag size="small">{{ group.category }}</el-tag>
+                </span>
+              </div>
+              <p class="group-description">{{ truncateText(group.description, 60) }}</p>
+              <div class="group-tags">
+                <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
+              </div>
+            </div>
+            <div class="group-actions">
+              <el-button type="success" size="small" plain disabled>
+                我创建的
+              </el-button>
+            </div>
+          </el-card>
+        </div>
+
+        <div class="pagination" v-if="activeTab === 'created' && groups.length > 0">
+          <!-- 对于创建的小组，不需要分页，因为数据量通常较小 -->
         </div>
       </el-tab-pane>
 
       <el-tab-pane label="我加入的" name="joined">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="您暂未加入任何小组" />
-          <!-- 内容与所有小组一致，通过切换标签加载不同数据 -->
+          <el-card v-for="group in groups" :key="group.groupId" class="group-card"
+            @click="goToGroupDetail(group.groupId)">
+            <div class="group-avatar">
+              <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
+                {{ group.name?.substring(0, 1) }}
+              </el-avatar>
+            </div>
+            <div class="group-info">
+              <h3 class="group-name">{{ group.name }}</h3>
+              <div class="group-meta">
+                <span>
+                  <el-icon>
+                    <User />
+                  </el-icon> {{ group.memberCount }} 成员
+                </span>
+                <span>
+                  <el-tag size="small">{{ group.category }}</el-tag>
+                </span>
+              </div>
+              <p class="group-description">{{ truncateText(group.description, 60) }}</p>
+              <div class="group-tags">
+                <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
+              </div>
+            </div>
+            <div class="group-actions">
+              <el-button type="success" size="small" plain disabled>
+                已加入
+              </el-button>
+            </div>
+          </el-card>
+        </div>
+
+        <div class="pagination" v-if="activeTab === 'joined' && groups.length > 0">
+          <!-- 对于加入的小组，不需要分页，因为数据量通常较小 -->
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -228,6 +297,13 @@ const isUserInGroup = (group) => {
   return userJoinedGroups.value.some(g => g.groupId === group.groupId);
 };
 
+// 兼容后端返回的tags为字符串的情况
+const normalizeTags = (tags) => {
+  if (Array.isArray(tags)) return tags;
+  if (typeof tags === 'string') return tags.split(/[，,]/).map(t => t.trim()).filter(Boolean);
+  return [];
+};
+
 // 生命周期钩子
 onMounted(() => {
   loadGroups();
@@ -263,15 +339,23 @@ const loadGroups = async () => {
         groups.value = response.data.data.records || [];
         total.value = response.data.data.total || 0;
       } else {
-        groups.value = response.data.data || [];
-        total.value = response.data.data.length || 0;
+        // 对于创建的和加入的小组，直接使用数组数据
+        const groupList = response.data.data || [];
+        groups.value = groupList;
+        total.value = groupList.length;
       }
+      
+      console.log(`${activeTab.value} tab loaded:`, groups.value.length, 'groups');
     } else {
       ElMessage.error(response.data?.message || '加载小组列表失败');
+      groups.value = [];
+      total.value = 0;
     }
   } catch (error) {
     console.error('加载小组列表失败:', error);
     ElMessage.error('加载小组列表失败，请稍后重试');
+    groups.value = [];
+    total.value = 0;
   } finally {
     loading.value = false;
   }
@@ -304,7 +388,18 @@ const handleCurrentChange = (val) => {
 
 // 处理标签切换
 const handleTabChange = (tab) => {
+  console.log('Tab changed to:', tab);
+  // 重置页面状态
   currentPage.value = 1;
+  groups.value = [];
+  total.value = 0;
+  
+  // 对于created和joined标签页，清除搜索和分类筛选
+  if (tab === 'created' || tab === 'joined') {
+    searchKeyword.value = '';
+    selectedCategory.value = '';
+  }
+  
   loadGroups();
 };
 
@@ -486,6 +581,10 @@ const goToGroupDetail = (groupId) => {
   line-height: 1.4;
   margin-bottom: 15px;
   min-height: 40px;
+}
+
+.group-tags {
+  margin-bottom: 15px;
 }
 
 .group-card .group-actions {

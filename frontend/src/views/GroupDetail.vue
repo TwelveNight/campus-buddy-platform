@@ -4,7 +4,7 @@
             <!-- 小组基本信息 -->
             <div class="group-header">
                 <div class="group-avatar">
-                    <el-avatar :size="80" :src="group.avatar || defaultAvatar">
+                    <el-avatar :size="80" :src="group.avatar || group.avatarUrl || defaultAvatar">
                         {{ group.name?.substring(0, 1) }}
                     </el-avatar>
                 </div>
@@ -12,7 +12,7 @@
                     <h1 class="group-name">{{ group.name }}</h1>
                     <div class="group-meta">
                         <el-tag>{{ group.category }}</el-tag>
-                        <el-tag v-for="tag in group.tags" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
+                        <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
                         <span class="member-count">
                             <el-icon>
                                 <User />
@@ -214,6 +214,9 @@ const loadGroupDetail = async () => {
         if (response.data && response.data.code === 200) {
             group.value = response.data.data;
 
+            // 兼容后端返回的tags为字符串的情况
+            group.value.tags = normalizeTags(group.value.tags);
+
             // 加载小组成员
             await loadGroupMembers();
         } else {
@@ -247,6 +250,13 @@ const loadGroupMembers = async () => {
     } catch (error) {
         console.error('加载小组成员失败:', error);
     }
+};
+
+// 兼容后端返回的tags为字符串的情况
+const normalizeTags = (tags) => {
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string') return tags.split(/[，,]/).map(t => t.trim()).filter(Boolean);
+    return [];
 };
 
 // 刷新小组详情

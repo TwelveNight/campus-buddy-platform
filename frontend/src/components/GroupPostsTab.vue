@@ -1,11 +1,7 @@
 <template>
     <div class="group-posts-tab">
         <div class="post-actions">
-            <el-button type="import { ref, onMounted, computed, watch } from 'vue';
-import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, MoreFilled, GoodsFilled, ChatDotRound } from '@element-plus/icons-vue';
-import DOMPurify from 'dompurify';
-import moment from 'moment';ry" @click="showCreatePostDialog" :disabled="!canCreatePost">
+            <el-button type="primary" @click="showCreatePostDialog" :disabled="!canCreatePost">
                 <el-icon>
                     <Edit />
                 </el-icon> 发布帖子
