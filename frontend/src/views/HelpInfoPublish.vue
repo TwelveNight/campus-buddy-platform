@@ -2,7 +2,7 @@
     <div class="helpinfo-publish-page">
         <el-card>
             <template #header>
-                <h2>{{ isEditMode ? '编辑互助信息' : '发布互助信息' }}</h2>
+                <h2>{{ isEditMode ? '编辑互助任务' : '发布互助任务' }}</h2>
             </template>
 
             <el-form :model="form" :rules="rules" ref="formRef" label-position="top" v-loading="loading">

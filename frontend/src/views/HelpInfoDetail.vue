@@ -3,7 +3,7 @@
     <el-card v-loading="loading">
       <template #header>
         <div class="card-header">
-          <h2>{{ info?.title || '互助信息详情' }}</h2>
+          <h2>{{ info?.title || '互助任务详情' }}</h2>
           <div class="header-actions" v-if="info && isPublisher">
             <el-button-group>
               <el-button size="small" type="primary" :disabled="!canChangeStatus"
@@ -100,7 +100,7 @@
         <!-- 进度信息 - 当互助信息状态为处理中时显示 -->
         <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
           <h3>处理进度</h3>
-          <el-alert title="此互助信息正在处理中" type="warning" :closable="false"
+          <el-alert title="此互助任务正在处理中" type="warning" :closable="false"
             :description="`由 ${acceptedApplication.applicantNickname} 提供帮助`">
           </el-alert>
 
@@ -142,7 +142,7 @@
 
         <!-- 提示信息 - 发布者查看自己发布的互助信息时显示 -->
         <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
-          <el-alert title="这是您发布的互助信息" type="info" description="您不能申请自己发布的互助信息，请等待其他用户申请帮助。" show-icon
+          <el-alert title="这是您发布的互助任务" type="info" description="您不能申请自己发布的互助任务，请等待其他用户申请帮助。" show-icon
             :closable="false">
           </el-alert>
         </div>

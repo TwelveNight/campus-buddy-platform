@@ -24,7 +24,7 @@
                             <el-icon class="menu-icon">
                                 <Service />
                             </el-icon>
-                            互助信息
+                            校园互助
                         </template>
                         <el-menu-item index="/helpinfo">
                             <el-icon><Collection /></el-icon>
@@ -37,6 +37,14 @@
                         <el-menu-item index="/my/helpinfo">
                             <el-icon><Document /></el-icon>
                             我的互助
+                        </el-menu-item>
+                        <el-menu-item index="/applications">
+                            <el-icon><List /></el-icon>
+                            我的申请
+                        </el-menu-item>
+                        <el-menu-item index="/reviews">
+                            <el-icon><Star /></el-icon>
+                            我的评价
                         </el-menu-item>
                     </el-sub-menu>
 

@@ -10,7 +10,7 @@
                     <el-button type="primary" size="large" round @click="navigateTo('/helpinfo')">
                         <el-icon>
                             <Promotion />
-                        </el-icon>浏览互助信息
+                        </el-icon>浏览互助任务
                     </el-button>
                     <el-button size="large" round class="secondary-btn" @click="navigateTo('/helpinfo/publish')"
                         v-if="authStore.isAuthenticated">
@@ -95,8 +95,8 @@
                         <el-icon class="module-icon primary">
                             <Service />
                         </el-icon>
-                        <h3>互助信息</h3>
-                        <p>浏览和发布互助信息，包括课程辅导、技能交换、物品借用等</p>
+                        <h3>校园互助</h3>
+                        <p>浏览和发布互助任务，包括课程辅导、技能交换、物品借用等</p>
                         <div class="card-action">
                             <el-button type="primary" text round>立即体验<el-icon>
                                     <ArrowRight />
@@ -174,7 +174,7 @@
                     <div class="step-number">2</div>
                     <div class="step-icon"><el-icon><Promotion /></el-icon></div>
                     <h3>浏览信息</h3>
-                    <p>查看互助信息或学习小组</p>
+                    <p>查看互助任务或学习小组</p>
                 </div>
                 <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
                 <div class="guide-step">

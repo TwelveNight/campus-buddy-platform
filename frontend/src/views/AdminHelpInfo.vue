@@ -3,7 +3,7 @@
         <el-card>
             <template #header>
                 <div class="card-header">
-                    <h2>管理员控制台 - 互助信息管理</h2>
+                    <h2>管理员控制台 - 互助任务管理</h2>
                 </div>
             </template>
 

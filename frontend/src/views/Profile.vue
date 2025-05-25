@@ -277,7 +277,7 @@
                                         <el-icon>
                                             <Promotion />
                                         </el-icon>
-                                        浏览互助信息
+                                        浏览互助任务
                                     </el-button>
                                 </router-link>
                             </el-empty>
@@ -369,7 +369,7 @@
                                                 <el-icon>
                                                     <Link />
                                                 </el-icon>
-                                                <span class="related-title">{{ review.relatedInfoTitle || '互助信息'
+                                                <span class="related-title">{{ review.relatedInfoTitle || '互助任务'
                                                 }}</span>
                                             </span>
                                         </el-tooltip>
@@ -377,7 +377,7 @@
                                             <el-icon>
                                                 <Link />
                                             </el-icon>
-                                            <span class="related-title">{{ review.relatedInfoTitle || '互助信息' }}</span>
+                                            <span class="related-title">{{ review.relatedInfoTitle || '互助任务' }}</span>
                                         </span>
                                     </div>
                                     <router-link :to="`/helpinfo/${review.relatedInfoId}`" class="detail-link">

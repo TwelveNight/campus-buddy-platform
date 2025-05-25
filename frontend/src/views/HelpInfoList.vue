@@ -1,9 +1,9 @@
 <template>
     <div class="helpinfo-list-page">
         <div class="page-header animate-enter">
-            <h2 class="page-title"><span class="title-icon">📋</span>互助信息列表</h2>
+            <h2 class="page-title"><span class="title-icon">📋</span>校园互助</h2>
             <el-button type="primary" @click="$router.push('/helpinfo/publish')" class="publish-btn">
-                <i class="el-icon-plus"></i> 发布互助信息
+                <i class="el-icon-plus"></i> 发布互助任务
             </el-button>
         </div>
 

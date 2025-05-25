@@ -1,11 +1,11 @@
 <template>
     <div class="my-helpinfo-page">
         <el-tabs v-model="activeTab" class="tabbed-section">
-            <el-tab-pane label="我发布的互助信息" name="published">
+            <el-tab-pane label="我发布的互助任务" name="published">
                 <el-card>
                     <template #header>
                         <div class="card-header">
-                            <h3 class="section-title">我发布的互助信息</h3>
+                            <h3 class="section-title">我发布的互助任务</h3>
                             <div>
                                 <el-button type="primary" icon="Plus"
                                     @click="$router.push('/helpinfo/publish')">发布新互助</el-button>
@@ -65,7 +65,7 @@
                     </el-table>
 
                     <div class="empty-block" v-if="publishedList.length === 0 && !loading">
-                        <el-empty description="您还没有发布任何互助信息"></el-empty>
+                        <el-empty description="您还没有发布任何互助任务"></el-empty>
                     </div>
 
                     <div class="pagination-container" v-if="publishedList.length > 0">
@@ -87,7 +87,7 @@
                     </template>
 
                     <el-table v-loading="loading" :data="appliedList" row-key="id" style="width: 100%">
-                        <el-table-column prop="helpInfo.title" label="互助信息标题" min-width="160">
+                        <el-table-column prop="helpInfo.title" label="互助任务标题" min-width="160">
                             <template #default="scope">
                                 <router-link :to="`/helpinfo/${scope.row.infoId}`" class="title-link">
                                     {{ scope.row.helpInfo?.title }}
