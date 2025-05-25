@@ -88,22 +88,62 @@ const form = reactive({
 const rules: FormRules = {
     title: [
         { required: true, message: '请输入标题', trigger: 'blur' },
-        { min: 2, max: 50, message: '标题长度应为2至50个字符', trigger: 'blur' }
+        { min: 2, max: 50, message: '标题长度应为2至50个字符', trigger: 'blur' },
+        { 
+            validator: (rule, value, callback) => {
+                if (value && value.trim().length < 2) {
+                    callback(new Error('标题不能全为空格'));
+                } else {
+                    callback();
+                }
+            }, 
+            trigger: 'blur' 
+        }
     ],
     type: [
         { required: true, message: '请选择类型', trigger: 'change' }
     ],
     description: [
-        { required: true, message: '请输入描述', trigger: 'blur' }
+        { required: true, message: '请输入详细描述', trigger: 'blur' }
     ],
     expectedTime: [
-        { required: true, message: '请输入预期时间', trigger: 'blur' }
+        { required: true, message: '请输入预期时间', trigger: 'blur' },
+        { 
+            validator: (rule, value, callback) => {
+                if (value && value.trim() === '') {
+                    callback(new Error('预期时间不能为空'));
+                } else {
+                    callback();
+                }
+            }, 
+            trigger: 'blur' 
+        }
     ],
     expectedLocation: [
-        { required: true, message: '请输入预期地点', trigger: 'blur' }
+        { required: true, message: '请输入预期地点', trigger: 'blur' },
+        { 
+            validator: (rule, value, callback) => {
+                if (value && value.trim() === '') {
+                    callback(new Error('预期地点不能为空'));
+                } else {
+                    callback();
+                }
+            }, 
+            trigger: 'blur' 
+        }
     ],
     contactMethod: [
-        { required: true, message: '请输入联系方式', trigger: 'blur' }
+        { required: true, message: '请输入联系方式', trigger: 'blur' },
+        { 
+            validator: (rule, value, callback) => {
+                if (value && value.trim() === '') {
+                    callback(new Error('联系方式不能为空'));
+                } else {
+                    callback();
+                }
+            }, 
+            trigger: 'blur' 
+        }
     ]
 }
 
@@ -148,30 +188,68 @@ async function onSubmit() {
 
     if (!formRef.value) return
 
-    await formRef.value.validate(async (valid) => {
+    try {
+        // 表单验证前显示加载状态
+        const valid = await new Promise<boolean>((resolve) => {
+            formRef.value!.validate((isValid: boolean) => {
+                if (!isValid) {
+                    // 自动滚动到第一个错误字段
+                    const firstErrorField = document.querySelector('.el-form-item.is-error')
+                    if (firstErrorField) {
+                        firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    }
+                    ElMessage.warning('请正确填写所有必填项')
+                }
+                resolve(isValid)
+            })
+        })
+
         if (valid) {
+            // 显示提交进度条，添加淡入淡出效果
             loading.value = true
+            
+            // 检查描述是否为空
+            if (!form.description.trim()) {
+                ElMessage.warning('请填写详细描述')
+                loading.value = false
+                return
+            }
+            
             try {
                 const formData = {
-                    title: form.title,
+                    title: form.title.trim(),
                     type: form.type,
                     description: form.description,
-                    expectedTime: form.expectedTime,
-                    expectedLocation: form.expectedLocation,
-                    contactMethod: form.contactMethod,
+                    expectedTime: form.expectedTime.trim(),
+                    expectedLocation: form.expectedLocation.trim(),
+                    contactMethod: form.contactMethod.trim(),
                     rewardAmount: form.rewardAmount > 0 ? form.rewardAmount : null
                 };
 
                 if (isEditMode.value && infoId.value) {
-                    // 编辑现有互助信息
+                    // 编辑现有互助任务
                     await helpInfoStore.updateInfo(infoId.value, formData)
-                    ElMessage.success('更新成功!')
-                    router.push(`/helpinfo/${infoId.value}`)
+                    ElMessage({
+                        message: '更新成功!',
+                        type: 'success',
+                        duration: 2000,
+                        showClose: true,
+                        onClose: () => {
+                            router.push(`/helpinfo/${infoId.value}`)
+                        }
+                    })
                 } else {
-                    // 发布新互助信息
+                    // 发布新互助任务
                     await helpInfoStore.publishInfo(formData)
-                    ElMessage.success('发布成功!')
-                    router.push('/helpinfo')
+                    ElMessage({
+                        message: '发布成功!',
+                        type: 'success',
+                        duration: 2000,
+                        showClose: true,
+                        onClose: () => {
+                            router.push('/helpinfo')
+                        }
+                    })
                 }
             } catch (e: any) {
                 const action = isEditMode.value ? '更新' : '发布'
@@ -180,7 +258,10 @@ async function onSubmit() {
                 loading.value = false
             }
         }
-    })
+    } catch (error) {
+        console.error('表单验证过程出错:', error)
+        loading.value = false
+    }
 }
 </script>
 
@@ -194,24 +275,55 @@ async function onSubmit() {
 
 .description-section {
     margin-top: 32px;
-    background: #fff;
+    background: var(--card-bg);
     border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    box-shadow: var(--shadow-light);
     padding: 24px 24px 16px 24px;
     text-align: left; /* 强制左对齐 */
+    transition: all 0.3s ease;
 }
+
+.description-section:hover {
+    box-shadow: var(--shadow-regular);
+}
+
 .desc-label {
-    font-size: 16px;
-    font-weight: 500;
-    color: #333;
+    color: var(--text-regular);
+    font-size: 14px;
+    line-height: 1.5;
     margin-bottom: 8px;
-    display: inline-block;
-    text-align: left;
+    display: block;
+    font-weight: 500;
 }
+
 .form-tips {
     font-size: 12px;
-    color: #909399;
-    margin-top: 5px;
-    text-align: left;
+    color: var(--text-secondary);
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .helpinfo-publish-page {
+        padding: 0 15px;
+        margin: 20px auto;
+    }
+    
+    .description-section {
+        padding: 16px;
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .helpinfo-publish-page {
+        padding: 0 10px;
+        margin: 15px auto;
+    }
+    
+    .description-section {
+        padding: 12px;
+        margin-top: 15px;
+    }
 }
 </style>

@@ -113,7 +113,21 @@ checkSavedCredentials()
 async function onSubmit() {
     if (!loginForm.value) return
 
-    await loginForm.value.validate(async (valid) => {
+    try {
+        // 表单验证前显示轻微的加载效果
+        const valid = await new Promise<boolean>((resolve) => {
+            loginForm.value!.validate((isValid: boolean) => {
+                if (!isValid) {
+                    // 自动聚焦到第一个错误字段
+                    const firstErrorInput = document.querySelector('.el-form-item.is-error input')
+                    if (firstErrorInput) {
+                        (firstErrorInput as HTMLElement).focus()
+                    }
+                }
+                resolve(isValid)
+            })
+        })
+
         if (valid) {
             loading.value = true
             try {
@@ -139,15 +153,40 @@ async function onSubmit() {
                     console.error('获取用户信息失败，但不影响登录流程', fetchError)
                 }
 
-                ElMessage.success('登录成功')
-                router.push('/')
+                ElMessage({
+                    message: '登录成功，欢迎回来！',
+                    type: 'success',
+                    duration: 2000,
+                    showClose: true,
+                    onClose: () => {
+                        router.push('/')
+                    }
+                })
+                
+                // 添加短暂延迟以显示成功消息
+                setTimeout(() => {
+                    router.push('/')
+                }, 1000)
             } catch (e: any) {
-                ElMessage.error(e.message || '登录失败，请检查用户名和密码')
+                ElMessage({
+                    message: e.message || '登录失败，请检查用户名和密码',
+                    type: 'error',
+                    duration: 3000,
+                    showClose: true
+                })
+                // 登录失败时自动聚焦用户名输入框
+                const usernameInput = document.querySelector('.login-card input[type="text"]')
+                if (usernameInput) {
+                    (usernameInput as HTMLElement).focus()
+                }
             } finally {
                 loading.value = false
             }
         }
-    })
+    } catch (error) {
+        console.error('登录过程出错:', error)
+        loading.value = false
+    }
 }
 </script>
 
@@ -168,7 +207,8 @@ async function onSubmit() {
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
+    background-color: var(--card-bg);
+    transition: all 0.3s ease;
 }
 
 .auth-welcome {
@@ -201,7 +241,6 @@ async function onSubmit() {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    margin-top: auto;
 }
 
 .feature {
@@ -209,21 +248,22 @@ async function onSubmit() {
     align-items: center;
     gap: 15px;
     font-size: 1.1rem;
-    opacity: 0.9;
+}
+
+.feature .el-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    padding: 8px;
 }
 
 .auth-card {
     flex: 1;
-    border: none;
-    box-shadow: none;
-    padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-
-.auth-card :deep(.el-card__body) {
-    padding: 30px;
+    padding: 20px;
+    border: none;
+    box-shadow: none;
 }
 
 .auth-header {
@@ -233,20 +273,25 @@ async function onSubmit() {
 
 .auth-header h2 {
     font-size: 1.8rem;
-    color: var(--text-primary);
     margin-bottom: 10px;
+    color: var(--text-primary);
 }
 
 .auth-header p {
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 
-.submit-btn {
-    width: 100%;
+:deep(.el-input__wrapper) {
+    border-radius: 8px;
+}
+
+:deep(.el-input__inner) {
     height: 50px;
-    font-size: 1.1rem;
-    margin-top: 10px;
+}
+
+:deep(.el-form-item) {
+    margin-bottom: 20px;
 }
 
 .remember-me {
@@ -254,35 +299,140 @@ async function onSubmit() {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    color: var(--text-regular);
 }
 
 .forgot-password {
-    font-size: 0.9rem;
     color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+.submit-btn {
+    width: 100%;
+    height: 50px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
 }
 
 .auth-footer {
     text-align: center;
     margin-top: 20px;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
+    color: var(--text-regular);
 }
 
 .register-link {
     color: var(--primary-color);
+    text-decoration: none;
     font-weight: 500;
     margin-left: 5px;
+    transition: color 0.3s;
 }
 
-/* 适配移动设备 */
+.register-link:hover {
+    text-decoration: underline;
+}
+
+/* 响应式布局 */
+@media (max-width: 992px) {
+    .auth-container {
+        width: 700px;
+    }
+    
+    .auth-welcome h1 {
+        font-size: 2rem;
+    }
+    
+    .auth-welcome p {
+        font-size: 1.1rem;
+    }
+}
+
 @media (max-width: 768px) {
     .auth-container {
         flex-direction: column;
         width: 100%;
+        max-width: 500px;
     }
-
+    
     .auth-welcome {
         padding: 30px;
     }
+    
+    .auth-features {
+        flex-direction: row;
+        justify-content: space-around;
+        margin-bottom: 10px;
+    }
+    
+    .feature {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-page {
+        padding: 10px;
+    }
+    
+    .auth-welcome {
+        padding: 20px;
+    }
+    
+    .auth-welcome h1 {
+        font-size: 1.5rem;
+    }
+    
+    .auth-welcome p {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+    
+    .auth-features {
+        gap: 5px;
+    }
+    
+    .feature {
+        font-size: 0.9rem;
+    }
+    
+    .feature .el-icon {
+        padding: 5px;
+    }
+    
+    .auth-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .auth-header p {
+        font-size: 0.9rem;
+    }
+    
+    :deep(.el-input__inner) {
+        height: 45px;
+    }
+    
+    .submit-btn {
+        height: 45px;
+        font-size: 1rem;
+    }
+}
+
+/* 暗色主题适配 */
+.dark-theme .login-page {
+    background: linear-gradient(135deg, #1e1e20 0%, #2a2a2e 100%);
 }
 </style>

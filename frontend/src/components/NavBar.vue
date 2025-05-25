@@ -85,6 +85,7 @@
             </div>
 
             <div class="user-actions">
+                <ThemeSwitch />
                 <template v-if="authStore.isAuthenticated">
                     <div class="notification-icon">
                         <el-badge :value="0" :max="99" :hidden="true" type="danger">
@@ -148,6 +149,7 @@
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
+import ThemeSwitch from './ThemeSwitch.vue'
 import { ElMessageBox } from 'element-plus'
 import {
     User,
@@ -522,9 +524,17 @@ const showCreateGroupDialog = () => {
     }
 }
 
+/* 在移动端隐藏整个导航栏 */
 @media (max-width: 768px) {
+    .navbar {
+        display: none !important;
+    }
+}
+
+/* 平板端优化 */
+@media (min-width: 769px) and (max-width: 1024px) {
     .container {
-        padding: 0 10px;
+        padding: 0 16px;
     }
     
     .menu {
@@ -533,11 +543,22 @@ const showCreateGroupDialog = () => {
     
     :deep(.el-menu--horizontal > .el-menu-item), 
     :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
-        padding: 0 10px;
+        padding: 0 12px;
     }
     
     .logo h1 {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
+    }
+    
+    .user-name {
+        font-size: 13px;
+    }
+}
+
+/* 桌面端显示类 */
+@media (min-width: 769px) {
+    .navbar {
+        display: flex !important;
     }
 }
 </style>

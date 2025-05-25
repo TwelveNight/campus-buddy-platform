@@ -1,6 +1,8 @@
 import { createApp } from 'vue'
 import './style.css'
 import './styles/dialog-fix.css' // 引入对话框修复样式
+import './styles/theme.css' // 引入主题样式
+import './styles/responsive.css' // 引入响应式样式
 import App from './App.vue'
 import router from './router/index'
 import { createPinia } from 'pinia'

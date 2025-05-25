@@ -1,24 +1,182 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import GlobalLoading from './components/GlobalLoading.vue'
+import PageTransition from './components/PageTransition.vue'
+import MobileNav from './components/MobileNav.vue'
+import MobileBottomNav from './components/MobileBottomNav.vue'
+
+// 初始化主题
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme') || 'light'
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark-theme')
+  }
+})
 </script>
 
 <template>
-  <router-view />
+  <div id="app" class="app-container">
+    <!-- 移动端顶部导航 -->
+    <MobileNav />
+    
+    <!-- 主内容区域 -->
+    <main class="app-main">
+      <router-view v-slot="{ Component }">
+        <page-transition>
+          <component :is="Component" />
+        </page-transition>
+      </router-view>
+    </main>
+    
+    <!-- 移动端底部导航 -->
+    <MobileBottomNav />
+    
+    <!-- 全局加载组件 -->
+    <GlobalLoading />
+  </div>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<style>
+/* 全局应用样式 */
+#app {
+  min-height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-regular);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  background-color: var(--background-color);
 }
 
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+.app-main {
+  position: relative;
+  z-index: 1;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .app-main {
+    padding-top: 60px; /* 为移动端导航栏留出空间 */
+    padding-bottom: 80px; /* 为底部导航栏留出空间 */
+  }
+}
+
+@media (max-width: 480px) {
+  .app-main {
+    padding-top: 56px; /* 更小屏幕的导航栏高度 */
+    padding-bottom: 76px; /* 更小屏幕的底部导航高度 */
+  }
+}
+
+/* 过渡动画 */
+.app-container {
+  transition: all 0.3s ease;
+}
+
+/* 页面滚动优化 */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-regular);
+}
+
+/* 移除默认样式 */
+* {
+  box-sizing: border-box;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 选择文本样式 */
+::selection {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+/* 焦点样式 */
+:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* 禁用状态 */
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 打印样式 */
+@media print {
+  .mobile-nav-wrapper,
+  .el-button,
+  .no-print {
+    display: none !important;
+  }
+  
+  .app-main {
+    padding-top: 0 !important;
+  }
+  
+  .el-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
 }
 </style>
-与资源共享平台
