@@ -230,6 +230,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useHelpInfoStore } from '../../store/helpinfo'
 import { useAuthStore } from '../../store/auth'
+// @ts-ignore
 import { marked } from 'marked'
 import {
   getApplications,

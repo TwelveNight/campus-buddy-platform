@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
+    "@types/marked": "^5.0.2",
     "@types/moment": "^2.11.29",
     "@types/node": "^22.15.21",
     "@types/vue": "^1.0.31",

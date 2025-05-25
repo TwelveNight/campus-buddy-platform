@@ -183,7 +183,7 @@ const showUploadDialog = () => {
 // 更新预览图
 const updatePreview = () => {
   if (cropperRef.value && typeof cropperRef.value.getCropData === 'function') {
-    cropperRef.value.getCropData((data) => {
+    cropperRef.value.getCropData((data: string) => {
       previewUrl.value = data;
     });
   }

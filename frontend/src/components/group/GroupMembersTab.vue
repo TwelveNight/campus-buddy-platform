@@ -197,7 +197,7 @@ const activeTab = ref('members');
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
 const router = useRouter();
-function goToUserProfile(userId) {
+function goToUserProfile(userId: string | number) {
     router.push(`/user/${userId}`);
 }
 
@@ -251,7 +251,7 @@ const loadMembers = async () => {
             } else {
                 allMembers = response.data.data || [];
             }
-            members.value = allMembers.filter(m => m.status === 'ACTIVE');
+            members.value = allMembers.filter((m: GroupMember) => m.status === 'ACTIVE');
             filterMembers();
         } else {
             ElMessage.error(response.data?.message || '加载小组成员失败');
@@ -272,7 +272,7 @@ const loadJoinRequests = async () => {
 
     requestsLoading.value = true;
     try {
-        const response = await getGroupMembers(props.groupId, 'PENDING');
+        const response = await getGroupMembers(props.groupId);
         if (response.data && response.data.code === 200) {
             let allRequests = [];
             if (response.data.data && response.data.data.records !== undefined) {
@@ -280,8 +280,8 @@ const loadJoinRequests = async () => {
             } else {
                 allRequests = response.data.data || [];
             }
-            // 只保留PENDING_APPROVAL或PENDING状态的成员
-            joinRequests.value = allRequests.filter(m => m.status === 'PENDING_APPROVAL' || m.status === 'PENDING');
+            // 只保留PENDING状态的成员
+            joinRequests.value = allRequests.filter((m: GroupMember) => m.status === 'PENDING');
         } else {
             ElMessage.error(response.data?.message || '加载加入申请失败');
             joinRequests.value = [];
