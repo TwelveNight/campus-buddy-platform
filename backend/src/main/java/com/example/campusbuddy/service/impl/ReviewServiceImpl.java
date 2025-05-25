@@ -52,7 +52,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
 
             if (review.getRelatedInfoId() == null) {
-                log.error("提交评价失败：关联互助信息ID不能为空");
+                log.error("提交评价失败：关联互助任务ID不能为空");
                 return false;
             }
 
@@ -133,13 +133,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     @Override
     public boolean canReview(Long userId, Long helpInfoId, String reviewType) {
-        // 获取互助信息
+        // 获取互助任务
         HelpInfo helpInfo = helpInfoMapper.selectById(helpInfoId);
         if (helpInfo == null) {
             return false;
         }
 
-        // 检查互助信息状态
+        // 检查互助任务状态
         boolean hasValidStatus = "RESOLVED".equals(helpInfo.getStatus()) || "UNSATISFIED".equals(helpInfo.getStatus());
         if (!hasValidStatus) {
             return false;
@@ -195,7 +195,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     public Map<String, Boolean> getHelpInfoReviewStatus(Long helpInfoId) {
         Map<String, Boolean> result = new HashMap<>();
 
-        // 获取互助信息
+        // 获取互助任务
         HelpInfo helpInfo = helpInfoMapper.selectById(helpInfoId);
         if (helpInfo == null) {
             result.put("publisherHasReviewed", false);
@@ -292,10 +292,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         log.info("获取用户评价状态: userId={}, helpInfoId={}", userId, helpInfoId);
         Map<String, Object> result = new HashMap<>();
 
-        // 获取互助信息
+        // 获取互助任务
         HelpInfo helpInfo = helpInfoMapper.selectById(helpInfoId);
         if (helpInfo == null) {
-            log.warn("互助信息不存在: helpInfoId={}", helpInfoId);
+            log.warn("互助任务不存在: helpInfoId={}", helpInfoId);
             result.put("canPublisherReview", false);
             result.put("canHelperReview", false);
             result.put("publisherHasReviewed", false);
@@ -306,7 +306,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         // 获取被接受的申请
         Long acceptedAppId = helpInfo.getAcceptedApplicationId();
         if (acceptedAppId == null) {
-            log.warn("互助信息没有被接受的申请: helpInfoId={}", helpInfoId);
+            log.warn("互助任务没有被接受的申请: helpInfoId={}", helpInfoId);
             result.put("canPublisherReview", false);
             result.put("canHelperReview", false);
             result.put("publisherHasReviewed", false);
@@ -325,7 +325,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             return result;
         }
 
-        // 检查互助信息状态
+        // 检查互助任务状态
         boolean hasValidStatus = "RESOLVED".equals(helpInfo.getStatus()) || "UNSATISFIED".equals(helpInfo.getStatus());
         boolean isPublisher = userId.equals(helpInfo.getPublisherId());
         boolean isHelper = userId.equals(application.getApplicantId());

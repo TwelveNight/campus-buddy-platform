@@ -2,6 +2,7 @@ package com.example.campusbuddy.controller;
 
 import com.example.campusbuddy.entity.Review;
 import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.ReviewService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.ReviewVO;
@@ -28,6 +29,9 @@ public class ReviewController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     @Operation(summary = "提交评价")
     @PostMapping("/submit")
@@ -48,13 +52,25 @@ public class ReviewController {
         }
 
         if (review.getRelatedInfoId() == null) {
-            log.error("评价提交失败: 缺少关联互助信息ID");
+            log.error("评价提交失败: 缺少关联互助任务ID");
             return ResponseEntity.badRequest().body(
-                    Map.of("success", false, "message", "缺少关联互助信息ID"));
+                    Map.of("success", false, "message", "缺少关联互助任务ID"));
         }
 
         boolean result = reviewService.submitReview(review);
         if (result) {
+            // 获取评价者信息
+            User reviewer = userService.getById(review.getReviewerUserId());
+            if (reviewer != null) {
+                // 发送评价通知
+                notificationService.createReviewNotification(
+                    review.getReviewId(),
+                    review.getReviewedUserId(),
+                    review.getReviewerUserId(),
+                    reviewer.getNickname(),
+                    review.getRelatedInfoId()
+                );
+            }
             return ResponseEntity.ok(Map.of("success", true));
         } else {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "评价提交失败"));
@@ -75,7 +91,7 @@ public class ReviewController {
         return reviewService.getUserCreditScore(userId);
     }
 
-    @Operation(summary = "检查用户是否可以对互助信息进行评价")
+    @Operation(summary = "检查用户是否可以对互助任务进行评价")
     @GetMapping("/canReview")
     public boolean canReview(@RequestParam Long userId,
             @RequestParam Long helpInfoId,
@@ -83,7 +99,7 @@ public class ReviewController {
         return reviewService.canReview(userId, helpInfoId, reviewType);
     }
 
-    @Operation(summary = "获取互助信息的评价状态")
+    @Operation(summary = "获取互助任务的评价状态")
     @GetMapping("/status")
     public Map<String, Boolean> getHelpInfoReviewStatus(@RequestParam Long helpInfoId) {
         return reviewService.getHelpInfoReviewStatus(helpInfoId);
@@ -101,7 +117,7 @@ public class ReviewController {
         return reviewService.getReviewList(userId, type, score, moduleType, page, size);
     }
 
-    @Operation(summary = "获取用户对特定互助信息的评价状态")
+    @Operation(summary = "获取用户对特定互助任务的评价状态")
     @GetMapping("/userReviewStatus")
     public ResponseEntity<?> getUserReviewStatus(
             @RequestParam Long userId,

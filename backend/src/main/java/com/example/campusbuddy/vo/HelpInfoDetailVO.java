@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 互助信息详情VO，包含发布者基本信息
+ * 互助任务详情VO，包含发布者基本信息
  */
 @Data
 public class HelpInfoDetailVO {

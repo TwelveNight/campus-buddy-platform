@@ -8,6 +8,7 @@ import com.example.campusbuddy.entity.GroupMember;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupMemberService;
 import com.example.campusbuddy.service.GroupService;
+import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.GroupMemberVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,6 +38,9 @@ public class GroupController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     /**
      * 获取当前认证用户
@@ -338,6 +342,14 @@ public class GroupController {
         if (group != null) {
             group.setMemberCount(group.getMemberCount() + 1);
             groupService.updateById(group);
+            
+            // 发送小组申请批准通知
+            notificationService.createGroupJoinResultNotification(
+                groupId,
+                userId,
+                true,
+                group.getName()
+            );
         }
 
         return R.ok("已批准加入申请", null);
@@ -368,9 +380,26 @@ public class GroupController {
         queryWrapper.eq(GroupMember::getGroupId, groupId)
                 .eq(GroupMember::getUserId, userId)
                 .eq(GroupMember::getStatus, "PENDING_APPROVAL");
+                
+        GroupMember member = groupMemberService.getOne(queryWrapper);
+        if (member == null) {
+            return R.fail("找不到待审批的申请");
+        }
 
         // 删除申请记录
         groupMemberService.remove(queryWrapper);
+        
+        // 获取小组信息
+        Group group = groupService.getById(groupId);
+        if (group != null) {
+            // 发送小组申请拒绝通知
+            notificationService.createGroupJoinResultNotification(
+                groupId,
+                userId,
+                false,
+                group.getName()
+            );
+        }
 
         return R.ok("已拒绝加入申请", null);
     }
@@ -438,6 +467,17 @@ public class GroupController {
         // 设置为管理员
         member.setRole("ADMIN");
         groupMemberService.updateById(member);
+        
+        // 发送设为管理员通知
+        if (group != null) {
+            notificationService.createGroupAdminAssignedNotification(
+                groupId,
+                userId,
+                currentUser.getUserId(),
+                currentUser.getNickname(),
+                group.getName()
+            );
+        }
 
         return R.ok("已设置为小组管理员", null);
     }

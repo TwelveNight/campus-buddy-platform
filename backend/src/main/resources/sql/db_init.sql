@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS user (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
--- 互助信息表
+-- 互助任务表
 CREATE TABLE IF NOT EXISTS help_info (
     info_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '信息ID',
     publisher_id BIGINT NOT NULL COMMENT '发布用户ID',
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS help_info (
 -- 互助申请表
 CREATE TABLE IF NOT EXISTS help_application (
     application_id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '申请ID',
-    info_id BIGINT NOT NULL COMMENT '互助信息ID',
+    info_id BIGINT NOT NULL COMMENT '互助任务ID',
     applicant_id BIGINT NOT NULL COMMENT '申请用户ID',
     publisher_id BIGINT NOT NULL COMMENT '信息发布者ID',
     message VARCHAR(255) COMMENT '申请附言',

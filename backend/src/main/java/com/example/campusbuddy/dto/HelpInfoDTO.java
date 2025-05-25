@@ -8,7 +8,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * 创建/更新互助信息的数据传输对象
+ * 创建/更新互助任务的数据传输对象
  */
 @Data
 public class HelpInfoDTO {

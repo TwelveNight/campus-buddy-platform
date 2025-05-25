@@ -1,4 +1,4 @@
--- 清空互助申请表和互助信息表
+-- 清空互助申请表和互助任务表
 -- 先将help_info表中的accepted_application_id设置为NULL
 UPDATE help_info SET accepted_application_id = NULL;
 
@@ -10,7 +10,7 @@ DELETE FROM help_info;
 ALTER TABLE help_application AUTO_INCREMENT = 1;
 ALTER TABLE help_info AUTO_INCREMENT = 1;
 
--- 添加互助信息测试数据
+-- 添加互助任务测试数据
 -- 课程辅导类互助
 INSERT INTO help_info (
         publisher_id,

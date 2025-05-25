@@ -30,10 +30,10 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
 
     @Override
     public HelpInfoDetailVO getHelpInfoDetail(Long infoId) {
-        // 获取互助信息
+        // 获取互助任务
         HelpInfo helpInfo = this.getById(infoId);
         if (helpInfo == null) {
-            throw new ResourceNotFoundException("互助信息", infoId);
+            throw new ResourceNotFoundException("互助任务", infoId);
         }
 
         // 转换为VO
@@ -61,10 +61,10 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         // 首先获取基本信息
         HelpInfoDetailVO vo = getHelpInfoDetail(infoId);
 
-        // 获取互助信息
+        // 获取互助任务
         HelpInfo helpInfo = this.getById(infoId);
         if (helpInfo == null) {
-            throw new ResourceNotFoundException("互助信息", infoId);
+            throw new ResourceNotFoundException("互助任务", infoId);
         }
 
         // 检查是否有被接受的申请
@@ -84,7 +84,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
                     vo.setHelperName(helper.getNickname());
                 }
 
-                // 获取互助信息的评价状态
+                // 获取互助任务的评价状态
                 Map<String, Boolean> reviewStatus = reviewService.getHelpInfoReviewStatus(infoId);
                 vo.setPublisherHasReviewed(reviewStatus.get("publisherHasReviewed"));
                 vo.setHelperHasReviewed(reviewStatus.get("helperHasReviewed"));
@@ -139,7 +139,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
     public HelpInfo incrementViewCount(Long infoId) {
         HelpInfo helpInfo = this.getById(infoId);
         if (helpInfo == null) {
-            throw new ResourceNotFoundException("互助信息", infoId);
+            throw new ResourceNotFoundException("互助任务", infoId);
         }
 
         // 增加浏览量

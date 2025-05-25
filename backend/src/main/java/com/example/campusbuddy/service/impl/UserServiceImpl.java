@@ -149,4 +149,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public boolean isAdmin(Long userId) {
         return userRoleService.hasRole(userId, "ROLE_ADMIN");
     }
+    
+    @Override
+    public boolean exists(Long userId) {
+        return getById(userId) != null;
+    }
 }

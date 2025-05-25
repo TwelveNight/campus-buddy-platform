@@ -49,7 +49,7 @@ public class SecurityConfig {
                                                                 "/static/**",
                                                                 "/public/**")
                                                 .permitAll()
-                                                // 允许所有GET请求访问互助信息
+                                                // 允许所有GET请求访问互助任务
                                                 .requestMatchers(HttpMethod.GET, "/api/helpinfo/**").permitAll()
                                                 // 允许PATCH请求访问 /api/helpinfo/{id}/view 用于更新浏览量
                                                 .requestMatchers(HttpMethod.PATCH, "/api/helpinfo/*/view").permitAll()

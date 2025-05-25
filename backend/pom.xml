@@ -101,6 +101,11 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+		<!-- 添加Jackson对Java 8日期时间API的支持 -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
 		<!-- 七牛云对象存储 Java SDK -->
 		<dependency>
 			<groupId>com.qiniu</groupId>

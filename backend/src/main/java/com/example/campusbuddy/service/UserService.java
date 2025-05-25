@@ -28,4 +28,12 @@ public interface UserService extends IService<User> {
      * @return 是否为管理员
      */
     boolean isAdmin(Long userId);
+    
+    /**
+     * 检查用户是否存在
+     * 
+     * @param userId 用户ID
+     * @return 是否存在
+     */
+    boolean exists(Long userId);
 }

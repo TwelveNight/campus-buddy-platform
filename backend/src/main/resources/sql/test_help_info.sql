@@ -1,4 +1,4 @@
--- 添加互助信息测试数据
+-- 添加互助任务测试数据
 -- 课程辅导类互助
 INSERT INTO help_info (
         publisher_id,
