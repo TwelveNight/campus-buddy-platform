@@ -7,6 +7,10 @@
         <el-icon class="avatar-icon"><Plus /></el-icon>
         <span class="avatar-text">上传头像</span>
       </div>
+      <div class="avatar-hover-effect">
+        <el-icon><Camera /></el-icon>
+        <span>更换头像</span>
+      </div>
     </div>
     <div class="upload-tip" v-if="tip">{{ tip }}</div>
 
@@ -31,56 +35,72 @@
             :show-file-list="false"
             :on-change="handleFileChange"
             accept="image/jpeg,image/png,image/gif,image/webp"
+            drag
           >
             <div class="upload-area">
               <el-icon class="upload-icon"><Plus /></el-icon>
-              <span class="upload-text">点击选择图片</span>
-              <span class="upload-hint">支持JPG、PNG、GIF格式，文件小于2MB</span>
+              <span class="upload-text">点击或拖拽图片到此处上传</span>
+              <span class="upload-hint">支持JPG、PNG、GIF、WebP格式，文件小于2MB</span>
             </div>
           </el-upload>
         </div>
 
         <!-- 裁剪区域 -->
         <div v-else class="cropper-area">
-          <VueCropper
-            ref="cropperRef"
-            :img="cropperImage"
-            :autoCrop="true"
-            :fixedBox="true"
-            :centerBox="true"
-            :autoCropWidth="200"
-            :autoCropHeight="200"
-            :outputSize="1"
-            :outputType="cropperOptions.outputType"
-            :info="true"
-            :full="true"
-            :canMove="true"
-            :canMoveBox="true"
-            :originalImg="true"
-            mode="cover"
-            :infoTrue="true"
-            class="cropper"
-          />
+          <div class="cropper-preview-container">
+            <VueCropper
+              ref="cropperRef"
+              :img="cropperImage"
+              :autoCrop="true"
+              :fixedBox="true"
+              :centerBox="true"
+              :autoCropWidth="200"
+              :autoCropHeight="200"
+              :outputSize="1"
+              :outputType="cropperOptions.outputType"
+              :info="true"
+              :full="true"
+              :canMove="true"
+              :canMoveBox="true"
+              :originalImg="true"
+              mode="cover"
+              :infoTrue="true"
+              class="cropper"
+            />
+            <div class="preview-container">
+              <div class="preview-label">预览效果</div>
+              <div class="preview-box">
+                <img :src="previewUrl" alt="头像预览" v-if="previewUrl" />
+                <div class="preview-placeholder" v-else>
+                  <el-icon><Camera /></el-icon>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="cropper-actions">
             <el-button-group>
-              <el-button @click="rotateLeft" type="default" size="small">
-                <el-icon><Refresh /></el-icon>
-                向左旋转
-              </el-button>
-              <el-button @click="rotateRight" type="default" size="small">
-                <el-icon><RefreshRight /></el-icon>
-                向右旋转
-              </el-button>
+              <el-tooltip content="向左旋转">
+                <el-button @click="rotateLeft" type="default" size="small">
+                  <el-icon><Refresh /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="向右旋转">
+                <el-button @click="rotateRight" type="default" size="small">
+                  <el-icon><RefreshRight /></el-icon>
+                </el-button>
+              </el-tooltip>
             </el-button-group>
             <el-button-group>
-              <el-button @click="zoomIn" type="default" size="small">
-                <el-icon><ZoomIn /></el-icon>
-                放大
-              </el-button>
-              <el-button @click="zoomOut" type="default" size="small">
-                <el-icon><ZoomOut /></el-icon>
-                缩小
-              </el-button>
+              <el-tooltip content="放大">
+                <el-button @click="zoomIn" type="default" size="small">
+                  <el-icon><ZoomIn /></el-icon>
+                </el-button>
+              </el-tooltip>
+              <el-tooltip content="缩小">
+                <el-button @click="zoomOut" type="default" size="small">
+                  <el-icon><ZoomOut /></el-icon>
+                </el-button>
+              </el-tooltip>
             </el-button-group>
           </div>
         </div>
@@ -100,7 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { VueCropper } from 'vue-cropper';
 import 'vue-cropper/dist/index.css';
@@ -109,7 +129,8 @@ import {
   Refresh,
   RefreshRight,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  Camera
 } from '@element-plus/icons-vue';
 import { useAuthStore } from '../store/auth';
 import { uploadApi } from '../api/upload';
@@ -152,10 +173,20 @@ const cropperOptions = ref({
   outputType: 'jpeg' // 输出图片格式
 });
 const uploading = ref(false);
+const previewUrl = ref(''); // 预览图片URL
 
 // 显示上传对话框
 const showUploadDialog = () => {
   dialogVisible.value = true;
+};
+
+// 更新预览图
+const updatePreview = () => {
+  if (cropperRef.value && typeof cropperRef.value.getCropData === 'function') {
+    cropperRef.value.getCropData((data) => {
+      previewUrl.value = data;
+    });
+  }
 };
 
 // 处理文件选择
@@ -183,6 +214,11 @@ const handleFileChange = (file: any) => {
     } else {
       cropperOptions.value.outputType = 'jpeg';
     }
+    
+    // 等待下一个tick后更新预览
+    setTimeout(() => {
+      updatePreview();
+    }, 300);
   };
   reader.readAsDataURL(file.raw);
 };
@@ -199,6 +235,7 @@ const rotateLeft = () => {
       } else {
         console.warn('裁剪组件不支持旋转操作');
       }
+      updatePreview();
     } catch (e) {
       console.error('旋转操作出错:', e);
     }
@@ -219,6 +256,7 @@ const rotateRight = () => {
       } else {
         console.warn('裁剪组件不支持旋转操作');
       }
+      updatePreview();
     } catch (e) {
       console.error('旋转操作出错:', e);
     }
@@ -240,6 +278,7 @@ const zoomIn = () => {
       } else {
         console.warn('裁剪组件不支持放大操作');
       }
+      updatePreview();
     } catch (e) {
       console.error('放大操作出错:', e);
     }
@@ -261,6 +300,7 @@ const zoomOut = () => {
       } else {
         console.warn('裁剪组件不支持缩小操作');
       }
+      updatePreview();
     } catch (e) {
       console.error('缩小操作出错:', e);
     }
@@ -273,11 +313,13 @@ const zoomOut = () => {
 const cancelCrop = () => {
   dialogVisible.value = false;
   cropperImage.value = '';
+  previewUrl.value = '';
 };
 
 // 重新选择图片
 const reselect = () => {
   cropperImage.value = '';
+  previewUrl.value = '';
 };
 
 // 确认裁剪并上传
@@ -440,6 +482,32 @@ const confirmCrop = () => {
   border-radius: 50%;
 }
 
+.avatar-hover-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: white;
+}
+
+.avatar-display:hover .avatar-hover-effect {
+  opacity: 1;
+}
+
+.avatar-hover-effect i {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
 .avatar-icon {
   font-size: 28px;
   margin-bottom: 8px;
@@ -552,8 +620,8 @@ const confirmCrop = () => {
 }
 
 .upload-area {
-  border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
+  border: 2px dashed var(--el-border-color);
+  border-radius: 8px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -563,24 +631,24 @@ const confirmCrop = () => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 80px 20px;
+  padding: 60px 20px;
 }
 
 .upload-area:hover {
   border-color: var(--el-color-primary);
-  background-color: #f5f7fa;
+  background-color: rgba(64, 158, 255, 0.05);
 }
 
 .upload-icon {
-  font-size: 28px;
-  color: #8c939d;
-  margin-bottom: 10px;
+  font-size: 36px;
+  color: var(--el-color-primary);
+  margin-bottom: 16px;
 }
 
 .upload-text {
   font-size: 16px;
   color: #606266;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .upload-hint {
@@ -596,16 +664,64 @@ const confirmCrop = () => {
   gap: 20px;
 }
 
+.cropper-preview-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
 .cropper {
-  height: 350px;
+  height: 320px;
+  flex: 1;
+}
+
+.preview-container {
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.preview-label {
+  font-size: 14px;
+  color: #606266;
+  margin-bottom: 10px;
+}
+
+.preview-box {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid var(--el-border-color);
+  background-color: #f5f7fa;
+}
+
+.preview-box img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  color: #ccc;
+  font-size: 24px;
 }
 
 .cropper-actions {
   display: flex;
-  justify-content: space-around;
-  gap: 10px;
+  justify-content: center;
+  gap: 20px;
   flex-wrap: wrap;
+  margin-top: 10px;
 }
 
 .dialog-footer {
@@ -622,8 +738,17 @@ const confirmCrop = () => {
     margin: 15px auto !important;
   }
 
+  .cropper-preview-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .preview-container {
+    margin-top: 15px;
+  }
+
   .cropper {
-    height: 280px;
+    height: 250px;
   }
 
   .cropper-actions {
