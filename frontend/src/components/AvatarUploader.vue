@@ -131,6 +131,10 @@ const props = defineProps({
   tip: {
     type: String,
     default: ''
+  },
+  isGroupAvatar: {
+    type: Boolean,
+    default: false // 默认为用户头像
   }
 });
 
@@ -314,8 +318,13 @@ const confirmCrop = () => {
       // 上传头像前关闭对话框，优化用户体验
       dialogVisible.value = false;
       
+      // 根据类型选择不同的上传API
+      const uploadPromise = props.isGroupAvatar 
+        ? uploadApi.uploadGroupAvatar(file) 
+        : uploadApi.uploadAvatar(file);
+        
       // 上传头像
-      uploadApi.uploadAvatar(file).then((response: any) => {
+      uploadPromise.then((response: any) => {
         // 确保响应有效
         if (!response) {
           throw new Error('上传头像失败：服务器没有响应');

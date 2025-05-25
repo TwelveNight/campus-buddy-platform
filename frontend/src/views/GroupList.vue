@@ -237,6 +237,11 @@
         <el-form-item label="描述" prop="description">
           <el-input v-model="groupForm.description" type="textarea" rows="4" placeholder="请输入小组描述" />
         </el-form-item>
+
+        <el-form-item label="小组头像" prop="avatarUrl">
+          <AvatarUploader v-model="groupForm.avatarUrl" :size="120" 
+            @upload-success="handleAvatarUploadSuccess" tip="点击上传小组头像" :isGroupAvatar="true" />
+        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -264,6 +269,9 @@ import {
   joinGroup
 } from '@/api/group';
 import { useAuthStore } from '@/store/auth';
+import ImageUploader from '../components/ImageUploader.vue';
+import AvatarUploader from '../components/AvatarUploader.vue';
+import { uploadApi } from '../api/upload';
 
 const router = useRouter();
 const route = useRoute();
@@ -289,7 +297,8 @@ const groupForm = ref({
   category: '',
   tags: [],
   joinType: 'PUBLIC',
-  description: ''
+  description: '',
+  avatarUrl: '' // 只保留字符串字段
 });
 
 // 表单验证规则
@@ -520,6 +529,22 @@ const showCreateGroupDialog = () => {
   createGroupDialogVisible.value = true;
 };
 
+// 处理小组头像上传成功
+const handleAvatarUploadSuccess = (url) => {
+  if (!url) {
+    ElMessage.warning('头像URL为空，无法更新');
+    return;
+  }
+
+  // 确保URL没有时间戳参数，避免重复添加
+  const cleanUrl = url.split('?')[0];
+  
+  // 更新表单中的头像URL
+  groupForm.value.avatarUrl = cleanUrl;
+  
+  ElMessage.success('小组头像上传成功');
+};
+
 // 创建小组
 const handleCreateGroup = async () => {
   if (!groupFormRef.value) return;
@@ -529,42 +554,36 @@ const handleCreateGroup = async () => {
 
     submitting.value = true;
     try {
+      // 头像已经在上传成功时更新了，这里直接使用
+      const avatarUrl = groupForm.value.avatarUrl;
+      
       // 格式化数据以匹配后端期望的格式
       const createData = {
         name: groupForm.value.name,
         description: groupForm.value.description,
         category: groupForm.value.category,
         joinType: groupForm.value.joinType,
-        // 将标签数组转换为逗号分隔的字符串
         tags: Array.isArray(groupForm.value.tags) 
           ? groupForm.value.tags.join(',') 
           : groupForm.value.tags,
-        avatarUrl: '', // 暂时设为空，后续可以添加头像上传功能
+        avatarUrl: avatarUrl,
         status: 'ACTIVE'
       };
-
-      console.log('Creating group with data:', createData);
-      
       const response = await createGroup(createData);
       if (response.data && response.data.code === 200) {
         ElMessage.success('创建小组成功');
         createGroupDialogVisible.value = false;
-
-        // 重置表单
         groupForm.value = {
           name: '',
           category: '',
           tags: [],
           joinType: 'PUBLIC',
-          description: ''
+          description: '',
+          avatarUrl: ''
         };
-
-        // 如果当前是"我创建的"标签页，重新加载数据
         if (activeTab.value === 'created') {
           loadGroups();
         }
-
-        // 跳转到新创建的小组详情页
         router.push(`/groups/${response.data.data}`);
       } else {
         ElMessage.error(response.data?.message || '创建小组失败');

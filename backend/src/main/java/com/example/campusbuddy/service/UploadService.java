@@ -17,6 +17,13 @@ public interface UploadService {
      * @return 头像URL
      */
     String uploadAvatar(Long userId, MultipartFile file);
+    
+    /**
+     * 上传小组头像
+     * @param file 头像文件
+     * @return 头像URL
+     */
+    String uploadGroupAvatar(MultipartFile file);
 
     /**
      * 上传通用图片

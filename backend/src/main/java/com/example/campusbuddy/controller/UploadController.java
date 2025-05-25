@@ -54,6 +54,19 @@ public class UploadController {
         String avatarUrl = uploadService.uploadAvatar(currentUser.getUserId(), file);
         return R.ok(avatarUrl);
     }
+    
+    /**
+     * 上传小组头像
+     */
+    @PostMapping("/group-avatar")
+    @Operation(summary = "上传小组头像", description = "上传小组头像图片，返回可访问的图片URL")
+    public R<String> uploadGroupAvatar(
+            @Parameter(description = "头像文件", required = true) @RequestParam("file") MultipartFile file) {
+        User currentUser = getCurrentUser();
+        // 使用专门的方法上传小组头像，避免与用户头像混淆
+        String avatarUrl = uploadService.uploadGroupAvatar(file);
+        return R.ok(avatarUrl);
+    }
 
     /**
      * 上传通用图片

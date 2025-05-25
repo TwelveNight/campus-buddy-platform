@@ -99,6 +99,11 @@
                     <el-form-item label="描述" prop="description">
                         <el-input v-model="groupForm.description" type="textarea" rows="4" placeholder="请输入小组描述" />
                     </el-form-item>
+
+                    <el-form-item label="小组头像" prop="avatarUrl">
+                        <AvatarUploader v-model="groupForm.avatarUrl" :size="120" 
+                            @upload-success="handleAvatarUploadSuccess" tip="点击更换头像" :isGroupAvatar="true" />
+                    </el-form-item>
                 </el-form>
 
                 <template #footer>
@@ -128,6 +133,9 @@ import { useAuthStore } from '@/store/auth';
 import GroupPostsTab from '@/components/GroupPostsTab.vue';
 import GroupFilesTab from '@/components/GroupFilesTab.vue';
 import GroupMembersTab from '@/components/GroupMembersTab.vue';
+import ImageUploader from '../components/ImageUploader.vue';
+import AvatarUploader from '../components/AvatarUploader.vue';
+import { uploadApi } from '../api/upload';
 
 const route = useRoute();
 const router = useRouter();
@@ -153,7 +161,8 @@ const groupForm = ref({
     category: '',
     tags: [],
     joinType: 'PUBLIC',
-    description: ''
+    description: '',
+    avatarUrl: '' // 只保留字符串字段
 });
 
 // 表单验证规则
@@ -302,10 +311,27 @@ const showEditGroupDialog = () => {
         category: group.value.category,
         tags: group.value.tags || [],
         joinType: group.value.joinType,
-        description: group.value.description
+        description: group.value.description,
+        avatarUrl: group.value.avatarUrl || ''
     };
 
     editGroupDialogVisible.value = true;
+};
+
+// 处理小组头像上传成功
+const handleAvatarUploadSuccess = (url) => {
+    if (!url) {
+        ElMessage.warning('头像URL为空，无法更新');
+        return;
+    }
+
+    // 确保URL没有时间戳参数，避免重复添加
+    const cleanUrl = url.split('?')[0];
+    
+    // 更新表单中的头像URL
+    groupForm.value.avatarUrl = cleanUrl;
+    
+    ElMessage.success('小组头像上传成功');
 };
 
 // 更新小组信息
@@ -317,6 +343,9 @@ const handleUpdateGroup = async () => {
 
         submitting.value = true;
         try {
+            // 头像已经在上传成功时更新了，这里直接使用
+            const avatarUrl = groupForm.value.avatarUrl;
+
             // 格式化数据以匹配后端期望的格式
             const updateData = {
                 name: groupForm.value.name,
@@ -327,7 +356,7 @@ const handleUpdateGroup = async () => {
                 tags: Array.isArray(groupForm.value.tags) 
                     ? groupForm.value.tags.join(',') 
                     : groupForm.value.tags,
-                avatarUrl: group.value.avatarUrl || '',
+                avatarUrl: avatarUrl,
                 status: group.value.status || 'ACTIVE'
             };
 

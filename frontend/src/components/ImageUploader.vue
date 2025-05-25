@@ -107,26 +107,34 @@ const handleRemove = (file: any, fileList: any[]) => {
 const handleCustomUpload = async (file: File) => {
     try {
         const response = await uploadApi.uploadImage(file)
-        if (response.code === 200) {
-            handleSuccess({ code: 200, data: response.data }, file, fileList.value)
+        const dataObj = response && typeof response.data === 'object' ? response.data as any : null
+        if (dataObj && typeof dataObj.code === 'number' && dataObj.code === 200) {
+            handleSuccess({ data: dataObj }, file, fileList.value)
         } else {
-            handleError(new Error(response.message || '上传失败'), file)
+            handleError(new Error((dataObj && dataObj.message) || '上传失败'), file)
         }
-    } catch (error) {
+    } catch (error: any) {
         handleError(error, file)
     }
 }
 
 // 上传成功
 const handleSuccess = (response: any, file: any, fileList: any[]) => {
-    if (response.code === 200) {
-        const imageUrl = response.data
-        const urls = fileList.map(item => item.url || item.response?.data)
-        emit('update:value', urls)
+    let dataObj = response && response.data ? response.data : response
+    if (dataObj && dataObj.code === 200) {
+        const imageUrl = dataObj.data
+        file.url = imageUrl // 确保图片能回显
+        // 单图上传时直接 emit 字符串，否则 emit 数组
+        if (props.maxCount === 1) {
+            emit('update:value', imageUrl)
+        } else {
+            const urls = fileList.map(item => item.url || (item.response && item.response.data && item.response.data.data))
+            emit('update:value', urls)
+        }
         emit('upload-success', imageUrl, file, fileList)
     } else {
-        ElMessage.error(response.message || '上传失败')
-        emit('upload-error', response, file)
+        ElMessage.error((dataObj && dataObj.message) || '上传失败')
+        emit('upload-error', dataObj, file)
     }
 }
 

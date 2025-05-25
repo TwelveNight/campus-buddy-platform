@@ -38,14 +38,6 @@
                             <el-icon><Document /></el-icon>
                             我的互助
                         </el-menu-item>
-                        <el-menu-item @click="$router.push('/applications')" v-if="authStore.isAuthenticated">
-                            <el-icon><Document /></el-icon>
-                            我的申请
-                        </el-menu-item>
-                        <el-menu-item @click="$router.push('/reviews')" v-if="authStore.isAuthenticated">
-                            <el-icon><Star /></el-icon>
-                            我的评价
-                        </el-menu-item>
                     </el-sub-menu>
 
                     <!-- 学习小组 -->

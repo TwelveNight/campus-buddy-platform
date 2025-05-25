@@ -138,6 +138,35 @@ public class UploadServiceImpl implements UploadService {
             throw new RuntimeException("图片上传失败: " + e.getMessage(), e);
         }
     }
+    
+    @Override
+    public String uploadGroupAvatar(MultipartFile file) {
+        try {
+            // 验证文件类型和大小
+            validateImageFile(file);
+
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                originalFilename = "group-avatar.jpg";
+            }
+
+            String fileExtension = "";
+            if (originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            } else {
+                fileExtension = ".jpg"; // 默认扩展名
+            }
+
+            // 生成唯一文件名，使用group-avatar前缀，避免与用户头像混淆
+            String uniqueFileName = "group-avatar/" + UUID.randomUUID() + fileExtension;
+
+            // 上传到七牛云
+            return uploadToQiniu(file.getBytes(), uniqueFileName);
+        } catch (Exception e) {
+            log.error("小组头像上传失败", e);
+            throw new RuntimeException("小组头像上传失败: " + e.getMessage(), e);
+        }
+    }
 
     @Override
     public String uploadGroupFile(Long groupId, Long userId, MultipartFile file, String folderPrefix) {

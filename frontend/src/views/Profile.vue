@@ -11,7 +11,7 @@
                     <div class="user-summary">
                         <div class="avatar-container">
                             <AvatarUploader v-model="avatarUrlWithTimestamp" :size="120"
-                                @upload-success="handleAvatarUploadSuccess" tip="点击更换头像" />
+                                @upload-success="handleAvatarUploadSuccess" tip="点击更换头像" :isGroupAvatar="false" />
                         </div>
                         <h2>
                             <router-link :to="`/user/${form.userId}`" class="profile-nickname">
