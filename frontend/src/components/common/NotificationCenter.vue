@@ -173,13 +173,18 @@ const getTypeLabel = (type: string) => {
 const fetchNotifications = async () => {
     loading.value = true
     try {
+        console.log('Fetching notifications with type:', props.type)
         const { data } = await getNotifications({
             page: currentPage.value,
             size: pageSize.value,
             type: props.type
         })
+        console.log('API response:', data)
+        console.log('Data structure:', data.data)
         notifications.value = data.data.records
         total.value = data.data.total
+        console.log('Set notifications:', notifications.value)
+        console.log('Set total:', total.value)
     } catch (error) {
         console.error('获取通知失败:', error)
         ElMessage.error('获取通知列表失败')

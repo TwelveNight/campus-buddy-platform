@@ -40,17 +40,23 @@ const handleTabChange = (tab: string) => {
 
 // 获取系统通知类型
 const getSystemNotificationTypes = () => {
-    return 'SYSTEM_ANNOUNCEMENT,SYSTEM_ACTIVITY'
+    const types = 'SYSTEM_ANNOUNCEMENT,SYSTEM_ACTIVITY'
+    console.log('System notification types:', types)
+    return types
 }
 
 // 获取互助通知类型
 const getHelpNotificationTypes = () => {
-    return 'HELP_NEW_APPLICATION,HELP_APPLICATION_ACCEPTED,HELP_APPLICATION_REJECTED,HELP_COMPLETED,HELP_NEW_REVIEW'
+    const types = 'HELP_NEW_APPLICATION,HELP_APPLICATION_ACCEPTED,HELP_APPLICATION_REJECTED,HELP_COMPLETED,HELP_NEW_REVIEW'
+    console.log('Help notification types:', types)
+    return types
 }
 
 // 获取小组通知类型
 const getGroupNotificationTypes = () => {
-    return 'GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'
+    const types = 'GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'
+    console.log('Group notification types:', types)
+    return types
 }
 
 // 初始化

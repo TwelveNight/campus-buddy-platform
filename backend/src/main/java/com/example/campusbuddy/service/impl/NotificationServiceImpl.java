@@ -60,10 +60,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         // type为'all'时不过滤类型，否则按type过滤
         if (StringUtils.hasText(type) && !"all".equalsIgnoreCase(type)) {
             if (type.contains(",")) {
-                // 支持多类型逗号分隔
-                wrapper.in(Notification::getType, type.split(","));
+                // 支持多类型逗号分隔，去除空格
+                String[] types = type.split(",");
+                List<String> typeList = new ArrayList<>();
+                for (String t : types) {
+                    if (StringUtils.hasText(t.trim())) {
+                        typeList.add(t.trim());
+                    }
+                }
+                wrapper.in(Notification::getType, typeList);
             } else {
-                wrapper.eq(Notification::getType, type);
+                wrapper.eq(Notification::getType, type.trim());
             }
         }
         // 未读优先，已读在后，创建时间倒序
