@@ -7,6 +7,9 @@ export function getUserProfile() {
 
 // 根据ID获取用户信息
 export function getUserById(userId: number) {
+  if (!userId || isNaN(userId)) {
+    return Promise.reject(new Error('Invalid user ID'))
+  }
   return axios.get(`/api/user/${userId}`)
 }
 

@@ -118,7 +118,8 @@
                                 <el-dropdown-menu class="notification-dropdown">
                                     <div class="notification-dropdown-header">
                                         <h3>通知
-                                            <span v-if="unreadCount > 0" class="unread-count-badge">{{ unreadCount }}</span>
+                                            <span v-if="unreadCount > 0" class="unread-count-badge">{{ unreadCount
+                                                }}</span>
                                         </h3>
                                         <el-button type="text" @click="markAllAsRead"
                                             :disabled="recentNotifications.length === 0 || unreadCount === 0">
@@ -131,20 +132,22 @@
                                             <el-dropdown-item v-for="notification in recentNotifications"
                                                 :key="notification.notificationId"
                                                 @click="handleNotificationClick(notification)" class="notification-item"
-                                                :class="{ 
+                                                :class="{
                                                     'notification-unread': !notification.isRead,
-                                                    'notification-read': notification.isRead 
+                                                    'notification-read': notification.isRead
                                                 }">
                                                 <div class="notification-content">
                                                     <div class="notification-title">
-                                                        <span v-if="!notification.isRead" class="unread-indicator">●</span>
+                                                        <span v-if="!notification.isRead"
+                                                            class="unread-indicator">●</span>
                                                         <span v-else class="read-indicator">○</span>
                                                         {{ notification.title }}
                                                         <span v-if="!notification.isRead" class="unread-badge">未读</span>
                                                         <span v-else class="read-badge">已读</span>
                                                     </div>
                                                     <div class="notification-body">{{ notification.content }}</div>
-                                                    <div class="notification-time">{{ formatTime(notification.createdAt) }}</div>
+                                                    <div class="notification-time">{{ formatTime(notification.createdAt)
+                                                        }}</div>
                                                 </div>
                                             </el-dropdown-item>
                                         </template>
@@ -152,7 +155,7 @@
                                     </div>
                                     <el-divider class="m-0" />
                                     <div class="notification-footer">
-                                        <router-link to="/user/notifications">查看全部</router-link>
+                                        <router-link to="/notifications">查看全部通知</router-link>
                                     </div>
                                 </el-dropdown-menu>
                             </template>
@@ -163,7 +166,7 @@
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="avatarUrl"></el-avatar>
                                 <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
-                                    }}</span>
+                                }}</span>
                                 <el-icon class="dropdown-icon">
                                     <ArrowDown />
                                 </el-icon>
@@ -276,7 +279,7 @@ const isAuthPage = computed(() => {
 const avatarUrl = computed(() => {
     const url = authStore.user?.avatarUrl;
     if (!url) return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
-    
+
     // 使用avatarUpdateTime属性作为时间戳，确保头像更新时刷新缓存
     const timestamp = authStore.avatarUpdateTime || Date.now();
     return `${url}?v=${timestamp}`;
@@ -296,81 +299,81 @@ const formatTime = (time: string) => {
 
 // 获取未读通知数量
 const fetchUnreadCount = async () => {
-  try {
-    const res = await getUnreadNotificationCount()
-    if (res.data.code === 200) {
-      unreadCount.value = res.data.data.count || 0
+    try {
+        const res = await getUnreadNotificationCount()
+        if (res.data.code === 200) {
+            unreadCount.value = res.data.data.count || 0
+        }
+    } catch (error) {
+        console.error('获取未读通知数量失败', error)
     }
-  } catch (error) {
-    console.error('获取未读通知数量失败', error)
-  }
 }
 
 // 获取最近通知列表
 const fetchRecentNotifications = async () => {
-  notificationsLoading.value = true
-  try {
-    // 获取最新的10条通知，type传'all'，后端已做未读优先排序
-    const res = await getNotifications({ page: 1, size: 10, type: 'all' })
-    if (res.data.code === 200) {
-      // 直接展示，未读在前，已读在后
-      recentNotifications.value = res.data.data.records || []
+    notificationsLoading.value = true
+    try {
+        // 获取最新的10条通知，type传'all'，后端已做未读优先排序
+        const res = await getNotifications({ page: 1, size: 10, type: 'all' })
+        if (res.data.code === 200) {
+            // 直接展示，未读在前，已读在后
+            recentNotifications.value = res.data.data.records || []
+        }
+    } catch (error) {
+        console.error('获取最近通知失败', error)
+    } finally {
+        notificationsLoading.value = false
     }
-  } catch (error) {
-    console.error('获取最近通知失败', error)
-  } finally {
-    notificationsLoading.value = false
-  }
 }
 
 // 处理通知点击
 const handleNotificationClick = (notification: NotificationItem) => {
-  // 如果未读，标记为已读
-  if (!notification.isRead) {
-    markAsRead(notification.notificationId)
-  }
-  // 如果有相关链接，跳转
-  if (notification.relatedLink) {
-    router.push(notification.relatedLink)
-  }
+    // 如果未读，标记为已读
+    if (!notification.isRead) {
+        markAsRead(notification.notificationId)
+    }
+    // 如果有相关链接，跳转
+    if (notification.relatedLink) {
+        router.push(notification.relatedLink)
+    }
 }
 
 // 标记为已读
 const markAsRead = async (notificationId: number) => {
-  try {
-    const res = await markNotificationAsRead(notificationId)
-    if (res.data.code === 200) {
-      // 更新本地状态
-      const index = recentNotifications.value.findIndex(item => item.notificationId === notificationId)
-      if (index !== -1) {
-        recentNotifications.value[index].isRead = true
-      }
-      // 刷新未读数量
-      fetchUnreadCount()
+    try {
+        const res = await markNotificationAsRead(notificationId)
+        if (res.data.code === 200) {
+            // 更新本地状态
+            const index = recentNotifications.value.findIndex(item => item.notificationId === notificationId)
+            if (index !== -1) {
+                recentNotifications.value[index].isRead = true
+            }
+            // 刷新未读数量
+            fetchUnreadCount()
+        }
+    } catch (error) {
+        console.error('标记已读失败', error)
     }
-  } catch (error) {
-    console.error('标记已读失败', error)
-  }
 }
 
 // 标记全部为已读
 const markAllAsRead = async () => {
-  try {
-    const res = await markAllNotificationsAsRead()
-    if (res.data.code === 200) {
-      // 更新本地状态
-      recentNotifications.value.forEach(item => {
-        item.isRead = true
-      })
-      unreadCount.value = 0
-      ElMessage.success('已将全部通知标记为已读')
-      // 刷新通知列表
-      fetchRecentNotifications()
+    try {
+        const res = await markAllNotificationsAsRead()
+        if (res.data.code === 200) {
+            // 更新本地状态
+            recentNotifications.value.forEach(item => {
+                item.isRead = true
+            })
+            unreadCount.value = 0
+            ElMessage.success('已将全部通知标记为已读')
+            // 刷新通知列表
+            fetchRecentNotifications()
+        }
+    } catch (error) {
+        console.error('标记全部已读失败', error)
+        ElMessage.error('操作失败')
     }
-  } catch (error) {
-    console.error('标记全部已读失败', error)
-    ElMessage.error('操作失败')
-  }
 }
 
 // 处理通知下拉菜单切换
@@ -1009,8 +1012,15 @@ const showCreateGroupDialog = () => {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .notification-body {

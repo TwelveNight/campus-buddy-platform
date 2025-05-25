@@ -32,8 +32,10 @@ export const useApplicationStore = defineStore('application', {
   actions: {
     // 获取用户信息，先从缓存中找，没有则通过API获取
     async getUserInfo(userId: number) {
+      console.log('getUserInfo called with userId:', userId, 'type:', typeof userId)
       // 如果无效的用户ID，直接返回未知用户
-      if (!userId) {
+      if (!userId || isNaN(userId)) {
+        console.log('Invalid userId, returning default user')
         return { nickname: '未知用户', avatar: '' }
       }
       

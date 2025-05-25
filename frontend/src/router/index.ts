@@ -82,6 +82,11 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'notifications',
+        component: () => import('../views/user/Notifications.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'admin/helpinfo',
         component: AdminHelpInfo,
         meta: { requiresAuth: true }
