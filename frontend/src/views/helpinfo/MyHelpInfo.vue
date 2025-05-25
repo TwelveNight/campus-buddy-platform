@@ -429,10 +429,6 @@ function getApplicationStatusLabel(status: string) {
     return statusMap[status] || status
 }
 
-// 判断是否显示“评价发布者”按钮
-function canShowReviewPublisherBtn(row: any) {
-    return (row.canHelperReview === true || row._canHelperReview === true) && !reviewedApplications.value[row.id]
-}
 
 // 打开评价帮助者弹窗
 async function openReviewDialog(row: any) {

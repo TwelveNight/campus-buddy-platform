@@ -27,23 +27,33 @@
                             校园互助
                         </template>
                         <el-menu-item index="/helpinfo">
-                            <el-icon><Collection /></el-icon>
+                            <el-icon>
+                                <Collection />
+                            </el-icon>
                             浏览互助
                         </el-menu-item>
                         <el-menu-item index="/helpinfo/publish" v-if="authStore.isAuthenticated">
-                            <el-icon><Plus /></el-icon>
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
                             发布互助
                         </el-menu-item>
                         <el-menu-item index="/my/helpinfo">
-                            <el-icon><Document /></el-icon>
+                            <el-icon>
+                                <Document />
+                            </el-icon>
                             我的互助
                         </el-menu-item>
                         <el-menu-item index="/applications">
-                            <el-icon><List /></el-icon>
+                            <el-icon>
+                                <List />
+                            </el-icon>
                             我的申请
                         </el-menu-item>
                         <el-menu-item index="/reviews">
-                            <el-icon><Star /></el-icon>
+                            <el-icon>
+                                <Star />
+                            </el-icon>
                             我的评价
                         </el-menu-item>
                     </el-sub-menu>
@@ -57,19 +67,27 @@
                             学习小组
                         </template>
                         <el-menu-item index="/groups" @click="navigateToGroups('all')">
-                            <el-icon><Collection /></el-icon>
+                            <el-icon>
+                                <Collection />
+                            </el-icon>
                             浏览小组
                         </el-menu-item>
                         <el-menu-item v-if="authStore.isAuthenticated" @click="navigateToGroups('joined')">
-                            <el-icon><Star /></el-icon>
+                            <el-icon>
+                                <Star />
+                            </el-icon>
                             我加入的小组
                         </el-menu-item>
                         <el-menu-item v-if="authStore.isAuthenticated" @click="navigateToGroups('created')">
-                            <el-icon><Edit /></el-icon>
+                            <el-icon>
+                                <Edit />
+                            </el-icon>
                             我创建的小组
                         </el-menu-item>
                         <el-menu-item v-if="authStore.isAuthenticated" @click="showCreateGroupDialog">
-                            <el-icon><Plus /></el-icon>
+                            <el-icon>
+                                <Plus />
+                            </el-icon>
                             创建小组
                         </el-menu-item>
                     </el-sub-menu>
@@ -91,27 +109,40 @@
                         <el-dropdown trigger="click" @visible-change="handleNotificationDropdownToggle">
                             <div>
                                 <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0" type="danger">
-                                    <el-icon class="bell-icon"><Bell /></el-icon>
+                                    <el-icon class="bell-icon">
+                                        <Bell />
+                                    </el-icon>
                                 </el-badge>
                             </div>
                             <template #dropdown>
                                 <el-dropdown-menu class="notification-dropdown">
                                     <div class="notification-dropdown-header">
-                                        <h3>通知</h3>
-                                        <el-button type="text" @click="markAllAsRead" :disabled="recentNotifications.length === 0">
+                                        <h3>通知
+                                            <span v-if="unreadCount > 0" class="unread-count-badge">{{ unreadCount }}</span>
+                                        </h3>
+                                        <el-button type="text" @click="markAllAsRead"
+                                            :disabled="recentNotifications.length === 0 || unreadCount === 0">
                                             全部已读
                                         </el-button>
                                     </div>
                                     <el-divider class="m-0" />
                                     <div class="notification-list" v-loading="notificationsLoading">
                                         <template v-if="recentNotifications.length > 0">
-                                            <el-dropdown-item v-for="notification in recentNotifications" 
+                                            <el-dropdown-item v-for="notification in recentNotifications"
                                                 :key="notification.notificationId"
-                                                @click="handleNotificationClick(notification)"
-                                                class="notification-item"
-                                                :class="{ 'notification-unread': !notification.isRead }">
+                                                @click="handleNotificationClick(notification)" class="notification-item"
+                                                :class="{ 
+                                                    'notification-unread': !notification.isRead,
+                                                    'notification-read': notification.isRead 
+                                                }">
                                                 <div class="notification-content">
-                                                    <div class="notification-title">{{ notification.title }}</div>
+                                                    <div class="notification-title">
+                                                        <span v-if="!notification.isRead" class="unread-indicator">●</span>
+                                                        <span v-else class="read-indicator">○</span>
+                                                        {{ notification.title }}
+                                                        <span v-if="!notification.isRead" class="unread-badge">未读</span>
+                                                        <span v-else class="read-badge">已读</span>
+                                                    </div>
                                                     <div class="notification-body">{{ notification.content }}</div>
                                                     <div class="notification-time">{{ formatTime(notification.createdAt) }}</div>
                                                 </div>
@@ -131,8 +162,11 @@
                         <el-dropdown trigger="hover">
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="avatarUrl"></el-avatar>
-                                <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户' }}</span>
-                                <el-icon class="dropdown-icon"><ArrowDown /></el-icon>
+                                <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
+                                    }}</span>
+                                <el-icon class="dropdown-icon">
+                                    <ArrowDown />
+                                </el-icon>
                             </div>
                             <template #dropdown>
                                 <el-dropdown-menu>
@@ -190,6 +224,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { getNotifications, getUnreadNotificationCount, markAllNotificationsAsRead, markNotificationAsRead } from '@/api/notification'
+import type { NotificationItem } from '@/types/notification'
 import {
     User,
     House,
@@ -255,16 +290,16 @@ const notificationPollingInterval = ref<any>(null)
 
 // 格式化时间
 const formatTime = (time: string) => {
-  if (!time) return ''
-  return dayjs(time).fromNow()
+    if (!time) return ''
+    return dayjs(time).fromNow()
 }
 
 // 获取未读通知数量
 const fetchUnreadCount = async () => {
   try {
     const res = await getUnreadNotificationCount()
-    if (res.code === 200) {
-      unreadCount.value = res.data || 0
+    if (res.data.code === 200) {
+      unreadCount.value = res.data.data.count || 0
     }
   } catch (error) {
     console.error('获取未读通知数量失败', error)
@@ -275,8 +310,10 @@ const fetchUnreadCount = async () => {
 const fetchRecentNotifications = async () => {
   notificationsLoading.value = true
   try {
-    const res = await getNotifications({ page: 1, size: 5, type: 'all' })
+    // 获取最新的10条通知，type传'all'，后端已做未读优先排序
+    const res = await getNotifications({ page: 1, size: 10, type: 'all' })
     if (res.data.code === 200) {
+      // 直接展示，未读在前，已读在后
       recentNotifications.value = res.data.data.records || []
     }
   } catch (error) {
@@ -287,12 +324,11 @@ const fetchRecentNotifications = async () => {
 }
 
 // 处理通知点击
-const handleNotificationClick = (notification: any) => {
+const handleNotificationClick = (notification: NotificationItem) => {
   // 如果未读，标记为已读
   if (!notification.isRead) {
     markAsRead(notification.notificationId)
   }
-  
   // 如果有相关链接，跳转
   if (notification.relatedLink) {
     router.push(notification.relatedLink)
@@ -303,7 +339,7 @@ const handleNotificationClick = (notification: any) => {
 const markAsRead = async (notificationId: number) => {
   try {
     const res = await markNotificationAsRead(notificationId)
-    if (res.code === 200) {
+    if (res.data.code === 200) {
       // 更新本地状态
       const index = recentNotifications.value.findIndex(item => item.notificationId === notificationId)
       if (index !== -1) {
@@ -321,7 +357,6 @@ const markAsRead = async (notificationId: number) => {
 const markAllAsRead = async () => {
   try {
     const res = await markAllNotificationsAsRead()
-    console.log('标记全部已读响应:', res)
     if (res.data.code === 200) {
       // 更新本地状态
       recentNotifications.value.forEach(item => {
@@ -329,6 +364,8 @@ const markAllAsRead = async () => {
       })
       unreadCount.value = 0
       ElMessage.success('已将全部通知标记为已读')
+      // 刷新通知列表
+      fetchRecentNotifications()
     }
   } catch (error) {
     console.error('标记全部已读失败', error)
@@ -338,36 +375,36 @@ const markAllAsRead = async () => {
 
 // 处理通知下拉菜单切换
 const handleNotificationDropdownToggle = (visible: boolean) => {
-  if (visible) {
-    fetchRecentNotifications()
-  }
+    if (visible) {
+        fetchRecentNotifications()
+    }
 }
 
 // 设置定期轮询未读通知数量
 const setupNotificationPolling = () => {
-  if (authStore.isAuthenticated) {
-    fetchUnreadCount() // 立即获取一次
-    notificationPollingInterval.value = setInterval(() => {
-      fetchUnreadCount()
-    }, 60000) // 每分钟检查一次
-  }
+    if (authStore.isAuthenticated) {
+        fetchUnreadCount() // 立即获取一次
+        notificationPollingInterval.value = setInterval(() => {
+            fetchUnreadCount()
+        }, 60000) // 每分钟检查一次
+    }
 }
 
 // 清除轮询
 const clearNotificationPolling = () => {
-  if (notificationPollingInterval.value) {
-    clearInterval(notificationPollingInterval.value)
-    notificationPollingInterval.value = null
-  }
+    if (notificationPollingInterval.value) {
+        clearInterval(notificationPollingInterval.value)
+        notificationPollingInterval.value = null
+    }
 }
 
 onMounted(() => {
-  // 设置通知轮询
-  setupNotificationPolling()
+    // 设置通知轮询
+    setupNotificationPolling()
 })
 
 onBeforeUnmount(() => {
-  clearNotificationPolling()
+    clearNotificationPolling()
 })
 
 // 退出登录
@@ -388,7 +425,7 @@ const navigateToGroups = (tab: string) => {
         });
         return;
     }
-    
+
     // 设置重定向标志，以便在 GroupList 组件中捕获
     router.push({
         path: '/groups',
@@ -407,7 +444,7 @@ const showCreateGroupDialog = () => {
         });
         return;
     }
-    
+
     // 导航到小组页面并传递创建参数
     router.push({
         path: '/groups',
@@ -665,16 +702,17 @@ const showCreateGroupDialog = () => {
     .user-name {
         display: none;
     }
-    
+
     .dropdown-icon {
         display: none;
     }
-    
+
     .avatar-wrapper {
         padding: 4px;
     }
-    
-    .login-btn, .register-btn {
+
+    .login-btn,
+    .register-btn {
         padding: 6px 14px;
     }
 }
@@ -691,20 +729,20 @@ const showCreateGroupDialog = () => {
     .container {
         padding: 0 16px;
     }
-    
+
     .menu {
         margin-left: 20px;
     }
-    
-    :deep(.el-menu--horizontal > .el-menu-item), 
+
+    :deep(.el-menu--horizontal > .el-menu-item),
     :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
         padding: 0 12px;
     }
-    
+
     .logo h1 {
         font-size: 1.4rem;
     }
-    
+
     .user-name {
         font-size: 13px;
     }
@@ -719,7 +757,8 @@ const showCreateGroupDialog = () => {
 
 /* 暗色主题适配 */
 [data-theme="dark"] .navbar {
-    background-color: var(--dark-bg, #1e1e20); /* 使用 theme.css 变量，并提供备用值 */
+    background-color: var(--dark-bg, #1e1e20);
+    /* 使用 theme.css 变量，并提供备用值 */
     box-shadow: var(--dark-shadow-light, 0 4px 12px rgba(0, 0, 0, 0.3));
 }
 
@@ -743,37 +782,47 @@ const showCreateGroupDialog = () => {
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item:hover),
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title) {
     color: var(--primary-color) !important;
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05)) !important; /* 使用 theme.css 变量 */
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05)) !important;
+    /* 使用 theme.css 变量 */
 }
 
 /* 更新 el-menu--popup 的暗色主题样式 */
 [data-theme="dark"] :deep(.el-menu--popup) {
-    background-color: var(--dark-bg-secondary, #2a2a2e) !important; /* 使用 theme.css 变量 */
-    border: 1px solid var(--dark-border-color, #4c4d4f) !important; /* 使用 theme.css 变量 */
-    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important; /* 使用 theme.css 变量 */
+    background-color: var(--dark-bg-secondary, #2a2a2e) !important;
+    /* 使用 theme.css 变量 */
+    border: 1px solid var(--dark-border-color, #4c4d4f) !important;
+    /* 使用 theme.css 变量 */
+    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important;
+    /* 使用 theme.css 变量 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item) {
-    background-color: transparent !important; /* 子菜单项背景透明，依赖父级 popup 背景 */
-    color: var(--dark-text-regular, #cfd3dc) !important; /* 使用 theme.css 变量 */
+    background-color: transparent !important;
+    /* 子菜单项背景透明，依赖父级 popup 背景 */
+    color: var(--dark-text-regular, #cfd3dc) !important;
+    /* 使用 theme.css 变量 */
     border-bottom: none !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item .el-icon) {
-    color: var(--dark-text-regular, #cfd3dc) !important; /* 确保图标颜色与文本一致 */
+    color: var(--dark-text-regular, #cfd3dc) !important;
+    /* 确保图标颜色与文本一致 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover) {
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important; /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important;
+    /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
     color: var(--primary-color) !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover .el-icon) {
-    color: var(--primary-color) !important; /* 确保 hover 时图标颜色也改变 */
+    color: var(--primary-color) !important;
+    /* 确保 hover 时图标颜色也改变 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item.is-active) {
-    background-color: var(--primary-color-dark-transparent, rgba(64, 158, 255, 0.2)) !important; /* 使用 theme.css 变量 */
+    background-color: var(--primary-color-dark-transparent, rgba(64, 158, 255, 0.2)) !important;
+    /* 使用 theme.css 变量 */
     color: var(--primary-color) !important;
 }
 
@@ -799,26 +848,33 @@ const showCreateGroupDialog = () => {
 
 /* 更新 el-dropdown-menu 的暗色主题样式 */
 [data-theme="dark"] :deep(.el-dropdown-menu) {
-    background-color: var(--dark-bg-secondary, #2a2a2e) !important; /* 使用 theme.css 变量 */
-    border: 1px solid var(--dark-border-color, #4c4d4f) !important; /* 使用 theme.css 变量 */
-    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important; /* 使用 theme.css 变量 */
+    background-color: var(--dark-bg-secondary, #2a2a2e) !important;
+    /* 使用 theme.css 变量 */
+    border: 1px solid var(--dark-border-color, #4c4d4f) !important;
+    /* 使用 theme.css 变量 */
+    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important;
+    /* 使用 theme.css 变量 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item) {
-    color: var(--dark-text-regular, #cfd3dc) !important; /* 使用 theme.css 变量 */
+    color: var(--dark-text-regular, #cfd3dc) !important;
+    /* 使用 theme.css 变量 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item .el-icon) {
-    color: var(--dark-text-regular, #cfd3dc) !important; /* 确保图标颜色与文本一致 */
+    color: var(--dark-text-regular, #cfd3dc) !important;
+    /* 确保图标颜色与文本一致 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important; /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important;
+    /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
     color: var(--primary-color) !important;
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item:hover .el-icon) {
-    color: var(--primary-color) !important; /* 确保 hover 时图标颜色也改变 */
+    color: var(--primary-color) !important;
+    /* 确保 hover 时图标颜色也改变 */
 }
 
 /* 通知下拉菜单样式 */
@@ -841,6 +897,20 @@ const showCreateGroupDialog = () => {
     font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.unread-count-badge {
+    background-color: var(--el-color-danger);
+    color: white;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    min-width: 20px;
+    text-align: center;
 }
 
 .notification-list {
@@ -861,18 +931,25 @@ const showCreateGroupDialog = () => {
 }
 
 .notification-item.notification-unread {
-    background-color: rgba(64, 158, 255, 0.05);
+    background-color: rgba(64, 158, 255, 0.1);
     position: relative;
+    font-weight: 500;
+    border-left: 4px solid var(--primary-color);
 }
 
 .notification-item.notification-unread::before {
     content: '';
     position: absolute;
-    left: 0;
+    left: -4px;
     top: 0;
     bottom: 0;
-    width: 3px;
+    width: 4px;
     background-color: var(--primary-color);
+}
+
+.notification-item.notification-read {
+    background-color: var(--bg-color);
+    opacity: 0.85;
 }
 
 .notification-content {
@@ -889,6 +966,51 @@ const showCreateGroupDialog = () => {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.unread-indicator {
+    color: var(--primary-color);
+    font-size: 12px;
+    margin-right: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.read-indicator {
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    margin-right: 6px;
+    opacity: 0.6;
+}
+
+.unread-badge {
+    background-color: var(--el-color-danger);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.read-badge {
+    background-color: var(--el-color-success);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+    margin-left: auto;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 .notification-body {
@@ -899,8 +1021,22 @@ const showCreateGroupDialog = () => {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.notification-read .notification-title {
+    color: var(--text-secondary);
+    font-weight: normal;
+}
+
+.notification-read .notification-body {
+    color: var(--text-tertiary);
+}
+
+.notification-read .notification-time {
+    color: var(--text-placeholder);
 }
 
 .notification-time {
@@ -936,6 +1072,11 @@ const showCreateGroupDialog = () => {
     color: var(--dark-text-primary, #e5eaf3);
 }
 
+[data-theme="dark"] .unread-count-badge {
+    background-color: var(--el-color-danger);
+    color: white;
+}
+
 [data-theme="dark"] .notification-item {
     border-bottom-color: var(--dark-border-color, #4c4d4f);
 }
@@ -945,7 +1086,33 @@ const showCreateGroupDialog = () => {
 }
 
 [data-theme="dark"] .notification-item.notification-unread {
-    background-color: rgba(64, 158, 255, 0.1);
+    background-color: rgba(64, 158, 255, 0.15);
+    border-left-color: var(--primary-color);
+}
+
+[data-theme="dark"] .notification-item.notification-read {
+    background-color: var(--dark-bg-secondary);
+    opacity: 0.8;
+}
+
+[data-theme="dark"] .unread-indicator {
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .read-indicator {
+    color: var(--dark-text-secondary, #a3a6ad);
+    opacity: 0.6;
+}
+
+[data-theme="dark"] .unread-badge {
+    background-color: var(--el-color-danger);
+    color: white;
+}
+
+[data-theme="dark"] .read-badge {
+    background-color: var(--el-color-success);
+    color: white;
+    opacity: 0.8;
 }
 
 [data-theme="dark"] .notification-title {
@@ -958,6 +1125,18 @@ const showCreateGroupDialog = () => {
 
 [data-theme="dark"] .notification-time {
     color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-read .notification-title {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-read .notification-body {
+    color: var(--dark-text-placeholder, #6c6e72);
+}
+
+[data-theme="dark"] .notification-read .notification-time {
+    color: var(--dark-text-placeholder, #6c6e72);
 }
 
 [data-theme="dark"] .notification-footer {

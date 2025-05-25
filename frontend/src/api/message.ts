@@ -1,13 +1,19 @@
 import request from '@/utils/request'
+import type {
+  ChatSessionListResponse,
+  ChatMessageListResponse,
+  SendMessageResponse,
+  CommonResponse
+} from '@/types/message'
 
 /**
  * 发送私信
  * @param {Object} data - 私信数据
  * @param {number} data.recipientId - 接收者ID
  * @param {string} data.content - 消息内容
- * @returns {Promise<Object>} 发送结果
+ * @returns {Promise<{data: SendMessageResponse}>} 发送结果
  */
-export const sendPrivateMessage = (data: { recipientId: number; content: string }): Promise<object> => {
+export const sendPrivateMessage = (data: { recipientId: number; content: string }) => {
   return request({
     url: '/messages',
     method: 'post',
@@ -21,9 +27,9 @@ export const sendPrivateMessage = (data: { recipientId: number; content: string 
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码
  * @param {number} params.size - 每页大小
- * @returns {Promise<Object>} 聊天记录
+ * @returns {Promise<{data: ChatMessageListResponse}>} 聊天记录
  */
-export const getChatHistory = (userId: number, params: { page: number; size: number; }): Promise<object> => {
+export const getChatHistory = (userId: number, params: { page: number; size: number; }) => {
   return request({
     url: `/messages/chat/${userId}`,
     method: 'get',
@@ -36,9 +42,9 @@ export const getChatHistory = (userId: number, params: { page: number; size: num
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码
  * @param {number} params.size - 每页大小
- * @returns {Promise<Object>} 会话列表
+ * @returns {Promise<{data: ChatSessionListResponse}>} 会话列表
  */
-export const getChatSessions = (params: { page: number; size: number; }): Promise<object> => {
+export const getChatSessions = (params: { page: number; size: number; }) => {
   return request({
     url: '/messages/sessions',
     method: 'get',
@@ -48,7 +54,7 @@ export const getChatSessions = (params: { page: number; size: number; }): Promis
 
 /**
  * 获取未读私信数量
- * @returns {Promise<Object>} 未读私信数量
+ * @returns {Promise<{data: any}>} 未读私信数量
  */
 export const getUnreadMessageCount = () => {
   return request({
@@ -60,9 +66,9 @@ export const getUnreadMessageCount = () => {
 /**
  * 标记与指定用户的所有私信为已读
  * @param {number} userId - 对方用户ID
- * @returns {Promise<Object>} 操作结果
+ * @returns {Promise<{data: CommonResponse}>} 操作结果
  */
-export const markAllMessagesAsRead = (userId: number): Promise<object> => {
+export const markAllMessagesAsRead = (userId: number) => {
   return request({
     url: `/messages/read/all/${userId}`,
     method: 'put'
@@ -72,9 +78,9 @@ export const markAllMessagesAsRead = (userId: number): Promise<object> => {
 /**
  * 标记私信为已读
  * @param {number} messageId - 私信ID
- * @returns {Promise<Object>} 操作结果
+ * @returns {Promise<{data: CommonResponse}>} 操作结果
  */
-export const markMessageAsRead = (messageId: number): Promise<object> => {
+export const markMessageAsRead = (messageId: number) => {
   return request({
     url: `/messages/${messageId}/read`,
     method: 'put'
@@ -84,9 +90,9 @@ export const markMessageAsRead = (messageId: number): Promise<object> => {
 /**
  * 删除私信
  * @param {number} messageId - 私信ID
- * @returns {Promise<Object>} 操作结果
+ * @returns {Promise<{data: CommonResponse}>} 操作结果
  */
-export const deleteMessage = (messageId: number): Promise<object> => {
+export const deleteMessage = (messageId: number) => {
   return request({
     url: `/messages/${messageId}`,
     method: 'delete'

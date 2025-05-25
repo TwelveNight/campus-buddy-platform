@@ -57,22 +57,22 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         Page<Notification> pageParam = new Page<>(page, size);
         LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Notification::getRecipientId, userId);
-        
-        // 只有当type不为null、不为空且不等于"all"时，才添加类型过滤条件
+        // type为'all'时不过滤类型，否则按type过滤
         if (StringUtils.hasText(type) && !"all".equalsIgnoreCase(type)) {
-            wrapper.eq(Notification::getType, type);
+            if (type.contains(",")) {
+                // 支持多类型逗号分隔
+                wrapper.in(Notification::getType, type.split(","));
+            } else {
+                wrapper.eq(Notification::getType, type);
+            }
         }
-        
-        wrapper.orderByDesc(Notification::getCreatedAt);
-        
+        // 未读优先，已读在后，创建时间倒序
+        wrapper.orderByAsc(Notification::getIsRead)
+               .orderByDesc(Notification::getCreatedAt);
         IPage<Notification> notificationPage = page(pageParam, wrapper);
-        
-        // 转换为VO
         IPage<NotificationVO> voPage = notificationPage.convert(notification -> {
             NotificationVO vo = new NotificationVO();
             BeanUtils.copyProperties(notification, vo);
-            
-            // 如果有发送者，获取发送者信息
             if (notification.getSenderId() != null) {
                 User sender = userService.getById(notification.getSenderId());
                 if (sender != null) {
@@ -80,13 +80,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                     vo.setSenderAvatar(sender.getAvatarUrl());
                 }
             }
-            
-            // 根据通知类型和相关ID生成相关链接
             vo.setRelatedLink(generateRelatedLink(notification.getType(), notification.getRelatedId()));
-            
             return vo;
         });
-        
         return voPage;
     }
 
