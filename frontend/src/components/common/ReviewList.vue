@@ -106,14 +106,14 @@
                                         <el-icon>
                                             <Link />
                                         </el-icon>
-                                        <span class="related-title">{{ review.relatedInfoTitle || '互助信息' }}</span>
+                                        <span class="related-title">{{ review.relatedInfoTitle || '互助任务' }}</span>
                                     </span>
                                 </el-tooltip>
                                 <span v-else class="related-info">
                                     <el-icon>
                                         <Link />
                                     </el-icon>
-                                    <span class="related-title">{{ review.relatedInfoTitle || '互助信息' }}</span>
+                                    <span class="related-title">{{ review.relatedInfoTitle || '互助任务' }}</span>
                                 </span>
                             </div>
                             <div class="action-buttons">
@@ -153,8 +153,8 @@ interface ReviewItem {
     content?: string;
     createdAt: string | number;
     reviewType?: string; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
-    relatedInfoTitle?: string; // 相关互助信息标题
-    relatedInfoSummary?: string; // 相关互助信息摘要
+    relatedInfoTitle?: string; // 相关互助任务标题
+    relatedInfoSummary?: string; // 相关互助任务摘要
     reviewerRole?: string; // PUBLISHER (求助方) 或 HELPER (帮助方)
     reviewedRole?: string; // PUBLISHER (求助方) 或 HELPER (帮助方)
 }

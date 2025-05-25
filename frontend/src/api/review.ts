@@ -15,8 +15,8 @@ export interface Review {
   createdAt?: string;
   moduleType?: string; // 例如：'互助', '学习小组', '资源共享'
   reviewType?: string; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
-  relatedInfoTitle?: string; // 相关互助信息标题
-  relatedInfoSummary?: string; // 相关互助信息摘要
+  relatedInfoTitle?: string; // 相关互助任务标题
+  relatedInfoSummary?: string; // 相关互助任务摘要
 }
 
 
@@ -82,7 +82,7 @@ export function canReview(userId: number, helpInfoId: number, reviewType: string
   });
 }
 
-// 获取互助信息的评价状态
+// 获取互助任务的评价状态
 export function getHelpInfoReviewStatus(helpInfoId: number) {
   return request({
     url: '/api/review/status',
@@ -100,7 +100,7 @@ export function getUserReviews(query: ReviewQuery) {
   });
 }
 
-// 获取用户对特定互助信息的评价状态
+// 获取用户对特定互助任务的评价状态
 export function getUserReviewStatus(userId: number, helpInfoId: number) {
   return request({
     url: '/api/review/userReviewStatus',

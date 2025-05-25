@@ -18,7 +18,7 @@
                         首页
                     </el-menu-item>
 
-                    <!-- 互助信息下拉菜单 -->
+                    <!-- 互助任务下拉菜单 -->
                     <el-sub-menu index="/helpinfo">
                         <template #title>
                             <el-icon class="menu-icon">
@@ -88,9 +88,44 @@
                 <ThemeSwitch />
                 <template v-if="authStore.isAuthenticated">
                     <div class="notification-icon">
-                        <el-badge :value="0" :max="99" :hidden="true" type="danger">
-                            <el-icon class="bell-icon"><Bell /></el-icon>
-                        </el-badge>
+                        <el-dropdown trigger="click" @visible-change="handleNotificationDropdownToggle">
+                            <div>
+                                <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0" type="danger">
+                                    <el-icon class="bell-icon"><Bell /></el-icon>
+                                </el-badge>
+                            </div>
+                            <template #dropdown>
+                                <el-dropdown-menu class="notification-dropdown">
+                                    <div class="notification-dropdown-header">
+                                        <h3>通知</h3>
+                                        <el-button type="text" @click="markAllAsRead" :disabled="recentNotifications.length === 0">
+                                            全部已读
+                                        </el-button>
+                                    </div>
+                                    <el-divider class="m-0" />
+                                    <div class="notification-list" v-loading="notificationsLoading">
+                                        <template v-if="recentNotifications.length > 0">
+                                            <el-dropdown-item v-for="notification in recentNotifications" 
+                                                :key="notification.notificationId"
+                                                @click="handleNotificationClick(notification)"
+                                                class="notification-item"
+                                                :class="{ 'notification-unread': !notification.isRead }">
+                                                <div class="notification-content">
+                                                    <div class="notification-title">{{ notification.title }}</div>
+                                                    <div class="notification-body">{{ notification.content }}</div>
+                                                    <div class="notification-time">{{ formatTime(notification.createdAt) }}</div>
+                                                </div>
+                                            </el-dropdown-item>
+                                        </template>
+                                        <el-empty v-else description="暂无通知" :image-size="60" />
+                                    </div>
+                                    <el-divider class="m-0" />
+                                    <div class="notification-footer">
+                                        <router-link to="/user/notifications">查看全部</router-link>
+                                    </div>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
                     </div>
                     <div class="user-avatar-container">
                         <el-dropdown trigger="hover">
@@ -146,11 +181,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import ThemeSwitch from './ThemeSwitch.vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
+import 'dayjs/locale/zh-cn'
+import { getNotifications, getUnreadNotificationCount, markAllNotificationsAsRead, markNotificationAsRead } from '@/api/notification'
 import {
     User,
     House,
@@ -168,6 +207,9 @@ import {
     ArrowDown
 } from '@element-plus/icons-vue'
 
+dayjs.extend(relativeTime)
+dayjs.locale('zh-cn')
+
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -176,10 +218,6 @@ const activeIndex = computed(() => route.path)
 
 // 使用authStore中的isAdmin getter
 const isAdmin = computed(() => {
-    // 添加调试日志
-    console.log('NavBar - 当前用户信息:', authStore.user);
-    console.log('NavBar - 用户角色:', authStore.user?.roles);
-    console.log('NavBar - isAdmin值:', authStore.isAdmin);
     return authStore.isAdmin;
 })
 
@@ -187,8 +225,7 @@ const isAdmin = computed(() => {
 onMounted(async () => {
     if (authStore.isAuthenticated) {
         try {
-            const isAdmin = await authStore.checkAdminStatus();
-            console.log('NavBar组件中检查管理员状态:', isAdmin);
+            await authStore.checkAdminStatus();
         } catch (error) {
             console.error('NavBar组件中检查管理员状态失败:', error);
         }
@@ -207,9 +244,131 @@ const avatarUrl = computed(() => {
     
     // 使用avatarUpdateTime属性作为时间戳，确保头像更新时刷新缓存
     const timestamp = authStore.avatarUpdateTime || Date.now();
-    console.log('导航栏获取头像URL:', `${url}?v=${timestamp}`);
     return `${url}?v=${timestamp}`;
 });
+
+// 通知相关状态
+const unreadCount = ref(0)
+const recentNotifications = ref<any[]>([])
+const notificationsLoading = ref(false)
+const notificationPollingInterval = ref<any>(null)
+
+// 格式化时间
+const formatTime = (time: string) => {
+  if (!time) return ''
+  return dayjs(time).fromNow()
+}
+
+// 获取未读通知数量
+const fetchUnreadCount = async () => {
+  try {
+    const res = await getUnreadNotificationCount()
+    if (res.code === 200) {
+      unreadCount.value = res.data || 0
+    }
+  } catch (error) {
+    console.error('获取未读通知数量失败', error)
+  }
+}
+
+// 获取最近通知列表
+const fetchRecentNotifications = async () => {
+  notificationsLoading.value = true
+  try {
+    const res = await getNotifications({ page: 1, size: 5, type: 'all' })
+    if (res.data.code === 200) {
+      recentNotifications.value = res.data.data.records || []
+    }
+  } catch (error) {
+    console.error('获取最近通知失败', error)
+  } finally {
+    notificationsLoading.value = false
+  }
+}
+
+// 处理通知点击
+const handleNotificationClick = (notification: any) => {
+  // 如果未读，标记为已读
+  if (!notification.isRead) {
+    markAsRead(notification.notificationId)
+  }
+  
+  // 如果有相关链接，跳转
+  if (notification.relatedLink) {
+    router.push(notification.relatedLink)
+  }
+}
+
+// 标记为已读
+const markAsRead = async (notificationId: number) => {
+  try {
+    const res = await markNotificationAsRead(notificationId)
+    if (res.code === 200) {
+      // 更新本地状态
+      const index = recentNotifications.value.findIndex(item => item.notificationId === notificationId)
+      if (index !== -1) {
+        recentNotifications.value[index].isRead = true
+      }
+      // 刷新未读数量
+      fetchUnreadCount()
+    }
+  } catch (error) {
+    console.error('标记已读失败', error)
+  }
+}
+
+// 标记全部为已读
+const markAllAsRead = async () => {
+  try {
+    const res = await markAllNotificationsAsRead()
+    console.log('标记全部已读响应:', res)
+    if (res.data.code === 200) {
+      // 更新本地状态
+      recentNotifications.value.forEach(item => {
+        item.isRead = true
+      })
+      unreadCount.value = 0
+      ElMessage.success('已将全部通知标记为已读')
+    }
+  } catch (error) {
+    console.error('标记全部已读失败', error)
+    ElMessage.error('操作失败')
+  }
+}
+
+// 处理通知下拉菜单切换
+const handleNotificationDropdownToggle = (visible: boolean) => {
+  if (visible) {
+    fetchRecentNotifications()
+  }
+}
+
+// 设置定期轮询未读通知数量
+const setupNotificationPolling = () => {
+  if (authStore.isAuthenticated) {
+    fetchUnreadCount() // 立即获取一次
+    notificationPollingInterval.value = setInterval(() => {
+      fetchUnreadCount()
+    }, 60000) // 每分钟检查一次
+  }
+}
+
+// 清除轮询
+const clearNotificationPolling = () => {
+  if (notificationPollingInterval.value) {
+    clearInterval(notificationPollingInterval.value)
+    notificationPollingInterval.value = null
+  }
+}
+
+onMounted(() => {
+  // 设置通知轮询
+  setupNotificationPolling()
+})
+
+onBeforeUnmount(() => {
+  clearNotificationPolling()
+})
 
 // 退出登录
 const handleLogout = () => {
@@ -219,8 +378,6 @@ const handleLogout = () => {
 
 // 导航到小组页面的不同标签
 const navigateToGroups = (tab: string) => {
-    console.log(`导航到小组页面，标签: ${tab}`);
-    
     // 确保用户已登录（对于需要身份验证的标签）
     if ((tab === 'joined' || tab === 'created') && !authStore.isAuthenticated) {
         ElMessageBox.alert('请先登录后再查看小组', '提示', {
@@ -241,7 +398,6 @@ const navigateToGroups = (tab: string) => {
 
 // 显示创建小组对话框
 const showCreateGroupDialog = () => {
-    console.log('尝试打开创建小组对话框');
     if (!authStore.isAuthenticated) {
         ElMessageBox.alert('请先登录后再创建小组', '提示', {
             confirmButtonText: '确定',
@@ -257,7 +413,6 @@ const showCreateGroupDialog = () => {
         path: '/groups',
         query: { action: 'create' }
     }).then(() => {
-        console.log('已导航到小组页面，带有创建参数');
     }).catch(err => {
         console.error('导航失败:', err);
     });
@@ -664,5 +819,149 @@ const showCreateGroupDialog = () => {
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item:hover .el-icon) {
     color: var(--primary-color) !important; /* 确保 hover 时图标颜色也改变 */
+}
+
+/* 通知下拉菜单样式 */
+:deep(.notification-dropdown) {
+    width: 350px;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.notification-dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--card-bg);
+}
+
+.notification-dropdown-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.notification-list {
+    max-height: 300px;
+    overflow-y: auto;
+    min-height: 100px;
+}
+
+.notification-item {
+    padding: 0 !important;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.notification-item:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+.notification-item.notification-unread {
+    background-color: rgba(64, 158, 255, 0.05);
+    position: relative;
+}
+
+.notification-item.notification-unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--primary-color);
+}
+
+.notification-content {
+    padding: 12px 16px;
+    width: 100%;
+}
+
+.notification-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.notification-body {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notification-time {
+    font-size: 12px;
+    color: var(--text-tertiary);
+}
+
+.notification-footer {
+    padding: 8px 16px;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--card-bg);
+}
+
+.notification-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.notification-footer a:hover {
+    color: var(--primary-color-hover);
+}
+
+/* 暗色主题通知样式 */
+[data-theme="dark"] .notification-dropdown-header {
+    background-color: var(--dark-bg-secondary, #2a2a2e);
+}
+
+[data-theme="dark"] .notification-dropdown-header h3 {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-item {
+    border-bottom-color: var(--dark-border-color, #4c4d4f);
+}
+
+[data-theme="dark"] .notification-item:hover {
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important;
+}
+
+[data-theme="dark"] .notification-item.notification-unread {
+    background-color: rgba(64, 158, 255, 0.1);
+}
+
+[data-theme="dark"] .notification-title {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-body {
+    color: var(--dark-text-regular, #cfd3dc);
+}
+
+[data-theme="dark"] .notification-time {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-footer {
+    background-color: var(--dark-bg-secondary, #2a2a2e);
+    border-top-color: var(--dark-border-color, #4c4d4f);
 }
 </style>

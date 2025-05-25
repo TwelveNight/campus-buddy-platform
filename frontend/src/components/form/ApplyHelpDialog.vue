@@ -83,11 +83,11 @@ async function submitForm() {
             } catch (e: any) {
                 // 显示具体的错误信息
                 if (e.message && e.message.includes('不能申请自己')) {
-                    ElMessage.error('您不能申请自己发布的互助信息')
+                    ElMessage.error('您不能申请自己发布的互助任务')
                 } else if (e.message && e.message.includes('已经申请')) {
-                    ElMessage.error('您已经申请过该互助信息')
+                    ElMessage.error('您已经申请过该互助任务')
                 } else if (e.message && e.message.includes('状态不允许')) {
-                    ElMessage.error('该互助信息当前状态不允许申请')
+                    ElMessage.error('该互助任务当前状态不允许申请')
                 } else if (e.message && e.message.includes('请求格式错误')) {
                     ElMessage.error('提交数据格式错误，请检查填写内容后重试')
                     console.error('申请提交格式错误:', e) // 在控制台打印详细错误以便调试

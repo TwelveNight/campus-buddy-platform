@@ -60,7 +60,7 @@ export const useApplicationStore = defineStore('application', {
       return { nickname: '未知用户', avatar: '' }
     },
     
-    // 为申请加载互助信息
+    // 为申请加载互助任务
     async loadHelpInfoForApplications(applications: any[]) {
       const authStore = useAuthStore()
       
@@ -76,7 +76,7 @@ export const useApplicationStore = defineStore('application', {
         .filter(app => app.infoId && (!app.helpInfo || !app.helpInfo.title || app.helpInfo.title === '加载中...'))
         .map(async (app) => {
           try {
-            // 获取互助信息详情
+            // 获取互助任务详情
             const res = await fetchHelpInfoDetail(app.infoId)
             if (res.data.code === 200 && res.data.data) {
               app.helpInfo = res.data.data
@@ -96,12 +96,12 @@ export const useApplicationStore = defineStore('application', {
               }
             }
           } catch (error) {
-            console.error('加载互助信息失败:', error)
+            console.error('加载互助任务失败:', error)
             
             // 创建一个最基本的helpInfo对象，避免undefined错误
             app.helpInfo = {
-              id: app.infoId, // 确保使用申请中的互助信息ID
-              title: '无法获取互助信息',
+              id: app.infoId, // 确保使用申请中的互助任务ID
+              title: '无法获取互助任务',
               status: 'ERROR',
               type: '未知',
               publisherNickname: '未知用户',
@@ -147,7 +147,7 @@ export const useApplicationStore = defineStore('application', {
         const res = await getMyApplications()
         if (res.data.code === 200) {
           const applications = res.data.data || []
-          // 为每个申请对象添加默认互助信息，避免undefined错误
+          // 为每个申请对象添加默认互助任务，避免undefined错误
           this.myApplications = applications.map((app: any) => {
             if (!app.helpInfo && app.infoId) {
               app.helpInfo = {

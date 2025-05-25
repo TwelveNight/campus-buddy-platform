@@ -167,13 +167,13 @@ const router = useRouter()
 const loading = ref(false)
 const activeTab = ref('published')
 
-// 已发布互助信息
+// 已发布互助任务
 const publishedList = ref<any[]>([])
 const publishedPage = ref(1)
 const publishedPageSize = ref(10)
 const publishedTotal = ref(0)
 
-// 已申请互助信息（由store管理）
+// 已申请互助任务（由store管理）
 const appliedList = ref<any[]>([])
 const appliedPage = ref(1)
 const appliedPageSize = ref(10)
@@ -200,14 +200,14 @@ function initReviewStatus() {
 function debugReviewStatus() {
     console.log('=== 评价状态调试信息 ===');
 
-    // 查看已发布互助信息的评价状态
-    console.log('已发布互助信息评价状态:');
+    // 查看已发布互助任务的评价状态
+    console.log('已发布互助任务评价状态:');
     publishedList.value.forEach(item => {
         console.log(`互助ID: ${item.infoId}, 标题: ${item.title}, 状态: ${item.status}, 可评价: ${item.canPublisherReview}, 已评价: ${item.publisherHasReviewed}`);
     });
 
-    // 查看已申请互助信息的评价状态
-    console.log('已申请互助信息评价状态:');
+    // 查看已申请互助任务的评价状态
+    console.log('已申请互助任务评价状态:');
     appliedList.value.forEach(item => {
         console.log(`申请ID: ${item.id}, 互助ID: ${item.infoId}, 状态: ${item.status}, 可评价: ${item.canHelperReview}, 已评价: ${item.helperHasReviewed}`);
     });
@@ -215,14 +215,14 @@ function debugReviewStatus() {
     console.log('=== 调试信息结束 ===');
 }
 
-// 获取我发布的互助信息
+// 获取我发布的互助任务
 async function loadMyPublishedHelpInfo() {
     loading.value = true
     try {
         const res = await fetchHelpInfoList({
             page: publishedPage.value,
             size: publishedPageSize.value,
-            publisherId: 'my' // 这里需要后端支持获取当前用户发布的互助信息
+            publisherId: 'my' // 这里需要后端支持获取当前用户发布的互助任务
         })
         if (res.data.code === 200) {
             let records = res.data.data.records || res.data.data || [];
@@ -231,7 +231,7 @@ async function loadMyPublishedHelpInfo() {
             for (const record of records) {
                 if (record.status === 'RESOLVED' && record.acceptedApplicationId) {
                     try {
-                        // 从后端获取用户对该互助信息的评价状态
+                        // 从后端获取用户对该互助任务的评价状态
                         const currentUserId = authStore.user?.userId;
                         if (!currentUserId) continue;
 
@@ -255,7 +255,7 @@ async function loadMyPublishedHelpInfo() {
             publishedList.value = records;
             publishedTotal.value = res.data.data.total || records.length;
 
-            console.log('加载的互助信息列表:', publishedList.value);
+            console.log('加载的互助任务列表:', publishedList.value);
         } else {
             ElMessage.error(res.data.message || '获取数据失败')
         }
@@ -278,7 +278,7 @@ async function loadMyApplications() {
         for (const app of applications) {
             if (app.status === 'ACCEPTED' && app.helpInfo?.status === 'RESOLVED' && app.infoId) {
                 try {
-                    // 从后端获取用户对该互助信息的评价状态
+                    // 从后端获取用户对该互助任务的评价状态
                     const currentUserId = authStore.user?.userId;
                     if (!currentUserId) continue;
 
@@ -310,9 +310,9 @@ async function loadMyApplications() {
     }
 }
 
-// 确认删除互助信息
+// 确认删除互助任务
 function confirmDelete(id: number) {
-    ElMessageBox.confirm('确定要删除该互助信息吗？此操作不可恢复。', '警告', {
+    ElMessageBox.confirm('确定要删除该互助任务吗？此操作不可恢复。', '警告', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'

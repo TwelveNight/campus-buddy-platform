@@ -161,7 +161,7 @@ onMounted(async () => {
     fetchList()
 })
 
-// 获取互助信息列表
+// 获取互助任务列表
 async function fetchList() {
     loading.value = true
 
@@ -183,7 +183,7 @@ async function fetchList() {
             ElMessage.error(res.data.message || '获取列表失败')
         }
     } catch (error: any) {
-        console.error('获取互助信息列表失败:', error)
+        console.error('获取互助任务列表失败:', error)
         ElMessage.error('获取列表失败: ' + error.message)
     } finally {
         loading.value = false
@@ -218,7 +218,7 @@ function handleSizeChange(val: number) {
     fetchList()
 }
 
-// 更新互助信息状态
+// 更新互助任务状态
 async function handleUpdateStatus(id: number, status: string) {
     try {
         const res = await updateHelpInfoStatus(id, status)
@@ -237,7 +237,7 @@ async function handleUpdateStatus(id: number, status: string) {
 // 确认删除
 function confirmRemove(id: number) {
     ElMessageBox.confirm(
-        '确定要删除这条互助信息吗？此操作不可恢复。',
+        '确定要删除这条互助任务吗？此操作不可恢复。',
         '警告',
         {
             confirmButtonText: '确认删除',

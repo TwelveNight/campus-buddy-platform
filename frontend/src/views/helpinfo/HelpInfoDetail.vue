@@ -97,7 +97,7 @@
           </el-table>
         </div>
 
-        <!-- 进度信息 - 当互助信息状态为处理中时显示 -->
+        <!-- 进度信息 - 当互助任务状态为处理中时显示 -->
         <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
           <h3>处理进度</h3>
           <el-alert title="此互助任务正在处理中" type="warning" :closable="false"
@@ -110,7 +110,7 @@
           </div>
         </div>
 
-        <!-- 操作按钮 - 非发布者且互助信息状态为进行中可见 -->
+        <!-- 操作按钮 - 非发布者且互助任务状态为进行中可见 -->
         <div class="action-container" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
           <!-- 错误信息 -->
           <el-alert v-if="!hasToken" title="请先登录" type="warning" show-icon :closable="false"
@@ -140,7 +140,7 @@
           </template>
         </div>
 
-        <!-- 提示信息 - 发布者查看自己发布的互助信息时显示 -->
+        <!-- 提示信息 - 发布者查看自己发布的互助任务时显示 -->
         <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
           <el-alert title="这是您发布的互助任务" type="info" description="您不能申请自己发布的互助任务，请等待其他用户申请帮助。" show-icon
             :closable="false">
@@ -327,7 +327,7 @@ onMounted(async () => {
   try {
     const id = Number(route.params.id)
     if (isNaN(id)) {
-      error.value = '非法的互助信息ID'
+      error.value = '非法的互助任务ID'
       return
     }
     await helpInfoStore.fetchDetail(id)
@@ -387,7 +387,7 @@ async function fetchApplications() {
     const res = await getApplications(id);
     if (res.data.code === 200) {
       let apps = res.data.data || [];
-      // 如果是发布者，或者互助信息在进行中，则需要获取申请人昵称
+      // 如果是发布者，或者互助任务在进行中，则需要获取申请人昵称
       if (isPublisher.value || info.value?.status === 'IN_PROGRESS') {
         const userPromises = apps.map(async (app: any) => {
           if (app.applicantId && !app.applicantNickname) {
@@ -427,7 +427,7 @@ async function handleAcceptApplication(application: any) {
     const res = await acceptApplication(id, applicationId)
     if (res.data.code === 200) {
       ElMessage.success('已接受申请')
-      await helpInfoStore.fetchDetail(id) // 刷新互助信息状态
+      await helpInfoStore.fetchDetail(id) // 刷新互助任务状态
       await fetchApplications() // 刷新申请列表
       // 如果接受成功，并且当前用户是发布者，则重新检查用户（自己）的申请状态，以更新视图
       if (isPublisher.value) {
@@ -470,7 +470,7 @@ async function handleComplete() {
     const res = await completeHelpInfo(id)
     if (res.data.code === 200) {
       ElMessage.success('已标记为已解决')
-      await helpInfoStore.fetchDetail(id) // 刷新互助信息状态
+      await helpInfoStore.fetchDetail(id) // 刷新互助任务状态
       await fetchApplications() // 刷新申请列表
     }
   } catch (e: any) {
@@ -481,7 +481,7 @@ async function handleComplete() {
 // 确认取消合作
 async function confirmCancel() {
   ElMessageBox.confirm(
-    '确定要取消与当前帮助者的合作吗？取消后，该互助信息将重新开放接受申请，原帮助者的申请状态将变为已拒绝。',
+    '确定要取消与当前帮助者的合作吗？取消后，该互助任务将重新开放接受申请，原帮助者的申请状态将变为已拒绝。',
     '确认取消',
     {
       confirmButtonText: '确定',
@@ -494,11 +494,11 @@ async function confirmCancel() {
         const id = Number(route.params.id)
         const currentAcceptedApp = acceptedApplication.value // Store before state changes
 
-        // 1. 重新开放互助信息
+        // 1. 重新开放互助任务
         const reopenRes = await reopenHelpInfo(id)
         if (reopenRes.data.code === 200) {
-          ElMessage.success('已取消合作，互助信息重新开放')
-          // 重新拉取互助信息详情，确保 acceptedApplicationId 变为 null
+          ElMessage.success('已取消合作，互助任务重新开放')
+          // 重新拉取互助任务详情，确保 acceptedApplicationId 变为 null
           await helpInfoStore.fetchDetail(id)
           // 不直接赋值 info.value，依赖响应式
 
@@ -537,7 +537,7 @@ async function confirmCancel() {
 // 确认删除
 function confirmDelete() {
   ElMessageBox.confirm(
-    '确定要删除该互助信息吗？此操作不可恢复。',
+    '确定要删除该互助任务吗？此操作不可恢复。',
     '警告',
     {
       confirmButtonText: '确定',
@@ -564,16 +564,16 @@ function handleEdit() {
 
   // 检查状态，只有当状态为OPEN时才能编辑
   if (info.value.status !== 'OPEN') {
-    ElMessage.warning('只有处于"进行中"状态的互助信息才能被编辑')
+    ElMessage.warning('只有处于"进行中"状态的互助任务才能被编辑')
     return
   }
 
   const id = Number(route.params.id)
-  // 跳转到编辑页面，将当前互助信息ID传递过去
+  // 跳转到编辑页面，将当前互助任务ID传递过去
   router.push(`/helpinfo/edit/${id}`)
 }
 
-// 更新互助信息状态
+// 更新互助任务状态
 async function handleStatusUpdate() {
   if (!newStatus.value) {
     ElMessage.warning('请选择状态')
@@ -660,7 +660,7 @@ async function checkUserApplication() {
       const apps = res.data.data || []
       const currentInfoId = Number(route.params.id)
 
-      // 筛选出针对当前互助信息的所有申请
+      // 筛选出针对当前互助任务的所有申请
       const userAppsForCurrentInfo = apps.filter((app: any) => app.infoId === currentInfoId || app.infoId === Number(currentInfoId))
 
       if (userAppsForCurrentInfo.length > 0) {
@@ -708,7 +708,7 @@ async function loadReviewStatus() {
     if (res.data && res.data.canPublisherReview !== undefined) {
       const statusData = res.data
 
-      // 获取互助信息中的帮助者信息
+      // 获取互助任务中的帮助者信息
       let helperId = null
       let helperName = ''
 

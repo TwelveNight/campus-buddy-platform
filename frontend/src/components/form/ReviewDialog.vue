@@ -180,7 +180,7 @@ export default defineComponent({
                 }
 
                 if (!props.helpInfoId) {
-                    ElMessage.error('缺少互助信息，无法提交评价');
+                    ElMessage.error('缺少互助任务，无法提交评价');
                     submitting.value = false;
                     return;
                 }

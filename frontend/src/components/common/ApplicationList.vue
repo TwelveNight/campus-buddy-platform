@@ -6,16 +6,16 @@
 
         <div v-else>
             <el-table :data="applications" style="width: 100%">
-                <!-- 互助信息标题 -->
-                <el-table-column value="互助信息标题" min-width="180">
+                <!-- 互助任务标题 -->
+                <el-table-column value="互助任务标题" min-width="180">
                     <template #default="scope">
                         <div class="helpinfo-column">
                             <template v-if="scope.row.helpInfo">
                                 <template v-if="scope.row.helpInfo.title === '加载中...'">
                                     <el-skeleton :rows="1" animated style="width: 80px;" />
                                 </template>
-                                <template v-else-if="scope.row.helpInfo.title === '无法获取互助信息'">
-                                    <span class="no-data">互助信息不存在或已删除</span>
+                                <template v-else-if="scope.row.helpInfo.title === '无法获取互助任务'">
+                                    <span class="no-data">互助任务不存在或已删除</span>
                                 </template>
                                 <template v-else>
                                     <router-link :to="`/helpinfo/${scope.row.infoId || scope.row.helpInfo.id}`"
@@ -25,7 +25,7 @@
                                 </template>
                             </template>
                             <template v-else>
-                                <span class="no-data">互助信息不存在或已删除</span>
+                                <span class="no-data">互助任务不存在或已删除</span>
                             </template>
                         </div>
                     </template>
@@ -211,7 +211,7 @@ async function handleAccept(application: any) {
         // 兼容 helpInfo 字段缺失，优先用 infoId
         const helpInfoId = application.infoId || (application.helpInfo && application.helpInfo.id);
         if (!helpInfoId) {
-            throw new Error('互助信息不存在或已被删除')
+            throw new Error('互助任务不存在或已被删除')
         }
         const applicationId = application.applicationId || application.id;
         const res = await acceptApplication(helpInfoId, applicationId);
@@ -232,7 +232,7 @@ async function handleReject(application: any) {
         // 兼容 helpInfo 字段缺失，优先用 infoId
         const helpInfoId = application.infoId || (application.helpInfo && application.helpInfo.id);
         if (!helpInfoId) {
-            throw new Error('互助信息不存在或已被删除')
+            throw new Error('互助任务不存在或已被删除')
         }
         const applicationId = application.applicationId || application.id;
         const res = await rejectApplication(helpInfoId, applicationId);

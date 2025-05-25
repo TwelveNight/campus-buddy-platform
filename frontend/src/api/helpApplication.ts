@@ -12,7 +12,7 @@ export function submitApplication(helpInfoId: number, data: {
   })
 }
 
-// 获取互助信息的申请列表
+// 获取互助任务的申请列表
 export function getApplications(helpInfoId: number) {
   return axios.get(`/api/help-application?infoId=${helpInfoId}`)
 }
@@ -58,17 +58,17 @@ export function cancelApplication(applicationId: number) {
   })
 }
 
-// 完成互助（将互助信息状态改为已解决）
+// 完成互助（将互助任务状态改为已解决）
 export function completeHelpInfo(helpInfoId: number) {
   return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=RESOLVED`)
 }
 
-// 关闭互助信息
+// 关闭互助任务
 export function closeHelpInfo(helpInfoId: number) {
   return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=CLOSED`)
 }
 
-// 重新打开互助信息
+// 重新打开互助任务
 export function reopenHelpInfo(helpInfoId: number) {
   return axios.patch(`/api/helpinfo/${helpInfoId}/status?status=OPEN`)
 }

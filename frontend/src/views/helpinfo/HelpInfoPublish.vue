@@ -152,7 +152,7 @@ onMounted(async () => {
     if (isEditMode.value && infoId.value) {
         loading.value = true
         try {
-            // 获取互助信息详情
+            // 获取互助任务详情
             const res = await fetchHelpInfoDetail(infoId.value)
             if (res.data.code === 200) {
                 const info = res.data.data
