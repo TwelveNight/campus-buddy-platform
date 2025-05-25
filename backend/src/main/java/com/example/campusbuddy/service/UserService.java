@@ -1,5 +1,6 @@
 package com.example.campusbuddy.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.dto.LoginDTO;
 import com.example.campusbuddy.dto.PasswordUpdateDTO;
@@ -36,4 +37,14 @@ public interface UserService extends IService<User> {
      * @return 是否存在
      */
     boolean exists(Long userId);
+    
+    /**
+     * 根据关键词搜索用户
+     * 
+     * @param keyword 关键词(用户名、昵称或联系方式)
+     * @param page 页码
+     * @param size 每页大小
+     * @return 用户分页结果
+     */
+    Page<UserVO> searchUsers(String keyword, Integer page, Integer size);
 }

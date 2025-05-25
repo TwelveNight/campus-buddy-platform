@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.campusbuddy.mapper.FriendRequestMapper">
+
+    <!-- 获取好友申请列表（含申请者信息） -->
+    <select id="getRequestsWithUserInfo" resultType="java.util.Map">
+        SELECT fr.request_id, fr.requester_id, fr.recipient_id, fr.request_message, fr.status, fr.created_at, fr.updated_at,
+               u.user_id, u.username, u.nickname, u.avatar_url, u.gender
+        FROM friend_request fr
+        LEFT JOIN user u ON fr.requester_id = u.user_id
+        WHERE fr.recipient_id = #{recipientId} AND fr.status = #{status}
+        ORDER BY fr.created_at DESC
+    </select>
+
+    <!-- 获取用户发送的好友申请列表 -->
+    <select id="getSentRequestsWithUserInfo" resultType="java.util.Map">
+        SELECT fr.request_id, fr.requester_id, fr.recipient_id, fr.request_message, fr.status, fr.created_at, fr.updated_at,
+               u.user_id, u.username, u.nickname, u.avatar_url, u.gender
+        FROM friend_request fr
+        LEFT JOIN user u ON fr.recipient_id = u.user_id
+        WHERE fr.requester_id = #{requesterId} AND fr.status = #{status}
+        ORDER BY fr.created_at DESC
+    </select>
+
+</mapper>

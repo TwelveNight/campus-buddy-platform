@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
@@ -103,8 +105,17 @@ public class UserController {
         if (userId == null) {
             return R.fail(ResultCode.UNAUTHORIZED, "未登录");
         }
-        
         boolean isAdmin = userService.isAdmin(userId);
-        return R.ok("检查成功", isAdmin);
+        return R.ok("获取管理员状态成功", isAdmin);
+    }
+    
+    @Operation(summary = "搜索用户", description = "根据关键词搜索用户")
+    @GetMapping("/search")
+    public R<Page<UserVO>> searchUsers(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        Page<UserVO> users = userService.searchUsers(keyword, page, size);
+        return R.ok("搜索用户成功", users);
     }
 }

@@ -13,6 +13,18 @@
             <el-tag v-if="userInfo.grade" type="info" size="small">{{ userInfo.grade }}</el-tag>
             <el-tag type="success" size="small">{{ formatDate(userInfo.createdAt) }} 加入</el-tag>
           </div>
+          <!-- 新增操作按钮 -->
+          <div class="user-profile-actions" v-if="showActionButtons">
+            <el-button type="primary" size="small" @click="startPrivateChat">
+              <el-icon><ChatDotRound /></el-icon> 发私信
+            </el-button>
+            <el-button type="success" size="small" @click="addFriend" v-if="!isFriend">
+              <el-icon><Plus /></el-icon> 加好友
+            </el-button>
+            <el-tag v-else type="success" size="small">
+              <el-icon><Check /></el-icon> 已是好友
+            </el-tag>
+          </div>
         </div>
         <div class="user-credit">
           <el-progress type="dashboard" :percentage="userInfo.creditScore ?? 0" :color="creditColors" :stroke-width="8">
@@ -92,14 +104,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import ReviewList from '../../components/common/ReviewList.vue';
 import { getUserReviews } from '../../api/review';
 import { getUserById } from '../../api/user';
-import { Star, User, List } from '@element-plus/icons-vue';
+import { applyFriend, getFriendList } from '../../api/friend';
+import { Star, User, List, ChatDotRound, Plus, Check } from '@element-plus/icons-vue';
+import { useAuthStore } from '../../store/auth';
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 const userId = ref(Number(route.params.userId));
 const loading = ref(false);
 const userInfo = ref<any>({ nickname: '', username: '', userId: '', creditScore: 0, avatarUrl: '', createdAt: '', status: 'ACTIVE', skillTags: '' });
@@ -112,6 +128,52 @@ const creditColors = [
   { color: '#1989fa', percentage: 80 },
   { color: '#6f7ad3', percentage: 100 }
 ];
+
+// 当前登录用户ID
+const currentUserId = computed(() => authStore.user?.userId);
+// 是否本人
+const isSelf = computed(() => currentUserId.value === userId.value);
+// 是否显示操作按钮
+const showActionButtons = computed(() => !isSelf.value && !!currentUserId.value);
+// 好友ID列表
+const friendIds = ref<number[]>([]);
+// 是否已是好友
+const isFriend = computed(() => friendIds.value.includes(userId.value));
+
+// 加好友
+const addFriend = async () => {
+  try {
+    const res = await applyFriend(userId.value);
+    if (res.data.code === 200) {
+      ElMessage.success('好友申请已发送');
+      await loadFriendIds();
+    } else {
+      ElMessage.error(res.data.message || '发送好友申请失败');
+    }
+  } catch (e) {
+    ElMessage.error('发送好友申请失败');
+  }
+};
+// 发起私聊
+const startPrivateChat = () => {
+  router.push(`/messages/${userId.value}`);
+};
+// 加载好友ID列表
+const loadFriendIds = async () => {
+  if (!currentUserId.value) return;
+  try {
+    const res = await getFriendList({ page: 1, size: 100 });
+    if (res.data.code === 200) {
+      friendIds.value = (res.data.data.records || []).map((f: any) => f.userId);
+    }
+  } catch (e) {}
+};
+
+onMounted(() => {
+  fetchUserInfo();
+  fetchUserReviews();
+  loadFriendIds();
+});
 
 // 解析技能标签
 const parsedSkillTags = computed(() => {
@@ -217,13 +279,6 @@ async function fetchUserReviews() {
   }
 }
 
-
-
-onMounted(() => {
-  fetchUserInfo();
-  fetchUserReviews();
-});
-
 // 监听路由参数变化，当用户ID改变时重新加载数据
 watch(() => route.params.userId, (newUserId) => {
   console.log('路由参数userId发生变化：', newUserId);
@@ -231,6 +286,7 @@ watch(() => route.params.userId, (newUserId) => {
     userId.value = Number(newUserId);
     fetchUserInfo();
     fetchUserReviews();
+    loadFriendIds();
   }
 }, { immediate: true });
 
@@ -239,6 +295,7 @@ watch(userId, (newId) => {
   console.log('用户ID变量发生变化：', newId);
   fetchUserInfo();
   fetchUserReviews();
+  loadFriendIds();
 });
 </script>
 
@@ -280,6 +337,12 @@ watch(userId, (newId) => {
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 6px;
+}
+
+.user-profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .user-credit {

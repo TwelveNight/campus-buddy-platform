@@ -129,6 +129,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/user/Messages.vue'),
         props: true,
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'friends',
+        component: () => import('../views/user/Friends.vue'),
+        meta: { requiresAuth: true }
       }
     ]
   }

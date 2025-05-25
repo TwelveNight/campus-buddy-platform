@@ -18,6 +18,15 @@ export function getUsersByIds(userIds: number[]): Promise<any> {
   return axios.post('/api/user/batch', { userIds });
 }
 
+// 搜索用户
+export function searchUsers(params: {
+  keyword: string;
+  page?: number;
+  size?: number;
+}) {
+  return axios.get('/api/user/search', { params })
+}
+
 // 更新用户个人信息
 export function updateUserProfile(data: {
   nickname?: string;

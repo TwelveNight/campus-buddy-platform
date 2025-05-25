@@ -1,6 +1,7 @@
 package com.example.campusbuddy.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.dto.LoginDTO;
 import com.example.campusbuddy.dto.PasswordUpdateDTO;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -153,5 +155,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean exists(Long userId) {
         return getById(userId) != null;
+    }
+    
+    @Override
+    public Page<UserVO> searchUsers(String keyword, Integer page, Integer size) {
+        // 创建分页对象
+        Page<User> userPage = new Page<>(page, size);
+        
+        // 构建查询条件
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            queryWrapper.like("username", keyword)
+                    .or()
+                    .like("nickname", keyword)
+                    .or()
+                    .like("contact_info", keyword);
+        }
+        
+        // 只查询激活状态的用户
+        queryWrapper.eq("status", "ACTIVE");
+        
+        // 执行分页查询
+        Page<User> result = this.page(userPage, queryWrapper);
+        
+        // 转换为VO对象
+        Page<UserVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        List<UserVO> voList = new ArrayList<>();
+        for (User user : result.getRecords()) {
+            UserVO vo = new UserVO();
+            BeanUtils.copyProperties(user, vo);
+            // 设置角色信息
+            List<String> roles = userRoleService.getUserRoles(user.getUserId());
+            vo.setRoles(roles);
+            voList.add(vo);
+        }
+        voPage.setRecords(voList);
+        
+        return voPage;
     }
 }

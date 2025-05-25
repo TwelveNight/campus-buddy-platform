@@ -105,6 +105,20 @@
             <div class="user-actions">
                 <ThemeSwitch />
                 <template v-if="authStore.isAuthenticated">
+                    <!-- 搜索用户图标 -->
+                    <div class="search-user-icon">
+                        <el-icon class="icon-button" @click="openUserSearch">
+                            <Search />
+                        </el-icon>
+                    </div>
+                    <!-- 好友图标 -->
+                    <div class="friends-icon">
+                        <router-link to="/friends">
+                            <el-icon class="icon-button">
+                                <UserFilled />
+                            </el-icon>
+                        </router-link>
+                    </div>
                     <!-- 私信图标 -->
                     <div class="message-icon">
                         <el-badge :value="unreadMessageCount" :max="99" :hidden="unreadMessageCount === 0"
@@ -131,7 +145,7 @@
                                     <div class="notification-dropdown-header">
                                         <h3>通知
                                             <span v-if="unreadCount > 0" class="unread-count-badge">{{ unreadCount
-                                                }}</span>
+                                            }}</span>
                                         </h3>
                                         <el-button type="text" @click="markAllAsRead"
                                             :disabled="recentNotifications.length === 0 || unreadCount === 0">
@@ -159,7 +173,7 @@
                                                     </div>
                                                     <div class="notification-body">{{ notification.content }}</div>
                                                     <div class="notification-time">{{ formatTime(notification.createdAt)
-                                                        }}</div>
+                                                    }}</div>
                                                 </div>
                                             </el-dropdown-item>
                                         </template>
@@ -178,7 +192,7 @@
                             <div class="avatar-wrapper">
                                 <el-avatar :size="36" :src="avatarUrl"></el-avatar>
                                 <span class="user-name">{{ authStore.user?.nickname || authStore.user?.username || '用户'
-                                }}</span>
+                                    }}</span>
                                 <el-icon class="dropdown-icon">
                                     <ArrowDown />
                                 </el-icon>
@@ -227,6 +241,13 @@
             </div>
         </div>
     </nav>
+    
+    <!-- 用户搜索对话框 -->
+    <UserSearchDialog 
+        ref="userSearchDialogRef" 
+        @message-user="handleMessageUser" 
+        @add-friend="handleAddFriend" 
+    />
 </template>
 
 <script setup lang="ts">
@@ -234,6 +255,7 @@ import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import ThemeSwitch from './ThemeSwitch.vue'
+import UserSearchDialog from './UserSearchDialog.vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -266,6 +288,7 @@ dayjs.locale('zh-cn')
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const userSearchDialogRef = ref<InstanceType<typeof UserSearchDialog> | null>(null); // 用户搜索对话框引用
 
 const activeIndex = computed(() => route.path)
 
@@ -273,6 +296,22 @@ const activeIndex = computed(() => route.path)
 const isAdmin = computed(() => {
     return authStore.isAdmin;
 })
+
+// 打开用户搜索对话框
+const openUserSearch = () => {
+    userSearchDialogRef.value?.open();
+}
+
+// 处理私信用户
+const handleMessageUser = (user: any) => {
+    router.push(`/messages/${user.userId}`);
+}
+
+// 处理添加好友
+const handleAddFriend = (user: any) => {
+    ElMessage.success(`已向${user.nickname || user.username}发送好友申请`);
+    // 这里可以刷新好友申请列表或者其他操作
+}
 
 // 组件挂载时进行初始化
 // 判断是否为认证页面（登录/注册）
@@ -432,7 +471,7 @@ const clearNotificationPolling = () => {
 // 处理WebSocket收到的通知
 const handleWebSocketNotification = (data: any) => {
     console.log('收到WebSocket通知:', data);
-    
+
     if (!data || data.type !== 'NOTIFICATION') {
         console.warn('收到无效通知数据:', data);
         return;
@@ -466,12 +505,12 @@ const handleWebSocketNotification = (data: any) => {
 // 处理WebSocket收到的私信
 const handleWebSocketMessage = (data: any) => {
     console.log('收到WebSocket私信:', data);
-    
+
     if (!data || data.type !== 'PRIVATE_MESSAGE') {
         console.warn('收到无效私信数据:', data);
         return;
     }
-    
+
     try {
         // 更新未读消息计数
         fetchUnreadMessageCount();
@@ -543,7 +582,7 @@ onBeforeUnmount(() => {
         webSocketService.disconnect();
         console.log('NavBar组件卸载，WebSocket连接已断开');
     }
-    
+
     // 清除所有可能的定时器
     const timers = [notificationPollingInterval.value];
     timers.forEach(timer => {
