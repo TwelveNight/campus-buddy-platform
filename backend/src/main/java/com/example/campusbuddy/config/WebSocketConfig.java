@@ -1,21 +1,20 @@
 package com.example.campusbuddy.config;
 
-import org.springframework.context.annotation.Bean;
+import com.example.campusbuddy.websocket.EchoHandler;
+import com.example.campusbuddy.websocket.UserWebSocketHandler;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.server.standard.ServerEndpointExporter;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
-/**
- * WebSocket配置类
- */
 @Configuration
-public class WebSocketConfig {
-
-    /**
-     * 注入ServerEndpointExporter，
-     * 这个bean会自动注册使用了@ServerEndpoint注解声明的Websocket endpoint
-     */
-    @Bean
-    public ServerEndpointExporter serverEndpointExporter() {
-        return new ServerEndpointExporter();
+@EnableWebSocket
+public class WebSocketConfig implements WebSocketConfigurer {
+    @Override
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        // Echo 测试端点
+        registry.addHandler(new EchoHandler(), "/ws/echo").setAllowedOrigins("*");
+        // 用户定向推送端点
+        registry.addHandler(new UserWebSocketHandler(), "/ws/{userId}").setAllowedOrigins("*");
     }
 }

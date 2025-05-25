@@ -105,6 +105,18 @@
             <div class="user-actions">
                 <ThemeSwitch />
                 <template v-if="authStore.isAuthenticated">
+                    <!-- 私信图标 -->
+                    <div class="message-icon">
+                        <el-badge :value="unreadMessageCount" :max="99" :hidden="unreadMessageCount === 0"
+                            type="danger">
+                            <router-link to="/messages">
+                                <el-icon class="icon-button">
+                                    <ChatDotRound />
+                                </el-icon>
+                            </router-link>
+                        </el-badge>
+                    </div>
+                    <!-- 通知图标 -->
                     <div class="notification-icon">
                         <el-dropdown trigger="click" @visible-change="handleNotificationDropdownToggle">
                             <div>
@@ -227,7 +239,9 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { getNotifications, getUnreadNotificationCount, markAllNotificationsAsRead, markNotificationAsRead } from '@/api/notification'
+import { getUnreadMessageCount } from '@/api/message'
 import type { NotificationItem } from '@/types/notification'
+import webSocketService from '@/utils/websocket'
 import {
     User,
     House,
@@ -242,7 +256,8 @@ import {
     Edit,
     Collection,
     Bell,
-    ArrowDown
+    ArrowDown,
+    ChatDotRound
 } from '@element-plus/icons-vue'
 
 dayjs.extend(relativeTime)
@@ -259,17 +274,7 @@ const isAdmin = computed(() => {
     return authStore.isAdmin;
 })
 
-// 组件挂载时检查管理员状态
-onMounted(async () => {
-    if (authStore.isAuthenticated) {
-        try {
-            await authStore.checkAdminStatus();
-        } catch (error) {
-            console.error('NavBar组件中检查管理员状态失败:', error);
-        }
-    }
-})
-
+// 组件挂载时进行初始化
 // 判断是否为认证页面（登录/注册）
 const isAuthPage = computed(() => {
     return route.path === '/login' || route.path === '/register'
@@ -287,6 +292,7 @@ const avatarUrl = computed(() => {
 
 // 通知相关状态
 const unreadCount = ref(0)
+const unreadMessageCount = ref(0)
 const recentNotifications = ref<any[]>([])
 const notificationsLoading = ref(false)
 const notificationPollingInterval = ref<any>(null)
@@ -306,6 +312,24 @@ const fetchUnreadCount = async () => {
         }
     } catch (error) {
         console.error('获取未读通知数量失败', error)
+    }
+}
+
+// 获取未读消息数量
+const fetchUnreadMessageCount = async () => {
+    try {
+        const res = await getUnreadMessageCount()
+        if (res.data.code === 200) {
+            unreadMessageCount.value = res.data.data.count || 0
+        }
+    } catch (error) {
+        console.error('获取未读消息数量失败', error)
+        // 添加重试机制，5秒后重试
+        setTimeout(() => {
+            if (authStore.isAuthenticated) {
+                fetchUnreadMessageCount()
+            }
+        }, 5000)
     }
 }
 
@@ -386,10 +410,12 @@ const handleNotificationDropdownToggle = (visible: boolean) => {
 // 设置定期轮询未读通知数量
 const setupNotificationPolling = () => {
     if (authStore.isAuthenticated) {
-        fetchUnreadCount() // 立即获取一次
+        fetchUnreadCount(); // 立即获取一次
+        fetchUnreadMessageCount(); // 立即获取一次
         notificationPollingInterval.value = setInterval(() => {
-            fetchUnreadCount()
-        }, 60000) // 每分钟检查一次
+            fetchUnreadCount();
+            fetchUnreadMessageCount();
+        }, 60000); // 每分钟检查一次
     }
 }
 
@@ -401,20 +427,150 @@ const clearNotificationPolling = () => {
     }
 }
 
-onMounted(() => {
-    // 设置通知轮询
-    setupNotificationPolling()
+// ===== WebSocket相关功能 =====
+
+// 处理WebSocket收到的通知
+const handleWebSocketNotification = (data: any) => {
+    console.log('收到WebSocket通知:', data);
+    
+    if (!data || data.type !== 'NOTIFICATION') {
+        console.warn('收到无效通知数据:', data);
+        return;
+    }
+
+    try {
+        // 更新未读通知计数
+        fetchUnreadCount();
+
+        // 如果通知下拉菜单是打开的，更新通知列表
+        if (document.querySelector('.notification-dropdown')?.parentElement?.style.display !== 'none') {
+            fetchRecentNotifications();
+        }
+
+        // 显示通知提示
+        ElMessage({
+            message: data.content || '您有一条新通知',
+            type: 'info',
+            duration: 3000
+        });
+
+        // 播放通知提示音
+        import('@/utils/sound').then(({ playNotificationSound }) => {
+            playNotificationSound();
+        }).catch(err => console.error('加载声音模块失败:', err));
+    } catch (error) {
+        console.error('处理WebSocket通知时出错:', error);
+    }
+};
+
+// 处理WebSocket收到的私信
+const handleWebSocketMessage = (data: any) => {
+    console.log('收到WebSocket私信:', data);
+    
+    if (!data || data.type !== 'PRIVATE_MESSAGE') {
+        console.warn('收到无效私信数据:', data);
+        return;
+    }
+    
+    try {
+        // 更新未读消息计数
+        fetchUnreadMessageCount();
+
+        // 显示私信提示
+        if (data.sender && data.content) {
+            ElMessage({
+                message: `${data.sender.nickname || data.sender.username || '用户'}: ${data.content}`,
+                type: 'success',
+                duration: 5000
+            });
+        }
+
+        // 播放消息提示音
+        import('@/utils/sound').then(({ playMessageSound }) => {
+            playMessageSound();
+        }).catch(err => console.error('加载声音模块失败:', err));
+    } catch (error) {
+        console.error('处理WebSocket私信时出错:', error);
+    }
+};
+
+// 初始化WebSocket连接
+const initWebSocket = () => {
+    if (authStore.isAuthenticated && authStore.user?.userId) {
+        // 连接WebSocket
+        webSocketService.connect(authStore.user.userId);
+
+        // 添加通知监听器
+        webSocketService.addNotificationListener(handleWebSocketNotification);
+
+        // 添加消息监听器
+        webSocketService.addMessageListener(handleWebSocketMessage);
+
+        // 添加连接状态监听器
+        webSocketService.addConnectionListener((status: boolean) => {
+            console.log('WebSocket连接状态:', status ? '已连接' : '已断开');
+        });
+    }
+};
+
+onMounted(async () => {
+    // 如果已登录，初始化WebSocket和获取用户数据
+    if (authStore.isAuthenticated && authStore.user) {
+        try {
+            // 检查管理员状态
+            await authStore.checkAdminStatus();
+            // 初始化WebSocket连接
+            initWebSocket();
+            // 获取通知和消息数量
+            fetchUnreadCount();
+            fetchUnreadMessageCount();
+            // 设置通知轮询
+            setupNotificationPolling();
+            console.log('NavBar组件已初始化WebSocket和通知系统');
+        } catch (error) {
+            console.error('NavBar组件初始化失败:', error);
+        }
+    } else {
+        // 设置通知轮询
+        setupNotificationPolling();
+    }
 })
 
 onBeforeUnmount(() => {
-    clearNotificationPolling()
+    clearNotificationPolling();
+    // 断开WebSocket连接
+    if (authStore.isAuthenticated) {
+        webSocketService.disconnect();
+        console.log('NavBar组件卸载，WebSocket连接已断开');
+    }
+    
+    // 清除所有可能的定时器
+    const timers = [notificationPollingInterval.value];
+    timers.forEach(timer => {
+        if (timer) {
+            clearInterval(timer);
+        }
+    });
 })
 
 // 退出登录
 const handleLogout = () => {
-    authStore.logout()
-    router.push('/login')
-}
+    // 显示确认框
+    ElMessageBox.confirm('确定要退出登录吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+    }).then(async () => {
+        try {
+            await authStore.logout();
+            router.push('/login');
+            ElMessage.success('已退出登录');
+        } catch (error) {
+            console.error('退出登录失败', error);
+            ElMessage.error('退出登录失败');
+        }
+    }).catch(() => { });
+};
 
 // 导航到小组页面的不同标签
 const navigateToGroups = (tab: string) => {
@@ -609,6 +765,25 @@ const showCreateGroupDialog = () => {
 }
 
 .bell-icon {
+    font-size: 20px;
+    color: var(--text-secondary);
+}
+
+.message-icon {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message-icon:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.icon-button {
     font-size: 20px;
     color: var(--text-secondary);
 }
@@ -834,6 +1009,14 @@ const showCreateGroupDialog = () => {
 }
 
 [data-theme="dark"] .bell-icon {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .message-icon:hover {
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1));
+}
+
+[data-theme="dark"] .icon-button {
     color: var(--dark-text-primary, #e5eaf3);
 }
 

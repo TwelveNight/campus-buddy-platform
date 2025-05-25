@@ -15,7 +15,7 @@ import type {
  */
 export const sendPrivateMessage = (data: { recipientId: number; content: string }) => {
   return request({
-    url: '/messages',
+    url: '/api/messages',
     method: 'post',
     data
   })
@@ -31,7 +31,7 @@ export const sendPrivateMessage = (data: { recipientId: number; content: string 
  */
 export const getChatHistory = (userId: number, params: { page: number; size: number; }) => {
   return request({
-    url: `/messages/chat/${userId}`,
+    url: `/api/messages/chat/${userId}`,
     method: 'get',
     params
   })
@@ -46,7 +46,7 @@ export const getChatHistory = (userId: number, params: { page: number; size: num
  */
 export const getChatSessions = (params: { page: number; size: number; }) => {
   return request({
-    url: '/messages/sessions',
+    url: '/api/messages/sessions',
     method: 'get',
     params
   })
@@ -58,7 +58,7 @@ export const getChatSessions = (params: { page: number; size: number; }) => {
  */
 export const getUnreadMessageCount = () => {
   return request({
-    url: '/messages/unread/count',
+    url: '/api/messages/unread/count',  // 添加/api前缀，匹配后端API路径
     method: 'get'
   })
 }
@@ -70,7 +70,7 @@ export const getUnreadMessageCount = () => {
  */
 export const markAllMessagesAsRead = (userId: number) => {
   return request({
-    url: `/messages/read/all/${userId}`,
+    url: `/api/messages/read/all/${userId}`,
     method: 'put'
   })
 }
@@ -82,7 +82,7 @@ export const markAllMessagesAsRead = (userId: number) => {
  */
 export const markMessageAsRead = (messageId: number) => {
   return request({
-    url: `/messages/${messageId}/read`,
+    url: `/api/messages/${messageId}/read`,
     method: 'put'
   })
 }
@@ -94,7 +94,7 @@ export const markMessageAsRead = (messageId: number) => {
  */
 export const deleteMessage = (messageId: number) => {
   return request({
-    url: `/messages/${messageId}`,
+    url: `/api/messages/${messageId}`,
     method: 'delete'
   })
 }

@@ -96,6 +96,7 @@ import {
     markAllMessagesAsRead
 } from '@/api/message'
 import type { ChatSession, ChatMessage } from '@/types/message'
+import webSocketService from '@/utils/websocket'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -314,6 +315,57 @@ const scrollToBottom = () => {
     }
 }
 
+// 处理WebSocket接收到的私信
+const handleNewMessage = (data: any) => {
+    if (!data || data.type !== 'PRIVATE_MESSAGE') return
+
+    const messageData = data.data
+    if (!messageData || !messageData.senderId) return
+
+    // 如果是当前聊天对象发送的消息
+    if (currentChatUser.value && messageData.senderId === currentChatUser.value.userId) {
+        // 添加到消息列表
+        messages.value.push({
+            messageId: messageData.messageId,
+            senderId: messageData.senderId,
+            recipientId: currentUserId.value || 0,
+            content: messageData.content,
+            createdAt: new Date(messageData.timestamp),
+            isRead: false
+        })
+        scrollToBottom()
+
+        // 自动标记为已读
+        markAllChatAsRead()
+    }
+
+    // 更新会话列表
+    const sessionIndex = sessions.value.findIndex(s => s.userId === messageData.senderId)
+    if (sessionIndex !== -1) {
+        // 更新现有会话
+        sessions.value[sessionIndex].lastMessage = messageData.content
+        sessions.value[sessionIndex].lastMessageTime = new Date(messageData.timestamp)
+
+        // 如果不是当前聊天对象，增加未读数
+        if (!currentChatUser.value || messageData.senderId !== currentChatUser.value.userId) {
+            sessions.value[sessionIndex].unreadCount++
+        }
+
+        // 移动到顶部
+        const session = sessions.value.splice(sessionIndex, 1)[0]
+        sessions.value.unshift(session)
+    } else {
+        // 创建新会话
+        sessions.value.unshift({
+            userId: messageData.senderId,
+            nickname: messageData.senderName || `用户 #${messageData.senderId}`,
+            lastMessage: messageData.content,
+            lastMessageTime: new Date(messageData.timestamp),
+            unreadCount: 1
+        })
+    }
+}
+
 // 监听路由变化
 watch(
     () => route.params.userId,
@@ -332,6 +384,22 @@ watch(
 
 onMounted(() => {
     fetchSessions()
+
+    // 监听WebSocket私信
+    webSocketService.addMessageListener(handleNewMessage)
+
+    // 如果已认证但WebSocket未连接，重新连接
+    if (authStore.isAuthenticated && authStore.user?.userId && !webSocketService.isConnected.value) {
+        webSocketService.connect(authStore.user.userId);
+    }
+
+    // 处理路由中的chat_with参数
+    if (route.query.chat_with && typeof route.query.chat_with === 'string') {
+        const userId = parseInt(route.query.chat_with as string)
+        if (!isNaN(userId)) {
+            fetchUserAndCreateSession(userId)
+        }
+    }
 })
 </script>
 

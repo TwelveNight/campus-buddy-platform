@@ -35,6 +35,14 @@ router.beforeEach(async (to, from, next) => {
       if (authStore.isAuthenticated) {
         const isAdmin = await authStore.checkAdminStatus();
         console.log('用户管理员状态检查结果:', isAdmin);
+        
+        // 初始化WebSocket连接
+        if (authStore.user?.userId) {
+          const webSocketModule = await import('./utils/websocket');
+          const webSocketService = webSocketModule.default;
+          webSocketService.connect(authStore.user.userId);
+          console.log('已初始化WebSocket连接');
+        }
       }
     } catch (error) {
       console.error('导航守卫中获取用户信息失败:', error)

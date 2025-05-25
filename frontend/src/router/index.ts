@@ -118,6 +118,17 @@ const routes: RouteRecordRaw[] = [
         component: Debug,
         name: 'Debug',
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'messages',
+        component: () => import('../views/user/Messages.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'messages/:userId',
+        component: () => import('../views/user/Messages.vue'),
+        props: true,
+        meta: { requiresAuth: true }
       }
     ]
   }

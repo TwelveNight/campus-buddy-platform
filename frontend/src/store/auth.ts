@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { login, register, getCurrentUser, checkIsAdmin } from '../api/auth'
 import axios from 'axios'
+import webSocketService from '../utils/websocket'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -114,6 +115,13 @@ export const useAuthStore = defineStore('auth', {
       this.isAuthenticated = false
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      
+      // 断开WebSocket连接
+      try {
+        webSocketService.disconnect();
+      } catch (err) {
+        console.error('断开WebSocket连接失败:', err);
+      }
     },
 
     // 从后端获取用户是否为管理员
@@ -139,6 +147,15 @@ export const useAuthStore = defineStore('auth', {
             this.user.roles.push('ROLE_ADMIN');
             localStorage.setItem('user', JSON.stringify(this.user));
             console.log('已更新用户角色，添加管理员权限');
+          }
+          
+          // 初始化WebSocket连接
+          if (this.user?.userId) {
+            try {
+              webSocketService.connect(this.user.userId);
+            } catch (err) {
+              console.error('初始化WebSocket失败:', err);
+            }
           }
           
           return res.data.data;
