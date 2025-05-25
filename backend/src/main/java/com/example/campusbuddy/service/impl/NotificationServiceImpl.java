@@ -302,8 +302,11 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             case "HELP_APPLICATION_ACCEPTED":
             case "HELP_APPLICATION_REJECTED":
             case "HELP_COMPLETED":
-            case "HELP_NEW_REVIEW":
                 return "/helpinfo/" + relatedId;
+                
+            case "HELP_NEW_REVIEW":
+                // 评价通知跳转到用户的评价页面，显示收到的评价
+                return "/reviews?type=received";
                 
             case "GROUP_JOIN_APPLICATION":
                 return "/groups/" + relatedId + "/detail?tab=members&subtab=requests";

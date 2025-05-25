@@ -206,6 +206,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import {
     Star, ChatRound, Document,
@@ -216,8 +217,9 @@ import { getUserReviews, getUserCreditScore } from '../../api/review';
 import type { Review, ReviewQuery } from '../../api/review';
 import { useAuthStore } from '../../store/auth';
 
-// 用户认证
+// 用户认证和路由
 const authStore = useAuthStore();
+const route = useRoute();
 const currentUserId = computed(() => authStore.user?.userId || 0);
 
 // 页面状态
@@ -389,6 +391,16 @@ const handlePageChange = (page: number) => {
 
 // 初始化加载
 onMounted(() => {
+    // 检查路由查询参数，设置初始标签页
+    const queryType = route.query.type as string;
+    if (queryType === 'received') {
+        activeTab.value = 'received';
+    } else if (queryType === 'given') {
+        activeTab.value = 'given';
+    } else {
+        activeTab.value = 'all';
+    }
+    
     fetchReviews();
     fetchCreditScore();
 });
