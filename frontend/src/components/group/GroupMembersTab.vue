@@ -111,7 +111,7 @@
 
                             <el-table-column label="申请时间" width="180">
                                 <template #default="{ row }">
-                                    {{ formatTime(row.requestTime) }}
+                                    {{ formatTime(row.joinedAt) }}
                                 </template>
                             </el-table-column>
 
@@ -146,7 +146,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import {
     getGroupMembers,
     setAdmin,
@@ -178,6 +178,10 @@ const props = defineProps({
     group: {
         type: Object,
         default: () => ({})
+    },
+    subtab: {
+        type: String,
+        default: null
     }
 });
 
@@ -197,6 +201,7 @@ const activeTab = ref('members');
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
 const router = useRouter();
+const route = useRoute();
 function goToUserProfile(userId: string | number) {
     router.push(`/user/${userId}`);
 }
@@ -230,11 +235,31 @@ watch(() => props.groupId, (newVal) => {
     }
 });
 
+// 监听路由查询参数变化
+watch(() => route.query.subtab, (newSubtab) => {
+    if (newSubtab === 'requests' && canApproveRequests.value) {
+        activeTab.value = 'requests';
+    }
+});
+
+// 监听 props.subtab 变化
+watch(() => props.subtab, (newSubtab) => {
+    if (newSubtab === 'requests' && canApproveRequests.value) {
+        activeTab.value = 'requests';
+    }
+}, { immediate: true });
+
 // 生命周期钩子
 onMounted(() => {
     loadMembers();
     if (canApproveRequests.value) {
         loadJoinRequests();
+    }
+    
+    // 检查查询参数并设置相应的子标签页
+    const subtabFromQuery = route.query.subtab || props.subtab;
+    if (subtabFromQuery === 'requests' && canApproveRequests.value) {
+        activeTab.value = 'requests';
     }
 });
 
@@ -281,7 +306,7 @@ const loadJoinRequests = async () => {
                 allRequests = response.data.data || [];
             }
             // 只保留PENDING状态的成员
-            joinRequests.value = allRequests.filter((m: GroupMember) => m.status === 'PENDING');
+            joinRequests.value = allRequests.filter((m: GroupMember) => m.status === 'PENDING_APPROVAL');
         } else {
             ElMessage.error(response.data?.message || '加载加入申请失败');
             joinRequests.value = [];

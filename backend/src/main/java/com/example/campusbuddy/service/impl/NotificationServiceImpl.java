@@ -149,14 +149,23 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Override
     @Transactional
-    public Long createApplicationResultNotification(Long helpInfoId, Long applicantId, boolean isAccepted, String helpTitle) {
+    public Long createApplicationResultNotification(Long helpInfoId, Long applicantId, boolean isAccepted, String helpTitle, Long operatorId, String operatorName) {
         NotificationCreateDTO dto = new NotificationCreateDTO();
         dto.setRecipientId(applicantId);
+        dto.setSenderId(operatorId); // 设置操作者ID，如果为null则为系统通知
         dto.setType(isAccepted ? 
                 Notification.NotificationType.HELP_APPLICATION_ACCEPTED.name() : 
                 Notification.NotificationType.HELP_APPLICATION_REJECTED.name());
         dto.setTitle(isAccepted ? "互助申请已接受" : "互助申请被拒绝");
-        dto.setContent("您申请的互助任务 \"" + helpTitle + "\" " + (isAccepted ? "已被接受" : "被拒绝了"));
+        
+        // 根据是否有操作者信息调整通知内容
+        String content;
+        if (operatorId != null && operatorName != null) {
+            content = operatorName + " " + (isAccepted ? "接受了" : "拒绝了") + " 您申请的互助任务 \"" + helpTitle + "\"";
+        } else {
+            content = "您申请的互助任务 \"" + helpTitle + "\" " + (isAccepted ? "已被接受" : "被拒绝了");
+        }
+        dto.setContent(content);
         dto.setRelatedId(helpInfoId);
         
         return createUserNotification(dto);
@@ -202,6 +211,27 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         dto.setRelatedId(groupId);
         
         return createUserNotification(dto);
+    }
+
+    @Override
+    @Transactional
+    public List<Long> createGroupJoinApplicationNotification(Long groupId, Long applicantId, String applicantName, String groupName, List<Long> adminIds) {
+        List<Long> notificationIds = new ArrayList<>();
+        
+        for (Long adminId : adminIds) {
+            NotificationCreateDTO dto = new NotificationCreateDTO();
+            dto.setRecipientId(adminId);
+            dto.setSenderId(applicantId);
+            dto.setType(Notification.NotificationType.GROUP_JOIN_APPLICATION.name());
+            dto.setTitle("新的小组加入申请");
+            dto.setContent(applicantName + " 申请加入小组 \"" + groupName + "\"");
+            dto.setRelatedId(groupId);
+            
+            Long notificationId = createUserNotification(dto);
+            notificationIds.add(notificationId);
+        }
+        
+        return notificationIds;
     }
 
     @Override
@@ -275,12 +305,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             case "HELP_NEW_REVIEW":
                 return "/helpinfo/" + relatedId;
                 
+            case "GROUP_JOIN_APPLICATION":
+                return "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
+                
             case "GROUP_JOIN_APPROVED":
             case "GROUP_JOIN_REJECTED":
             case "GROUP_INVITATION":
             case "GROUP_ANNOUNCEMENT":
             case "GROUP_ADMIN_ASSIGNED":
-                return "/group/" + relatedId;
+                return "/groups/" + relatedId + "/detail";
                 
             default:
                 return null;

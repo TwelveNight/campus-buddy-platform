@@ -92,9 +92,11 @@ public interface NotificationService extends IService<Notification> {
      * @param applicantId 申请者ID
      * @param isAccepted  是否接受
      * @param helpTitle   互助标题
+     * @param operatorId  操作者ID（可选，为null时作为系统通知）
+     * @param operatorName 操作者名称（可选）
      * @return 通知ID
      */
-    Long createApplicationResultNotification(Long helpInfoId, Long applicantId, boolean isAccepted, String helpTitle);
+    Long createApplicationResultNotification(Long helpInfoId, Long applicantId, boolean isAccepted, String helpTitle, Long operatorId, String operatorName);
 
     /**
      * 创建互助完成通知
@@ -128,6 +130,18 @@ public interface NotificationService extends IService<Notification> {
      * @return 通知ID
      */
     Long createGroupJoinResultNotification(Long groupId, Long userId, boolean isApproved, String groupName);
+
+    /**
+     * 创建小组加入申请通知
+     *
+     * @param groupId       小组ID
+     * @param applicantId   申请者ID
+     * @param applicantName 申请者名称
+     * @param groupName     小组名称
+     * @param adminIds      管理员ID列表
+     * @return 通知ID列表
+     */
+    List<Long> createGroupJoinApplicationNotification(Long groupId, Long applicantId, String applicantName, String groupName, List<Long> adminIds);
 
     /**
      * 创建小组邀请通知

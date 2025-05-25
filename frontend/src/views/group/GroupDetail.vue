@@ -64,6 +64,7 @@
 
                 <el-tab-pane label="成员管理" name="members">
                     <group-members-tab :group-id="groupId" :user-role="userRole" :group="group"
+                        :subtab="route.query.subtab"
                         @member-updated="refreshGroupDetail" />
                 </el-tab-pane>
             </el-tabs>
@@ -124,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { User } from '@element-plus/icons-vue';
@@ -223,6 +224,19 @@ const joinStatus = ref('not_joined'); // 'not_joined' | 'pending' | 'joined'
 // 生命周期钩子
 onMounted(() => {
     loadGroupDetail();
+    
+    // 检查查询参数并设置相应的标签页
+    const tabFromQuery = route.query.tab;
+    if (tabFromQuery && ['posts', 'files', 'members'].includes(tabFromQuery)) {
+        activeTab.value = tabFromQuery;
+    }
+});
+
+// 监听路由查询参数变化
+watch(() => route.query.tab, (newTab) => {
+    if (newTab && ['posts', 'files', 'members'].includes(newTab)) {
+        activeTab.value = newTab;
+    }
 });
 
 // 加载小组详情

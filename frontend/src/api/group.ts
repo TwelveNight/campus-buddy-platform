@@ -31,7 +31,7 @@ export interface GroupMember {
   realName?: string;
   avatarUrl?: string;
   role: 'CREATOR' | 'ADMIN' | 'MEMBER';
-  status: 'ACTIVE' | 'PENDING' | 'REJECTED';
+  status: 'ACTIVE' | 'PENDING_APPROVAL' | 'REJECTED';
   joinedAt?: string;
   requestTime?: string;
   [key: string]: any;

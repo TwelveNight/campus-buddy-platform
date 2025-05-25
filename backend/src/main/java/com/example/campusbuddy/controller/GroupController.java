@@ -257,6 +257,28 @@ public class GroupController {
             groupService.updateById(group);
         } else {
             member.setStatus("PENDING_APPROVAL");
+            
+            // 私有小组，需要发送通知给管理员和创建者
+            LambdaQueryWrapper<GroupMember> adminQuery = new LambdaQueryWrapper<>();
+            adminQuery.eq(GroupMember::getGroupId, groupId)
+                    .in(GroupMember::getRole, "CREATOR", "ADMIN")
+                    .eq(GroupMember::getStatus, "ACTIVE");
+            List<GroupMember> admins = groupMemberService.list(adminQuery);
+            
+            if (!admins.isEmpty()) {
+                List<Long> adminIds = admins.stream()
+                    .map(GroupMember::getUserId)
+                    .collect(Collectors.toList());
+                    
+                // 发送小组加入申请通知给所有管理员和创建者
+                notificationService.createGroupJoinApplicationNotification(
+                    groupId,
+                    currentUser.getUserId(),
+                    currentUser.getNickname() != null ? currentUser.getNickname() : currentUser.getUsername(),
+                    group.getName(),
+                    adminIds
+                );
+            }
         }
 
         member.setJoinedAt(new Date());

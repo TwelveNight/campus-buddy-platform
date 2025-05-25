@@ -54,7 +54,7 @@ const getHelpNotificationTypes = () => {
 
 // 获取小组通知类型
 const getGroupNotificationTypes = () => {
-    const types = 'GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'
+    const types = 'GROUP_JOIN_APPLICATION,GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'
     console.log('Group notification types:', types)
     return types
 }

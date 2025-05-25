@@ -83,6 +83,7 @@ public class Notification implements Serializable {
         HELP_APPLICATION_REJECTED, // 申请被拒绝
         HELP_COMPLETED,           // 互助完成
         HELP_NEW_REVIEW,          // 新的评价
+        GROUP_JOIN_APPLICATION,   // 用户申请加入小组
         GROUP_JOIN_APPROVED,      // 加入小组申请被批准
         GROUP_JOIN_REJECTED,      // 加入小组申请被拒绝
         GROUP_INVITATION,         // 被邀请加入小组

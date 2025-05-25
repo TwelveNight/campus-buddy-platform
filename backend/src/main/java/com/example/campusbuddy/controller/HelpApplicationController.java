@@ -4,7 +4,6 @@ import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.entity.HelpApplication;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.entity.User;
-import com.example.campusbuddy.exception.ForbiddenException;
 import com.example.campusbuddy.service.HelpApplicationService;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.service.NotificationService;
@@ -14,8 +13,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import java.util.List;
 
@@ -194,6 +191,10 @@ public class HelpApplicationController {
         application.setStatus(newStatus);
         helpApplicationService.updateById(application);
 
+        // 获取当前操作者信息（用于通知）
+        User operator = userService.getById(userId);
+        String operatorName = (operator != null) ? operator.getNickname() : "系统管理员";
+
         HelpInfo helpInfo = helpInfoService.getById(application.getInfoId());
         if (helpInfo != null) {
             if ("ACCEPTED".equals(newStatus)) {
@@ -207,7 +208,9 @@ public class HelpApplicationController {
                     helpInfo.getInfoId(),
                     application.getApplicantId(),
                     true,
-                    helpInfo.getTitle()
+                    helpInfo.getTitle(),
+                    userId,
+                    operatorName
                 );
 
                 // 拒绝该互助任务下的其他待处理申请
@@ -230,7 +233,9 @@ public class HelpApplicationController {
                         helpInfo.getInfoId(),
                         rejectedApp.getApplicantId(),
                         false,
-                        helpInfo.getTitle()
+                        helpInfo.getTitle(),
+                        userId,
+                        operatorName
                     );
                 }
             } else if ("REJECTED".equals(newStatus)) {
@@ -239,7 +244,9 @@ public class HelpApplicationController {
                     helpInfo.getInfoId(),
                     application.getApplicantId(),
                     false,
-                    helpInfo.getTitle()
+                    helpInfo.getTitle(),
+                    userId,
+                    operatorName
                 );
                 
                 // 如果被拒绝的申请是当前已接受的申请，则清空 helpInfo 的 acceptedApplicationId 并将状态设为 OPEN
