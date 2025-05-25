@@ -1,22 +1,22 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
-import Login from '../views/Login.vue'
-import Register from '../views/Register.vue'
+import Login from '../views/auth/Login.vue'
+import Register from '../views/auth/Register.vue'
 import Home from '../views/Home.vue'
-import HelpInfoList from '../views/HelpInfoList.vue'
-import HelpInfoDetail from '../views/HelpInfoDetail.vue'
-import HelpInfoPublish from '../views/HelpInfoPublish.vue'
-import MyApplications from '../views/MyApplications.vue'
-import MyHelpInfo from '../views/MyHelpInfo.vue'
-import Profile from '../views/Profile.vue'
-import Reviews from '../views/Reviews.vue'
-import AdminHelpInfo from '../views/AdminHelpInfo.vue'
+import HelpInfoList from '../views/helpinfo/HelpInfoList.vue'
+import HelpInfoDetail from '../views/helpinfo/HelpInfoDetail.vue'
+import HelpInfoPublish from '../views/helpinfo/HelpInfoPublish.vue'
+import MyApplications from '../views/user/MyApplications.vue'
+import MyHelpInfo from '../views/helpinfo/MyHelpInfo.vue'
+import Profile from '../views/user/Profile.vue'
+import Reviews from '../views/user/Reviews.vue'
+import AdminHelpInfo from '../views/admin/AdminHelpInfo.vue'
 import Debug from '../views/Debug.vue' // 添加调试页面
 // 动态导入组件
-const GroupList = () => import('../views/GroupList.vue')
-const GroupDetail = () => import('../views/GroupDetail.vue')
-const GroupPreview = () => import('../views/GroupPreview.vue')
+const GroupList = () => import('../views/group/GroupList.vue')
+const GroupDetail = () => import('../views/group/GroupDetail.vue')
+const GroupPreview = () => import('../views/group/GroupPreview.vue')
 import { useAuthStore } from '../store/auth'
 
 const routes: RouteRecordRaw[] = [
@@ -89,7 +89,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'user/:userId',
         name: 'UserProfile',
-        component: () => import('../views/UserProfile.vue')
+        component: () => import('../views/user/UserProfile.vue')
       },
       {
         path: 'groups',

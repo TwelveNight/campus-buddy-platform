@@ -130,12 +130,12 @@ import { ElMessage, ElMessageBox } from 'element-plus';
 import { User } from '@element-plus/icons-vue';
 import { getGroupDetail, updateGroup, joinGroup, quitGroup, disbandGroup, getGroupMembers } from '@/api/group';
 import { useAuthStore } from '@/store/auth';
-import GroupPostsTab from '@/components/GroupPostsTab.vue';
-import GroupFilesTab from '@/components/GroupFilesTab.vue';
-import GroupMembersTab from '@/components/GroupMembersTab.vue';
-import ImageUploader from '../components/ImageUploader.vue';
-import AvatarUploader from '../components/AvatarUploader.vue';
-import { uploadApi } from '../api/upload';
+import GroupPostsTab from '@/components/group/GroupPostsTab.vue';
+import GroupFilesTab from '@/components/group/GroupFilesTab.vue';
+import GroupMembersTab from '@/components/group/GroupMembersTab.vue';
+import ImageUploader from '@/components/form/ImageUploader.vue';
+import AvatarUploader from '@/components/form/AvatarUploader.vue';
+import { uploadApi } from '../../api/upload';
 
 const route = useRoute();
 const router = useRouter();

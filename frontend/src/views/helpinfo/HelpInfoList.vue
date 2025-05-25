@@ -112,7 +112,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { fetchHelpInfoList } from '../api/helpinfo'
+import { fetchHelpInfoList } from '../../api/helpinfo'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 

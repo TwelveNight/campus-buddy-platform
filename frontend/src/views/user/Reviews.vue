@@ -211,10 +211,10 @@ import {
     Star, ChatRound, Document,
     Trophy, Medal, Collection, Filter, RefreshRight
 } from '@element-plus/icons-vue';
-import ReviewList from '../components/ReviewList.vue';
-import { getUserReviews, getUserCreditScore } from '../api/review';
-import type { Review, ReviewQuery } from '../api/review';
-import { useAuthStore } from '../store/auth';
+import ReviewList from '../../components/common/ReviewList.vue';
+import { getUserReviews, getUserCreditScore } from '../../api/review';
+import type { Review, ReviewQuery } from '../../api/review';
+import { useAuthStore } from '../../store/auth';
 
 // 用户认证
 const authStore = useAuthStore();

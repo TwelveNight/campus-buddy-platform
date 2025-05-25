@@ -23,10 +23,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, reactive, toRefs, watch, onMounted } from 'vue';
-import { ElMessage } from 'element-plus';
-import { submitReview as submitReviewApi, hasReviewed, canReview, getUserReviewStatus } from '../api/review';
-import type { Review } from '../api/review';
+import { defineComponent, ref, reactive, watch, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import { submitReview as submitReviewApi, canReview, getUserReviewStatus } from "../../api/review";
+import type { Review } from "../../api/review";
 
 export default defineComponent({
     name: 'ReviewDialog',

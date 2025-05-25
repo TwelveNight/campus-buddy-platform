@@ -155,8 +155,8 @@ import {
     approveJoinRequest,
     rejectJoinRequest,
     type GroupMember
-} from '@/api/group';
-import { useAuthStore } from '@/store/auth';
+} from '../../api/group';
+import { useAuthStore } from '../../store/auth';
 import {
     Search,
     ArrowDown,

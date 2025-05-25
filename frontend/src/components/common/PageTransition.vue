@@ -10,9 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import { useUiStore } from '../store/ui'
+import { useUiStore } from "../../store/ui";
 
-const uiStore = useUiStore()
+const uiStore = useUiStore();
 </script>
 
 <style>

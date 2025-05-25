@@ -154,14 +154,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { fetchHelpInfoList, deleteHelpInfo } from '../api/helpinfo'
-import { useApplicationStore } from '../store/application'
-import ReviewDialog from '../components/ReviewDialog.vue'
-import { canReview, getHelpInfoReviewStatus, getUserReviewStatus } from '../api/review'
-import { useAuthStore } from '../store/auth'
-import { getApplicationById } from '../api/helpApplication'
+import { useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { fetchHelpInfoList, deleteHelpInfo } from "../../api/helpinfo";
+import { useApplicationStore } from "../../store/application";
+import ReviewDialog from "../../components/form/ReviewDialog.vue";
+import { canReview, getHelpInfoReviewStatus, getUserReviewStatus } from '../../api/review';
+import { useAuthStore } from '../../store/auth';
+import { getApplicationById } from '../../api/helpApplication';
 
 const router = useRouter()
 const loading = ref(false)

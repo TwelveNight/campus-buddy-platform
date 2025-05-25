@@ -2,7 +2,7 @@
     <nav class="navbar" :class="{ 'auth-page': isAuthPage }">
         <div class="container">
             <router-link to="/" class="logo">
-                <img src="../assets/vue.svg" alt="学伴" />
+                <img src="../../assets/vue.svg" alt="学伴" />
                 <h1>学伴</h1>
             </router-link>
 
@@ -148,7 +148,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../store/auth'
+import { useAuthStore } from '../../store/auth'
 import ThemeSwitch from './ThemeSwitch.vue'
 import { ElMessageBox } from 'element-plus'
 import {
@@ -564,8 +564,8 @@ const showCreateGroupDialog = () => {
 
 /* 暗色主题适配 */
 [data-theme="dark"] .navbar {
-    background-color: #1a1a1a !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background-color: var(--dark-bg, #1e1e20); /* 使用 theme.css 变量，并提供备用值 */
+    box-shadow: var(--dark-shadow-light, 0 4px 12px rgba(0, 0, 0, 0.3));
 }
 
 [data-theme="dark"] .navbar.auth-page {
@@ -578,83 +578,91 @@ const showCreateGroupDialog = () => {
 }
 
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item) {
-    color: #ffffff !important;
+    color: var(--dark-text-primary, #e5eaf3) !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
-    color: #ffffff !important;
+    color: var(--dark-text-primary, #e5eaf3) !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item:hover),
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title) {
     color: var(--primary-color) !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05)) !important; /* 使用 theme.css 变量 */
 }
 
+/* 更新 el-menu--popup 的暗色主题样式 */
 [data-theme="dark"] :deep(.el-menu--popup) {
-    background-color: #1a1a1a !important;
-    border: 1px solid #333333 !important;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
+    background-color: var(--dark-bg-secondary, #2a2a2e) !important; /* 使用 theme.css 变量 */
+    border: 1px solid var(--dark-border-color, #4c4d4f) !important; /* 使用 theme.css 变量 */
+    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important; /* 使用 theme.css 变量 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item) {
-    background-color: #1a1a1a !important;
-    color: #ffffff !important;
+    background-color: transparent !important; /* 子菜单项背景透明，依赖父级 popup 背景 */
+    color: var(--dark-text-regular, #cfd3dc) !important; /* 使用 theme.css 变量 */
     border-bottom: none !important;
 }
 
-[data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover) {
-    background-color: #333333 !important;
-    color: #ffffff !important;
-}
-
-[data-theme="dark"] :deep(.el-menu--popup .el-menu-item.is-active) {
-    background-color: #333333 !important;
-    color: var(--primary-color) !important;
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item .el-icon) {
+    color: var(--dark-text-regular, #cfd3dc) !important; /* 确保图标颜色与文本一致 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover) {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important; /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
     color: var(--primary-color) !important;
 }
 
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover .el-icon) {
+    color: var(--primary-color) !important; /* 确保 hover 时图标颜色也改变 */
+}
+
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item.is-active) {
-    background-color: rgba(64, 158, 255, 0.2) !important;
+    background-color: var(--primary-color-dark-transparent, rgba(64, 158, 255, 0.2)) !important; /* 使用 theme.css 变量 */
     color: var(--primary-color) !important;
 }
 
 [data-theme="dark"] .notification-icon:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1));
 }
 
 [data-theme="dark"] .bell-icon {
-    color: #ffffff;
+    color: var(--dark-text-primary, #e5eaf3);
 }
 
 [data-theme="dark"] .avatar-wrapper:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1));
 }
 
 [data-theme="dark"] .user-name {
-    color: #ffffff;
+    color: var(--dark-text-primary, #e5eaf3);
 }
 
 [data-theme="dark"] .dropdown-icon {
-    color: #ffffff;
+    color: var(--dark-text-secondary, #a3a6ad);
 }
 
+/* 更新 el-dropdown-menu 的暗色主题样式 */
 [data-theme="dark"] :deep(.el-dropdown-menu) {
-    background-color: #1a1a1a !important;
-    border: 1px solid #333333 !important;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
+    background-color: var(--dark-bg-secondary, #2a2a2e) !important; /* 使用 theme.css 变量 */
+    border: 1px solid var(--dark-border-color, #4c4d4f) !important; /* 使用 theme.css 变量 */
+    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important; /* 使用 theme.css 变量 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item) {
-    color: #ffffff !important;
+    color: var(--dark-text-regular, #cfd3dc) !important; /* 使用 theme.css 变量 */
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item .el-icon) {
+    color: var(--dark-text-regular, #cfd3dc) !important; /* 确保图标颜色与文本一致 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
-    background-color: rgba(255, 255, 255, 0.1) !important;
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important; /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
     color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item:hover .el-icon) {
+    color: var(--primary-color) !important; /* 确保 hover 时图标颜色也改变 */
 }
 </style>

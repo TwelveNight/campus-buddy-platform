@@ -23,8 +23,8 @@
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { useAuthStore } from '../store/auth'
-import { uploadApi } from '../api/upload'
+import { useAuthStore } from '../../store/auth'
+import { uploadApi } from '../../api/upload'
 
 // 定义组件的属性
 const props = defineProps({

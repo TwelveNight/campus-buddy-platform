@@ -269,9 +269,9 @@ import {
   joinGroup
 } from '@/api/group';
 import { useAuthStore } from '@/store/auth';
-import ImageUploader from '../components/ImageUploader.vue';
-import AvatarUploader from '../components/AvatarUploader.vue';
-import { uploadApi } from '../api/upload';
+import ImageUploader from '../../components/form/ImageUploader.vue';
+import AvatarUploader from '../../components/form/AvatarUploader.vue';
+import { uploadApi } from '../../api/upload';
 
 const router = useRouter();
 const route = useRoute();

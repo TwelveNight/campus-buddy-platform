@@ -56,13 +56,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
-import { useHelpInfoStore } from '../store/helpinfo'
-import { useAuthStore } from '../store/auth'
-import { fetchHelpInfoDetail } from '../api/helpinfo'
-import RichEditor from '../components/RichEditor.vue'
+import { useRouter, useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
+import type { FormInstance, FormRules } from "element-plus";
+import { useHelpInfoStore } from "../../store/helpinfo";
+import { useAuthStore } from "../../store/auth";
+import { fetchHelpInfoDetail, publishHelpInfo, updateHelpInfo } from "../../api/helpinfo";
+import RichEditor from "../../components/form/RichEditor.vue";
 
 const router = useRouter()
 const route = useRoute()

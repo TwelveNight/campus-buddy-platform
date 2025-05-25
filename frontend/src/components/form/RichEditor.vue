@@ -23,7 +23,7 @@
 import { ref, watch, onMounted, computed } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { uploadApi } from '../api/upload'
+import { uploadApi } from '../../api/upload'
 
 interface Props {
   modelValue: string

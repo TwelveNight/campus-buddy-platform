@@ -136,7 +136,7 @@
 <script setup lang="ts">
 import { ref, computed, defineProps, defineEmits } from 'vue';
 import { Clock, ChatRound, Document, Link, View } from '@element-plus/icons-vue';
-import { useAuthStore } from '../store/auth';
+import { useAuthStore } from '../../store/auth';
 
 // 定义评价对象类型
 interface ReviewItem {

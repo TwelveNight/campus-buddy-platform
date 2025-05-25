@@ -408,12 +408,12 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import type { FormInstance } from 'element-plus'
-import { useAuthStore } from '../store/auth'
-import AvatarUploader from '../components/AvatarUploader.vue'
-import { getUserProfile, updateUserProfile, changePassword } from '../api/user'
-import { getUserReviews } from '../api/review'
+import { ElMessage } from "element-plus";
+import type { FormInstance } from "element-plus";
+import { useAuthStore } from "../../store/auth";
+import AvatarUploader from "../../components/form/AvatarUploader.vue";
+import { getUserProfile, updateUserProfile, changePassword } from "../../api/user";
+import { getUserReviews } from '../../api/review';
 import {
     User, UserFilled, Avatar, Key, Lock, Check,
     RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View, MessageBox, ChatRound, Document, Collection, Promotion

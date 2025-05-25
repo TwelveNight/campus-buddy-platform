@@ -92,7 +92,7 @@ import { ElMessage } from 'element-plus'
 import {
     acceptApplication,
     rejectApplication
-} from '../api/helpApplication'
+} from '../../api/helpApplication'
 
 const props = defineProps({
     applications: {

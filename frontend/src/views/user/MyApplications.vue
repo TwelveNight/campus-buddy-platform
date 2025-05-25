@@ -63,9 +63,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useApplicationStore } from '../store/application'
+import { useApplicationStore } from '../../store/application'
 import { ElMessage } from 'element-plus'
-import ApplicationList from '../components/ApplicationList.vue'
+import ApplicationList from '../../components/common/ApplicationList.vue'
 
 const applicationStore = useApplicationStore()
 const activeTab = ref('sent')

@@ -70,7 +70,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { useAuthStore } from '../store/auth'
+import { useAuthStore } from '../../store/auth'
 import { User, Lock, ChatLineRound, Share, Trophy } from '@element-plus/icons-vue'
 
 const router = useRouter()

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import GlobalLoading from './components/GlobalLoading.vue'
-import PageTransition from './components/PageTransition.vue'
-import MobileNav from './components/MobileNav.vue'
-import MobileBottomNav from './components/MobileBottomNav.vue'
+import GlobalLoading from './components/common/GlobalLoading.vue'
+import PageTransition from './components/common/PageTransition.vue'
+import MobileNav from './components/mobile/MobileNav.vue'
+import MobileBottomNav from './components/mobile/MobileBottomNav.vue'
 
 // 初始化主题
 onMounted(() => {

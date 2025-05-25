@@ -99,8 +99,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { fetchHelpInfoList, deleteHelpInfo, updateHelpInfoStatus } from '../api/helpinfo'
-import { useAuthStore } from '../store/auth'
+import { fetchHelpInfoList, deleteHelpInfo, updateHelpInfoStatus } from '../../api/helpinfo'
+import { useAuthStore } from '../../store/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()

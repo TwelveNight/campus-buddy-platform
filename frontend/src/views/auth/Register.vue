@@ -81,7 +81,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { useAuthStore } from '../store/auth'
+import { useAuthStore } from '../../store/auth'
 import {
     User,
     EditPen,
@@ -291,4 +291,27 @@ async function onSubmit() {
         padding: 30px;
     }
 }
+
+/* Dark Theme Styles */
+html.dark-theme .register-page {
+    background-color: var(--background-color); /* 使用主题的主要背景色 */
+    background-image: none; /* 确保覆盖渐变 */
+}
+
+[data-theme="dark"] .auth-container, /* Keep for consistency if data-theme is also used */
+html.dark-theme .auth-container {
+    background-color: var(--card-bg-color); /* 使用主题的卡片背景色 */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* 为暗色背景调整阴影 */
+}
+
+[data-theme="dark"] .auth-welcome, /* Keep for consistency */
+html.dark-theme .auth-welcome {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #1d2b38 100%); /* 使用新的 --secondary-color 和一个深色 */
+}
+
+/*
+  使用 var(--text-primary), var(--text-secondary), var(--primary-color) 等变量的文本颜色
+  应根据 theme.css 中为 [data-theme="dark"] 所做的定义自动适应。
+  Element Plus 组件（如输入框、按钮、复选框）也应在全局暗色主题激活时自动适应。
+*/
 </style>

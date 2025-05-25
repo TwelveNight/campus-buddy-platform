@@ -28,7 +28,7 @@ import { ref, reactive } from 'vue' // Removed defineEmits, defineProps
 import type { PropType } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { submitApplication } from '../api/helpApplication'
+import { submitApplication } from '../../api/helpApplication'
 
 const props = defineProps({
     helpInfoId: {

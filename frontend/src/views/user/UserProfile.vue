@@ -94,9 +94,9 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import ReviewList from '../components/ReviewList.vue';
-import { getUserReviews } from '../api/review';
-import { getUserById } from '../api/user';
+import ReviewList from '../../components/common/ReviewList.vue';
+import { getUserReviews } from '../../api/review';
+import { getUserById } from '../../api/user';
 import { Star, User, List } from '@element-plus/icons-vue';
 
 const route = useRoute();

@@ -106,6 +106,7 @@
 /* 默认亮色主题变量 */
 :root {
     --primary-color: #409eff;
+    --secondary-color: #3aa67c; /* 为渐变定义 */
     --primary-light: #ecf5ff;
     --primary-dark: #3a8ee6;
     --success-color: #67c23a;
@@ -137,6 +138,7 @@
 .dark-theme,
 [data-theme="dark"] {
     --primary-color: #409eff;
+    --secondary-color: #2c3e50; /* 为渐变定义 */
     --primary-color-light: #60a9ff;
     --primary-light: #18222c;
     --primary-dark: #60a9ff;

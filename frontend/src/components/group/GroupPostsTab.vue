@@ -168,10 +168,10 @@ import { useRouter } from 'vue-router';
 // import DOMPurify from 'dompurify';
 // import moment from 'moment';
 
-import { getGroupPosts, createPost, updatePost, deletePost, likePost, unlikePost, getLikeStatus } from '../api/groupPost';
-import { getPostComments, addComment, deleteComment } from '../api/postComment';
-import { useAuthStore } from '../store/auth';
-import RichEditor from '../components/RichEditor.vue';
+import { getGroupPosts, createPost, updatePost, deletePost, likePost, unlikePost, getLikeStatus } from '../../api/groupPost';
+import { getPostComments, addComment, deleteComment } from '../../api/postComment';
+import { useAuthStore } from '../../store/auth';
+import RichEditor from '../form/RichEditor.vue';
 
 // 类型定义
 interface Post {

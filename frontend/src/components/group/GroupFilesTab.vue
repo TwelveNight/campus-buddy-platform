@@ -148,14 +148,14 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { useAuthStore } from '@/store/auth';
+import { useAuthStore } from '../../store/auth';
 import {
     getGroupFiles,
     uploadFile,
     updateFileInfo,
     deleteFile,
     downloadFileById
-} from '@/api/groupFile';
+} from '../../api/groupFile';
 import {
     Document,
     Picture,

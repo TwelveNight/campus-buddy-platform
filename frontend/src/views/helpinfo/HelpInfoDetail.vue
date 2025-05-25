@@ -228,8 +228,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useHelpInfoStore } from '../store/helpinfo'
-import { useAuthStore } from '../store/auth'
+import { useHelpInfoStore } from '../../store/helpinfo'
+import { useAuthStore } from '../../store/auth'
 import { marked } from 'marked'
 import {
   getApplications,
@@ -240,12 +240,12 @@ import {
   getMyApplications,
   cancelApplication,
   closeHelpInfo
-} from '../api/helpApplication'
-import { deleteHelpInfo, incrementHelpInfoViewCount } from '../api/helpinfo'
-import { getUserById } from '../api/user'
-import ApplyHelpDialog from '../components/ApplyHelpDialog.vue'
-import ReviewDialog from '../components/ReviewDialog.vue'
-import { getUserReviewStatus } from '../api/review'
+} from '../../api/helpApplication'
+import { deleteHelpInfo, incrementHelpInfoViewCount, updateHelpInfoStatus } from '../../api/helpinfo'
+import { getUserById } from '../../api/user'
+import ApplyHelpDialog from '../../components/form/ApplyHelpDialog.vue'
+import ReviewDialog from '../../components/form/ReviewDialog.vue'
+import { getUserReviewStatus } from '../../api/review'
 
 const route = useRoute()
 const router = useRouter()
