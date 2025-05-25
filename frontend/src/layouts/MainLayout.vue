@@ -31,13 +31,14 @@ const showDebugPanel = ref(window.location.search.includes('debug=true'))
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    background-color: var(--background-color);
 }
 
 .main-content {
     flex: 1;
     padding-top: 1rem;
     padding-bottom: 3rem;
-    background-color: var(--light-bg);
+    background-color: var(--background-color);
 }
 
 .page-container {
@@ -45,6 +46,20 @@ const showDebugPanel = ref(window.location.search.includes('debug=true'))
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 20px;
+    background-color: var(--background-color);
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .main-layout {
+    background-color: #1a1a1a !important;
+}
+
+[data-theme="dark"] .main-content {
+    background-color: #1a1a1a !important;
+}
+
+[data-theme="dark"] .page-container {
+    background-color: #1a1a1a !important;
 }
 
 /* 页面过渡动画 */

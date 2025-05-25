@@ -1,6 +1,6 @@
 <template>
     <el-dialog :title="title" :model-value="dialogVisible" @update:model-value="updateDialog" width="500px"
-        @close="handleClose" destroy-on-close>
+        @close="handleClose" destroy-on-close class="review-dialog">
         <div class="review-form">
             <el-form ref="reviewForm" :model="formData" :rules="rules" label-width="80px">
                 <el-form-item label="评分" prop="score">
@@ -257,5 +257,57 @@ export default defineComponent({
 <style scoped>
 .review-form {
     padding: 10px 0;
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .review-dialog :deep(.el-dialog__header) {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-text-primary);
+    border-bottom: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-dialog__body) {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-dialog__footer) {
+    background-color: var(--dark-card-bg);
+    border-top: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-form-item__label) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-textarea__inner) {
+    background-color: var(--dark-input-bg);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-textarea__inner:focus) {
+    border-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-rate__text) {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-button) {
+    background-color: var(--dark-button-bg);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-button--primary) {
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+    color: var(--dark-text-on-primary);
+}
+
+[data-theme="dark"] .review-dialog :deep(.el-button--primary:hover) {
+    background-color: var(--primary-color-dark-hover);
+    border-color: var(--primary-color-dark-hover);
 }
 </style>

@@ -699,63 +699,155 @@ const goToGroupDetail = (groupId) => {
   border: 1.5px dashed #e57373;
 }
 
-.group-card-disbanded .el-tag[type="danger"] {
-  background: #e57373;
-  color: #fff;
-  border: none;
+/* 暗色模式适配 */
+[data-theme="dark"] .group-list-page {
+  background-color: var(--dark-bg);
+  color: var(--dark-text-primary);
 }
 
-.group-avatar {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 15px;
+[data-theme="dark"] .page-title {
+  color: var(--dark-text-primary);
 }
 
-.group-info {
-  flex: 1;
+[data-theme="dark"] .group-card {
+  background-color: var(--dark-card-bg);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
 }
 
-.group-name {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
+[data-theme="dark"] .group-card:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
 }
 
-.group-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  color: #666;
-  font-size: 14px;
+[data-theme="dark"] .group-card-disbanded {
+  background: var(--dark-bg-secondary) !important;
+  border: 1.5px dashed #ef5350;
 }
 
-.group-creator {
-  margin-bottom: 10px;
+[data-theme="dark"] .group-name {
+  color: var(--dark-text-primary);
 }
 
-.group-description {
-  color: #666;
-  font-size: 14px;
-  line-height: 1.4;
-  margin-bottom: 15px;
-  min-height: 40px;
+[data-theme="dark"] .group-meta {
+  color: var(--dark-text-secondary);
 }
 
-.group-tags {
-  margin-bottom: 15px;
+[data-theme="dark"] .group-creator {
+  color: var(--dark-text-secondary);
 }
 
-.group-card .group-actions {
-  margin-top: auto;
-  display: flex;
-  justify-content: center;
+[data-theme="dark"] .creator-link {
+  color: var(--primary-color-dark);
 }
 
-.pagination {
-  margin-top: 30px;
-  display: flex;
-  justify-content: center;
+[data-theme="dark"] .creator-link:hover {
+  color: var(--primary-color-dark-hover);
+}
+
+[data-theme="dark"] .group-description {
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .group-tags .tag {
+  background-color: var(--dark-bg-secondary);
+  color: var(--dark-text-secondary);
+  border-color: var(--dark-border-color);
+}
+
+/* 暗色模式下的Element Plus组件样式 */
+[data-theme="dark"] :deep(.el-tabs__nav-wrap::after) {
+  background-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-tabs__active-bar) {
+  background-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item) {
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item.is-active) {
+  color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item:hover) {
+  color: var(--primary-color-dark-hover);
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+  background-color: var(--dark-input-bg);
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-input__prefix) {
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-select) {
+  --el-select-input-focus-border-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item) {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.hover, .el-select-dropdown__item:hover) {
+  background-color: var(--dark-bg-hover);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.selected) {
+  background-color: var(--primary-color-dark-transparent);
+  color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-empty__description) {
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-pagination) {
+  --el-pagination-button-color: var(--dark-text-secondary);
+  --el-pagination-button-bg-color: var(--dark-bg-secondary);
+  --el-pagination-button-disabled-color: var(--dark-text-disabled);
+  --el-pagination-button-disabled-bg-color: var(--dark-bg);
+  --el-pagination-hover-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-pagination .btn-prev, .el-pagination .btn-next) {
+  background-color: var(--dark-bg-secondary);
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-pagination .el-select .el-input) {
+  width: 100px;
+}
+
+[data-theme="dark"] :deep(.el-dialog) {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-dialog__header) {
+  border-bottom: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-dialog__title) {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-form-item__label) {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner) {
+  background-color: var(--dark-input-bg);
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner:focus) {
+  border-color: var(--primary-color-dark);
 }
 </style>

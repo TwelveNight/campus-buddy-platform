@@ -327,4 +327,105 @@ const handleJoinGroup = async () => {
     color: #666;
     line-height: 1.5;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .group-preview-page {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .group-header {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .group-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .group-meta {
+    color: #909399;
+}
+
+[data-theme="dark"] .member-count,
+[data-theme="dark"] .join-type {
+    color: #909399;
+}
+
+[data-theme="dark"] .group-creator {
+    color: #909399;
+}
+
+[data-theme="dark"] .creator-link {
+    color: #409eff;
+}
+
+[data-theme="dark"] .creator-link:hover {
+    color: #66b1ff;
+}
+
+[data-theme="dark"] .group-description {
+    color: #909399;
+}
+
+[data-theme="dark"] .tag {
+    background-color: #262626;
+    border-color: #333333;
+    color: #909399;
+}
+
+[data-theme="dark"] .feature-card {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .card-header h3 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .feature-item .el-icon {
+    color: #409eff;
+}
+
+[data-theme="dark"] .feature-info h4 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .feature-info p {
+    color: #909399;
+}
+
+/* 暗色模式下的 Element Plus 组件 */
+[data-theme="dark"] :deep(.el-alert) {
+    --el-alert-bg-color: rgba(64, 158, 255, 0.1);
+    --el-alert-border-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-alert .el-alert__title) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-alert .el-alert__description) {
+    color: #a3a6ad;
+}
+
+[data-theme="dark"] :deep(.el-card) {
+    --el-card-bg-color: #1a1a1a;
+    --el-card-border-color: #333333;
+    color: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] :deep(.el-card__header) {
+    background-color: #1a1a1a;
+    border-bottom-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-empty__description) {
+    color: #909399;
+}
 </style>

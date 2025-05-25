@@ -490,4 +490,159 @@ const formatTime = (timestamp: string | undefined) => {
 .danger-item {
     color: #f56c6c;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .group-members-tab {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .members-section {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .member-info {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .member-name .nickname {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .member-name .nickname:hover {
+    color: #409eff;
+}
+
+[data-theme="dark"] .member-detail {
+    color: #909399;
+}
+
+[data-theme="dark"] .danger-item {
+    color: #f78989;
+}
+
+/* 暗色模式下的表格样式 */
+[data-theme="dark"] :deep(.el-table) {
+    --el-table-bg-color: #1a1a1a;
+    --el-table-tr-bg-color: #1a1a1a;
+    --el-table-header-bg-color: #262626;
+    --el-table-header-text-color: #ffffff;
+    --el-table-text-color: #ffffff;
+    --el-table-border-color: #333333;
+    --el-table-row-hover-bg-color: #2a2a2e;
+}
+
+[data-theme="dark"] :deep(.el-table th) {
+    background-color: #262626 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+[data-theme="dark"] :deep(.el-table td) {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+[data-theme="dark"] :deep(.el-table__body tr:hover > td) {
+    background-color: #2a2a2e !important;
+}
+
+[data-theme="dark"] :deep(.el-table__empty-block) {
+    background-color: #1a1a1a !important;
+}
+
+/* 暗色模式下的 Element Plus 组件 */
+[data-theme="dark"] :deep(.el-tabs__nav-wrap::after) {
+    background-color: #333333;
+}
+
+[data-theme="dark"] :deep(.el-tabs__active-bar) {
+    background-color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-tabs__item) {
+    color: #909399;
+}
+
+[data-theme="dark"] :deep(.el-tabs__item.is-active) {
+    color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-tabs__item:hover) {
+    color: #66b1ff;
+}
+
+[data-theme="dark"] :deep(.el-input__wrapper) {
+    background-color: #262626;
+    box-shadow: 0 0 0 1px #333333 inset;
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-select .el-input) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown) {
+    background-color: #1a1a1a;
+    border-color: #333333;
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.hover, .el-select-dropdown__item:hover) {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.selected) {
+    background-color: rgba(64, 158, 255, 0.2);
+    color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-tag) {
+    background-color: #262626;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-tag.el-tag--info) {
+    --el-tag-info-color: #ffffff;
+    background-color: rgba(144, 147, 153, 0.2);
+}
+
+[data-theme="dark"] :deep(.el-tag.el-tag--warning) {
+    --el-tag-warning-color: #ffffff;
+    background-color: rgba(230, 162, 60, 0.2);
+}
+
+[data-theme="dark"] :deep(.el-tag.el-tag--danger) {
+    --el-tag-danger-color: #ffffff;
+    background-color: rgba(245, 108, 108, 0.2);
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu) {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-empty__description) {
+    color: #909399;
+}
 </style>

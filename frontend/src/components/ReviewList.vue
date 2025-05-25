@@ -885,63 +885,164 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
     }
 }
 
-/* 用户角色样式 */
-.role-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* 暗色模式适配 */
+[data-theme="dark"] .review-list-comp {
+    background-color: transparent;
+    color: #ffffff;
 }
 
-.role-badge:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+[data-theme="dark"] .review-filter {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
 }
 
-.role-publisher {
+[data-theme="dark"] .review-item {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    color: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .review-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border-color: #409eff;
+}
+
+[data-theme="dark"] .review-header {
+    border-bottom-color: #333333;
+}
+
+[data-theme="dark"] .reviewer-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .reviewer-name:hover {
     color: #409eff;
 }
 
-.role-helper {
-    color: #67c23a;
+[data-theme="dark"] .review-opposite-info .user-link,
+[data-theme="dark"] .reviewed-name {
+    color: #409eff;
 }
 
-.role-default {
+[data-theme="dark"] .review-date {
     color: #909399;
 }
 
-.role-icon {
-    font-size: 1rem;
-    margin-right: 4px;
+[data-theme="dark"] .score-value {
+    color: #ffffff;
 }
 
-.user-link {
-    font-weight: 600;
-    color: var(--el-color-primary);
-    font-size: 1.05rem;
-    line-height: 1.2;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    position: relative;
-    cursor: pointer;
+[data-theme="dark"] .score-max {
+    color: #909399;
 }
 
-.user-link:hover {
-    color: var(--el-color-primary-dark-2);
+[data-theme="dark"] .score-label {
+    color: #909399;
 }
 
-.user-link::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -2px;
-    left: 0;
-    background-color: var(--el-color-primary);
-    transition: width 0.3s ease;
+[data-theme="dark"] .review-content-wrap {
+    background-color: #262626;
+    border: 1px solid #333333;
 }
 
-.user-link:hover::after {
-    width: 100%;
+[data-theme="dark"] .review-content-quote-mark {
+    color: #909399;
+}
+
+[data-theme="dark"] .review-content {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .review-content-empty {
+    color: #909399;
+}
+
+[data-theme="dark"] .review-footer {
+    border-top: 1px solid #333333;
+}
+
+[data-theme="dark"] .related-info {
+    color: #909399;
+}
+
+[data-theme="dark"] .related-title {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .detail-link {
+    color: #409eff;
+}
+
+[data-theme="dark"] .detail-link:hover {
+    color: #66b1ff;
+}
+
+[data-theme="dark"] .user-link {
+    color: #409eff;
+}
+
+[data-theme="dark"] .user-link:hover {
+    color: #66b1ff;
+}
+
+[data-theme="dark"] .user-link::after {
+    background-color: #409eff;
+}
+
+[data-theme="dark"] .empty-reviews {
+    color: #909399;
+}
+
+[data-theme="dark"] .empty-tip {
+    color: #909399;
+}
+
+/* 暗色模式下的角色标签样式 */
+[data-theme="dark"] .role-publisher {
+    color: #409eff;
+}
+
+[data-theme="dark"] .role-helper {
+    color: #67c23a;
+}
+
+[data-theme="dark"] .role-default {
+    color: #909399;
+}
+
+[data-theme="dark"] .role-badge:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 暗色模式下的对话框样式 */
+[data-theme="dark"] :deep(.el-dialog) {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+}
+
+[data-theme="dark"] :deep(.el-dialog__header) {
+    border-bottom-color: #333333;
+}
+
+[data-theme="dark"] :deep(.el-dialog__title) {
+    color: #ffffff;
+}
+
+/* 暗色模式下的模块类型标签样式 */
+[data-theme="dark"] .review-module .el-tag {
+    background-color: #262626;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+/* 暗色模式下的脉冲点样式 */
+[data-theme="dark"] .pulse-dot {
+    background-color: #409eff;
+    box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.7);
+}
+
+[data-theme="dark"] .pulse-dot::before {
+    background-color: #409eff;
 }
 </style>

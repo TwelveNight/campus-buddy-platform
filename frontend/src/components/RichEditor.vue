@@ -12,7 +12,7 @@
           :preview-theme="previewTheme"
           :editor-theme="editorTheme"
           :showWordCount="false"
-          class="md-editor-fullwidth"
+          class="md-editor-fullwidth rich-editor-dark"
         />
       </div>
     </el-form-item>
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import { uploadApi } from '../api/upload'
@@ -48,9 +48,35 @@ const emit = defineEmits(['update:modelValue', 'change'])
 // 编辑器内容
 const valueContent = ref(props.modelValue || '')
 
-// 主题设置
-const previewTheme = 'vuepress'
-const editorTheme = 'light'
+// 获取当前主题模式
+const isDarkMode = ref(false)
+
+// 监听主题变化并更新编辑器主题
+const updateTheme = () => {
+  const htmlElement = document.documentElement
+  isDarkMode.value = htmlElement.getAttribute('data-theme') === 'dark'
+}
+
+// 初始检查主题
+updateTheme()
+
+// 创建主题监听器
+onMounted(() => {
+  // 监听主题变化
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'data-theme') {
+        updateTheme()
+      }
+    })
+  })
+  
+  observer.observe(document.documentElement, { attributes: true })
+})
+
+// 主题设置 - 根据当前主题动态变化
+const previewTheme = computed(() => isDarkMode.value ? 'github-dark' : 'vuepress')
+const editorTheme = computed(() => isDarkMode.value ? 'dark' : 'light')
 
 // 监听内容变化
 const handleChange = (content: string) => {
@@ -148,5 +174,41 @@ defineExpose({
 
 :deep(.md-editor-preview) {
   min-height: 300px;
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] :deep(.md-editor) {
+  background-color: var(--dark-bg);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.md-editor-toolbar) {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.md-editor-toolbar svg) {
+  color: var(--dark-text-primary);
+  fill: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.md-editor-toolbar .active svg) {
+  color: var(--primary-color-dark);
+  fill: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.md-editor-input) {
+  background-color: var(--dark-bg);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.md-editor-content .show-html-type) {
+  background-color: var(--dark-bg);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .text-count {
+  color: var(--dark-text-secondary);
 }
 </style>

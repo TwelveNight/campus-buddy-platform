@@ -71,4 +71,26 @@
 .links a:hover::after {
   width: 100%;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .footer {
+  background-color: var(--dark-card-bg);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .footer-content {
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .links a {
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .links a:hover {
+  color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .links a::after {
+  background-color: var(--primary-color-dark);
+}
 </style>

@@ -533,6 +533,156 @@ const confirmDisbandGroup = () => {
 }
 
 .group-tabs {
-    margin-top: 20px;
+    margin-top: 30px;
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .group-detail-page {
+    background-color: var(--dark-bg);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .group-header {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .group-name {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .group-meta {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .member-count,
+[data-theme="dark"] .join-type {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .group-creator {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .creator-link {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .creator-link:hover {
+    color: var(--primary-color-dark-hover);
+}
+
+[data-theme="dark"] .group-description {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .tag {
+    background-color: var(--dark-bg-secondary);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-secondary);
+}
+
+/* 暗色模式下的标签页样式 */
+[data-theme="dark"] .group-tabs :deep(.el-tabs__nav-wrap::after) {
+    background-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] .group-tabs :deep(.el-tabs__active-bar) {
+    background-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .group-tabs :deep(.el-tabs__item) {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .group-tabs :deep(.el-tabs__item.is-active) {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .group-tabs :deep(.el-tabs__item:hover) {
+    color: var(--primary-color-dark-hover);
+}
+
+/* 暗色模式下的对话框样式 */
+[data-theme="dark"] :deep(.el-dialog) {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-dialog__header) {
+    border-bottom: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-dialog__title) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-dialog__body) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-dialog__footer) {
+    border-top: 1px solid var(--dark-border-color);
+}
+
+/* 暗色模式下的表单样式 */
+[data-theme="dark"] :deep(.el-form-item__label) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+    background-color: var(--dark-input-bg);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner) {
+    background-color: var(--dark-input-bg);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-select .el-input.is-focus .el-input__inner) {
+    border-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.hover, .el-select-dropdown__item:hover) {
+    background-color: var(--dark-bg-hover);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.selected) {
+    background-color: var(--primary-color-dark-transparent);
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-radio) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-radio__inner) {
+    background-color: var(--dark-bg-secondary);
+    border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-radio__input.is-checked .el-radio__inner) {
+    border-color: var(--primary-color-dark);
+    background-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-radio__label) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-radio__input.is-checked+.el-radio__label) {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-empty__description) {
+    color: var(--dark-text-secondary);
 }
 </style>

@@ -561,4 +561,100 @@ const showCreateGroupDialog = () => {
         display: flex !important;
     }
 }
+
+/* 暗色主题适配 */
+[data-theme="dark"] .navbar {
+    background-color: #1a1a1a !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .navbar.auth-page {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .logo h1 {
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item) {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item:hover),
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title) {
+    color: var(--primary-color) !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--popup) {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item) {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-bottom: none !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover) {
+    background-color: #333333 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item.is-active) {
+    background-color: #333333 !important;
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover) {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] :deep(.el-menu--popup .el-menu-item.is-active) {
+    background-color: rgba(64, 158, 255, 0.2) !important;
+    color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .notification-icon:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .bell-icon {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .avatar-wrapper:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .user-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .dropdown-icon {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu) {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333333 !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item) {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--primary-color) !important;
+}
 </style>

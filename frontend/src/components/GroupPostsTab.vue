@@ -990,4 +990,203 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     display: inline-block;
     text-align: left;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .group-posts-tab {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .post-actions {
+    background-color: #1a1a1a;
+}
+
+[data-theme="dark"] .post-item {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    color: #ffffff;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .post-item:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border-color: #409eff;
+}
+
+[data-theme="dark"] .author-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .author-name:hover {
+    color: #409eff;
+}
+
+[data-theme="dark"] .post-time {
+    color: #909399;
+}
+
+[data-theme="dark"] .post-title {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .post-body {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .post-footer {
+    border-top-color: #333333;
+}
+
+[data-theme="dark"] .post-comments {
+    background-color: #262626;
+    border: 1px solid #333333;
+}
+
+[data-theme="dark"] .comment-item {
+    border-bottom-color: #333333;
+}
+
+[data-theme="dark"] .comment-author-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .comment-time {
+    color: #909399;
+}
+
+[data-theme="dark"] .comment-content {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .comment-input {
+    border-top-color: #333333;
+}
+
+[data-theme="dark"] .login-tip {
+    color: #909399;
+}
+
+[data-theme="dark"] .post-content-section {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .content-label {
+    color: #ffffff;
+}
+
+/* 暗色模式下的 Markdown 内容样式 */
+[data-theme="dark"] :deep(.markdown-content) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.markdown-content h1),
+[data-theme="dark"] :deep(.markdown-content h2) {
+    border-bottom-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.markdown-content h3),
+[data-theme="dark"] :deep(.markdown-content h4) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.markdown-content blockquote) {
+    color: #a3a6ad;
+    border-left-color: #4c4d4f;
+}
+
+[data-theme="dark"] :deep(.markdown-content pre) {
+    background-color: #262626;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.markdown-content code) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.markdown-content table th),
+[data-theme="dark"] :deep(.markdown-content table td) {
+    border-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.markdown-content table tr:nth-child(2n)) {
+    background-color: #262626;
+}
+
+[data-theme="dark"] :deep(.markdown-content hr) {
+    background-color: #333333;
+}
+
+/* 暗色模式下的 Element Plus 组件 */
+[data-theme="dark"] :deep(.el-dropdown-menu) {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-empty__description) {
+    color: #909399;
+}
+
+[data-theme="dark"] :deep(.el-pagination) {
+    --el-pagination-button-color: #909399;
+    --el-pagination-button-bg-color: #262626;
+    --el-pagination-button-disabled-color: #6c6e72;
+    --el-pagination-button-disabled-bg-color: #1a1a1a;
+    --el-pagination-hover-color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-pagination .btn-prev, .el-pagination .btn-next) {
+    background-color: #262626;
+    color: #909399;
+}
+
+[data-theme="dark"] :deep(.el-dialog) {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+}
+
+[data-theme="dark"] :deep(.el-dialog__header) {
+    border-bottom-color: #333333;
+}
+
+[data-theme="dark"] :deep(.el-dialog__title) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-form-item__label) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-input__wrapper) {
+    background-color: #262626;
+    box-shadow: 0 0 0 1px #333333 inset;
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner) {
+    background-color: #262626;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner:focus) {
+    border-color: #409eff;
+}
 </style>

@@ -54,6 +54,8 @@ onMounted(() => {
 .app-main {
   position: relative;
   z-index: 1;
+  background-color: var(--background-color);
+  min-height: 100vh;
 }
 
 /* 响应式布局 */
@@ -61,6 +63,7 @@ onMounted(() => {
   .app-main {
     padding-top: 60px; /* 为移动端导航栏留出空间 */
     padding-bottom: 80px; /* 为底部导航栏留出空间 */
+    min-height: calc(100vh - 140px);
   }
 }
 
@@ -68,6 +71,7 @@ onMounted(() => {
   .app-main {
     padding-top: 56px; /* 更小屏幕的导航栏高度 */
     padding-bottom: 76px; /* 更小屏幕的底部导航高度 */
+    min-height: calc(100vh - 132px);
   }
 }
 
@@ -89,6 +93,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-color);
   color: var(--text-regular);
+}
+
+/* 暗色模式下的全局背景 */
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+[data-theme="dark"] #app,
+[data-theme="dark"] .app-container,
+[data-theme="dark"] .app-main {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
 }
 
 /* 移除默认样式 */

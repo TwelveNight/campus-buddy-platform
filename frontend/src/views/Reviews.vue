@@ -621,4 +621,147 @@ onMounted(() => {
         overflow-x: auto;
     }
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .reviews-page {
+    background-color: var(--dark-bg);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .reviews-header h1 {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .reviews-header h1 span {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .stat-card {
+    background-color: var(--dark-card-bg);
+    border-color: var(--dark-border-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .stat-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .stat-value {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .stat-label,
+[data-theme="dark"] .stat-detail {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .reviews-card {
+    background-color: var(--dark-card-bg);
+    border-color: var(--dark-border-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .reviews-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .title h2 {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .title :deep(svg) {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .filter-label {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .empty-tip {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-radio-button__inner) {
+    background-color: var(--dark-bg-secondary);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-radio-button__orig-radio:checked+.el-radio-button__inner) {
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+    color: var(--dark-text-on-primary);
+}
+
+[data-theme="dark"] :deep(.el-button--primary) {
+    background-color: var(--primary-color-dark);
+    border-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-button--primary.is-plain) {
+    background-color: transparent;
+    border-color: var(--primary-color-dark);
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-button--primary.is-plain:hover) {
+    background-color: var(--primary-color-dark);
+    color: var(--dark-text-on-primary);
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+    background-color: var(--dark-input-bg);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-input__inner:focus) {
+    border-color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown) {
+    background-color: var(--dark-card-bg);
+    border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item) {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.el-select-dropdown__item.hover, .el-select-dropdown__item:hover) {
+    background-color: var(--dark-bg-hover);
+}
+
+[data-theme="dark"] :deep(.el-popover) {
+    background-color: var(--dark-card-bg);
+    border-color: var(--dark-border-color);
+    color: var(--dark-text-primary);
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+    .reviews-filter {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-tabs {
+        width: 100%;
+        margin-bottom: 12px;
+    }
+
+    .reviews-filter .el-radio-group {
+        width: 100%;
+        display: flex;
+    }
+
+    .reviews-filter .el-radio-button {
+        flex: 1;
+    }
+
+    .filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
 </style>

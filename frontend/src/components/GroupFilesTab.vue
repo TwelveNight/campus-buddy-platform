@@ -527,4 +527,155 @@ const handleCurrentChange = (val: number) => {
 :deep(.el-upload-dragger) {
     width: 100%;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .group-files-tab {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .files-container {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .file-name-cell {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .file-name {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .file-icon {
+    color: #409eff;
+}
+
+[data-theme="dark"] .danger-item {
+    color: #f78989;
+}
+
+/* 暗色模式下的表格样式 */
+[data-theme="dark"] :deep(.el-table) {
+    --el-table-bg-color: #1a1a1a;
+    --el-table-tr-bg-color: #1a1a1a;
+    --el-table-header-bg-color: #262626;
+    --el-table-header-text-color: #ffffff;
+    --el-table-text-color: #ffffff;
+    --el-table-border-color: #333333;
+    --el-table-row-hover-bg-color: #2a2a2e;
+}
+
+[data-theme="dark"] :deep(.el-table th) {
+    background-color: #262626 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+[data-theme="dark"] :deep(.el-table td) {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+[data-theme="dark"] :deep(.el-table__body tr:hover > td) {
+    background-color: #2a2a2e !important;
+}
+
+[data-theme="dark"] :deep(.el-table__empty-block) {
+    background-color: #1a1a1a !important;
+}
+
+/* 暗色模式下的 Element Plus 组件 */
+[data-theme="dark"] :deep(.el-dropdown-menu) {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-empty__description) {
+    color: #909399;
+}
+
+[data-theme="dark"] :deep(.el-pagination) {
+    --el-pagination-button-color: #909399;
+    --el-pagination-button-bg-color: #262626;
+    --el-pagination-button-disabled-color: #6c6e72;
+    --el-pagination-button-disabled-bg-color: #1a1a1a;
+    --el-pagination-hover-color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-pagination .btn-prev, .el-pagination .btn-next) {
+    background-color: #262626;
+    color: #909399;
+}
+
+[data-theme="dark"] :deep(.el-dialog) {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+}
+
+[data-theme="dark"] :deep(.el-dialog__header) {
+    border-bottom-color: #333333;
+}
+
+[data-theme="dark"] :deep(.el-dialog__title) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-form-item__label) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-upload) {
+    border-color: #333333;
+}
+
+[data-theme="dark"] :deep(.el-upload-dragger) {
+    background-color: #262626;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-upload-dragger:hover) {
+    background-color: #2a2a2e;
+    border-color: #409eff;
+}
+
+[data-theme="dark"] :deep(.el-upload__text) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-upload__tip) {
+    color: #909399;
+}
+
+[data-theme="dark"] :deep(.el-input__wrapper) {
+    background-color: #262626;
+    box-shadow: 0 0 0 1px #333333 inset;
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner) {
+    background-color: #262626;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+[data-theme="dark"] :deep(.el-textarea__inner:focus) {
+    border-color: #409eff;
+}
 </style>

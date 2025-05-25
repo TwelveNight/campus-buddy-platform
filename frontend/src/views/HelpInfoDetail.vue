@@ -1299,4 +1299,205 @@ async function handleApplySuccess() {
   background-color: #e1e4e8;
   border: 0;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .helpinfo-detail-page {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .el-card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .card-header h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .publisher-info .user-link,
+[data-theme="dark"] .helper-info .user-link {
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .publisher-info .user-link:hover,
+[data-theme="dark"] .helper-info .user-link:hover {
+  color: var(--primary-color-light);
+}
+
+[data-theme="dark"] .description-section {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .description-title,
+[data-theme="dark"] .section-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .markdown-content {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .images-section {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .image-gallery {
+  background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .applications-section h3,
+[data-theme="dark"] .progress-section h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .message-content {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .action-buttons .el-button {
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .progress-info {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .application-form {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .form-title {
+  color: var(--text-primary);
+}
+
+/* 暗色模式下的 Markdown 内容样式 */
+[data-theme="dark"] :deep(.markdown-content h1),
+[data-theme="dark"] :deep(.markdown-content h2) {
+  border-bottom-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content h3),
+[data-theme="dark"] :deep(.markdown-content h4) {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content blockquote) {
+  color: var(--dark-text-secondary);
+  border-left-color: var(--dark-border-color);
+  background-color: var(--dark-bg-secondary);
+}
+
+[data-theme="dark"] :deep(.markdown-content pre) {
+  background-color: var(--dark-bg-secondary);
+  border: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.markdown-content code) {
+  background-color: var(--dark-code-bg);
+  color: var(--dark-code-text);
+}
+
+[data-theme="dark"] :deep(.markdown-content table) {
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.markdown-content th) {
+  background-color: var(--dark-bg-secondary);
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content td) {
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content a) {
+  color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.markdown-content a:hover) {
+  color: var(--primary-color-dark-hover);
+}
+
+[data-theme="dark"] :deep(.markdown-content hr) {
+  background-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.markdown-content img) {
+  filter: brightness(0.8);
+}
+
+/* 暗色模式下表格样式 */
+[data-theme="dark"] .el-table {
+  background-color: var(--dark-card-bg);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .el-table th.el-table__cell {
+  background-color: var(--dark-bg-secondary);
+  color: var(--dark-text-primary);
+  border-bottom-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] .el-table td.el-table__cell {
+  border-bottom-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] .el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background-color: var(--dark-bg-secondary);
+}
+
+[data-theme="dark"] .el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background-color: var(--dark-bg-hover);
+}
+
+/* 暗色模式下的描述组件 */
+[data-theme="dark"] .el-descriptions {
+  background-color: var(--dark-card-bg);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .el-descriptions__title {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .el-descriptions-item__label {
+  background-color: var(--dark-bg-secondary);
+  color: var(--dark-text-primary);
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] .el-descriptions-item__content {
+  border-color: var(--dark-border-color);
+}
+
+/* 暗色模式下的对话框 */
+[data-theme="dark"] .el-dialog {
+  background-color: var(--dark-card-bg);
+  border: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] .el-dialog__header {
+  border-bottom: 1px solid var(--dark-border-color);
+}
+
+[data-theme="dark"] .el-dialog__title {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .el-dialog__body {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .el-dialog__footer {
+  border-top: 1px solid var(--dark-border-color);
+}
 </style>

@@ -727,4 +727,64 @@ function navigateTo(path: string) {
         font-size: 1.8rem;
     }
 }
+
+/* 暗色主题适配 */
+.dark-theme .home-page {
+    background-color: var(--background-color);
+}
+
+.dark-theme .section-title {
+    color: var(--text-primary);
+}
+
+.dark-theme .feature-card {
+    background-color: var(--card-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .feature-card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .feature-card h3 {
+    color: var(--text-primary);
+}
+
+.dark-theme .feature-card p {
+    color: var(--text-secondary);
+}
+
+.dark-theme .modules-section {
+    background-color: var(--background-color);
+}
+
+.dark-theme .module-card {
+    background-color: var(--card-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .module-card h3 {
+    color: var(--text-primary);
+}
+
+.dark-theme .module-card p {
+    color: var(--text-secondary);
+}
+
+.dark-theme .guide-step {
+    background-color: var(--card-bg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme .guide-step h3 {
+    color: var(--text-primary);
+}
+
+.dark-theme .guide-step p {
+    color: var(--text-secondary);
+}
+
+.dark-theme .guide-arrow {
+    color: var(--text-secondary);
+}
 </style>
