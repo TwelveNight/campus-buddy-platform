@@ -11,6 +11,7 @@ import com.example.campusbuddy.mapper.NotificationMapper;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.NotificationVO;
+import com.example.campusbuddy.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setType(dto.getType());
         notification.setIsRead(false);
         save(notification);
+        
+        // 通过WebSocket发送实时通知
+        String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
+        WebSocketServer.sendNotification(
+            dto.getRecipientId(), 
+            dto.getTitle(), 
+            dto.getContent(), 
+            dto.getType(), 
+            relatedLink
+        );
+        
         return notification.getNotificationId();
     }
 
@@ -49,6 +61,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         notification.setType(dto.getType());
         notification.setIsRead(false);
         save(notification);
+        
+        // 通过WebSocket发送实时通知
+        String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
+        WebSocketServer.sendNotification(
+            dto.getRecipientId(), 
+            dto.getTitle(), 
+            dto.getContent(), 
+            dto.getType(), 
+            relatedLink
+        );
+        
         return notification.getNotificationId();
     }
 

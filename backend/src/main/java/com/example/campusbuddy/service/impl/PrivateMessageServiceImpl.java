@@ -11,6 +11,7 @@ import com.example.campusbuddy.mapper.PrivateMessageMapper;
 import com.example.campusbuddy.service.PrivateMessageService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.PrivateMessageVO;
+import com.example.campusbuddy.websocket.WebSocketServer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,19 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         message.setIsRead(false);
         
         save(message);
+        
+        // 通过WebSocket发送实时消息
+        User sender = userService.getById(senderId);
+        if (sender != null) {
+            WebSocketServer.sendPrivateMessage(
+                dto.getRecipientId(), 
+                senderId, 
+                sender.getNickname(), 
+                dto.getContent(), 
+                message.getMessageId()
+            );
+        }
+        
         return message.getMessageId();
     }
 
