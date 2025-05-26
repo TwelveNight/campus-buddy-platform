@@ -51,3 +51,8 @@ export function searchFriends(keyword: string, params?: {
 export function deleteFriend(userId: number) {
   return axios.delete(`/api/friend/${userId}`)
 }
+
+// 检查是否是好友
+export function checkFriendStatus(targetId: number) {
+  return axios.get(`/api/friend/check/${targetId}`)
+}

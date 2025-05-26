@@ -201,8 +201,10 @@ watch(
       activeTab.value = 'friends';
     }
     if (activeTab.value === 'requests') {
+      requestsPage.value = 1;
       loadFriendRequests();
     } else {
+      currentPage.value = 1;
       loadFriends();
     }
   }
@@ -248,9 +250,17 @@ const loadFriendRequests = async () => {
       size: pageSize.value
     });
     if (res.data.code === 200) {
-      console.log('好友申请列表:', res.data.data);
-      friendRequests.value = res.data.data || [];
-      totalRequests.value = res.data.data.total || 0;
+      // 兼容后端返回结构
+      if (res.data.data && Array.isArray(res.data.data.records)) {
+        friendRequests.value = res.data.data.records;
+        totalRequests.value = res.data.data.total || 0;
+      } else if (Array.isArray(res.data.data)) {
+        friendRequests.value = res.data.data;
+        totalRequests.value = res.data.data.length;
+      } else {
+        friendRequests.value = [];
+        totalRequests.value = 0;
+      }
     } else {
       ElMessage.error(res.data.message || '获取好友申请列表失败');
     }
@@ -269,8 +279,15 @@ const filterFriends = () => {
 
 // 切换标签时同步更新路由参数
 const handleTabChange = (tab: string) => {
+  if (tab === 'requests') {
+    requestsPage.value = 1;
+    loadFriendRequests();
+  } else {
+    currentPage.value = 1;
+    loadFriends();
+  }
   router.replace({
-    path: '/user/friends',
+    path: '/friends', // 修正为无 /user 前缀
     query: { ...route.query, tab }
   });
 };

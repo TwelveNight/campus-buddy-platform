@@ -316,92 +316,53 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     private String generateRelatedLink(String type, Long relatedId) {
         if (relatedId == null) {
             // 处理无需relatedId的类型
-            switch (type) {
-                case "FRIEND_REQUEST_ACCEPTED":
-                    return "/user/friends?tab=friends";
-                case "FRIEND_REQUEST":
-                    return "/user/friends?tab=requests";
-                case "FRIEND_REMOVED":
-                    return null; // 无法生成链接，可能需要其他处理
-                default:
-                    return null; // 无法生成链接，可能需要其他处理
-            }
+            return switch (type) {
+                case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED" -> "/friends?tab=friends";
+                case "FRIEND_REQUEST" -> "/friends?tab=requests";
+                default -> null; // 无法生成链接，可能需要其他处理
+            };
         }
-        
-        switch (type) {
-            case "SYSTEM_ANNOUNCEMENT":
-            case "SYSTEM_ACTIVITY":
-                return "/announcement/" + relatedId;
-                
-            case "HELP_NEW_APPLICATION":
-            case "HELP_APPLICATION_ACCEPTED":
-            case "HELP_APPLICATION_REJECTED":
-            case "HELP_COMPLETED":
-                return "/helpinfo/" + relatedId;
-                
-            case "HELP_NEW_REVIEW":
-                // 评价通知跳转到用户的评价页面，显示收到的评价
-                return "/reviews?type=received";
-                
-            case "GROUP_JOIN_APPLICATION":
-                return "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
-                
-            case "GROUP_JOIN_APPROVED":
-            case "GROUP_JOIN_REJECTED":
-            case "GROUP_INVITATION":
-            case "GROUP_ANNOUNCEMENT":
-            case "GROUP_ADMIN_ASSIGNED":
-                return "/groups/" + relatedId + "/detail";
 
-            case "FRIEND_REQUEST_ACCEPTED":
-                return "/friends?tab=friends";
-            case "FRIEND_REQUEST":
-                return "/friends?tab=requests";
-            default:
-                return null;
-        }
+        return switch (type) {
+            case "SYSTEM_ANNOUNCEMENT", "SYSTEM_ACTIVITY" -> "/announcement/" + relatedId;
+            case "HELP_NEW_APPLICATION", "HELP_APPLICATION_ACCEPTED", "HELP_APPLICATION_REJECTED", "HELP_COMPLETED" ->
+                    "/helpinfo/" + relatedId;
+            case "HELP_NEW_REVIEW" ->
+                // 评价通知跳转到用户的评价页面，显示收到的评价
+                    "/reviews?type=received";
+            case "GROUP_JOIN_APPLICATION" -> "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
+            case "GROUP_JOIN_APPROVED", "GROUP_JOIN_REJECTED", "GROUP_INVITATION", "GROUP_ANNOUNCEMENT",
+                 "GROUP_ADMIN_ASSIGNED" -> "/groups/" + relatedId + "/detail";
+            case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
+            case "FRIEND_REQUEST" -> "/friends?tab=requests";
+            default -> null;
+        };
     }
 
     /**
      * 根据通知类型和相关ID生成前端路由链接，支持senderId
      */
     private String generateRelatedLink(String type, Long relatedId, Long senderId) {
-        // 兼容老逻辑
-        if ("FRIEND_REMOVED".equals(type) && senderId != null) {
-            return "/user/" + senderId;
-        }
+
         if (relatedId == null) {
             // 处理无需relatedId的类型
-            switch (type) {
-                case "FRIEND_REQUEST_ACCEPTED":
-                    return "/friends?tab=friends";
-                case "FRIEND_REQUEST":
-                    return "/friends?tab=requests";
-                default:
-                    return null;
-            }
+            return switch (type) {
+                case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
+                case "FRIEND_REQUEST" -> "/friends?tab=requests";
+                default -> null;
+            };
         }
-        switch (type) {
-            case "SYSTEM_ANNOUNCEMENT":
-            case "SYSTEM_ACTIVITY":
-                return "/announcement/" + relatedId;
-            case "HELP_NEW_APPLICATION":
-            case "HELP_APPLICATION_ACCEPTED":
-            case "HELP_APPLICATION_REJECTED":
-            case "HELP_COMPLETED":
-                return "/helpinfo/" + relatedId;
-            case "HELP_NEW_REVIEW":
-                return "/reviews?type=received";
-            case "GROUP_JOIN_APPLICATION":
-                return "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
-            case "GROUP_JOIN_APPROVED":
-            case "GROUP_JOIN_REJECTED":
-            case "GROUP_INVITATION":
-            case "GROUP_ANNOUNCEMENT":
-            case "GROUP_ADMIN_ASSIGNED":
-                return "/groups/" + relatedId + "/detail";
-            default:
-                return null;
-        }
+        return switch (type) {
+            case "SYSTEM_ANNOUNCEMENT", "SYSTEM_ACTIVITY" -> "/announcement/" + relatedId;
+            case "HELP_NEW_APPLICATION", "HELP_APPLICATION_ACCEPTED", "HELP_APPLICATION_REJECTED", "HELP_COMPLETED" ->
+                    "/helpinfo/" + relatedId;
+            case "HELP_NEW_REVIEW" -> "/reviews?type=received";
+            case "GROUP_JOIN_APPLICATION" -> "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
+            case "GROUP_JOIN_APPROVED", "GROUP_JOIN_REJECTED", "GROUP_INVITATION", "GROUP_ANNOUNCEMENT",
+                 "GROUP_ADMIN_ASSIGNED" -> "/groups/" + relatedId + "/detail";
+            case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
+            case "FRIEND_REQUEST" -> "/friends?tab=requests";
+            default -> null;
+        };
     }
 }

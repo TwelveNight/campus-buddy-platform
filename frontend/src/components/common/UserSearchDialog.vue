@@ -41,6 +41,7 @@
                 size="small" 
                 @click="handleAction('message', user)"
                 plain
+                v-if="isFriend(user.userId)"
               >
                 <el-icon><ChatDotRound /></el-icon> 私信
               </el-button>
@@ -81,7 +82,7 @@ import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 import { ChatDotRound, Plus, Check, Search } from '@element-plus/icons-vue';
 import { searchUsers } from '../../api/user';
-import { applyFriend } from '../../api/friend';
+import { applyFriend, checkFriendStatus } from '../../api/friend';
 
 const emit = defineEmits(['select-user', 'message-user', 'add-friend']);
 const router = useRouter();
@@ -96,6 +97,7 @@ const pageSize = ref(10);
 const total = ref(0);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 const friendIds = ref<number[]>([]); // 存储当前用户的好友ID列表
+const friendStatusMap = ref<Record<number, boolean>>({}); // 记录每个用户的好友状态
 
 // 打开对话框
 const open = (options?: { friendIds?: number[] }) => {
@@ -103,6 +105,28 @@ const open = (options?: { friendIds?: number[] }) => {
   if (options?.friendIds) {
     friendIds.value = options.friendIds;
   }
+};
+
+// 检查单个用户是否为好友
+const checkIsFriend = async (userId: number) => {
+  if (friendStatusMap.value[userId] !== undefined) return friendStatusMap.value[userId];
+  try {
+    const res = await checkFriendStatus(userId);
+    if (res.data && typeof res.data.data?.isFriend === 'boolean') {
+      friendStatusMap.value[userId] = res.data.data.isFriend;
+      return res.data.data.isFriend;
+    }
+  } catch {}
+  friendStatusMap.value[userId] = false;
+  return false;
+};
+
+// 检查是否为好友（异步，优先本地缓存）
+const isFriend = (userId: number) => {
+  if (friendStatusMap.value[userId] !== undefined) return friendStatusMap.value[userId];
+  // 触发异步检查
+  checkIsFriend(userId);
+  return false;
 };
 
 // 搜索用户
@@ -123,6 +147,10 @@ const handleSearch = async () => {
     if (res.data.code === 200) {
       searchResults.value = res.data.data.records || [];
       total.value = res.data.data.total || 0;
+      // 批量检查好友状态
+      for (const user of searchResults.value) {
+        checkIsFriend(user.userId);
+      }
     } else {
       ElMessage.error(res.data.message || '搜索失败');
     }
@@ -138,11 +166,6 @@ const handleSearch = async () => {
 const handlePageChange = (page: number) => {
   currentPage.value = page;
   handleSearch();
-};
-
-// 检查是否为好友
-const isFriend = (userId: number) => {
-  return friendIds.value.includes(userId);
 };
 
 // 查看用户资料

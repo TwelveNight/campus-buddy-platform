@@ -15,14 +15,17 @@
           </div>
           <!-- 新增操作按钮 -->
           <div class="user-profile-actions" v-if="showActionButtons">
-            <el-button type="primary" size="small" @click="startPrivateChat">
+            <el-button type="primary" size="small" @click="startPrivateChat" v-if="isFriend">
               <el-icon><ChatDotRound /></el-icon> 发私信
             </el-button>
-            <el-button type="success" size="small" @click="addFriend" v-if="!isFriend">
+            <el-button type="success" size="small" @click="addFriend" v-if="!isFriend && friendRequestStatus !== 'PENDING_OUTGOING'">
               <el-icon><Plus /></el-icon> 加好友
             </el-button>
-            <el-tag v-else type="success" size="small">
+            <el-tag v-else-if="isFriend" type="success" size="small">
               <el-icon><Check /></el-icon> 已是好友
+            </el-tag>
+            <el-tag v-else-if="friendRequestStatus === 'PENDING_OUTGOING'" type="info" size="small">
+              <el-icon><Check /></el-icon> 已发送申请，等待对方处理
             </el-tag>
           </div>
         </div>
@@ -109,7 +112,7 @@ import { ElMessage } from 'element-plus';
 import ReviewList from '../../components/common/ReviewList.vue';
 import { getUserReviews } from '../../api/review';
 import { getUserById } from '../../api/user';
-import { applyFriend, getFriendList } from '../../api/friend';
+import { applyFriend, getFriendList, checkFriendStatus } from '../../api/friend';
 import { Star, User, List, ChatDotRound, Plus, Check } from '@element-plus/icons-vue';
 import { useAuthStore } from '../../store/auth';
 
@@ -138,7 +141,31 @@ const showActionButtons = computed(() => !isSelf.value && !!currentUserId.value)
 // 好友ID列表
 const friendIds = ref<number[]>([]);
 // 是否已是好友
-const isFriend = computed(() => friendIds.value.includes(userId.value));
+const isFriend = ref(false);
+// 好友请求状态
+const friendRequestStatus = ref<string | null>(null);
+
+// 检查是否为好友，并返回好友状态
+const checkIsFriend = async () => {
+  if (!currentUserId.value || !userId.value || isSelf.value) {
+    isFriend.value = false;
+    friendRequestStatus.value = null;
+    return;
+  }
+  try {
+    const res = await checkFriendStatus(userId.value);
+    if (res.data && typeof res.data.data?.isFriend === 'boolean') {
+      isFriend.value = res.data.data.isFriend;
+      friendRequestStatus.value = res.data.data.requestStatus || null;
+    } else {
+      isFriend.value = false;
+      friendRequestStatus.value = null;
+    }
+  } catch (e) {
+    isFriend.value = false;
+    friendRequestStatus.value = null;
+  }
+};
 
 // 加好友
 const addFriend = async () => {
@@ -146,12 +173,26 @@ const addFriend = async () => {
     const res = await applyFriend(userId.value);
     if (res.data.code === 200) {
       ElMessage.success('好友申请已发送');
-      await loadFriendIds();
+      await checkIsFriend();
     } else {
-      ElMessage.error(res.data.message || '发送好友申请失败');
+      // 针对已发送过申请的情况，后端会返回特定提示
+      if (res.data.message && res.data.message.includes('已发送过好友申请')) {
+        ElMessage.info('已发送过好友申请，请等待对方处理');
+      } else if (res.data.message && res.data.message.includes('已经是好友')) {
+        ElMessage.info('你们已经是好友，无需重复添加');
+      } else {
+        ElMessage.error(res.data.message || '发送好友申请失败');
+      }
     }
-  } catch (e) {
-    ElMessage.error('发送好友申请失败');
+  } catch (e: any) {
+    // 针对后端异常返回重复申请等
+    if (e?.response?.data?.message && e.response.data.message.includes('已发送过好友申请')) {
+      ElMessage.info('已发送过好友申请，请等待对方处理');
+    } else if (e?.response?.data?.message && e.response.data.message.includes('已经是好友')) {
+      ElMessage.info('你们已经是好友，无需重复添加');
+    } else {
+      ElMessage.error('发送好友申请失败');
+    }
   }
 };
 // 发起私聊
@@ -172,7 +213,7 @@ const loadFriendIds = async () => {
 onMounted(() => {
   fetchUserInfo();
   fetchUserReviews();
-  loadFriendIds();
+  checkIsFriend();
 });
 
 // 解析技能标签
@@ -286,7 +327,7 @@ watch(() => route.params.userId, (newUserId) => {
     userId.value = Number(newUserId);
     fetchUserInfo();
     fetchUserReviews();
-    loadFriendIds();
+    checkIsFriend();
   }
 }, { immediate: true });
 
@@ -295,7 +336,7 @@ watch(userId, (newId) => {
   console.log('用户ID变量发生变化：', newId);
   fetchUserInfo();
   fetchUserReviews();
-  loadFriendIds();
+  checkIsFriend();
 });
 </script>
 
