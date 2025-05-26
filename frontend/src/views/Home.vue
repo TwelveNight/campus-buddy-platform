@@ -3,31 +3,23 @@
         <!-- 英雄区域 -->
         <section class="hero-section">
             <div class="hero-content">
-                <h1>"学伴" <span>校园互助平台</span></h1>
-                <p class="hero-description">连接校园资源，互助共享，共同成长</p>
-                <p class="hero-sub-description">让校园生活更便捷，让学习之路更精彩</p>
+                <h1>学伴 <span>校园互助与成长平台</span></h1>
+                <p class="hero-description">让每一位同学都能在这里找到帮助、收获成长、结识伙伴</p>
+                <p class="hero-sub-description">互助 · 共享 · 进步 | 校园生活新方式</p>
                 <div class="cta-buttons">
                     <el-button type="primary" size="large" round @click="navigateTo('/helpinfo')">
-                        <el-icon>
-                            <Promotion />
-                        </el-icon>浏览互助任务
+                        <el-icon><Promotion /></el-icon>浏览互助任务
                     </el-button>
-                    <el-button size="large" round class="secondary-btn" @click="navigateTo('/helpinfo/publish')"
-                        v-if="authStore.isAuthenticated">
-                        <el-icon>
-                            <Edit />
-                        </el-icon>发布互助
+                    <el-button size="large" round class="secondary-btn" @click="navigateTo('/helpinfo/publish')" v-if="authStore.isAuthenticated">
+                        <el-icon><Edit /></el-icon>发布互助
                     </el-button>
-                    <el-button size="large" round class="accent-btn" @click="navigateTo('/groups?tab=all')"
-                        v-if="authStore.isAuthenticated">
-                        <el-icon>
-                            <UserFilled />
-                        </el-icon>学习小组
+                    <el-button size="large" round class="accent-btn" @click="navigateTo('/groups?tab=all')" v-if="authStore.isAuthenticated">
+                        <el-icon><UserFilled /></el-icon>学习小组
                     </el-button>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="../assets/vue.svg" alt="学伴" />
+                <img src="../assets/vue.svg" alt="学伴LOGO" />
                 <div class="floating-icon icon-1"><el-icon><ChatLineRound /></el-icon></div>
                 <div class="floating-icon icon-2"><el-icon><Files /></el-icon></div>
                 <div class="floating-icon icon-3"><el-icon><Trophy /></el-icon></div>
@@ -39,95 +31,65 @@
             <h2 class="section-title">平台特色</h2>
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">
-                        <el-icon>
-                            <Connection />
-                        </el-icon>
-                    </div>
-                    <h3>互助合作</h3>
-                    <p>发布求助、提供帮助，让校园互助更便捷</p>
+                    <div class="feature-icon"><el-icon><Connection /></el-icon></div>
+                    <h3>高效互助</h3>
+                    <p>一键发布/接收互助任务，涵盖学业、生活、技能等多场景</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon accent">
-                        <el-icon>
-                            <Trophy />
-                        </el-icon>
-                    </div>
+                    <div class="feature-icon accent"><el-icon><Trophy /></el-icon></div>
                     <h3>信用积分</h3>
-                    <p>完成互助任务获取积分，提升个人信用等级</p>
+                    <p>完成互助任务可获积分，积分提升个人信誉与特权</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon secondary">
-                        <el-icon>
-                            <ChatLineRound />
-                        </el-icon>
-                    </div>
+                    <div class="feature-icon secondary"><el-icon><ChatLineRound /></el-icon></div>
                     <h3>实时沟通</h3>
-                    <p>便捷的沟通工具，使互助过程更高效</p>
+                    <p>内置私信与群聊，沟通无障碍，协作更高效</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon tertiary">
-                        <el-icon>
-                            <Reading />
-                        </el-icon>
-                    </div>
+                    <div class="feature-icon tertiary"><el-icon><Reading /></el-icon></div>
                     <h3>学习小组</h3>
-                    <p>创建和加入学习小组，共同学习，共同进步</p>
+                    <p>组队学习、资料共享、共同进步，打造专属学习圈</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon quaternary">
-                        <el-icon>
-                            <Star />
-                        </el-icon>
-                    </div>
+                    <div class="feature-icon quaternary"><el-icon><Star /></el-icon></div>
                     <h3>评价反馈</h3>
-                    <p>完善的评价系统，为优质互助提供保障</p>
+                    <p>完善的互评体系，保障互助体验与平台健康</p>
                 </div>
             </div>
         </section>
 
         <!-- 平台功能区域 -->
         <section class="modules-section">
-            <h2 class="section-title">平台功能</h2>
+            <h2 class="section-title">核心功能</h2>
             <el-row :gutter="30" class="module-row">
                 <el-col :xs="24" :sm="12" :md="8">
                     <el-card class="module-card active" shadow="hover" @click="navigateTo('/helpinfo')">
-                        <el-icon class="module-icon primary">
-                            <Service />
-                        </el-icon>
+                        <el-icon class="module-icon primary"><Service /></el-icon>
                         <h3>校园互助</h3>
-                        <p>浏览和发布互助任务，包括课程辅导、技能交换、物品借用等</p>
+                        <p>浏览/发布互助任务，涵盖学业辅导、技能交换、生活互助等</p>
                         <div class="card-action">
-                            <el-button type="primary" text round>立即体验<el-icon>
-                                    <ArrowRight />
-                                </el-icon></el-button>
+                            <el-button type="primary" text round>立即体验<el-icon><ArrowRight /></el-icon></el-button>
                         </div>
                     </el-card>
                 </el-col>
                 <el-col :xs="24" :sm="12" :md="8">
                     <el-card class="module-card active" shadow="hover" @click="navigateTo('/groups?tab=all')">
-                        <el-icon class="module-icon secondary">
-                            <UserFilled />
-                        </el-icon>
+                        <el-icon class="module-icon secondary"><UserFilled /></el-icon>
                         <h3>学习小组</h3>
-                        <p>创建或加入学习小组，进行协作学习和讨论</p>
+                        <p>创建/加入小组，协作学习、资料共享、组队成长</p>
                         <div class="card-tag">
-                            <el-tag size="small" effect="dark" type="success">新上线</el-tag>
+                            <el-tag size="small" effect="dark" type="success">新功能</el-tag>
                         </div>
                         <div class="card-action">
-                            <el-button type="success" text round>立即体验<el-icon>
-                                    <ArrowRight />
-                                </el-icon></el-button>
+                            <el-button type="success" text round>立即体验<el-icon><ArrowRight /></el-icon></el-button>
                         </div>
                     </el-card>
                 </el-col>
                 <el-col :xs="24" :sm="12" :md="8">
                     <el-card class="module-card disabled" shadow="hover">
-                        <el-icon class="module-icon accent">
-                            <Files />
-                        </el-icon>
+                        <el-icon class="module-icon accent"><Files /></el-icon>
                         <h3>资源共享</h3>
-                        <p>分享和获取学习资料、二手物品等校园资源</p>
+                        <p>资料、二手物品等校园资源自由分享与获取</p>
                         <div class="card-tag">
                             <el-tag size="small" effect="dark" type="warning">即将上线</el-tag>
                         </div>
@@ -161,34 +123,34 @@
 
         <!-- 使用指南 -->
         <section class="guide-section">
-            <h2 class="section-title">使用指南</h2>
+            <h2 class="section-title">新手指南</h2>
             <div class="guide-container">
                 <div class="guide-step">
                     <div class="step-number">1</div>
                     <div class="step-icon"><el-icon><User /></el-icon></div>
-                    <h3>注册账号</h3>
-                    <p>简单注册，完善个人信息</p>
+                    <h3>注册/登录</h3>
+                    <p>快速注册，完善个人信息，开启互助之旅</p>
                 </div>
                 <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
                 <div class="guide-step">
                     <div class="step-number">2</div>
                     <div class="step-icon"><el-icon><Promotion /></el-icon></div>
-                    <h3>浏览信息</h3>
-                    <p>查看互助任务或学习小组</p>
+                    <h3>浏览/发布互助</h3>
+                    <p>查找你需要的帮助，或主动发布互助任务</p>
                 </div>
                 <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
                 <div class="guide-step">
                     <div class="step-number">3</div>
                     <div class="step-icon"><el-icon><ChatDotRound /></el-icon></div>
-                    <h3>互动交流</h3>
-                    <p>申请帮助或加入小组</p>
+                    <h3>沟通协作</h3>
+                    <p>与同学实时沟通，协作解决问题</p>
                 </div>
                 <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
                 <div class="guide-step">
                     <div class="step-number">4</div>
                     <div class="step-icon"><el-icon><Star /></el-icon></div>
-                    <h3>评价反馈</h3>
-                    <p>完成互助后进行评价</p>
+                    <h3>互评反馈</h3>
+                    <p>完成互助后互相评价，积累信用积分</p>
                 </div>
             </div>
         </section>
