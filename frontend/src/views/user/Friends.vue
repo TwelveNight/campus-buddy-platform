@@ -334,14 +334,14 @@ const confirmDeleteFriend = (friend: any) => {
       type: 'warning'
     }
   ).then(() => {
-    handleDeleteFriend(friend.userId);
+    handleDeleteFriend(friend.friendId); // 修正为传递 friendId
   }).catch(() => {});
 };
 
 // 删除好友
-const handleDeleteFriend = async (userId: number) => {
+const handleDeleteFriend = async (friendId: number) => { // 参数名修正
   try {
-    const res = await deleteFriend(userId);
+    const res = await deleteFriend(friendId); // 传递好友id
     if (res.data.code === 200) {
       ElMessage.success('已删除好友');
       loadFriends();

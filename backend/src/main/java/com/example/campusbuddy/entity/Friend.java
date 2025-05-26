@@ -1,6 +1,7 @@
 package com.example.campusbuddy.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -30,15 +31,18 @@ public class Friend implements Serializable {
     /**
      * 用户ID
      */
+    @TableField("user_id")
     private Long userId;
 
     /**
      * 好友ID
      */
+    @TableField("friend_id")
     private Long friendId;
 
     /**
      * 创建时间
      */
+    @TableField("created_at")
     private LocalDateTime createdAt;
 }
