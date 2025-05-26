@@ -406,6 +406,12 @@ const refreshUnreadMessageCount = async () => {
         const res = await getUnreadMessageCount();
         if (res.data.code === 200) {
             console.log('消息页面刷新未读消息数量:', res.data.data.count);
+            
+            // 更新导航栏中显示的未读消息数 - 触发自定义事件
+            const event = new CustomEvent('update-unread-message-count', { 
+                detail: { count: res.data.data.count } 
+            });
+            window.dispatchEvent(event);
         }
     } catch (error) {
         console.error('获取未读消息数量失败', error);
@@ -438,7 +444,14 @@ const handleNewMessage = (data: any) => {
         totalMessages.value++
         
         nextTick(scrollToBottom)
-        markAllChatAsRead()
+        
+        // 只有当前界面打开且处于活动状态时才自动标记为已读
+        if (document.visibilityState === 'visible' && route.path.includes('/messages/')) {
+            markAllChatAsRead()
+        } else {
+            // 当用户没有查看消息时，需要更新未读消息数量
+            refreshUnreadMessageCount();
+        }
     } else {
         // 刷新未读消息计数（如果不是当前聊天窗口）
         refreshUnreadMessageCount();
@@ -508,12 +521,29 @@ onMounted(() => {
             fetchUserAndCreateSession(userId)
         }
     }
+    
+    // 添加页面可见性变化事件监听
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 })
+
+// 处理页面可见性变化
+const handleVisibilityChange = () => {
+    // 当页面变为可见且在消息页面且有当前选中的聊天对象时，标记为已读
+    if (document.visibilityState === 'visible' && 
+        route.path.includes('/messages/') && 
+        currentChatUser.value && 
+        currentChatUser.value.unreadCount > 0) {
+        markAllChatAsRead();
+    }
+};
 
 // 组件卸载前的清理工作
 onBeforeUnmount(() => {
     // 离开消息页面时刷新一次未读消息数量
     refreshUnreadMessageCount();
+    
+    // 移除页面可见性变化事件监听
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 </script>
 
