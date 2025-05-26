@@ -2,11 +2,13 @@ package com.example.campusbuddy.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.common.R;
+import com.example.campusbuddy.dto.NotificationCreateDTO;
 import com.example.campusbuddy.entity.Group;
 import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.GroupService;
+import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.GroupPostVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +34,9 @@ public class AdminPostController {
     
     @Autowired
     private GroupService groupService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Operation(summary = "分页查询帖子（支持关键词、小组ID和状态）")
     @GetMapping("/page")
@@ -118,6 +123,20 @@ public class AdminPostController {
         }
         
         boolean ok = groupPostService.adminUpdatePostStatus(postId, status);
+        if (ok) {
+            // 获取帖子，通知作者
+            GroupPost post = groupPostService.getById(postId);
+            if (post != null && post.getAuthorId() != null) {
+                NotificationCreateDTO dto = new NotificationCreateDTO();
+                dto.setRecipientId(post.getAuthorId());
+                dto.setType("POST_STATUS");
+                dto.setTitle("帖子状态变更");
+                String statusText = "ACTIVE".equals(status) ? "启用" : "禁用";
+                dto.setContent("您的帖子(ID:" + postId + ")已被管理员" + statusText + "。");
+                dto.setRelatedId(postId);
+                notificationService.createUserNotification(dto);
+            }
+        }
         return ok ? R.ok("操作成功", null) : R.fail("操作失败");
     }
 
@@ -135,7 +154,19 @@ public class AdminPostController {
             return R.fail("权限不足，需要管理员权限");
         }
         
+        // 获取帖子，通知作者
+        GroupPost post = groupPostService.getById(postId);
+        Long authorId = post != null ? post.getAuthorId() : null;
         boolean ok = groupPostService.adminDeletePost(postId);
+        if (ok && authorId != null) {
+            NotificationCreateDTO dto = new NotificationCreateDTO();
+            dto.setRecipientId(authorId);
+            dto.setType("POST_DELETE");
+            dto.setTitle("帖子被删除");
+            dto.setContent("您的帖子(ID:" + postId + ")已被管理员删除。");
+            dto.setRelatedId(postId);
+            notificationService.createUserNotification(dto);
+        }
         return ok ? R.ok("删除成功", null) : R.fail("删除失败");
     }
 }

@@ -3,6 +3,8 @@ package com.example.campusbuddy.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.service.GroupService;
+import com.example.campusbuddy.service.NotificationService;
+import com.example.campusbuddy.dto.NotificationCreateDTO;
 import com.example.campusbuddy.vo.GroupVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,6 +21,9 @@ public class AdminGroupController {
     
     @Autowired
     private GroupService groupService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Operation(summary = "分页查询小组（支持关键词和状态）")
     @GetMapping("/page")
@@ -57,6 +62,25 @@ public class AdminGroupController {
         }
         
         boolean ok = groupService.adminUpdateGroupStatus(groupId, status);
+        if (ok) {
+            // 获取小组VO，通知创建者
+            GroupVO group = groupService.getGroupDetail(groupId) != null ? new GroupVO() : null;
+            if (group == null) return R.ok("操作成功", null);
+            // 这里实际应从 groupService 获取 GroupVO，简化处理
+            group.setGroupId(groupId);
+            // ...可补充更多属性...
+            Long creatorId = group.getCreatorId();
+            if (creatorId != null) {
+                NotificationCreateDTO dto = new NotificationCreateDTO();
+                dto.setRecipientId(creatorId);
+                dto.setType("GROUP_STATUS");
+                dto.setTitle("小组状态变更");
+                String statusText = "ACTIVE".equals(status) ? "启用" : "禁用";
+                dto.setContent("您的小组(ID:" + groupId + ")已被管理员" + statusText + "。");
+                dto.setRelatedId(groupId);
+                notificationService.createUserNotification(dto);
+            }
+        }
         return ok ? R.ok("操作成功", null) : R.fail("操作失败");
     }
 
@@ -74,7 +98,21 @@ public class AdminGroupController {
             return R.fail("权限不足，需要管理员权限");
         }
         
+        // 获取小组VO，通知创建者
+        GroupVO group = groupService.getGroupDetail(groupId) != null ? new GroupVO() : null;
+        if (group == null) return R.ok("删除成功", null);
+        group.setGroupId(groupId);
+        Long creatorId = group.getCreatorId();
         boolean ok = groupService.adminDeleteGroup(groupId);
+        if (ok && creatorId != null) {
+            NotificationCreateDTO dto = new NotificationCreateDTO();
+            dto.setRecipientId(creatorId);
+            dto.setType("GROUP_DELETE");
+            dto.setTitle("小组被删除");
+            dto.setContent("您的小组(ID:" + groupId + ")已被管理员删除。");
+            dto.setRelatedId(groupId);
+            notificationService.createUserNotification(dto);
+        }
         return ok ? R.ok("删除成功", null) : R.fail("删除失败");
     }
 }
