@@ -143,7 +143,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, reactive, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { User, Document, ChatDotRound, UserFilled } from '@element-plus/icons-vue'
@@ -165,6 +165,7 @@ import { LabelLayout, UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { getAdminOverview, getAdminUserStats, getAdminPostStats, getAdminGroupStats } from '@/api/adminDashboard'
 import { useAuthStore } from '@/store/auth'
+import { useUiStore } from '@/store/ui'
 
 // 注册必须的组件
 echarts.use([
@@ -184,6 +185,7 @@ echarts.use([
 
 const router = useRouter()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 const loading = ref(false)
 
 // 图表引用
@@ -225,30 +227,40 @@ const groupStats = reactive({
   groupTrend: [] as any[]
 })
 
+// 获取当前 ECharts 主题
+function getEchartsTheme() {
+  // 优先 data-theme 属性
+  if (document.documentElement.getAttribute('data-theme') === 'dark') return 'dark'
+  // 兼容 class 方案
+  if (document.documentElement.classList.contains('dark-theme')) return 'dark'
+  return 'default'
+}
+
 // 初始化图表
 function initCharts() {
+  const theme = getEchartsTheme()
   if (userStatusChartRef.value) {
-    userStatusChart = echarts.init(userStatusChartRef.value)
+    userStatusChart = echarts.init(userStatusChartRef.value, theme)
   }
   
   if (userRegistrationChartRef.value) {
-    userRegistrationChart = echarts.init(userRegistrationChartRef.value)
+    userRegistrationChart = echarts.init(userRegistrationChartRef.value, theme)
   }
   
   if (postStatusChartRef.value) {
-    postStatusChart = echarts.init(postStatusChartRef.value)
+    postStatusChart = echarts.init(postStatusChartRef.value, theme)
   }
   
   if (postTrendChartRef.value) {
-    postTrendChart = echarts.init(postTrendChartRef.value)
+    postTrendChart = echarts.init(postTrendChartRef.value, theme)
   }
   
   if (groupStatusChartRef.value) {
-    groupStatusChart = echarts.init(groupStatusChartRef.value)
+    groupStatusChart = echarts.init(groupStatusChartRef.value, theme)
   }
   
   if (groupTrendChartRef.value) {
-    groupTrendChart = echarts.init(groupTrendChartRef.value)
+    groupTrendChart = echarts.init(groupTrendChartRef.value, theme)
   }
 }
 
@@ -342,7 +354,7 @@ function updateCharts() {
   
   if (postStatusChart) {
     const statusMap: Record<string, string> = {
-      'ACTIVE': '正常',
+      'PUBLISHED': '正常',
       'INACTIVE': '未激活',
       'BLOCKED': '已屏蔽',
       'DELETED': '已删除'
@@ -428,9 +440,8 @@ function updateCharts() {
   if (groupStatusChart) {
     const statusMap: Record<string, string> = {
       'ACTIVE': '正常',
-      'PENDING': '待审核',
-      'BLOCKED': '已屏蔽',
-      'ARCHIVED': '已归档'
+      'INACTIVE': '未激活',
+      'DISBANDED': '已解散'
     }
     
     const chartData = groupStats.statusCounts.map(item => {
@@ -510,6 +521,23 @@ function updateCharts() {
     })
   }
 }
+
+// 监听暗色模式切换，自动切换 ECharts 主题
+watch(
+  () => document.documentElement.getAttribute('data-theme'),
+  async (theme) => {
+    // 销毁并延迟重建，避免 ECharts dom 冲突
+    userStatusChart?.dispose()
+    userRegistrationChart?.dispose()
+    postStatusChart?.dispose()
+    postTrendChart?.dispose()
+    groupStatusChart?.dispose()
+    groupTrendChart?.dispose()
+    await nextTick()
+    initCharts()
+    updateCharts()
+  }
+)
 
 // 窗口大小变化时重新调整图表大小
 function handleResize() {
@@ -627,7 +655,6 @@ onUnmounted(() => {
 .admin-dashboard {
   max-width: 1200px;
   margin: 30px auto;
-  padding: 0 20px;
 }
 
 .card-header {
@@ -643,104 +670,114 @@ onUnmounted(() => {
 }
 
 [data-theme="dark"] .card-header h2 {
-  color: #e5eaf3;
+  color: #fff;
 }
 
 .overview-cards {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
 
 .overview-card {
-  height: 120px;
-  transition: all 0.3s;
+  border-radius: 12px;
+  transition: box-shadow 0.2s;
+  background: #fff;
+  border: 1px solid #f0f0f0;
 }
 
 .overview-card:hover {
-  transform: translateY(-5px);
+  box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.08);
 }
 
 .card-header-small {
-  font-size: 16px;
-  font-weight: bold;
-  color: #606266;
+  font-size: 15px;
+  font-weight: 500;
+  color: #666;
 }
 
 .overview-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 60px;
-}
-
-.users-card {
-  border-top: 4px solid #409eff;
-}
-
-.posts-card {
-  border-top: 4px solid #67c23a;
-}
-
-.comments-card {
-  border-top: 4px solid #e6a23c;
-}
-
-.groups-card {
-  border-top: 4px solid #f56c6c;
+  color: #409eff;
+  margin-top: 10px;
 }
 
 .data-section {
-  margin-bottom: 30px;
+  margin-bottom: 36px;
+  background: #f8fafd;
+  border-radius: 10px;
+  padding: 18px 20px 10px 20px;
+  box-shadow: 0 1px 6px 0 rgba(60, 60, 60, 0.04);
 }
 
 .data-section h3 {
   font-size: 18px;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #ebeef5;
-  color: #303133;
+  color: #409eff;
+  font-weight: 600;
+  margin-bottom: 18px;
 }
 
 .chart-container {
-  background-color: #fff;
-  border-radius: 4px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  height: 300px;
+  background: #fff;
+  border-radius: 10px;
+  padding: 18px 10px 10px 10px;
+  margin-bottom: 18px;
+  min-height: 340px;
+  box-shadow: 0 1px 6px 0 rgba(60, 60, 60, 0.04);
 }
 
 .chart-container h4 {
-  margin-top: 0;
-  margin-bottom: 15px;
   font-size: 16px;
-  color: #606266;
+  color: #222;
+  font-weight: 500;
+  margin-bottom: 10px;
 }
 
 .chart {
-  height: 250px;
   width: 100%;
+  height: 260px;
 }
 
-/* 深色主题适配 */
+/* 暗色模式适配 */
+[data-theme="dark"] .el-card,
+[data-theme="dark"] .overview-card {
+  background: #232326 !important;
+  border-color: #333 !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .overview-value {
+  color: #6cb4ff;
+}
 [data-theme="dark"] .card-header-small {
-  color: #a3a6ad;
+  color: #bbb;
 }
-
+[data-theme="dark"] .data-section {
+  background: #18181c !important;
+  color: #fff !important;
+  box-shadow: 0 1px 8px 0 rgba(0,0,0,0.18);
+}
 [data-theme="dark"] .data-section h3 {
-  color: #e5eaf3;
-  border-bottom-color: #363637;
+  color: #6cb4ff;
 }
-
 [data-theme="dark"] .chart-container {
-  background-color: #1d1e1f;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+  background: #232326 !important;
+  color: #fff !important;
+  box-shadow: 0 1px 8px 0 rgba(0,0,0,0.18);
+}
+[data-theme="dark"] .chart-container h4 {
+  color: #fff;
+}
+[data-theme="dark"] .el-statistic {
+  color: #fff !important;
+}
+[data-theme="dark"] .el-row,
+[data-theme="dark"] .el-col {
+  background: transparent !important;
+}
+[data-theme="dark"] .chart {
+  background: transparent !important;
 }
 
-[data-theme="dark"] .chart-container h4 {
-  color: #a3a6ad;
-}
+/* ECharts 图表暗色适配建议：可在 updateCharts 里设置 theme: 'dark'，或在全局注册时设置。 */
 
 /* 响应式适配 */
 @media (max-width: 768px) {
