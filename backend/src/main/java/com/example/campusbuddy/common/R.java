@@ -87,6 +87,23 @@ public class R<T> {
     }
 
     /**
+     * 操作失败返回结果（带数据）
+     * 
+     * @param code    状态码
+     * @param message 失败消息
+     * @param data    返回数据
+     * @param <T>     数据类型
+     * @return 响应结果
+     */
+    public static <T> R<T> fail(int code, String message, T data) {
+        R<T> r = new R<>();
+        r.setCode(code);
+        r.setMessage(message);
+        r.setData(data);
+        return r;
+    }
+
+    /**
      * 未授权返回结果
      * 
      * @param <T> 数据类型

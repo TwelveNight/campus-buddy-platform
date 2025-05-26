@@ -36,27 +36,58 @@
               </div>
             </div>
             <div class="user-actions">
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="handleAction('message', user)"
-                plain
-                v-if="isFriend(user.userId)"
-              >
-                <el-icon><ChatDotRound /></el-icon> 私信
-              </el-button>
-              <el-button 
-                type="success" 
-                size="small" 
-                @click="handleAction('friend', user)"
-                plain
-                v-if="!isFriend(user.userId)"
-              >
-                <el-icon><Plus /></el-icon> 加好友
-              </el-button>
-              <el-tag v-else type="success" size="small">
-                <el-icon><Check /></el-icon> 已是好友
-              </el-tag>
+              <!-- 自己不显示任何按钮 -->
+              <template v-if="user.userId === currentUserId">
+                <el-tag type="info" size="small">
+                  <el-icon><UserFilled /></el-icon> 这是您自己
+                </el-tag>
+              </template>
+              
+              <!-- 已是好友显示私信按钮 -->
+              <template v-else-if="isFriend(user.userId)">
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  @click="handleAction('message', user)"
+                  plain
+                >
+                  <el-icon><ChatDotRound /></el-icon> 私信
+                </el-button>
+                <el-tag type="success" size="small">
+                  <el-icon><Check /></el-icon> 已是好友
+                </el-tag>
+              </template>
+              
+              <!-- 已发送申请等待处理 -->
+              <template v-else-if="getRequestStatus(user.userId) === 'PENDING_OUTGOING'">
+                <el-tag type="warning" size="small">
+                  <el-icon><Timer /></el-icon> 已发送申请，等待处理
+                </el-tag>
+              </template>
+              
+              <!-- 收到对方申请等待自己处理 -->
+              <template v-else-if="getRequestStatus(user.userId) === 'PENDING_INCOMING'">
+                <el-button 
+                  type="warning" 
+                  size="small" 
+                  @click="handleFriendRequest(user.userId)"
+                  plain
+                >
+                  <el-icon><Timer /></el-icon> 收到申请，去处理
+                </el-button>
+              </template>
+              
+              <!-- 其他情况显示加好友按钮 -->
+              <template v-else>
+                <el-button 
+                  type="success" 
+                  size="small" 
+                  @click="handleAction('friend', user)"
+                  plain
+                >
+                  <el-icon><Plus /></el-icon> 加好友
+                </el-button>
+              </template>
             </div>
           </div>
           
@@ -77,15 +108,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineExpose, defineEmits } from 'vue';
+import { ref, defineExpose, defineEmits, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
-import { ChatDotRound, Plus, Check, Search } from '@element-plus/icons-vue';
-import { searchUsers } from '../../api/user';
+import { ChatDotRound, Plus, Check, Search, Timer, UserFilled } from '@element-plus/icons-vue';
+import { searchUsers, getUserInfo } from '../../api/user';
 import { applyFriend, checkFriendStatus } from '../../api/friend';
+import { useAuthStore } from '../../store/auth';
 
 const emit = defineEmits(['select-user', 'message-user', 'add-friend']);
 const router = useRouter();
+const authStore = useAuthStore();
 
 // 状态
 const dialogVisible = ref(false);
@@ -98,6 +131,10 @@ const total = ref(0);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 const friendIds = ref<number[]>([]); // 存储当前用户的好友ID列表
 const friendStatusMap = ref<Record<number, boolean>>({}); // 记录每个用户的好友状态
+const requestStatusMap = ref<Record<number, string>>({}); // 记录好友申请状态
+
+// 当前登录用户ID
+const currentUserId = computed(() => authStore.user?.userId);
 
 // 打开对话框
 const open = (options?: { friendIds?: number[] }) => {
@@ -109,11 +146,18 @@ const open = (options?: { friendIds?: number[] }) => {
 
 // 检查单个用户是否为好友
 const checkIsFriend = async (userId: number) => {
+  // 如果是自己，直接返回false
+  if (userId === currentUserId.value) return false;
+  
   if (friendStatusMap.value[userId] !== undefined) return friendStatusMap.value[userId];
   try {
     const res = await checkFriendStatus(userId);
     if (res.data && typeof res.data.data?.isFriend === 'boolean') {
       friendStatusMap.value[userId] = res.data.data.isFriend;
+      // 保存申请状态
+      if (res.data.data.requestStatus) {
+        requestStatusMap.value[userId] = res.data.data.requestStatus;
+      }
       return res.data.data.isFriend;
     }
   } catch {}
@@ -127,6 +171,11 @@ const isFriend = (userId: number) => {
   // 触发异步检查
   checkIsFriend(userId);
   return false;
+};
+
+// 获取好友申请状态
+const getRequestStatus = (userId: number) => {
+  return requestStatusMap.value[userId] || 'NONE';
 };
 
 // 搜索用户
@@ -188,17 +237,52 @@ const handleAction = (type: 'message' | 'friend', user: any) => {
 // 添加好友
 const addFriend = async (user: any) => {
   try {
+    // 先检查是否已经是好友或已发送申请
+    const status = getRequestStatus(user.userId);
+    if (status === 'PENDING_OUTGOING') {
+      ElMessage.info(`已向${user.nickname || user.username}发送过好友申请，请等待对方处理`);
+      return;
+    }
+    
+    if (isFriend(user.userId)) {
+      ElMessage.info(`你们已经是好友，无需重复添加`);
+      return;
+    }
+    
     const res = await applyFriend(user.userId);
     if (res.data.code === 200) {
       ElMessage.success(`已向${user.nickname || user.username}发送好友申请`);
+      // 更新申请状态
+      requestStatusMap.value[user.userId] = 'PENDING_OUTGOING';
       emit('add-friend', user);
     } else {
-      ElMessage.error(res.data.message || '发送好友申请失败');
+      // 根据后端返回状态处理不同情况
+      if (res.data.data && res.data.data.status) {
+        const status = res.data.data.status;
+        if (status === 'ALREADY_FRIEND') {
+          friendStatusMap.value[user.userId] = true;
+          ElMessage.info(`你们已经是好友，无需重复添加`);
+        } else if (status === 'ALREADY_APPLIED') {
+          requestStatusMap.value[user.userId] = 'PENDING_OUTGOING';
+          ElMessage.info(`已向${user.nickname || user.username}发送过好友申请，请等待对方处理`);
+        } else {
+          ElMessage.error(res.data.message || '发送好友申请失败');
+        }
+      } else {
+        ElMessage.error(res.data.message || '发送好友申请失败');
+      }
     }
   } catch (error) {
     console.error('添加好友出错:', error);
     ElMessage.error('发送好友申请失败，请稍后重试');
   }
+};
+
+// 处理好友申请
+const handleFriendRequest = (userId: number) => {
+  // 跳转到好友管理页面处理申请
+  router.push(`/friends?tab=requests`);
+  dialogVisible.value = false;
 };
 
 // 重置搜索

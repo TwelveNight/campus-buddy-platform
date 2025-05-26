@@ -166,10 +166,11 @@ const handleWebSocketNotification = (data: any) => {
 const handleWebSocketMessage = (data: any) => {
     if (!data || data.type !== 'PRIVATE_MESSAGE') return;
     
-    // 更新未读消息计数
+    // 仅更新未读消息计数，不显示弹窗
     fetchUnreadMessageCount();
 
-    // 注意：声音通知已移除以解决兼容性问题
+    // 在这里不进行任何通知弹窗，避免重复通知
+    // 消息弹窗由具体消息页面处理
 };
 
 // 初始化WebSocket连接

@@ -26,7 +26,7 @@ public class FriendController {
     
     @Operation(summary = "发送好友申请")
     @PostMapping("/apply")
-    public R<Long> applyFriend(HttpServletRequest request, @RequestBody FriendRequestDTO dto) {
+    public R<Map<String, Object>> applyFriend(HttpServletRequest request, @RequestBody FriendRequestDTO dto) {
         Long userId = (Long) request.getAttribute("userId");
         if (userId == null) {
             return R.fail(ResultCode.UNAUTHORIZED, "未登录");
@@ -34,9 +34,26 @@ public class FriendController {
         
         try {
             Long requestId = friendService.applyFriend(userId, dto);
-            return R.ok("好友申请发送成功", requestId);
+            Map<String, Object> data = Map.of(
+                "requestId", requestId,
+                "status", "SUCCESS"
+            );
+            return R.ok("好友申请发送成功", data);
         } catch (Exception e) {
-            return R.fail(e.getMessage());
+            String msg = e.getMessage();
+            String status = "ERROR";
+            
+            // 根据异常消息判断具体状态
+            if (msg != null) {
+                if (msg.contains("已经是好友") || msg.contains("已是好友")) {
+                    status = "ALREADY_FRIEND";
+                } else if (msg.contains("已发送过好友申请") || msg.contains("已申请")) {
+                    status = "ALREADY_APPLIED";
+                }
+            }
+            
+            Map<String, Object> data = Map.of("status", status);
+            return R.fail(ResultCode.BAD_REQUEST, msg, data);
         }
     }
     
@@ -151,9 +168,28 @@ public class FriendController {
         boolean isFriend = friendService.isFriend(userId, targetId);
         String requestStatus = friendService.getFriendRequestStatus(userId, targetId);
         
+        // 标准化 requestStatus
+        String normalizedStatus = "NONE";
+        if (isFriend) {
+            normalizedStatus = "ACCEPTED";
+        } else if (requestStatus != null) {
+            if (requestStatus.contains("PENDING") || requestStatus.contains("待处理")) {
+                // 判断是自己发出的还是收到的
+                if (requestStatus.contains("OUTGOING") || requestStatus.contains("发出")) {
+                    normalizedStatus = "PENDING_OUTGOING";
+                } else if (requestStatus.contains("INCOMING") || requestStatus.contains("收到")) {
+                    normalizedStatus = "PENDING_INCOMING";
+                } else {
+                    normalizedStatus = "PENDING_OUTGOING"; // 默认为发出
+                }
+            } else if (requestStatus.contains("REJECTED") || requestStatus.contains("拒绝")) {
+                normalizedStatus = "REJECTED";
+            }
+        }
+        
         return R.ok("获取好友状态成功", Map.of(
                 "isFriend", isFriend,
-                "requestStatus", requestStatus
+                "requestStatus", normalizedStatus
         ));
     }
 }
