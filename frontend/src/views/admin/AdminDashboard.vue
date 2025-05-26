@@ -525,7 +525,7 @@ function updateCharts() {
 // 监听暗色模式切换，自动切换 ECharts 主题
 watch(
   () => document.documentElement.getAttribute('data-theme'),
-  async (theme) => {
+  async (_newTheme) => { // 使用 _newTheme 表示该参数未使用
     // 销毁并延迟重建，避免 ECharts dom 冲突
     userStatusChart?.dispose()
     userRegistrationChart?.dispose()

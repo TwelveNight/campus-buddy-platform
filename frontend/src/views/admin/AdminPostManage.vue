@@ -57,7 +57,14 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="authorNickname" label="作者" width="120"></el-table-column>
+        <el-table-column label="作者" width="120">
+          <template #default="scope">
+            <router-link :to="`/user/${scope.row.authorId}`" class="author-link" v-if="scope.row.authorId">
+              {{ scope.row.authorName }}
+            </router-link>
+            <span v-else>{{ scope.row.authorName || '未知作者' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="createdAt" label="发布时间" width="180">
           <template #default="scope">
             {{ formatDate(scope.row.createdAt) }}
@@ -114,7 +121,12 @@
       <div class="post-detail-dialog" v-if="currentPost">
         <h3 class="post-title">{{ currentPost.title }}</h3>
         <div class="post-meta">
-          <span>作者: {{ currentPost.authorNickname }}</span>
+          <span>作者: 
+            <router-link :to="`/user/${currentPost.authorId}`" class="author-link" v-if="currentPost.authorId">
+              {{ currentPost.authorName }}
+            </router-link>
+            <span v-else>{{ currentPost.authorName || '未知作者' }}</span>
+          </span>
           <span>发布时间: {{ formatDate(currentPost.createdAt) }}</span>
           <span>状态: 
             <el-tag :type="getStatusType(currentPost.status)">
@@ -471,12 +483,12 @@ function getStatusType(status: string) {
   flex-wrap: wrap;
 }
 
-.post-title-link, .group-link {
+.post-title-link, .group-link, .author-link {
   color: #409EFF;
   text-decoration: none;
 }
 
-.post-title-link:hover, .group-link:hover {
+.post-title-link:hover, .group-link:hover, .author-link:hover {
   text-decoration: underline;
 }
 

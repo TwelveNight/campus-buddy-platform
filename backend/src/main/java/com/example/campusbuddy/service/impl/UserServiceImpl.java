@@ -18,7 +18,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Service
@@ -204,24 +207,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public Page<UserVO> adminPageUsers(Integer page, Integer size, String keyword, String status) {
-        Page<User> userPage = new Page<>(page, size);
-        QueryWrapper<User> query = new QueryWrapper<>();
-        if (keyword != null && !keyword.isEmpty()) {
-            query.like("username", keyword)
-                .or().like("nickname", keyword)
-                .or().like("email", keyword);
+    public Page<UserVO> adminPageUsers(Integer pageNum, Integer pageSize, String keyword, String status) {
+        Page<User> userPage = new Page<>(pageNum, pageSize);
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like("username", keyword)
+                    .or()
+                    .like("nickname", keyword)
+                    .or()
+                    .like("contact_info", keyword)); // Changed from email to contact_info
         }
-        if (status != null && !status.isEmpty()) {
-            query.eq("status", status);
+
+        if (status != null && !status.trim().isEmpty()) {
+            queryWrapper.eq("status", status);
         }
-        Page<User> result = this.page(userPage, query);
-        Page<UserVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        queryWrapper.orderByDesc("created_at");
+
+        Page<User> resultPage = this.page(userPage, queryWrapper);
+
+        Page<UserVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
         List<UserVO> voList = new ArrayList<>();
-        for (User user : result.getRecords()) {
+        for (User user : resultPage.getRecords()) {
             UserVO vo = new UserVO();
             BeanUtils.copyProperties(user, vo);
-            vo.setRoles(userRoleService.getUserRoles(user.getUserId()));
+            List<String> roles = userRoleService.getUserRoles(user.getUserId());
+            vo.setRoles(roles);
             voList.add(vo);
         }
         voPage.setRecords(voList);
@@ -229,6 +241,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public boolean adminUpdateUserStatus(Long userId, String status) {
         User user = this.getById(userId);
         if (user == null) return false;
@@ -237,14 +250,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public String adminResetPassword(Long userId) {
         User user = this.getById(userId);
-        if (user == null) throw new IllegalArgumentException("用户不存在");
-        String newPwd = "U" + userId + ((int)(Math.random()*9000)+1000);
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        user.setPasswordHash(encoder.encode(newPwd));
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+        // 生成一个随机的新密码
+        String newPassword = generateRandomPassword(8);
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         this.updateById(user);
-        // TODO: 可通过邮件通知用户新密码
-        return newPwd;
+        return newPassword;
+    }
+
+    private String generateRandomPassword(int length) {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[length]; // 生成更短的字节数组以获得更短的Base64字符串
+        random.nextBytes(bytes);
+        // 使用URL和文件名安全的Base64编码，并移除填充字符'='
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes).substring(0, length);
     }
 }
