@@ -267,14 +267,26 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
         LambdaQueryWrapper<Friend> wrapper1 = new LambdaQueryWrapper<>();
         wrapper1.eq(Friend::getUserId, userId)
                 .eq(Friend::getFriendId, friendId);
-        
         LambdaQueryWrapper<Friend> wrapper2 = new LambdaQueryWrapper<>();
         wrapper2.eq(Friend::getUserId, friendId)
                 .eq(Friend::getFriendId, userId);
-        
         boolean result1 = this.remove(wrapper1);
         boolean result2 = this.remove(wrapper2);
-        
+
+        // 发送通知给被删除的好友
+        if (result1 && result2) {
+            UserVO user = userService.getUserVOById(userId);
+            Notification notification = new Notification();
+            notification.setRecipientId(friendId);
+            notification.setSenderId(userId);
+            notification.setType("FRIEND_REMOVED"); // 你需要在前端加上该类型的展示
+            notification.setTitle("好友关系已解除");
+            notification.setContent((user != null ? user.getNickname() : "对方") + "已将你移除好友");
+            notification.setIsRead(false);
+            notification.setCreatedAt(LocalDateTime.now());
+            notification.setUpdatedAt(LocalDateTime.now());
+            notificationService.save(notification);
+        }
         return result1 && result2;
     }
     

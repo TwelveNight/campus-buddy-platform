@@ -147,9 +147,10 @@ const getTypeTagType = (type: string) => {
         'GROUP_INVITATION': 'primary',
         'GROUP_ANNOUNCEMENT': 'warning',
         'GROUP_ADMIN_ASSIGNED': 'success',
-        'FRIEND_REQUEST': 'primary',
+        'FRIEND_REQUEST': 'primary', 
         'FRIEND_REQUEST_ACCEPTED': 'success',
         'FRIEND_REQUEST_REJECTED': 'danger',
+        'FRIEND_REMOVED': 'danger',
     }
     return typeMap[type] || 'info'
 }
@@ -173,6 +174,7 @@ const getTypeLabel = (type: string) => {
         'FRIEND_REQUEST': '好友申请',
         'FRIEND_REQUEST_ACCEPTED': '申请通过',
         'FRIEND_REQUEST_REJECTED': '申请拒绝',
+        'FRIEND_REMOVED': '好友移除',
     }
     return typeMap[type] || type
 }
