@@ -48,6 +48,11 @@
                     <el-empty v-if="messages.length === 0 && !messagesLoading" description="暂无消息记录" />
                     <el-skeleton :rows="3" animated v-if="messagesLoading" :count="3" />
                     <template v-else>
+                        <div v-if="hasMoreMessages" class="load-more-messages">
+                            <el-button type="text" @click="loadMoreMessages" :loading="loadingMoreMessages">
+                                加载更多消息
+                            </el-button>
+                        </div>
                         <div v-for="message in messages" :key="message.messageId" class="message-item" :class="{
                             'message-self': message.senderId === currentUserId,
                             'message-other': message.senderId !== currentUserId
@@ -81,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, nextTick, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 // import { Search } from '@element-plus/icons-vue'
@@ -93,7 +98,8 @@ import {
     getChatSessions,
     getChatHistory,
     sendPrivateMessage,
-    markAllMessagesAsRead
+    markAllMessagesAsRead,
+    getUnreadMessageCount
 } from '@/api/message'
 import type { ChatSession, ChatMessage } from '@/types/message'
 import webSocketService from '@/utils/websocket'
@@ -111,10 +117,13 @@ const currentChatUser = ref<ChatSession | null>(null)
 const messageContent = ref('')
 const sessionsLoading = ref(false)
 const messagesLoading = ref(false)
+const loadingMoreMessages = ref(false)
 const searchKeyword = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(20)
+const totalMessages = ref(0)
+const hasMoreMessages = ref(false)
 const defaultAvatar = ref('/avatar-placeholder.png')
 
 // 当前用户信息
@@ -218,22 +227,41 @@ const fetchChatHistory = async () => {
 
     messagesLoading.value = true
     try {
-        const res = await getChatHistory(currentChatUser.value.userId, {
-            page: currentPage.value,
-            size: pageSize.value
+        // 先获取总消息数，以便获取最新的消息
+        const totalResponse = await getChatHistory(currentChatUser.value.userId, {
+            page: 1,
+            size: 1 // 只查询一条来获取总数
         })
-        if (res.data.code === 200) {
-            messages.value = res.data.data.records || []
+        
+        if (totalResponse.data.code === 200) {
+            totalMessages.value = totalResponse.data.data.total
+            // 计算包含最新消息的页码
+            const latestPage = Math.max(1, Math.ceil(totalMessages.value / pageSize.value))
+            
+            // 获取最新的消息
+            const res = await getChatHistory(currentChatUser.value.userId, {
+                page: latestPage, // 使用计算出的最新页码
+                size: pageSize.value
+            })
+            
+            if (res.data.code === 200) {
+                messages.value = res.data.data.records || []
+                // 记录当前页码，便于后续加载更多旧消息
+                currentPage.value = latestPage
+                
+                // 检查是否还有更多历史消息可以加载
+                hasMoreMessages.value = currentPage.value > 1
 
-            // 更新会话中的未读数
-            const index = sessions.value.findIndex(s => currentChatUser.value && s.userId === currentChatUser.value.userId)
-            if (index !== -1) {
-                sessions.value[index].unreadCount = 0
+                // 更新会话中的未读数
+                const index = sessions.value.findIndex(s => currentChatUser.value && s.userId === currentChatUser.value.userId)
+                if (index !== -1) {
+                    sessions.value[index].unreadCount = 0
+                }
+
+                // 滚动到底部
+                await nextTick()
+                scrollToBottom()
             }
-
-            // 滚动到底部
-            await nextTick()
-            scrollToBottom()
         }
     } catch (error) {
         console.error('获取聊天历史失败', error)
@@ -265,6 +293,9 @@ const sendMessage = async () => {
                 isRead: true
             }
             messages.value.push(newMessage)
+            
+            // 增加总消息数
+            totalMessages.value++
 
             // 更新会话列表中的最后消息
             const index = sessions.value.findIndex(s => currentChatUser.value && s.userId === currentChatUser.value.userId)
@@ -302,9 +333,60 @@ const markAllChatAsRead = async () => {
             if (index !== -1) {
                 sessions.value[index].unreadCount = 0
             }
+            
+            // 刷新全局未读消息计数
+            refreshUnreadMessageCount();
         }
     } catch (error) {
         console.error('标记已读失败', error)
+    }
+}
+
+// 加载更多历史消息
+const loadMoreMessages = async () => {
+    if (!currentChatUser.value || loadingMoreMessages.value || currentPage.value <= 1) return
+
+    loadingMoreMessages.value = true
+    try {
+        // 获取前一页的消息
+        const previousPage = currentPage.value - 1
+        const res = await getChatHistory(currentChatUser.value.userId, {
+            page: previousPage,
+            size: pageSize.value
+        })
+        
+        if (res.data.code === 200) {
+            const oldMessages = res.data.data.records || []
+            if (oldMessages.length > 0) {
+                // 保存当前滚动位置
+                const messagesEl = messagesContainer.value
+                const scrollHeight = messagesEl ? messagesEl.scrollHeight : 0
+                const scrollTop = messagesEl ? messagesEl.scrollTop : 0
+                
+                // 在消息列表前面添加较旧的消息
+                messages.value = [...oldMessages, ...messages.value]
+                
+                // 更新当前页码
+                currentPage.value = previousPage
+                
+                // 检查是否还有更多历史消息可以加载
+                hasMoreMessages.value = previousPage > 1
+                
+                // 恢复滚动位置，确保用户继续查看之前的位置
+                await nextTick()
+                if (messagesEl) {
+                    const newScrollHeight = messagesEl.scrollHeight
+                    messagesEl.scrollTop = scrollTop + (newScrollHeight - scrollHeight)
+                }
+            } else {
+                hasMoreMessages.value = false
+            }
+        }
+    } catch (error) {
+        console.error('加载更多消息失败', error)
+        ElMessage.error('加载更多消息失败')
+    } finally {
+        loadingMoreMessages.value = false
     }
 }
 
@@ -314,6 +396,21 @@ const scrollToBottom = () => {
         messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
     }
 }
+
+// 更新全局未读消息计数
+const refreshUnreadMessageCount = async () => {
+    if (!authStore.isAuthenticated) return;
+    
+    try {
+        // 获取最新的未读消息数量
+        const res = await getUnreadMessageCount();
+        if (res.data.code === 200) {
+            console.log('消息页面刷新未读消息数量:', res.data.data.count);
+        }
+    } catch (error) {
+        console.error('获取未读消息数量失败', error);
+    }
+};
 
 // 处理WebSocket接收到的私信
 const handleNewMessage = (data: any) => {
@@ -327,6 +424,7 @@ const handleNewMessage = (data: any) => {
     const chatUserId = currentChatUser.value ? Number(currentChatUser.value.userId) : null
 
     if (chatUserId && senderId === chatUserId) {
+        // 添加新消息到聊天记录
         messages.value.push({
             messageId: data.messageId,
             senderId: senderId,
@@ -335,8 +433,15 @@ const handleNewMessage = (data: any) => {
             createdAt: new Date(data.timestamp),
             isRead: false
         })
+        
+        // 增加总消息数
+        totalMessages.value++
+        
         nextTick(scrollToBottom)
         markAllChatAsRead()
+    } else {
+        // 刷新未读消息计数（如果不是当前聊天窗口）
+        refreshUnreadMessageCount();
     }
 
     // 更新会话列表
@@ -393,6 +498,9 @@ onMounted(() => {
         webSocketService.connect(authStore.user.userId);
     }
 
+    // 进入消息页面时，刷新未读消息数量
+    refreshUnreadMessageCount();
+
     // 处理路由中的chat_with参数
     if (route.query.chat_with && typeof route.query.chat_with === 'string') {
         const userId = parseInt(route.query.chat_with as string)
@@ -401,6 +509,12 @@ onMounted(() => {
         }
     }
 })
+
+// 组件卸载前的清理工作
+onBeforeUnmount(() => {
+    // 离开消息页面时刷新一次未读消息数量
+    refreshUnreadMessageCount();
+});
 </script>
 
 <style scoped>
@@ -564,5 +678,11 @@ onMounted(() => {
 .input-tip {
     font-size: 12px;
     color: var(--el-text-color-secondary);
+}
+
+.load-more-messages {
+    text-align: center;
+    padding: 10px 0;
+    margin-bottom: 15px;
 }
 </style>

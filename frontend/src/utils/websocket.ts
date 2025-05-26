@@ -174,6 +174,9 @@ class WebSocketService {
     this.lastError.value = null;
     this.reconnectAttempts = 0;
     
+    // 发送立即心跳以同步时间
+    this.sendPing();
+    
     // 设置心跳检测，增加到60秒一次
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
@@ -196,11 +199,25 @@ class WebSocketService {
           this.notificationListeners.forEach(listener => listener(data));
           break;
         case 'PRIVATE_MESSAGE':
+          // 确保消息包含所需字段
+          if (!data.senderId || !data.senderName || !data.content) {
+            console.warn('接收到的私信数据格式不完整:', data);
+          }
           this.messageListeners.forEach(listener => listener(data));
           break;
         case 'PONG':
           // 心跳响应
-          console.log('Received PONG from server');
+          console.log('收到PONG响应，服务器时间:', data.timestamp);
+          
+          // 通知所有监听器连接状态，并附带服务器时间
+          this.connectionListeners.forEach(listener => {
+            try {
+              // 调用普通连接状态监听器
+              listener(true);
+            } catch (e) {
+              console.error('调用连接状态监听器失败:', e);
+            }
+          });
           break;
         case 'CONNECTION':
           // 连接状态消息

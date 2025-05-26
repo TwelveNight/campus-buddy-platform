@@ -329,6 +329,16 @@ const avatarUrl = computed(() => {
     return `${url}?v=${timestamp}`;
 });
 
+// 处理服务器与客户端的时间差异
+const serverTimeOffset = ref(0);
+
+// 同步服务器时间（当收到PONG响应时调用）
+const syncServerTime = (serverTimestamp: number) => {
+    const clientTime = Date.now();
+    serverTimeOffset.value = serverTimestamp - clientTime;
+    console.log(`服务器时间偏移: ${serverTimeOffset.value}ms`);
+};
+
 // 通知相关状态
 const unreadCount = ref(0)
 const unreadMessageCount = ref(0)
@@ -360,6 +370,7 @@ const fetchUnreadMessageCount = async () => {
         const res = await getUnreadMessageCount()
         if (res.data.code === 200) {
             unreadMessageCount.value = res.data.data.count || 0
+            console.log('未读消息数量:', unreadMessageCount.value);
         }
     } catch (error) {
         console.error('获取未读消息数量失败', error)
@@ -454,7 +465,7 @@ const setupNotificationPolling = () => {
         notificationPollingInterval.value = setInterval(() => {
             fetchUnreadCount();
             fetchUnreadMessageCount();
-        }, 60000); // 每分钟检查一次
+        }, 30000); // 每30秒检查一次，缩短轮询间隔
     }
 }
 
@@ -468,6 +479,17 @@ const clearNotificationPolling = () => {
 
 // ===== WebSocket相关功能 =====
 
+// 私信消息类型定义
+interface PrivateMessagePayload {
+  type: string;
+  title: string;
+  senderId: number;
+  senderName: string;
+  content: string;
+  messageId: number;
+  timestamp: number;
+}
+
 // 处理WebSocket收到的通知
 const handleWebSocketNotification = (data: any) => {
     console.log('收到WebSocket通知:', data);
@@ -478,8 +500,13 @@ const handleWebSocketNotification = (data: any) => {
     }
 
     try {
-        // 更新未读通知计数
-        fetchUnreadCount();
+        // 立即增加未读通知计数（无需等待API调用）
+        unreadCount.value += 1;
+        
+        // 异步刷新未读通知计数（确保数据一致性）
+        setTimeout(() => {
+            fetchUnreadCount();
+        }, 1000);
 
         // 如果通知下拉菜单是打开的，更新通知列表
         if (document.querySelector('.notification-dropdown')?.parentElement?.style.display !== 'none') {
@@ -492,11 +519,6 @@ const handleWebSocketNotification = (data: any) => {
             type: 'info',
             duration: 3000
         });
-
-        // 播放通知提示音
-        import('@/utils/sound').then(({ playNotificationSound }) => {
-            playNotificationSound();
-        }).catch(err => console.error('加载声音模块失败:', err));
     } catch (error) {
         console.error('处理WebSocket通知时出错:', error);
     }
@@ -512,22 +534,22 @@ const handleWebSocketMessage = (data: any) => {
     }
 
     try {
-        // 更新未读消息计数
-        fetchUnreadMessageCount();
+        // 立即增加未读消息计数（无需等待API调用）
+        unreadMessageCount.value += 1;
+        
+        // 异步刷新未读消息计数（确保数据一致性）
+        setTimeout(() => {
+            fetchUnreadMessageCount();
+        }, 1000);
 
         // 显示私信提示
-        if (data.sender && data.content) {
+        if (data.senderName && data.content) {
             ElMessage({
-                message: `${data.sender.nickname || data.sender.username || '用户'}: ${data.content}`,
+                message: `${data.senderName || '用户'}: ${data.content}`,
                 type: 'success',
                 duration: 5000
             });
         }
-
-        // 播放消息提示音
-        import('@/utils/sound').then(({ playMessageSound }) => {
-            playMessageSound();
-        }).catch(err => console.error('加载声音模块失败:', err));
     } catch (error) {
         console.error('处理WebSocket私信时出错:', error);
     }
@@ -548,6 +570,11 @@ const initWebSocket = () => {
         // 添加连接状态监听器
         webSocketService.addConnectionListener((status: boolean) => {
             console.log('WebSocket连接状态:', status ? '已连接' : '已断开');
+            // 连接成功后立即获取未读消息和通知数量
+            if (status) {
+                fetchUnreadCount();
+                fetchUnreadMessageCount();
+            }
         });
     }
 };
@@ -671,21 +698,22 @@ const showCreateGroupDialog = () => {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1280px; /* 增加最大宽度 */
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    height: 60px;
+    padding: 0 24px; /* 增加水平内边距 */
+    height: 64px; /* 增加高度 */
 }
 
 .logo {
     display: flex;
     align-items: center;
     text-decoration: none;
-    gap: 10px;
+    gap: 12px; /* 增加间距 */
     transition: transform 0.3s ease;
+    margin-right: 10px; /* 增加与菜单的间距 */
 }
 
 .logo:hover {
@@ -693,12 +721,12 @@ const showCreateGroupDialog = () => {
 }
 
 .logo img {
-    height: 32px;
+    height: 36px; /* 增加图标大小 */
     width: auto;
 }
 
 .logo h1 {
-    font-size: 1.5rem;
+    font-size: 1.6rem; /* 增加字体大小 */
     font-weight: 600;
     color: var(--primary-color);
     margin: 0;
@@ -706,7 +734,7 @@ const showCreateGroupDialog = () => {
 
 .menu {
     flex-grow: 1;
-    margin-left: 40px;
+    margin-left: 50px; /* 增加左侧边距 */
 }
 
 /* Override Element Plus menu styles */
@@ -716,17 +744,17 @@ const showCreateGroupDialog = () => {
 }
 
 :deep(.el-menu--horizontal > .el-menu-item) {
-    height: 60px;
-    line-height: 60px;
-    padding: 0 16px;
+    height: 64px; /* 增加高度与容器一致 */
+    line-height: 64px;
+    padding: 0 20px; /* 增加水平内边距 */
     border-bottom: 2px solid transparent !important;
     transition: all 0.3s ease;
 }
 
 :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
-    height: 60px;
-    line-height: 60px;
-    padding: 0 16px;
+    height: 64px; /* 增加高度与容器一致 */
+    line-height: 64px;
+    padding: 0 20px; /* 增加水平内边距 */
     border-bottom: 2px solid transparent !important;
     transition: all 0.3s ease;
 }
@@ -746,26 +774,28 @@ const showCreateGroupDialog = () => {
 
 /* 子菜单样式优化 */
 :deep(.el-menu--popup) {
-    min-width: 160px;
-    padding: 8px 0;
-    border-radius: 8px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    min-width: 180px; /* 增加宽度 */
+    padding: 10px 0; /* 增加内边距 */
+    border-radius: 10px; /* 增加圆角 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* 增强阴影 */
 }
 
 :deep(.el-menu--popup .el-menu-item) {
-    height: 40px;
-    line-height: 40px;
-    padding: 0 16px;
+    height: 44px; /* 增加高度 */
+    line-height: 44px;
+    padding: 0 20px; /* 增加内边距 */
     display: flex;
     align-items: center;
-    gap: 8px;
-    border-radius: 4px;
-    margin: 0 5px;
+    gap: 10px; /* 增加图标与文字的间距 */
+    border-radius: 6px; /* 增加圆角 */
+    margin: 0 6px; /* 增加外边距 */
     transition: all 0.2s ease;
+    font-size: 15px; /* 增加字体大小 */
 }
 
 :deep(.el-menu--popup .el-menu-item:hover) {
     background-color: rgba(64, 158, 255, 0.1) !important;
+    transform: translateX(4px); /* 添加悬浮效果 */
 }
 
 :deep(.el-menu--popup .el-menu-item.is-active) {
@@ -786,12 +816,12 @@ const showCreateGroupDialog = () => {
 .user-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 20px; /* 增加间距 */
 }
 
-.notification-icon {
+.notification-icon, .message-icon, .search-user-icon, .friends-icon {
     cursor: pointer;
-    padding: 8px;
+    padding: 10px; /* 增加内边距 */
     border-radius: 50%;
     transition: background-color 0.3s;
     display: flex;
@@ -799,45 +829,28 @@ const showCreateGroupDialog = () => {
     justify-content: center;
 }
 
-.notification-icon:hover {
+.notification-icon:hover, .message-icon:hover, .search-user-icon:hover, .friends-icon:hover {
     background-color: rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px); /* 添加悬浮效果 */
 }
 
-.bell-icon {
-    font-size: 20px;
-    color: var(--text-secondary);
-}
-
-.message-icon {
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    transition: background-color 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.message-icon:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-}
-
-.icon-button {
-    font-size: 20px;
+.bell-icon, .icon-button {
+    font-size: 22px; /* 增加图标大小 */
     color: var(--text-secondary);
 }
 
 .user-avatar-container {
     display: flex;
     align-items: center;
+    margin-left: 8px; /* 增加左边距 */
 }
 
 .avatar-wrapper {
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 20px;
+    padding: 6px 14px; /* 增加水平内边距 */
+    border-radius: 22px; /* 增加圆角 */
     transition: all 0.3s;
 }
 
@@ -847,9 +860,10 @@ const showCreateGroupDialog = () => {
 }
 
 .user-name {
-    margin: 0 8px;
-    font-size: 14px;
+    margin: 0 10px; /* 增加间距 */
+    font-size: 15px; /* 增加字体大小 */
     color: var(--text-primary);
+    font-weight: 500; /* 增加字重 */
 }
 
 .dropdown-icon {
@@ -867,7 +881,8 @@ const showCreateGroupDialog = () => {
     border-color: var(--primary-color);
     font-weight: 500;
     transition: all 0.3s;
-    padding: 8px 20px;
+    padding: 10px 24px; /* 增加内边距 */
+    font-size: 15px; /* 增加字体大小 */
 }
 
 .login-btn:hover {
@@ -880,7 +895,8 @@ const showCreateGroupDialog = () => {
     border-color: var(--primary-color);
     background: transparent;
     transition: all 0.3s;
-    padding: 8px 20px;
+    padding: 10px 24px; /* 增加内边距 */
+    font-size: 15px; /* 增加字体大小 */
 }
 
 .register-btn:hover {
@@ -889,29 +905,30 @@ const showCreateGroupDialog = () => {
 }
 
 :deep(.el-dropdown-menu) {
-    border-radius: 8px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-    padding: 8px 0;
+    border-radius: 10px; /* 增加圆角 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* 增强阴影 */
+    padding: 10px 0; /* 增加内边距 */
 }
 
 :deep(.el-dropdown-menu__item) {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
+    gap: 10px; /* 增加图标与文字的间距 */
+    padding: 12px 20px; /* 增加内边距 */
     transition: all 0.2s;
-    border-radius: 4px;
-    margin: 0 4px;
-    font-size: 14px;
+    border-radius: 6px; /* 增加圆角 */
+    margin: 0 6px; /* 增加外边距 */
+    font-size: 15px; /* 增加字体大小 */
 }
 
 :deep(.el-dropdown-menu__item:hover) {
     background-color: rgba(64, 158, 255, 0.1);
     color: var(--primary-color);
+    transform: translateX(4px); /* 添加悬浮效果 */
 }
 
 :deep(.el-dropdown-menu__item i) {
-    font-size: 16px;
+    font-size: 18px; /* 增加图标大小 */
 }
 
 /* 响应式调整 */
@@ -1104,22 +1121,25 @@ const showCreateGroupDialog = () => {
 
 /* 通知下拉菜单样式 */
 :deep(.notification-dropdown) {
-    width: 350px;
-    max-height: 500px;
+    width: 380px; /* 增加宽度 */
+    max-height: 520px; /* 增加高度 */
     overflow: hidden;
+    border-radius: 12px; /* 增加圆角 */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18); /* 增强阴影 */
 }
 
 .notification-dropdown-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
+    padding: 16px 20px; /* 增加内边距 */
     background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color); /* 添加边框 */
 }
 
 .notification-dropdown-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 18px; /* 增加字体大小 */
     font-weight: 600;
     color: var(--text-primary);
     display: flex;
@@ -1139,20 +1159,25 @@ const showCreateGroupDialog = () => {
 }
 
 .notification-list {
-    max-height: 300px;
+    max-height: 340px; /* 增加高度 */
     overflow-y: auto;
-    min-height: 100px;
+    min-height: 120px; /* 增加最小高度 */
+    padding: 8px 0; /* 添加内边距 */
 }
 
 .notification-item {
     padding: 0 !important;
     border-bottom: 1px solid var(--border-color);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s ease;
+    margin: 0 6px; /* 添加外边距，增加空间感 */
+    border-radius: 8px; /* 添加圆角 */
 }
 
 .notification-item:hover {
     background-color: var(--bg-hover) !important;
+    transform: translateX(2px); /* 添加悬浮效果 */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* 添加悬浮阴影 */
 }
 
 .notification-item.notification-unread {
@@ -1160,6 +1185,7 @@ const showCreateGroupDialog = () => {
     position: relative;
     font-weight: 500;
     border-left: 4px solid var(--primary-color);
+    margin-bottom: 6px; /* 添加下边距 */
 }
 
 .notification-item.notification-unread::before {
@@ -1175,18 +1201,19 @@ const showCreateGroupDialog = () => {
 .notification-item.notification-read {
     background-color: var(--bg-color);
     opacity: 0.85;
+    margin-bottom: 6px; /* 添加下边距 */
 }
 
 .notification-content {
-    padding: 12px 16px;
+    padding: 14px 18px; /* 增加内边距 */
     width: 100%;
 }
 
 .notification-title {
-    font-size: 14px;
+    font-size: 15px; /* 增加字体大小 */
     font-weight: 500;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 6px; /* 增加下边距 */
     line-height: 1.4;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1198,24 +1225,24 @@ const showCreateGroupDialog = () => {
 
 .unread-indicator {
     color: var(--primary-color);
-    font-size: 12px;
-    margin-right: 6px;
+    font-size: 14px; /* 增加大小 */
+    margin-right: 8px; /* 增加间距 */
     animation: pulse 1.5s ease-in-out infinite;
 }
 
 .read-indicator {
     color: var(--el-text-color-secondary);
-    font-size: 12px;
-    margin-right: 6px;
+    font-size: 14px; /* 增加大小 */
+    margin-right: 8px; /* 增加间距 */
     opacity: 0.6;
 }
 
 .unread-badge {
     background-color: var(--el-color-danger);
     color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
+    font-size: 11px; /* 增加字体大小 */
+    padding: 2px 8px; /* 增加内边距 */
+    border-radius: 12px; /* 增加圆角 */
     font-weight: 500;
     margin-left: auto;
     flex-shrink: 0;
@@ -1224,9 +1251,9 @@ const showCreateGroupDialog = () => {
 .read-badge {
     background-color: var(--el-color-success);
     color: white;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 10px;
+    font-size: 11px; /* 增加字体大小 */
+    padding: 2px 8px; /* 增加内边距 */
+    border-radius: 12px; /* 增加圆角 */
     font-weight: 500;
     margin-left: auto;
     flex-shrink: 0;
@@ -1246,10 +1273,10 @@ const showCreateGroupDialog = () => {
 }
 
 .notification-body {
-    font-size: 13px;
+    font-size: 14px; /* 增加字体大小 */
     color: var(--text-secondary);
-    margin-bottom: 4px;
-    line-height: 1.4;
+    margin-bottom: 6px; /* 增加下边距 */
+    line-height: 1.5; /* 增加行高 */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1272,12 +1299,13 @@ const showCreateGroupDialog = () => {
 }
 
 .notification-time {
-    font-size: 12px;
+    font-size: 13px; /* 增加字体大小 */
     color: var(--text-tertiary);
+    margin-top: 2px; /* 添加上边距 */
 }
 
 .notification-footer {
-    padding: 8px 16px;
+    padding: 10px 18px; /* 增加内边距 */
     text-align: center;
     border-top: 1px solid var(--border-color);
     background-color: var(--card-bg);
@@ -1286,13 +1314,17 @@ const showCreateGroupDialog = () => {
 .notification-footer a {
     color: var(--primary-color);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px; /* 增加字体大小 */
     font-weight: 500;
     transition: color 0.2s;
+    padding: 6px 10px; /* 添加内边距增加可点击区域 */
+    border-radius: 6px; /* 添加圆角 */
+    display: inline-block; /* 使内边距生效 */
 }
 
 .notification-footer a:hover {
     color: var(--primary-color-hover);
+    background-color: rgba(64, 158, 255, 0.08); /* 添加悬浮背景色 */
 }
 
 /* 暗色主题通知样式 */
