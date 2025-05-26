@@ -1,9 +1,11 @@
 package com.example.campusbuddy.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.dto.NotificationCreateDTO;
 import com.example.campusbuddy.entity.Notification;
+import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.NotificationVO;
@@ -11,10 +13,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,6 +44,7 @@ public class NotificationController {
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer size,
             @Parameter(description = "通知类型") @RequestParam(required = false) String type,
+            @Parameter(description = "是否已读") @RequestParam(required = false) Boolean isRead, // 添加 isRead 参数
             HttpServletRequest request) {
         
         Long userId = (Long) request.getAttribute("userId");
@@ -47,7 +52,7 @@ public class NotificationController {
             return R.fail("用户未登录");
         }
         
-        IPage<NotificationVO> notifications = notificationService.getUserNotifications(userId, page, size, type);
+        IPage<NotificationVO> notifications = notificationService.getUserNotifications(userId, page, size, type, isRead); // 传递 isRead 参数
         return R.ok(notifications);
     }
 
@@ -151,6 +156,32 @@ public class NotificationController {
             return R.fail("权限不足，仅管理员可发送系统通知");
         }
         
+        // 如果recipientId为0或null，视为系统公告，给所有活跃用户发送通知
+        if (dto.getRecipientId() == null || dto.getRecipientId() == 0) {
+            // 获取所有活跃用户
+            List<User> activeUsers = userService.list(
+                new LambdaQueryWrapper<User>()
+                    .eq(User::getStatus, "ACTIVE")
+            );
+            
+            Long firstNotificationId = null;
+            
+            // 为每个用户创建一条系统通知
+            for (User user : activeUsers) {
+                NotificationCreateDTO userDto = new NotificationCreateDTO();
+                BeanUtils.copyProperties(dto, userDto);
+                userDto.setRecipientId(user.getUserId());
+                
+                Long notificationId = notificationService.createSystemNotification(userDto);
+                if (firstNotificationId == null) {
+                    firstNotificationId = notificationId;
+                }
+            }
+            
+            return R.ok("系统公告发送成功", firstNotificationId);
+        }
+        
+        // 给特定用户发送通知
         Long notificationId = notificationService.createSystemNotification(dto);
         return R.ok("发送成功", notificationId);
     }

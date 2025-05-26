@@ -130,6 +130,12 @@
                             </el-icon>
                             帖子管理
                         </el-menu-item>
+                        <el-menu-item @click="navigateToPublishAnnouncement">
+                            <el-icon>
+                                <Bell />
+                            </el-icon>
+                            发布公告
+                        </el-menu-item>
                     </el-sub-menu>
                 </el-menu>
             </div>
@@ -325,6 +331,10 @@ const activeIndex = computed(() => route.path)
 const isAdmin = computed(() => {
     return authStore.isAdmin;
 })
+
+const navigateToPublishAnnouncement = () => {
+  router.push({ path: '/notifications', query: { action: 'publish-announcement' } });
+};
 
 // 打开用户搜索对话框
 const openUserSearch = () => {

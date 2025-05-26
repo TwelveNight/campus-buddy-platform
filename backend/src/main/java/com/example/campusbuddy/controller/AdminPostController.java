@@ -131,7 +131,14 @@ public class AdminPostController {
                 dto.setRecipientId(post.getAuthorId());
                 dto.setType("POST_STATUS");
                 dto.setTitle("帖子状态变更");
-                String statusText = "ACTIVE".equals(status) ? "启用" : "禁用";
+                String statusText;
+                if ("ACTIVE".equals(status)) {
+                    statusText = "启用";
+                } else if ("BANNED".equals(status) || "INACTIVE".equals(status)) {
+                    statusText = "禁用";
+                } else {
+                    statusText = status;
+                }
                 dto.setContent("您的帖子(ID:" + postId + ")已被管理员" + statusText + "。");
                 dto.setRelatedId(postId);
                 notificationService.createUserNotification(dto);

@@ -35,23 +35,40 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Override
     @Transactional
     public Long createSystemNotification(NotificationCreateDTO dto) {
-        Notification notification = new Notification();
-        BeanUtils.copyProperties(dto, notification);
-        notification.setType(dto.getType());
-        notification.setIsRead(false);
-        save(notification);
-        
-        // 通过WebSocket发送实时通知
-        String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
-        UserWebSocketHandler.sendNotification(
-            dto.getRecipientId(), 
-            dto.getTitle(), 
-            dto.getContent(), 
-            dto.getType(), 
-            relatedLink
+        // 首先获取所有活跃用户
+        List<User> activeUsers = userService.list(
+            new LambdaQueryWrapper<User>()
+                .eq(User::getStatus, "ACTIVE")
         );
         
-        return notification.getNotificationId();
+        Long firstNotificationId = null;
+        
+        // 为每个用户创建一条系统通知
+        for (User user : activeUsers) {
+            Notification notification = new Notification();
+            BeanUtils.copyProperties(dto, notification);
+            notification.setType(dto.getType());
+            notification.setIsRead(false);
+            notification.setRecipientId(user.getUserId()); // 设置接收者ID为当前用户
+            save(notification);
+            
+            // 保存第一个通知ID作为返回值
+            if (firstNotificationId == null) {
+                firstNotificationId = notification.getNotificationId();
+            }
+            
+            // 通过WebSocket发送实时通知
+            String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
+            UserWebSocketHandler.sendNotification(
+                user.getUserId(), 
+                dto.getTitle(), 
+                dto.getContent(), 
+                dto.getType(), 
+                relatedLink
+            );
+        }
+        
+        return firstNotificationId;
     }
 
     @Override
@@ -77,30 +94,24 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     }
 
     @Override
-    public IPage<NotificationVO> getUserNotifications(Long userId, int page, int size, String type) {
-        Page<Notification> pageParam = new Page<>(page, size);
-        LambdaQueryWrapper<Notification> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Notification::getRecipientId, userId);
-        // type为'all'时不过滤类型，否则按type过滤
-        if (StringUtils.hasText(type) && !"all".equalsIgnoreCase(type)) {
-            if (type.contains(",")) {
-                // 支持多类型逗号分隔，去除空格
-                String[] types = type.split(",");
-                List<String> typeList = new ArrayList<>();
-                for (String t : types) {
-                    if (StringUtils.hasText(t.trim())) {
-                        typeList.add(t.trim());
-                    }
-                }
-                wrapper.in(Notification::getType, typeList);
-            } else {
-                wrapper.eq(Notification::getType, type.trim());
-            }
+    public IPage<NotificationVO> getUserNotifications(Long userId, int page, int size, String type, Boolean isRead) {
+        Page<Notification> pageRequest = new Page<>(page, size);
+        LambdaQueryWrapper<Notification> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Notification::getRecipientId, userId);
+
+        if (StringUtils.hasText(type) && !"all".equalsIgnoreCase(type)) { // 修改这里
+            // 支持多种类型查询，逗号分隔
+            List<String> typeList = List.of(type.split(","));
+            queryWrapper.in(Notification::getType, typeList);
         }
-        // 未读优先，已读在后，创建时间倒序
-        wrapper.orderByAsc(Notification::getIsRead)
-               .orderByDesc(Notification::getCreatedAt);
-        IPage<Notification> notificationPage = page(pageParam, wrapper);
+
+        if (isRead != null) { // 添加已读状态过滤
+            queryWrapper.eq(Notification::getIsRead, isRead);
+        }
+
+        queryWrapper.orderByDesc(Notification::getCreatedAt);
+
+        IPage<Notification> notificationPage = this.page(pageRequest, queryWrapper);
         IPage<NotificationVO> voPage = notificationPage.convert(notification -> {
             NotificationVO vo = new NotificationVO();
             BeanUtils.copyProperties(notification, vo);

@@ -85,7 +85,7 @@ public class AdminHelpInfoController {
                 dto.setTitle("互助任务状态变更");
                 String statusText = status;
                 dto.setContent("您的互助任务(ID:" + id + ")状态已被管理员更改为：" + statusText + "。");
-                dto.setRelatedId(id);
+                dto.setRelatedId(id); // 便于前端跳转
                 notificationService.createUserNotification(dto);
             }
         }

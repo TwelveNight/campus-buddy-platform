@@ -36,9 +36,10 @@ public interface NotificationService extends IService<Notification> {
      * @param page   页码
      * @param size   每页大小
      * @param type   通知类型
+     * @param isRead 是否已读 (新增)
      * @return 分页通知列表
      */
-    IPage<NotificationVO> getUserNotifications(Long userId, int page, int size, String type);
+    IPage<NotificationVO> getUserNotifications(Long userId, int page, int size, String type, Boolean isRead);
 
     /**
      * 获取用户未读通知数量

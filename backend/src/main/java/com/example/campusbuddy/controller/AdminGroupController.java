@@ -6,6 +6,7 @@ import com.example.campusbuddy.service.GroupService;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.dto.NotificationCreateDTO;
 import com.example.campusbuddy.vo.GroupVO;
+import com.example.campusbuddy.entity.Group;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -63,16 +64,11 @@ public class AdminGroupController {
         
         boolean ok = groupService.adminUpdateGroupStatus(groupId, status);
         if (ok) {
-            // 获取小组VO，通知创建者
-            GroupVO group = groupService.getGroupDetail(groupId) != null ? new GroupVO() : null;
-            if (group == null) return R.ok("操作成功", null);
-            // 这里实际应从 groupService 获取 GroupVO，简化处理
-            group.setGroupId(groupId);
-            // ...可补充更多属性...
-            Long creatorId = group.getCreatorId();
-            if (creatorId != null) {
+            // 获取小组，通知创建者
+            Group group = groupService.getGroupDetail(groupId);
+            if (group != null && group.getCreatorId() != null) {
                 NotificationCreateDTO dto = new NotificationCreateDTO();
-                dto.setRecipientId(creatorId);
+                dto.setRecipientId(group.getCreatorId());
                 dto.setType("GROUP_STATUS");
                 dto.setTitle("小组状态变更");
                 String statusText = "ACTIVE".equals(status) ? "启用" : "禁用";
@@ -84,7 +80,7 @@ public class AdminGroupController {
         return ok ? R.ok("操作成功", null) : R.fail("操作失败");
     }
 
-    @Operation(summary = "删除小组")
+    @Operation(summary = "管理员删除小组")
     @DeleteMapping("/{groupId}")
     public R<Void> deleteGroup(
             @PathVariable Long groupId,
@@ -93,16 +89,12 @@ public class AdminGroupController {
         @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
-        
         if (!isAdmin) {
             return R.fail("权限不足，需要管理员权限");
         }
-        
-        // 获取小组VO，通知创建者
-        GroupVO group = groupService.getGroupDetail(groupId) != null ? new GroupVO() : null;
-        if (group == null) return R.ok("删除成功", null);
-        group.setGroupId(groupId);
-        Long creatorId = group.getCreatorId();
+        // 获取小组，通知创建者
+        com.example.campusbuddy.entity.Group group = groupService.getGroupDetail(groupId);
+        Long creatorId = group != null ? group.getCreatorId() : null;
         boolean ok = groupService.adminDeleteGroup(groupId);
         if (ok && creatorId != null) {
             NotificationCreateDTO dto = new NotificationCreateDTO();
