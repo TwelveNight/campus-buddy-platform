@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -110,7 +111,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                     vo.setSenderAvatar(sender.getAvatarUrl());
                 }
             }
-            vo.setRelatedLink(generateRelatedLink(notification.getType(), notification.getRelatedId()));
+            // 传递senderId用于FRIEND_REMOVED跳转
+            vo.setRelatedLink(generateRelatedLink(notification.getType(), notification.getRelatedId(), notification.getSenderId()));
             return vo;
         });
         return voPage;
@@ -313,7 +315,17 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      */
     private String generateRelatedLink(String type, Long relatedId) {
         if (relatedId == null) {
-            return null;
+            // 处理无需relatedId的类型
+            switch (type) {
+                case "FRIEND_REQUEST_ACCEPTED":
+                    return "/user/friends?tab=friends";
+                case "FRIEND_REQUEST":
+                    return "/user/friends?tab=requests";
+                case "FRIEND_REMOVED":
+                    return null; // 无法生成链接，可能需要其他处理
+                default:
+                    return null; // 无法生成链接，可能需要其他处理
+            }
         }
         
         switch (type) {
@@ -340,7 +352,54 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             case "GROUP_ANNOUNCEMENT":
             case "GROUP_ADMIN_ASSIGNED":
                 return "/groups/" + relatedId + "/detail";
-                
+
+            case "FRIEND_REQUEST_ACCEPTED":
+                return "/friends?tab=friends";
+            case "FRIEND_REQUEST":
+                return "/friends?tab=requests";
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * 根据通知类型和相关ID生成前端路由链接，支持senderId
+     */
+    private String generateRelatedLink(String type, Long relatedId, Long senderId) {
+        // 兼容老逻辑
+        if ("FRIEND_REMOVED".equals(type) && senderId != null) {
+            return "/user/" + senderId;
+        }
+        if (relatedId == null) {
+            // 处理无需relatedId的类型
+            switch (type) {
+                case "FRIEND_REQUEST_ACCEPTED":
+                    return "/friends?tab=friends";
+                case "FRIEND_REQUEST":
+                    return "/friends?tab=requests";
+                default:
+                    return null;
+            }
+        }
+        switch (type) {
+            case "SYSTEM_ANNOUNCEMENT":
+            case "SYSTEM_ACTIVITY":
+                return "/announcement/" + relatedId;
+            case "HELP_NEW_APPLICATION":
+            case "HELP_APPLICATION_ACCEPTED":
+            case "HELP_APPLICATION_REJECTED":
+            case "HELP_COMPLETED":
+                return "/helpinfo/" + relatedId;
+            case "HELP_NEW_REVIEW":
+                return "/reviews?type=received";
+            case "GROUP_JOIN_APPLICATION":
+                return "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
+            case "GROUP_JOIN_APPROVED":
+            case "GROUP_JOIN_REJECTED":
+            case "GROUP_INVITATION":
+            case "GROUP_ANNOUNCEMENT":
+            case "GROUP_ADMIN_ASSIGNED":
+                return "/groups/" + relatedId + "/detail";
             default:
                 return null;
         }

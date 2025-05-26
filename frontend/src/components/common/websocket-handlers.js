@@ -21,11 +21,6 @@ const handleWebSocketNotification = (data) => {
     if (document.querySelector('.notification-dropdown')?.parentElement?.style.display !== 'none') {
         fetchRecentNotifications()
     }
-
-    // 播放通知提示音（可选）
-    import('@/utils/sound').then(({ playNotificationSound }) => {
-        playNotificationSound()
-    })
 }
 
 // 处理WebSocket收到的私信
@@ -34,11 +29,6 @@ const handleWebSocketMessage = (data) => {
 
     // 更新未读消息计数
     fetchUnreadMessageCount()
-
-    // 播放消息提示音（可选）
-    import('@/utils/sound').then(({ playMessageSound }) => {
-        playMessageSound()
-    })
 }
 
 // 初始化WebSocket连接

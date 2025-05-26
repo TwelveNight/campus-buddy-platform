@@ -209,24 +209,64 @@ const fetchNotifications = async () => {
 
 // 处理通知点击
 const handleNotificationClick = (notification: NotificationItem) => {
-    // 如果未读，标记为已读
+    console.log('点击通知详情:', notification);
+    console.log('通知类型:', notification.type);
+    console.log('link', notification.relatedLink);
+    
     if (!notification.isRead) {
         markAsRead(notification.notificationId)
     }
-
-    // 好友申请相关类型跳转到好友申请页
-    if (
-        notification.type === 'FRIEND_REQUEST' ||
-        notification.type === 'FRIEND_REQUEST_ACCEPTED' ||
-        notification.type === 'FRIEND_REQUEST_REJECTED'
-    ) {
-        router.push('/user/friends?tab=requests')
-        return
-    }
-
-    // 如果有相关链接，跳转
+    
     if (notification.relatedLink) {
-        router.push(notification.relatedLink)
+        console.log('点击通知，跳转到:', notification.relatedLink);
+        
+        const currentPath = router.currentRoute.value.path;
+        const currentQuery = router.currentRoute.value.query;
+        console.log('当前路径:', currentPath, '当前查询参数:', currentQuery);
+        
+        const targetPath = notification.relatedLink;
+        const targetUrl = new URL(targetPath, window.location.origin);
+        const targetPathOnly = targetUrl.pathname;
+        const targetQuery = Object.fromEntries(targetUrl.searchParams.entries());
+        
+        console.log('目标路径:', targetPathOnly, '查询参数:', targetQuery);
+        
+        // 特殊处理好友相关通知
+        if (notification.type === 'FRIEND_REQUEST' || 
+            notification.type === 'FRIEND_REQUEST_ACCEPTED' || 
+            notification.type === 'FRIEND_REQUEST_REJECTED' ||
+            notification.type === 'FRIEND_REMOVED') {
+            console.log('处理好友相关通知:', notification.type);
+        }
+        
+        if (currentPath === targetPathOnly) {
+            // 同一页面不同参数的情况
+            console.log('同页面跳转，使用replace');
+            
+            // 强制刷新参数
+            if (targetPathOnly === '/user/friends') {
+                console.log('好友页面跳转，强制刷新标签参数');
+                // 先将路由推入历史记录
+                router.push({ path: '/user/profile' }).then(() => {
+                    // 然后立即跳转到目标路径
+                    setTimeout(() => {
+                        router.replace({ path: targetPathOnly, query: targetQuery });
+                    }, 100);
+                }).catch(err => {
+                    console.error('路由跳转出错:', err);
+                    // 直接使用replace作为后备方案
+                    router.replace({ path: targetPathOnly, query: targetQuery });
+                });
+            } else {
+                router.replace({ path: targetPathOnly, query: targetQuery });
+            }
+        } else {
+            // 不同页面
+            console.log('不同页面跳转，使用push');
+            router.push(targetPath);
+        }
+    } else {
+        console.warn('通知没有关联链接');
     }
 }
 

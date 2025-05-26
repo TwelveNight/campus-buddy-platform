@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { UserFilled, Plus, ArrowDown, ChatDotRound, View, Delete, Search } from '@element-plus/icons-vue';
 import dayjs from 'dayjs';
@@ -139,7 +139,10 @@ dayjs.extend(relativeTime);
 dayjs.locale('zh-cn');
 
 const router = useRouter();
+const route = useRoute();
 const userSearchDialog = ref(null);
+
+const validTabs = ['friends', 'requests'];
 
 // 状态变量
 const loading = ref(false);
@@ -175,9 +178,35 @@ const pendingRequestsCount = computed(() => {
 
 // 生命周期钩子
 onMounted(() => {
-  loadFriends();
-  loadFriendRequests();
+  const tab = route.query.tab as string;
+  if (validTabs.includes(tab)) {
+    activeTab.value = tab;
+  } else {
+    activeTab.value = 'friends';
+  }
+  if (activeTab.value === 'requests') {
+    loadFriendRequests();
+  } else {
+    loadFriends();
+  }
 });
+
+// 监听路由参数变化
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (validTabs.includes(tab as string)) {
+      activeTab.value = tab as string;
+    } else {
+      activeTab.value = 'friends';
+    }
+    if (activeTab.value === 'requests') {
+      loadFriendRequests();
+    } else {
+      loadFriends();
+    }
+  }
+);
 
 // 加载好友列表
 const loadFriends = async () => {
@@ -238,13 +267,12 @@ const filterFriends = () => {
   loadFriends();
 };
 
-// 标签页切换
+// 切换标签时同步更新路由参数
 const handleTabChange = (tab: string) => {
-  if (tab === 'requests') {
-    loadFriendRequests();
-  } else {
-    loadFriends();
-  }
+  router.replace({
+    path: '/user/friends',
+    query: { ...route.query, tab }
+  });
 };
 
 // 好友列表分页变化

@@ -56,10 +56,7 @@ export const setupNavBarWebSocket = (options) => {
       fetchRecentNotifications();
     }
     
-    // 播放通知提示音
-    import('@/utils/sound').then(({ playNotificationSound }) => {
-      playNotificationSound();
-    }).catch(err => console.error('加载声音模块失败:', err));
+    // 注意：声音通知已移除以解决兼容性问题
   };
 
   // 处理WebSocket收到的私信
@@ -69,10 +66,7 @@ export const setupNavBarWebSocket = (options) => {
     // 更新未读消息计数
     fetchUnreadMessageCount();
     
-    // 播放消息提示音
-    import('@/utils/sound').then(({ playMessageSound }) => {
-      playMessageSound();
-    }).catch(err => console.error('加载声音模块失败:', err));
+    // 注意：声音通知已移除以解决兼容性问题
   };
 
   // 初始化WebSocket连接
