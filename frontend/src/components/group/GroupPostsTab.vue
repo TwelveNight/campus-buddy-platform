@@ -40,7 +40,10 @@
                 </div>
 
                 <div class="post-content">
-                    <h3 class="post-title">{{ post.title }}</h3>
+                    <h3 class="post-title" @click="goToPostDetail(post)">
+                        {{ post.title }}
+                        <el-icon style="margin-left:4px;"><Pointer /></el-icon>
+                    </h3>
                     <div class="post-body" v-html="renderContent(post)"></div>
                 </div>
 
@@ -507,6 +510,13 @@ const formatTime = (time: string | undefined) => {
     }
 };
 
+// 跳转到帖子详情页面
+const goToPostDetail = (post: Post) => {
+    if (post.postId) {
+        router.push(`/groups/${props.groupId}/posts/${post.postId}`);
+    }
+};
+
 // 导入marked库，用于Markdown转HTML
 import { marked } from 'marked';
 
@@ -567,21 +577,17 @@ const showComments = async (post: Post) => {
 // 加载评论列表
 const loadComments = async (post: Post) => {
     if (!post.postId) return;
-    
     post.loadingComments = true;
-    
     try {
         const response = await getPostComments({
             postId: post.postId,
             pageNum: post.commentCurrentPage,
             pageSize: post.commentPageSize
         });
-        
         if (response.data && response.data.code === 200) {
             post.comments = response.data.data.comments || [];
             post.commentTotal = response.data.data.total || 0;
-            
-            // 更新评论数量显示
+            // 强制同步评论数
             post.commentCount = post.commentTotal;
         } else {
             ElMessage.error(response.data?.message || '加载评论失败');
@@ -696,6 +702,12 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s, border-color 0.3s;
+}
+
+.post-item:hover {
+    box-shadow: 0 4px 24px rgba(64,158,255,0.12);
+    border-color: #409eff;
 }
 
 .post-header {
@@ -730,6 +742,23 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     font-size: 18px;
     font-weight: 600;
     color: #333;
+    cursor: pointer;
+    text-decoration: underline dotted #409eff 1.5px;
+    transition: color 0.2s, text-decoration 0.2s;
+    display: inline-flex;
+    align-items: center;
+}
+
+.post-title:hover {
+    color: #409eff;
+    text-decoration: underline solid #409eff 2px;
+}
+
+.post-title .el-icon {
+    margin-left: 6px;
+    font-size: 16px;
+    color: #409eff;
+    opacity: 0.7;
 }
 
 .post-body {
@@ -749,6 +778,10 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 .post-stats {
     display: flex;
     gap: 15px;
+}
+
+.post-stats .el-button {
+    position: relative;
 }
 
 .content-type-selector {
@@ -832,9 +865,12 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     font-size: 14px;
     color: #333;
     line-height: 1.6;
-    padding-left: 42px; /* 对齐头像右侧 */
+    padding-left: 42px;
     word-break: break-word;
     margin-top: 5px;
+    background: #f7faff;
+    border-radius: 4px;
+    padding: 8px 12px 8px 42px;
 }
 
 .comment-pagination {
@@ -1006,10 +1042,9 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 }
 
 [data-theme="dark"] .post-item {
-    background-color: #1a1a1a;
-    border: 1px solid #333333;
-    color: #ffffff;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    background-color: #18181a;
+    border: 1px solid #333;
+    color: #fff;
 }
 
 [data-theme="dark"] .post-item:hover {
@@ -1030,7 +1065,12 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 }
 
 [data-theme="dark"] .post-title {
-    color: #ffffff;
+    color: #fff;
+    text-decoration-color: #409eff;
+}
+
+[data-theme="dark"] .post-title:hover {
+    color: #409eff;
 }
 
 [data-theme="dark"] .post-body {
@@ -1059,7 +1099,8 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 }
 
 [data-theme="dark"] .comment-content {
-    color: #ffffff;
+    color: #fff;
+    background: #232326;
 }
 
 [data-theme="dark"] .comment-input {

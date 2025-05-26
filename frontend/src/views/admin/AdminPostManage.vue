@@ -73,12 +73,12 @@
                 查看
               </el-button>
               <el-button 
-                :type="scope.row.status === 'NORMAL' ? 'warning' : 'success'" 
+                :type="scope.row.status === 'PUBLISHED' ? 'warning' : 'success'" 
                 size="small" 
                 link
                 @click="handleToggleStatus(scope.row)"
               >
-                {{ scope.row.status === 'NORMAL' ? '禁用' : '启用' }}
+                {{ scope.row.status === 'PUBLISHED' ? '禁用' : '启用' }}
               </el-button>
               <el-button type="danger" size="small" link @click="confirmRemove(scope.row.postId)">
                 删除
@@ -123,16 +123,16 @@
           </span>
         </div>
         <div class="post-content">
-          <div v-if="currentPost.contentType === 'MARKDOWN'" v-html="renderMarkdown(currentPost.content)"></div>
-          <div v-else v-html="renderText(currentPost.content)"></div>
+          <div v-if="currentPost.contentType === 'MARKDOWN'" class="markdown-content" v-html="renderMarkdown(currentPost.content)"></div>
+          <div v-else class="text-content" v-html="renderText(currentPost.content)"></div>
         </div>
         <div class="post-actions">
           <el-button-group>
             <el-button 
-              :type="currentPost.status === 'NORMAL' ? 'warning' : 'success'" 
+              :type="currentPost.status === 'PUBLISHED' ? 'warning' : 'success'" 
               @click="handleToggleStatus(currentPost)"
             >
-              {{ currentPost.status === 'NORMAL' ? '禁用' : '启用' }}
+              {{ currentPost.status === 'PUBLISHED' ? '禁用' : '启用' }}
             </el-button>
             <el-button type="danger" @click="confirmRemove(currentPost.postId)">
               删除帖子
@@ -174,7 +174,7 @@ const filters = reactive({
 
 // 状态选项
 const statusOptions = [
-  { value: 'NORMAL', label: '正常' },
+  { value: 'PUBLISHED', label: '正常' },
   { value: 'DELETED', label: '已禁用' }
 ]
 
@@ -298,23 +298,52 @@ function viewPost(post: any) {
 function renderMarkdown(content: string) {
   if (!content) return ''
   try {
-    return marked(content)
+    // 配置marked选项，优化图片和代码块处理
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      sanitize: false,
+      silent: true
+    })
+    
+    // 渲染markdown
+    let html = marked(content)
+    
+    // 后处理：为图片添加样式类
+    html = html.replace(/<img\s+([^>]*?)>/gi, '<img class="markdown-image" $1>')
+    
+    // 为表格添加样式类
+    html = html.replace(/<table>/gi, '<table class="markdown-table">')
+    
+    // 为代码块添加样式类
+    html = html.replace(/<pre>/gi, '<pre class="markdown-code">')
+    
+    return html
   } catch (error) {
     console.error('Markdown渲染错误:', error)
-    return content
+    return `<p class="error-text">内容渲染失败</p>`
   }
 }
 
 // 渲染纯文本内容
 function renderText(content: string) {
   if (!content) return ''
-  return content.replace(/\n/g, '<br>')
+  // 转义HTML字符防止XSS攻击
+  const escaped = content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+  
+  // 转换换行符为<br>标签
+  return escaped.replace(/\n/g, '<br>')
 }
 
 // 切换帖子状态（启用/禁用）
 async function handleToggleStatus(post: any) {
-  const newStatus = post.status === 'NORMAL' ? 'DELETED' : 'NORMAL'
-  const actionText = newStatus === 'NORMAL' ? '启用' : '禁用'
+  const newStatus = post.status === 'PUBLISHED' ? 'DELETED' : 'PUBLISHED'
+  const actionText = newStatus === 'PUBLISHED' ? '启用' : '禁用'
   
   try {
     await ElMessageBox.confirm(`确定要${actionText}帖子 "${post.title}" 吗？`, '提示', {
@@ -396,8 +425,8 @@ function formatDate(dateString: string | Date | number) {
 // 获取状态标签
 function getStatusLabel(status: string) {
   const map: Record<string, string> = {
-    'NORMAL': '正常',
-    'DELETED': '已删除',
+    'PUBLISHED': '正常',
+    'DELETED': '已禁用',
     'HIDDEN': '已隐藏'
   }
   return map[status] || status
@@ -406,7 +435,7 @@ function getStatusLabel(status: string) {
 // 获取状态类型颜色
 function getStatusType(status: string) {
   const map: Record<string, string> = {
-    'NORMAL': 'success',
+    'PUBLISHED': 'success',
     'DELETED': 'danger',
     'HIDDEN': 'warning'
   }
@@ -482,6 +511,114 @@ function getStatusType(status: string) {
   background-color: #FAFAFA;
   margin-bottom: 20px;
   min-height: 100px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Markdown样式 */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin: 1em 0 0.5em;
+  color: #303133;
+  font-weight: 600;
+}
+
+.markdown-content h1 { font-size: 1.5em; }
+.markdown-content h2 { font-size: 1.3em; }
+.markdown-content h3 { font-size: 1.2em; }
+.markdown-content h4 { font-size: 1.1em; }
+
+.markdown-content p {
+  margin: 0.8em 0;
+  color: #606266;
+}
+
+.markdown-content blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #409EFF;
+  background-color: #f6f8fa;
+  color: #666;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin: 0.8em 0;
+  padding-left: 2em;
+}
+
+.markdown-content li {
+  margin: 0.2em 0;
+}
+
+.markdown-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.5em 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.markdown-image:hover {
+  transform: scale(1.02);
+}
+
+.markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-table th,
+.markdown-table td {
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-table th {
+  background-color: #f5f7fa;
+  font-weight: 600;
+}
+
+.markdown-code {
+  background-color: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9em;
+  line-height: 1.45;
+}
+
+.markdown-content code:not(pre code) {
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.text-content {
+  line-height: 1.6;
+  color: #606266;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.error-text {
+  color: #F56C6C;
+  font-style: italic;
 }
 
 .post-actions {
@@ -514,5 +651,42 @@ function getStatusType(status: string) {
 [data-theme="dark"] .post-content {
   background-color: #2c2e30;
   border-color: #4c4e50;
+}
+
+[data-theme="dark"] .markdown-content h1,
+[data-theme="dark"] .markdown-content h2,
+[data-theme="dark"] .markdown-content h3,
+[data-theme="dark"] .markdown-content h4,
+[data-theme="dark"] .markdown-content h5,
+[data-theme="dark"] .markdown-content h6 {
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .markdown-content p {
+  color: #a6a9ad;
+}
+
+[data-theme="dark"] .markdown-content blockquote {
+  background-color: #3a3c3f;
+  border-left-color: #409EFF;
+  color: #a6a9ad;
+}
+
+[data-theme="dark"] .markdown-table th {
+  background-color: #3a3c3f;
+}
+
+[data-theme="dark"] .markdown-table th,
+[data-theme="dark"] .markdown-table td {
+  border-color: #4c4e50;
+}
+
+[data-theme="dark"] .markdown-code {
+  background-color: #2c2e30;
+  border-color: #4c4e50;
+}
+
+[data-theme="dark"] .text-content {
+  color: #a6a9ad;
 }
 </style>

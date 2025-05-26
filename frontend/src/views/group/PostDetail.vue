@@ -3,7 +3,10 @@
     <el-card v-loading="loading">
       <template #header>
         <div class="post-detail-header">
-          <el-button @click="goBack" icon="ArrowLeft" type="primary" plain>返回</el-button>
+          <el-button @click="goBack" type="primary" plain>
+            <el-icon><ArrowLeft /></el-icon>
+            返回
+          </el-button>
           <h2>帖子详情</h2>
         </div>
       </template>
@@ -29,8 +32,8 @@
 
         <!-- 帖子内容 -->
         <div class="post-body">
-          <div v-if="post.contentType === 'MARKDOWN'" v-html="renderMarkdown(post.content)"></div>
-          <div v-else v-html="renderText(post.content)"></div>
+          <div v-if="post.contentType === 'MARKDOWN'" class="markdown-content" v-html="renderMarkdown(post.content)"></div>
+          <div v-else class="text-content" v-html="renderText(post.content)"></div>
         </div>
 
         <!-- 操作按钮 -->
@@ -57,13 +60,26 @@
             <div class="comments-list" v-loading="commentsLoading">
               <div v-for="comment in comments" :key="comment.commentId" class="comment-item">
                 <div class="comment-author">
-                  <el-avatar :size="24" :src="comment.authorAvatar">
-                    {{ comment.authorName?.substring(0, 1) }}
+                  <el-avatar
+                    :size="24"
+                    :src="comment.avatar || comment.authorAvatar || defaultAvatar"
+                    style="cursor:pointer"
+                    @click="goToUserProfile(comment.userId || comment.authorId)"
+                  >
+                    {{ (comment.nickname || comment.authorName || comment.username || '').substring(0, 1) }}
                   </el-avatar>
-                  <span class="comment-author-name">{{ comment.authorName }}</span>
+                  <el-link
+                    class="comment-author-name"
+                    type="primary"
+                    :underline="true"
+                    style="font-weight:500"
+                    @click="goToUserProfile(comment.userId || comment.authorId)"
+                  >
+                    {{ comment.nickname || comment.authorName || comment.username || '匿名' }}
+                  </el-link>
                   <span class="comment-time">{{ formatTime(comment.createdAt) }}</span>
                 </div>
-                <div class="comment-content" v-html="renderCommentContent(comment.content)"></div>
+                <div class="comment-content markdown-content" v-html="renderCommentContent(comment.content)"></div>
               </div>
               <el-empty v-if="comments.length === 0 && !commentsLoading" description="暂无评论" />
             </div>
@@ -108,7 +124,10 @@ const authStore = useAuthStore()
 
 // 路由参数
 const groupId = computed(() => route.params.groupId)
-const postId = computed(() => route.params.postId)
+const postId = computed(() => {
+  const id = route.params.postId
+  return Array.isArray(id) ? id[0] : id
+})
 
 // 数据状态
 const loading = ref(false)
@@ -122,6 +141,9 @@ const newComment = ref('')
 const commentCurrentPage = ref(1)
 const commentPageSize = ref(10)
 const commentTotal = ref(0)
+
+// 默认头像
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 // 加载帖子详情
 const loadPostDetail = async () => {
@@ -167,6 +189,9 @@ const loadComments = async () => {
       const data = response.data.data
       if (data.records !== undefined) {
         comments.value = data.records || []
+        commentTotal.value = data.total || 0
+      } else if (data.comments !== undefined) {
+        comments.value = data.comments || []
         commentTotal.value = data.total || 0
       } else {
         comments.value = data || []
@@ -299,7 +324,18 @@ const formatTime = (time: string | undefined) => {
 const renderMarkdown = (content: string) => {
   if (!content) return ''
   try {
-    return marked(content)
+    let html = marked(content)
+    
+    // 为图片添加样式类
+    html = html.replace(/<img\s+([^>]*?)>/gi, '<img class="markdown-image" $1>')
+    
+    // 为表格添加样式类
+    html = html.replace(/<table>/gi, '<table class="markdown-table">')
+    
+    // 为代码块添加样式类
+    html = html.replace(/<pre>/gi, '<pre class="markdown-code">')
+    
+    return html
   } catch (error) {
     console.error('Markdown渲染错误:', error)
     return content
@@ -314,15 +350,29 @@ const renderText = (content: string) => {
 const renderCommentContent = (content: string) => {
   if (!content) return ''
   try {
-    return marked(content)
+    let html = marked(content)
+    
+    // 为图片添加样式类
+    html = html.replace(/<img\s+([^>]*?)>/gi, '<img class="markdown-image" $1>')
+    
+    // 为表格添加样式类
+    html = html.replace(/<table>/gi, '<table class="markdown-table">')
+    
+    // 为代码块添加样式类
+    html = html.replace(/<pre>/gi, '<pre class="markdown-code">')
+    
+    return html
   } catch (error) {
+    console.error('评论Markdown渲染错误:', error)
     return content.replace(/\n/g, '<br>')
   }
 }
 
 // 生命周期
 onMounted(() => {
-  loadPostDetail()
+  loadPostDetail();
+  loadComments();
+  showComments.value = true; // 页面加载时自动展开评论区
 })
 
 // 监听评论显示状态变化
@@ -361,6 +411,29 @@ watch(() => showComments.value, (newValue) => {
   font-weight: bold;
   margin-bottom: 16px;
   color: var(--el-text-color-primary);
+  text-decoration: underline dotted #409eff 1.5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s, text-decoration 0.2s;
+}
+.post-title:hover {
+  color: #409eff;
+  text-decoration: underline solid #409eff 2px;
+}
+.post-title .el-icon {
+  margin-left: 6px;
+  font-size: 20px;
+  color: #409eff;
+  opacity: 0.7;
+}
+
+[data-theme="dark"] .post-title {
+  color: #fff;
+  text-decoration-color: #409eff;
+}
+[data-theme="dark"] .post-title:hover {
+  color: #409eff;
 }
 
 .post-meta {
@@ -458,9 +531,235 @@ watch(() => showComments.value, (newValue) => {
   line-height: 1.5;
 }
 
+.comment-content.markdown-content {
+  background: #f7faff;
+  border-radius: 4px;
+  padding: 8px 12px 8px 42px;
+  margin-top: 5px;
+}
+[data-theme="dark"] .comment-content.markdown-content {
+  background: #232326;
+  color: #fff;
+}
+
 .comment-pagination {
   margin-top: 16px;
   text-align: center;
+}
+
+/* Markdown内容样式 */
+:deep(.markdown-content) {
+  line-height: 1.6;
+  word-break: break-word;
+  text-align: left;
+}
+
+:deep(.markdown-content h1) {
+  font-size: 2em;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.markdown-content h2) {
+  font-size: 1.5em;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: 0.3em;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.markdown-content h3) {
+  font-size: 1.17em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.markdown-content h4) {
+  font-size: 1em;
+  margin-top: 1.33em;
+  margin-bottom: 1.33em;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.markdown-content h5) {
+  font-size: 0.83em;
+  margin-top: 1.67em;
+  margin-bottom: 1.67em;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.markdown-content h6) {
+  font-size: 0.67em;
+  margin-top: 2.33em;
+  margin-bottom: 2.33em;
+  color: var(--el-text-color-primary);
+}
+
+:deep(.markdown-content p) {
+  margin-top: 1em;
+  margin-bottom: 1em;
+  color: var(--el-text-color-regular);
+}
+
+:deep(.markdown-content blockquote) {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid #409EFF;
+  background-color: #f6f8fa;
+  color: #666;
+}
+
+:deep(.markdown-content pre) {
+  background-color: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 16px;
+  overflow-x: auto;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9em;
+  line-height: 1.45;
+}
+
+:deep(.markdown-content pre code) {
+  padding: 0;
+  background-color: transparent;
+}
+
+:deep(.markdown-content code:not(pre code)) {
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+  padding: 0.2em 0.4em;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9em;
+}
+
+:deep(.markdown-content ul), 
+:deep(.markdown-content ol) {
+  padding-left: 2em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+:deep(.markdown-content li) {
+  margin: 0.25em 0;
+}
+
+:deep(.markdown-content table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+:deep(.markdown-content table th),
+:deep(.markdown-content table td) {
+  padding: 6px 13px;
+  border: 1px solid #dfe2e5;
+}
+
+:deep(.markdown-content table th) {
+  background-color: #f5f7fa;
+  font-weight: 600;
+}
+
+:deep(.markdown-content table tr:nth-child(2n)) {
+  background-color: #f6f8fa;
+}
+
+:deep(.markdown-content img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.5em 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+:deep(.markdown-content img:hover) {
+  transform: scale(1.02);
+}
+
+:deep(.markdown-content hr) {
+  border: none;
+  border-top: 1px solid #eaecef;
+  margin: 2em 0;
+}
+
+:deep(.markdown-content a) {
+  color: var(--el-color-primary);
+  text-decoration: none;
+}
+
+:deep(.markdown-content a:hover) {
+  text-decoration: underline;
+}
+
+.text-content {
+  line-height: 1.6;
+  color: var(--el-text-color-regular);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 暗色模式下的 Markdown 内容样式 */
+[data-theme="dark"] :deep(.markdown-content h1),
+[data-theme="dark"] :deep(.markdown-content h2) {
+  border-bottom-color: var(--el-border-color);
+  color: var(--el-text-color-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content h3),
+[data-theme="dark"] :deep(.markdown-content h4),
+[data-theme="dark"] :deep(.markdown-content h5),
+[data-theme="dark"] :deep(.markdown-content h6) {
+  color: var(--el-text-color-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content p) {
+  color: var(--el-text-color-regular);
+}
+
+[data-theme="dark"] :deep(.markdown-content blockquote) {
+  color: var(--el-text-color-secondary);
+  border-left-color: var(--el-color-primary);
+  background-color: var(--el-fill-color-lighter);
+}
+
+[data-theme="dark"] :deep(.markdown-content pre) {
+  background-color: var(--el-fill-color-lighter);
+  border-color: var(--el-border-color);
+  color: var(--el-text-color-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content code:not(pre code)) {
+  background-color: var(--el-fill-color-light);
+  color: var(--el-text-color-primary);
+}
+
+[data-theme="dark"] :deep(.markdown-content table th),
+[data-theme="dark"] :deep(.markdown-content table td) {
+  border-color: var(--el-border-color);
+}
+
+[data-theme="dark"] :deep(.markdown-content table th) {
+  background-color: var(--el-fill-color-lighter);
+}
+
+[data-theme="dark"] :deep(.markdown-content table tr:nth-child(2n)) {
+  background-color: var(--el-fill-color-light);
+}
+
+[data-theme="dark"] :deep(.markdown-content hr) {
+  border-top-color: var(--el-border-color);
+}
+
+[data-theme="dark"] .text-content {
+  color: var(--el-text-color-regular);
 }
 
 /* 响应式设计 */
