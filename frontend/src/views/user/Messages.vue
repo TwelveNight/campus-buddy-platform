@@ -319,35 +319,35 @@ const scrollToBottom = () => {
 const handleNewMessage = (data: any) => {
     if (!data || data.type !== 'PRIVATE_MESSAGE') return
 
-    const messageData = data.data
-    if (!messageData || !messageData.senderId) return
+    // 调试输出，便于排查
+    console.log('收到新消息', data, currentChatUser.value)
 
-    // 如果是当前聊天对象发送的消息
-    if (currentChatUser.value && messageData.senderId === currentChatUser.value.userId) {
-        // 添加到消息列表
+    // 判断 senderId 类型一致
+    const senderId = Number(data.senderId)
+    const chatUserId = currentChatUser.value ? Number(currentChatUser.value.userId) : null
+
+    if (chatUserId && senderId === chatUserId) {
         messages.value.push({
-            messageId: messageData.messageId,
-            senderId: messageData.senderId,
+            messageId: data.messageId,
+            senderId: senderId,
             recipientId: currentUserId.value || 0,
-            content: messageData.content,
-            createdAt: new Date(messageData.timestamp),
+            content: data.content,
+            createdAt: new Date(data.timestamp),
             isRead: false
         })
-        scrollToBottom()
-
-        // 自动标记为已读
+        nextTick(scrollToBottom)
         markAllChatAsRead()
     }
 
     // 更新会话列表
-    const sessionIndex = sessions.value.findIndex(s => s.userId === messageData.senderId)
+    const sessionIndex = sessions.value.findIndex(s => Number(s.userId) === senderId)
     if (sessionIndex !== -1) {
         // 更新现有会话
-        sessions.value[sessionIndex].lastMessage = messageData.content
-        sessions.value[sessionIndex].lastMessageTime = new Date(messageData.timestamp)
+        sessions.value[sessionIndex].lastMessage = data.content
+        sessions.value[sessionIndex].lastMessageTime = new Date(data.timestamp)
 
         // 如果不是当前聊天对象，增加未读数
-        if (!currentChatUser.value || messageData.senderId !== currentChatUser.value.userId) {
+        if (!currentChatUser.value || senderId !== chatUserId) {
             sessions.value[sessionIndex].unreadCount++
         }
 
@@ -357,10 +357,10 @@ const handleNewMessage = (data: any) => {
     } else {
         // 创建新会话
         sessions.value.unshift({
-            userId: messageData.senderId,
-            nickname: messageData.senderName || `用户 #${messageData.senderId}`,
-            lastMessage: messageData.content,
-            lastMessageTime: new Date(messageData.timestamp),
+            userId: senderId,
+            nickname: data.senderName || `用户 #${senderId}`,
+            lastMessage: data.content,
+            lastMessageTime: new Date(data.timestamp),
             unreadCount: 1
         })
     }

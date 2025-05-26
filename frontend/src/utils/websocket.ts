@@ -143,20 +143,26 @@ class WebSocketService {
       
       // 设置心跳超时检测
       setTimeout(() => {
-        // 如果心跳在5秒内没有响应，认为连接可能已断开，尝试重连
+        // 如果心跳在10秒内没有响应，认为连接可能已断开，尝试重连
         if (this.isConnected.value && !this.reconnectTimeout) {
           console.warn('心跳超时，尝试重新连接...');
           this.disconnect();
           if (this.userId) {
-            this.connect(this.userId);
+            setTimeout(() => {
+              if (this.userId) {
+                this.connect(this.userId);
+              }
+            }, 5000); // 延迟5秒后重连
           }
         }
-      }, 5000);
+      }, 10000); // 增加到10秒超时
     } else {
       console.warn('WebSocket不处于开启状态，无法发送心跳');
-      // 如果连接不是开启状态，尝试重连
+      // 如果连接不是开启状态，尝试重连，但增加延迟
       if (this.userId && !this.reconnectTimeout && !this.isConnected.value) {
-        this.attemptReconnect();
+        setTimeout(() => {
+          this.attemptReconnect();
+        }, 3000); // 延迟3秒后尝试重连
       }
     }
   }
@@ -168,11 +174,11 @@ class WebSocketService {
     this.lastError.value = null;
     this.reconnectAttempts = 0;
     
-    // 设置心跳检测
+    // 设置心跳检测，增加到60秒一次
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
     }
-    this.pingInterval = setInterval(() => this.sendPing(), 30000);
+    this.pingInterval = setInterval(() => this.sendPing(), 60000); // 60秒
     
     // 通知连接状态监听器
     this.connectionListeners.forEach(listener => listener(true));
@@ -228,7 +234,19 @@ class WebSocketService {
           if (this.userId) {
             this.connect(this.userId);
           }
-        }, 1000);
+        }, 3000); // 增加延迟到3秒，减少频繁重连
+        return;
+      }
+    } else if (event.code === 1000) {
+      // 这是正常关闭，如果不是由disconnect方法触发的，可能是服务器主动关闭
+      // 在这种情况下，可以尝试延迟较长时间后重连
+      console.log('WebSocket正常关闭（代码1000），等待一段时间后尝试重新连接...');
+      if (this.userId && !this.reconnectTimeout) {
+        setTimeout(() => {
+          if (this.userId) {
+            this.connect(this.userId);
+          }
+        }, 10000); // 10秒后尝试重连
         return;
       }
     }

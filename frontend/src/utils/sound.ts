@@ -1,6 +1,6 @@
 // 通知音效文件
-const NOTIFICATION_SOUND = '/sounds/notification.mp3';
-const MESSAGE_SOUND = '/sounds/message.mp3';
+const NOTIFICATION_SOUND = './sounds/notification.mp3';
+const MESSAGE_SOUND = './sounds/message.mp3';
 
 // 播放通知声音
 export const playNotificationSound = () => {

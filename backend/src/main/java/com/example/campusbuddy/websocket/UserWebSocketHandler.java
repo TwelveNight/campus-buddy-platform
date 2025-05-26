@@ -33,8 +33,22 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        // 可根据需要处理客户端发来的消息
-        session.sendMessage(new TextMessage("echo: " + message.getPayload()));
+        // 解析消息内容
+        String payload = message.getPayload();
+        try {
+            // 检查是否是PING消息
+            if (payload.contains("\"type\":\"PING\"")) {
+                // 返回PONG响应
+                session.sendMessage(new TextMessage("{\"type\":\"PONG\",\"timestamp\":" + System.currentTimeMillis() + "}"));
+                return;
+            }
+            
+            // 处理其他类型的消息
+            session.sendMessage(new TextMessage("echo: " + payload));
+        } catch (Exception e) {
+            // 如果解析出错，返回原消息
+            session.sendMessage(new TextMessage("echo: " + payload));
+        }
     }
 
     // 静态方法：向指定用户推送消息
