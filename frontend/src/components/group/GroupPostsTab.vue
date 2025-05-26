@@ -200,6 +200,10 @@ const props = defineProps({
     userRole: {
         type: String,
         default: null
+    },
+    disabled: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -244,7 +248,7 @@ const postRules = {
 
 // 计算属性
 const canCreatePost = computed(() => {
-    return props.userRole && ['CREATOR', 'ADMIN', 'MEMBER'].includes(props.userRole);
+    return !props.disabled && props.userRole && ['CREATOR', 'ADMIN', 'MEMBER'].includes(props.userRole);
 });
 
 const isGroupAdmin = computed(() => {

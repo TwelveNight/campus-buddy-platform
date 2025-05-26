@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.entity.GroupPost;
+import com.example.campusbuddy.vo.GroupPostVO;
 
 public interface GroupPostService extends IService<GroupPost> {
     // 分页查询小组帖子
@@ -36,6 +37,9 @@ public interface GroupPostService extends IService<GroupPost> {
     // =============== 管理员方法 ===============
     // 管理员分页查询帖子
     Page<GroupPost> adminPagePosts(Integer page, Integer size, String keyword, Long groupId, String status);
+    
+    // 管理员分页查询帖子（带VO，包含小组和作者信息）
+    Page<GroupPostVO> adminPagePostVOs(Integer page, Integer size, String keyword, Long groupId, String status);
     
     // 管理员更新帖子状态
     boolean adminUpdatePostStatus(Long postId, String status);

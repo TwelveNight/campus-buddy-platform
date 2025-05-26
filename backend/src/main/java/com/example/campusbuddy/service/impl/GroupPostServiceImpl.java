@@ -7,16 +7,21 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.entity.Group;
 import com.example.campusbuddy.entity.GroupMember;
 import com.example.campusbuddy.entity.GroupPost;
+import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.GroupMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
 import com.example.campusbuddy.mapper.GroupPostMapper;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.PostLikeService;
+import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.vo.GroupPostVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost> implements GroupPostService {
@@ -26,6 +31,12 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     
     @Autowired
     private GroupMapper groupMapper;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private PostLikeService postLikeService;
 
     @Override
     public IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize) {
@@ -121,9 +132,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     public GroupPost getPostDetail(Long postId) {
         return getById(postId);
     }
-
-    @Autowired
-    private PostLikeService postLikeService;
     
     @Override
     public boolean likePost(Long postId, Long userId) {
@@ -221,6 +229,54 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         queryWrapper.orderByDesc(GroupPost::getCreatedAt);
         
         return page(pageInfo, queryWrapper);
+    }
+    
+    @Override
+    public Page<GroupPostVO> adminPagePostVOs(Integer page, Integer size, String keyword, Long groupId, String status) {
+        // 先获取原始的 GroupPost 分页数据
+        Page<GroupPost> postPage = adminPagePosts(page, size, keyword, groupId, status);
+        
+        // 创建一个新的 GroupPostVO 分页对象
+        Page<GroupPostVO> voPage = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
+        
+        // 将 GroupPost 转换为 GroupPostVO
+        List<GroupPostVO> voList = postPage.getRecords().stream().map(post -> {
+            GroupPostVO vo = new GroupPostVO();
+            vo.setPostId(post.getPostId());
+            vo.setGroupId(post.getGroupId());
+            vo.setAuthorId(post.getAuthorId());
+            vo.setTitle(post.getTitle());
+            vo.setContent(post.getContent());
+            vo.setContentType(post.getContentType());
+            vo.setLikeCount(post.getLikeCount());
+            vo.setCommentCount(post.getCommentCount());
+            vo.setStatus(post.getStatus());
+            vo.setCreatedAt(post.getCreatedAt());
+            vo.setUpdatedAt(post.getUpdatedAt());
+            
+            // 查询作者信息
+            User author = userService.getById(post.getAuthorId());
+            if (author != null) {
+                vo.setAuthorName(author.getNickname() != null ? author.getNickname() : author.getUsername());
+                vo.setAuthorAvatar(author.getAvatarUrl());
+            } else {
+                vo.setAuthorName("未知用户");
+            }
+            
+            // 查询小组信息
+            Group group = groupMapper.selectById(post.getGroupId());
+            if (group != null) {
+                vo.setGroupName(group.getName());
+                vo.setGroupAvatar(group.getAvatarUrl());
+            } else {
+                vo.setGroupName("未知小组");
+            }
+            
+            return vo;
+        }).collect(Collectors.toList());
+        
+        voPage.setRecords(voList);
+        return voPage;
     }
     
     @Override

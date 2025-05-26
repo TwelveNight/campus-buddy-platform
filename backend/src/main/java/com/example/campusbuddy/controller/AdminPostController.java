@@ -2,8 +2,13 @@ package com.example.campusbuddy.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.common.R;
+import com.example.campusbuddy.entity.Group;
 import com.example.campusbuddy.entity.GroupPost;
+import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostService;
+import com.example.campusbuddy.service.GroupService;
+import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.vo.GroupPostVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Tag(name = "管理员帖子管理", description = "管理员帖子管理相关操作")
 @RestController
@@ -19,10 +26,16 @@ public class AdminPostController {
     
     @Autowired
     private GroupPostService groupPostService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private GroupService groupService;
 
     @Operation(summary = "分页查询帖子（支持关键词、小组ID和状态）")
     @GetMapping("/page")
-    public R<Page<GroupPost>> pagePosts(
+    public R<Page<GroupPostVO>> pagePosts(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
@@ -30,6 +43,7 @@ public class AdminPostController {
             @RequestParam(required = false) String status,
             HttpServletRequest request) {
         // 验证管理员权限
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         
@@ -37,8 +51,55 @@ public class AdminPostController {
             return R.fail("权限不足，需要管理员权限");
         }
         
-        Page<GroupPost> result = groupPostService.adminPagePosts(page, size, keyword, groupId, status);
-        return R.ok("查询成功", result);
+        // 使用 adminPagePosts 获取基本帖子数据
+        Page<GroupPost> postPage = groupPostService.adminPagePosts(page, size, keyword, groupId, status);
+        
+        // 转换为 GroupPostVO 并添加作者和小组信息
+        List<Long> authorIds = postPage.getRecords().stream().map(GroupPost::getAuthorId).collect(Collectors.toList());
+        List<Long> groupIds = postPage.getRecords().stream().map(GroupPost::getGroupId).collect(Collectors.toList());
+        
+        Map<Long, User> userMap = userService.listByIds(authorIds).stream().collect(Collectors.toMap(User::getUserId, user -> user));
+        Map<Long, Group> groupMap = groupService.listByIds(groupIds).stream().collect(Collectors.toMap(Group::getGroupId, group -> group));
+        
+        // 创建转换后的页面
+        Page<GroupPostVO> voPage = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
+        List<GroupPostVO> voList = postPage.getRecords().stream().map(post -> {
+            GroupPostVO vo = new GroupPostVO();
+            vo.setPostId(post.getPostId());
+            vo.setGroupId(post.getGroupId());
+            vo.setAuthorId(post.getAuthorId());
+            vo.setTitle(post.getTitle());
+            vo.setContent(post.getContent());
+            vo.setContentType(post.getContentType());
+            vo.setLikeCount(post.getLikeCount());
+            vo.setCommentCount(post.getCommentCount());
+            vo.setStatus(post.getStatus());
+            vo.setCreatedAt(post.getCreatedAt());
+            vo.setUpdatedAt(post.getUpdatedAt());
+            
+            // 添加作者信息
+            User author = userMap.get(post.getAuthorId());
+            if (author != null) {
+                vo.setAuthorName(author.getNickname() != null ? author.getNickname() : author.getUsername());
+                vo.setAuthorAvatar(author.getAvatarUrl());
+            } else {
+                vo.setAuthorName("未知用户");
+            }
+            
+            // 添加小组信息
+            Group group = groupMap.get(post.getGroupId());
+            if (group != null) {
+                vo.setGroupName(group.getName());
+                vo.setGroupAvatar(group.getAvatarUrl());
+            } else {
+                vo.setGroupName("未知小组");
+            }
+            
+            return vo;
+        }).collect(Collectors.toList());
+        
+        voPage.setRecords(voList);
+        return R.ok("查询成功", voPage);
     }
 
     @Operation(summary = "更新帖子状态")
@@ -48,6 +109,7 @@ public class AdminPostController {
             @RequestParam String status,
             HttpServletRequest request) {
         // 验证管理员权限
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         
@@ -65,6 +127,7 @@ public class AdminPostController {
             @PathVariable Long postId,
             HttpServletRequest request) {
         // 验证管理员权限
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         

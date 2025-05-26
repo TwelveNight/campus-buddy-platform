@@ -2,8 +2,8 @@ package com.example.campusbuddy.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.common.R;
-import com.example.campusbuddy.entity.Group;
 import com.example.campusbuddy.service.GroupService;
+import com.example.campusbuddy.vo.GroupVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,13 +22,14 @@ public class AdminGroupController {
 
     @Operation(summary = "分页查询小组（支持关键词和状态）")
     @GetMapping("/page")
-    public R<Page<Group>> pageGroups(
+    public R<Page<GroupVO>> pageGroups(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             HttpServletRequest request) {
         // 验证管理员权限
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         
@@ -36,7 +37,7 @@ public class AdminGroupController {
             return R.fail("权限不足，需要管理员权限");
         }
         
-        Page<Group> result = groupService.adminPageGroups(page, size, keyword, status);
+        Page<GroupVO> result = groupService.adminPageGroupVOs(page, size, keyword, status);
         return R.ok("查询成功", result);
     }
 
@@ -47,6 +48,7 @@ public class AdminGroupController {
             @RequestParam String status,
             HttpServletRequest request) {
         // 验证管理员权限
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         
@@ -64,6 +66,7 @@ public class AdminGroupController {
             @PathVariable Long groupId,
             HttpServletRequest request) {
         // 验证管理员权限
+        @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) request.getAttribute("roles");
         boolean isAdmin = roles != null && roles.contains("ROLE_ADMIN");
         

@@ -19,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +50,35 @@ public class GroupController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         return userService.getUserByUsername(username);
+    }
+
+    /**
+     * 检查当前用户是否为管理员
+     */
+    private boolean isCurrentUserAdmin(HttpServletRequest request) {
+        try {
+            List<String> roles = (List<String>) request.getAttribute("roles");
+            return roles != null && roles.contains("ROLE_ADMIN");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 检查用户是否有访问小组的权限（管理员或小组成员）
+     */
+    private boolean hasGroupAccess(Long groupId, Long userId, HttpServletRequest request) {
+        // 如果是管理员，允许访问任何小组
+        if (isCurrentUserAdmin(request)) {
+            return true;
+        }
+        
+        // 检查是否为小组成员
+        LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(GroupMember::getGroupId, groupId)
+                .eq(GroupMember::getUserId, userId)
+                .eq(GroupMember::getStatus, "ACTIVE");
+        return groupMemberService.count(queryWrapper) > 0;
     }
 
     /**
@@ -139,7 +169,13 @@ public class GroupController {
      */
     @Operation(summary = "获取小组详情", description = "根据小组ID获取详细信息。返回Group对象和创建者信息。")
     @GetMapping("/{groupId}")
-    public R<Map<String, Object>> getGroupDetail(@Parameter(description = "小组ID") @PathVariable Long groupId) {
+    public R<Map<String, Object>> getGroupDetail(@Parameter(description = "小组ID") @PathVariable Long groupId, HttpServletRequest request) {
+        User currentUser = getCurrentUser();
+        // 管理员可以访问任何小组，普通用户需要检查权限
+        if (!isCurrentUserAdmin(request) && !hasGroupAccess(groupId, currentUser.getUserId(), request)) {
+            return R.fail("您没有权限访问该小组");
+        }
+
         Group group = groupService.getGroupDetail(groupId);
         if (group == null) {
             return R.fail("小组不存在");

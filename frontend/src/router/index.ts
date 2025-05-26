@@ -139,6 +139,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'groups/:groupId/posts/:postId',
+        component: () => import('../views/group/PostDetail.vue'),
+        props: true,
+        meta: { requiresAuth: true }
+      },
+      {
         path: 'debug',
         component: Debug,
         name: 'Debug',

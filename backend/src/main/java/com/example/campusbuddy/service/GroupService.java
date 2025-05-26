@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.entity.Group;
+import com.example.campusbuddy.vo.GroupVO;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,9 @@ public interface GroupService extends IService<Group> {
     // =============== 管理员方法 ===============
     // 管理员分页查询小组
     Page<Group> adminPageGroups(Integer page, Integer size, String keyword, String status);
+    
+    // 管理员分页查询小组（带VO，包含创建者信息）
+    Page<GroupVO> adminPageGroupVOs(Integer page, Integer size, String keyword, String status);
     
     // 管理员更新小组状态
     boolean adminUpdateGroupStatus(Long groupId, String status);

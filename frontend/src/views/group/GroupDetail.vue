@@ -22,6 +22,11 @@
                             <el-tag v-if="group.joinType === 'PUBLIC'" type="success">公开小组</el-tag>
                             <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning">需审批</el-tag>
                         </span>
+                        <!-- 小组状态标签 -->
+                        <span class="group-status">
+                            <el-tag v-if="group.status === 'INACTIVE'" type="danger">已禁用</el-tag>
+                            <el-tag v-else-if="group.status === 'DISBANDED'" type="info">已解散</el-tag>
+                        </span>
                     </div>
                     <!-- 创建者信息展示 -->
                     <div class="group-creator" v-if="creator">
@@ -34,32 +39,74 @@
                     <p class="group-description">{{ group.description }}</p>
                 </div>
                 <div class="group-actions">
-                    <template v-if="!userRole">
-                        <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup">加入小组</el-button>
-                        <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
+                    <!-- 小组已解散时不显示任何操作按钮 -->
+                    <template v-if="group.status === 'DISBANDED'">
+                        <el-button type="info" disabled>小组已解散</el-button>
                     </template>
+                    <!-- 小组被禁用时的处理 -->
+                    <template v-else-if="group.status === 'INACTIVE'">
+                        <template v-if="userRole">
+                            <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog" disabled>
+                                编辑小组（已禁用）
+                            </el-button>
+                            <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup">
+                                退出小组
+                            </el-button>
+                        </template>
+                        <template v-else>
+                            <el-button type="primary" disabled>加入小组（已禁用）</el-button>
+                        </template>
+                    </template>
+                    <!-- 正常状态下的操作 -->
                     <template v-else>
-                        <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog">
-                            编辑小组
-                        </el-button>
-                        <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup">
-                            退出小组
-                        </el-button>
-                        <el-button v-if="userRole === 'CREATOR'" type="danger" @click="confirmDisbandGroup">
-                            解散小组
-                        </el-button>
+                        <template v-if="!userRole">
+                            <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup">加入小组</el-button>
+                            <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
+                        </template>
+                        <template v-else>
+                            <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog">
+                                编辑小组
+                            </el-button>
+                            <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup">
+                                退出小组
+                            </el-button>
+                            <el-button v-if="userRole === 'CREATOR'" type="danger" @click="confirmDisbandGroup">
+                                解散小组
+                            </el-button>
+                        </template>
                     </template>
                 </div>
             </div>
 
+            <!-- 小组状态警告信息 -->
+            <div v-if="group.status === 'INACTIVE'" class="group-status-warning">
+                <el-alert
+                    title="该小组已被管理员禁用"
+                    type="warning"
+                    description="小组已被管理员禁用，部分功能可能受限。如有疑问，请联系管理员。"
+                    show-icon
+                    :closable="false"
+                />
+            </div>
+            
+            <div v-if="group.status === 'DISBANDED'" class="group-status-warning">
+                <el-alert
+                    title="该小组已解散"
+                    type="info"
+                    description="该小组已由创建者解散，无法进行任何操作。"
+                    show-icon
+                    :closable="false"
+                />
+            </div>
+
             <!-- 小组功能区 -->
-            <el-tabs v-model="activeTab" class="group-tabs">
+            <el-tabs v-model="activeTab" class="group-tabs" :disabled="group.status === 'DISBANDED'">
                 <el-tab-pane label="讨论区" name="posts">
-                    <group-posts-tab :group-id="groupId" :user-role="userRole" />
+                    <group-posts-tab :group-id="groupId" :user-role="userRole" :disabled="group.status !== 'ACTIVE'" />
                 </el-tab-pane>
 
                 <el-tab-pane label="文件资源" name="files">
-                    <group-files-tab :group-id="groupId" :user-role="userRole" />
+                    <group-files-tab :group-id="groupId" :user-role="userRole" :disabled="group.status !== 'ACTIVE'" />
                 </el-tab-pane>
 
                 <el-tab-pane label="成员管理" name="members">
@@ -548,6 +595,10 @@ const confirmDisbandGroup = () => {
 
 .group-tabs {
     margin-top: 30px;
+}
+
+.group-status-warning {
+    margin-bottom: 20px;
 }
 
 /* 暗色模式适配 */

@@ -9,6 +9,7 @@ import com.example.campusbuddy.entity.GroupMember;
 import com.example.campusbuddy.mapper.GroupMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
 import com.example.campusbuddy.service.GroupService;
+import com.example.campusbuddy.vo.GroupVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @Autowired
     private GroupMemberMapper groupMemberMapper;
+    @Autowired
+    private com.example.campusbuddy.mapper.UserMapper userMapper;
 
     @Override
     public IPage<Group> queryGroups(Integer pageNum, Integer pageSize, String category, String tag, String keyword) {
@@ -208,5 +211,63 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         
         // 删除小组
         return removeById(groupId);
+    }
+
+    // 管理员分页查询小组（带VO）
+    @Override
+    public Page<GroupVO> adminPageGroupVOs(Integer page, Integer size, String keyword, String status) {
+        Page<Group> pageInfo = new Page<>(page, size);
+        LambdaQueryWrapper<Group> queryWrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            queryWrapper.like(Group::getName, keyword)
+                    .or()
+                    .like(Group::getDescription, keyword);
+        }
+        if (StringUtils.hasText(status)) {
+            queryWrapper.eq(Group::getStatus, status);
+        }
+        queryWrapper.orderByDesc(Group::getCreatedAt);
+        Page<Group> groupPage = page(pageInfo, queryWrapper);
+        List<Group> groupList = groupPage.getRecords();
+        
+        // 批量查创建者
+        List<Long> creatorIds = new ArrayList<>();
+        for (Group g : groupList) {
+            if (g.getCreatorId() != null) creatorIds.add(g.getCreatorId());
+        }
+        Map<Long, com.example.campusbuddy.entity.User> creatorMap = new HashMap<>();
+        if (!creatorIds.isEmpty()) {
+            for (com.example.campusbuddy.entity.User u : userMapper.selectBatchIds(creatorIds)) {
+                creatorMap.put(u.getUserId(), u);
+            }
+        }
+        
+        // 组装VO
+        List<GroupVO> voList = new ArrayList<>();
+        for (Group g : groupList) {
+            GroupVO vo = new GroupVO();
+            vo.setGroupId(g.getGroupId());
+            vo.setName(g.getName());
+            vo.setDescription(g.getDescription());
+            vo.setAvatarUrl(g.getAvatarUrl());
+            vo.setCreatorId(g.getCreatorId());
+            com.example.campusbuddy.entity.User creator = creatorMap.get(g.getCreatorId());
+            if (creator != null) {
+                vo.setCreatorNickname(creator.getNickname() != null ? creator.getNickname() : creator.getUsername());
+                vo.setCreatorAvatar(creator.getAvatarUrl());
+            }
+            vo.setJoinType(g.getJoinType());
+            vo.setCategory(g.getCategory());
+            vo.setTags(g.getTags());
+            vo.setMemberCount(g.getMemberCount());
+            vo.setPostCount(g.getPostCount());
+            vo.setStatus(g.getStatus());
+            vo.setCreatedAt(g.getCreatedAt());
+            vo.setUpdatedAt(g.getUpdatedAt());
+            voList.add(vo);
+        }
+        Page<GroupVO> voPage = new Page<>(groupPage.getCurrent(), groupPage.getSize(), groupPage.getTotal());
+        voPage.setRecords(voList);
+        return voPage;
     }
 }

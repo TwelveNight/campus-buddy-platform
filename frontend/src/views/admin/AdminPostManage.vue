@@ -73,7 +73,7 @@
                 查看
               </el-button>
               <el-button 
-                :type="scope.row.status === 'NORMAL' ? 'danger' : 'success'" 
+                :type="scope.row.status === 'NORMAL' ? 'warning' : 'success'" 
                 size="small" 
                 link
                 @click="handleToggleStatus(scope.row)"
@@ -105,8 +105,11 @@
     <el-dialog
       v-model="postDialogVisible"
       title="帖子详情"
-      width="70%"
+      width="90%"
+      top="3vh"
       destroy-on-close
+      :close-on-click-modal="false"
+      class="post-detail-dialog-wrapper"
     >
       <div class="post-detail-dialog" v-if="currentPost">
         <h3 class="post-title">{{ currentPost.title }}</h3>
@@ -126,10 +129,10 @@
         <div class="post-actions">
           <el-button-group>
             <el-button 
-              :type="currentPost.status === 'NORMAL' ? 'danger' : 'success'" 
+              :type="currentPost.status === 'NORMAL' ? 'warning' : 'success'" 
               @click="handleToggleStatus(currentPost)"
             >
-              {{ currentPost.status === 'NORMAL' ? '禁用帖子' : '启用帖子' }}
+              {{ currentPost.status === 'NORMAL' ? '禁用' : '启用' }}
             </el-button>
             <el-button type="danger" @click="confirmRemove(currentPost.postId)">
               删除帖子
@@ -146,7 +149,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
-import { getAdminPosts, deletePost, updatePostStatus } from '../../api/groupPost'
+import { getAdminPosts, adminDeletePost, updatePostStatus } from '../../api/groupPost'
 import { getGroups } from '../../api/group'
 import { marked } from 'marked'
 
@@ -172,7 +175,7 @@ const filters = reactive({
 // 状态选项
 const statusOptions = [
   { value: 'NORMAL', label: '正常' },
-  { value: 'HIDDEN', label: '已禁用' }
+  { value: 'DELETED', label: '已禁用' }
 ]
 
 onMounted(async () => {
@@ -310,7 +313,7 @@ function renderText(content: string) {
 
 // 切换帖子状态（启用/禁用）
 async function handleToggleStatus(post: any) {
-  const newStatus = post.status === 'NORMAL' ? 'HIDDEN' : 'NORMAL'
+  const newStatus = post.status === 'NORMAL' ? 'DELETED' : 'NORMAL'
   const actionText = newStatus === 'NORMAL' ? '启用' : '禁用'
   
   try {
@@ -343,18 +346,18 @@ async function handleToggleStatus(post: any) {
 function confirmRemove(postId: number) {
   ElMessageBox.confirm(
     '确定要删除这篇帖子吗？此操作将同时删除该帖子的所有评论。此操作不可恢复。',
-    '警告',
+    '删除警告',
     {
       confirmButtonText: '确认删除',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'error'
     }
   ).then(async () => {
     try {
-      const res = await deletePost(postId)
+      const res = await adminDeletePost(postId)
 
       if (res.data.code === 200) {
-        ElMessage.success('删除成功')
+        ElMessage.success('帖子已删除')
         // 如果当前正在查看这篇帖子，关闭对话框
         if (postDialogVisible.value && currentPost.value && currentPost.value.postId === postId) {
           postDialogVisible.value = false
@@ -394,7 +397,8 @@ function formatDate(dateString: string | Date | number) {
 function getStatusLabel(status: string) {
   const map: Record<string, string> = {
     'NORMAL': '正常',
-    'HIDDEN': '已禁用'
+    'DELETED': '已删除',
+    'HIDDEN': '已隐藏'
   }
   return map[status] || status
 }
@@ -403,7 +407,8 @@ function getStatusLabel(status: string) {
 function getStatusType(status: string) {
   const map: Record<string, string> = {
     'NORMAL': 'success',
-    'HIDDEN': 'danger'
+    'DELETED': 'danger',
+    'HIDDEN': 'warning'
   }
   return map[status] || ''
 }
@@ -483,6 +488,18 @@ function getStatusType(status: string) {
   display: flex;
   justify-content: flex-end;
   margin-top: 20px;
+}
+
+.post-detail-dialog-wrapper :deep(.el-dialog) {
+  min-height: 80vh;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.post-detail-dialog-wrapper :deep(.el-dialog__body) {
+  max-height: calc(90vh - 120px);
+  overflow-y: auto;
+  padding: 20px;
 }
 
 [data-theme="dark"] .card-header h2,

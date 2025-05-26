@@ -189,6 +189,10 @@ const props = defineProps({
     userRole: {
         type: String,
         default: null
+    },
+    disabled: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -225,7 +229,7 @@ const fileRules = {
 
 // 计算属性
 const canUploadFile = computed(() => {
-    return props.userRole && ['CREATOR', 'ADMIN', 'MEMBER'].includes(props.userRole);
+    return !props.disabled && props.userRole && ['CREATOR', 'ADMIN', 'MEMBER'].includes(props.userRole);
 });
 
 // 权限判断 - 是否可以管理文件（删除、编辑）
