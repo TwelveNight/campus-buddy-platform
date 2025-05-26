@@ -39,7 +39,7 @@
         <el-empty v-if="filteredFriends.length === 0 && !loading" description="暂无好友" />
         
         <div v-for="friend in filteredFriends" :key="friend.userId" class="friend-item">
-          <div class="friend-info" @click="viewUserProfile(friend.userId)">
+          <div class="friend-info" @click="viewUserProfile(friend.friendId)">
             <el-avatar :size="50" :src="friend.avatarUrl || defaultAvatar"></el-avatar>
             <div class="friend-details">
               <div class="friend-name">{{ friend.nickname || friend.username }}</div>
@@ -58,7 +58,7 @@
                   <el-dropdown-item @click="sendMessage(friend)">
                     <el-icon><ChatDotRound /></el-icon> 发起私聊
                   </el-dropdown-item>
-                  <el-dropdown-item @click="viewUserProfile(friend.userId)">
+                  <el-dropdown-item @click="viewUserProfile(friend.friendId)">
                     <el-icon><View /></el-icon> 查看资料
                   </el-dropdown-item>
                   <el-dropdown-item divided @click="confirmDeleteFriend(friend)" class="danger-item">
@@ -85,40 +85,32 @@
       <!-- 好友申请列表 -->
       <div v-else class="friend-requests" v-loading="requestsLoading">
         <el-empty v-if="friendRequests.length === 0 && !requestsLoading" description="暂无好友申请" />
-        
         <div v-for="request in friendRequests" :key="request.requestId" class="request-item">
-          <div class="request-info" @click="viewUserProfile(request.fromUserId)">
-            <el-avatar :size="50" :src="request.fromUserAvatar || defaultAvatar"></el-avatar>
+          <div class="request-info" @click="viewUserProfile(request.requester.userId)">
+            <el-avatar :src="request.requester.avatarUrl || defaultAvatar" />
             <div class="request-details">
-              <div class="request-name">{{ request.fromUserName }}</div>
+              <div class="request-name">{{ request.requester.nickname || request.requester.username }}</div>
               <div class="request-meta">
-                申请时间: {{ formatTime(request.createdAt) }}
+                <span>{{ formatTime(request.createdAt) }}</span>
               </div>
-              <div class="request-message" v-if="request.message">
-                留言: {{ request.message }}
-              </div>
+              <div class="request-message" v-if="request.requestMessage">{{ request.requestMessage }}</div>
             </div>
           </div>
           <div class="request-actions" v-if="request.status === 'PENDING'">
-            <el-button type="success" size="small" @click="acceptRequest(request)">接受</el-button>
-            <el-button type="danger" size="small" @click="rejectRequest(request)" plain>拒绝</el-button>
+            <el-button size="small" type="primary" @click="acceptRequest(request)">接受</el-button>
+            <el-button size="small" @click="rejectRequest(request)">拒绝</el-button>
           </div>
-          <div class="request-status" v-else>
-            <el-tag :type="request.status === 'ACCEPTED' ? 'success' : 'info'">
-              {{ request.status === 'ACCEPTED' ? '已接受' : '已拒绝' }}
-            </el-tag>
+          <div class="request-actions" v-else>
+            <el-tag v-if="request.status === 'ACCEPTED'" type="success">已同意</el-tag>
+            <el-tag v-else-if="request.status === 'REJECTED'" type="info">已拒绝</el-tag>
           </div>
         </div>
-        
         <el-pagination
-          v-if="totalRequests > pageSize"
-          background
-          layout="prev, pager, next"
-          :total="totalRequests"
+          class="pagination"
           :current-page="requestsPage"
           :page-size="pageSize"
+          :total="totalRequests"
           @current-change="handleRequestsPageChange"
-          class="pagination"
         />
       </div>
     </el-card>
@@ -198,8 +190,15 @@ const loadFriends = async () => {
     });
     
     if (res.data.code === 200) {
-      friends.value = res.data.data.records || [];
-      totalFriends.value = res.data.data.total || 0;
+      // 拍平后端返回的好友数据结构，方便前端渲染
+      friends.value = (res.data.data || []).map(item => ({
+        ...item.friend,
+        id: item.id,
+        friendId: item.friendId
+      }));
+      totalFriends.value = friends.value.length || 0;
+      console.log('好友列表:', friends.value);
+      console.log('总好友数:', totalFriends.value);
     } else {
       ElMessage.error(res.data.message || '获取好友列表失败');
     }
@@ -219,9 +218,9 @@ const loadFriendRequests = async () => {
       page: requestsPage.value,
       size: pageSize.value
     });
-    
     if (res.data.code === 200) {
-      friendRequests.value = res.data.data.records || [];
+      console.log('好友申请列表:', res.data.data);
+      friendRequests.value = res.data.data || [];
       totalRequests.value = res.data.data.total || 0;
     } else {
       ElMessage.error(res.data.message || '获取好友申请列表失败');
@@ -267,7 +266,22 @@ const viewUserProfile = (userId: number) => {
 
 // 发送私信
 const sendMessage = (user: any) => {
-  router.push(`/messages/${user.userId}`);
+  // 好友列表：friend.friendId
+  if (user.friendId) {
+    router.push(`/messages/${user.friendId}`)
+    return
+  }
+  // 好友申请：requester.userId
+  if (user.userId) {
+    router.push(`/messages/${user.userId}`)
+    return
+  }
+  // 兜底
+  if (user.id) {
+    router.push(`/messages/${user.id}`)
+    return
+  }
+  ElMessage.error('无法识别用户ID，无法发起私聊');
 };
 
 // 打开用户搜索对话框

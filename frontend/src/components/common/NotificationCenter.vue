@@ -146,7 +146,10 @@ const getTypeTagType = (type: string) => {
         'GROUP_JOIN_REJECTED': 'danger',
         'GROUP_INVITATION': 'primary',
         'GROUP_ANNOUNCEMENT': 'warning',
-        'GROUP_ADMIN_ASSIGNED': 'success'
+        'GROUP_ADMIN_ASSIGNED': 'success',
+        'FRIEND_REQUEST': 'primary',
+        'FRIEND_REQUEST_ACCEPTED': 'success',
+        'FRIEND_REQUEST_REJECTED': 'danger',
     }
     return typeMap[type] || 'info'
 }
@@ -166,7 +169,10 @@ const getTypeLabel = (type: string) => {
         'GROUP_JOIN_REJECTED': '加入拒绝',
         'GROUP_INVITATION': '小组邀请',
         'GROUP_ANNOUNCEMENT': '小组公告',
-        'GROUP_ADMIN_ASSIGNED': '管理员任命'
+        'GROUP_ADMIN_ASSIGNED': '管理员任命',
+        'FRIEND_REQUEST': '好友申请',
+        'FRIEND_REQUEST_ACCEPTED': '申请通过',
+        'FRIEND_REQUEST_REJECTED': '申请拒绝',
     }
     return typeMap[type] || type
 }
@@ -204,6 +210,16 @@ const handleNotificationClick = (notification: NotificationItem) => {
     // 如果未读，标记为已读
     if (!notification.isRead) {
         markAsRead(notification.notificationId)
+    }
+
+    // 好友申请相关类型跳转到好友申请页
+    if (
+        notification.type === 'FRIEND_REQUEST' ||
+        notification.type === 'FRIEND_REQUEST_ACCEPTED' ||
+        notification.type === 'FRIEND_REQUEST_REJECTED'
+    ) {
+        router.push('/user/friends?tab=requests')
+        return
     }
 
     // 如果有相关链接，跳转

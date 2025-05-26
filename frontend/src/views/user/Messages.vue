@@ -101,6 +101,7 @@ import {
     markAllMessagesAsRead,
     getUnreadMessageCount
 } from '@/api/message'
+import { getUserById } from '@/api/user'
 import type { ChatSession, ChatMessage } from '@/types/message'
 import webSocketService from '@/utils/websocket'
 
@@ -182,20 +183,23 @@ const fetchSessions = async () => {
 // 获取用户信息并创建会话
 const fetchUserAndCreateSession = async (userId: number) => {
     try {
-        // 这里应该调用获取用户信息的API
-        // 由于示例中没有定义，暂时使用一个模拟对象
-        const userInfo = {
-            userId: userId,
-            nickname: `用户${userId}`,
-            avatarUrl: '',
-            lastMessage: '',
-            lastMessageTime: new Date().toISOString(),
-            unreadCount: 0
+        // 调用真实API获取用户信息
+        const res = await getUserById(userId)
+        if (res.data.code === 200) {
+            const user = res.data.data
+            const userInfo = {
+                userId: user.userId,
+                nickname: user.nickname,
+                avatarUrl: user.avatarUrl,
+                lastMessage: '',
+                lastMessageTime: new Date().toISOString(),
+                unreadCount: 0
+            }
+            sessions.value.unshift(userInfo)
+            selectChat(userInfo)
+        } else {
+            ElMessage.error('获取用户信息失败')
         }
-
-        // 将新会话添加到列表
-        sessions.value.unshift(userInfo)
-        selectChat(userInfo)
     } catch (error) {
         console.error('获取用户信息失败', error)
         ElMessage.error('获取用户信息失败')
@@ -204,6 +208,11 @@ const fetchUserAndCreateSession = async (userId: number) => {
 
 // 选择聊天对象
 const selectChat = async (session: ChatSession) => {
+    // 如果头像或昵称缺失，主动补全
+    if (!session.avatarUrl || !session.nickname) {
+        await fetchUserAndCreateSession(session.userId)
+        return
+    }
     currentChatUser.value = session
 
     // 更新路由，但不触发重新加载

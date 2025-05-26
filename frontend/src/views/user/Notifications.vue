@@ -5,13 +5,16 @@
                 <NotificationCenter :key="'all'" :title="'全部通知'" :type="'all'" />
             </el-tab-pane>
             <el-tab-pane label="系统通知" name="system">
-                <NotificationCenter :key="'system'" :title="'系统通知'" :type="getSystemNotificationTypes()" />
+                <NotificationCenter :key="'system'" :title="'系统通知'" :type="'SYSTEM_ANNOUNCEMENT,SYSTEM_ACTIVITY'" />
             </el-tab-pane>
             <el-tab-pane label="互助通知" name="help">
-                <NotificationCenter :key="'help'" :title="'互助通知'" :type="getHelpNotificationTypes()" />
+                <NotificationCenter :key="'help'" :title="'互助通知'" :type="'HELP_NEW_APPLICATION,HELP_APPLICATION_ACCEPTED,HELP_APPLICATION_REJECTED,HELP_COMPLETED,HELP_NEW_REVIEW'" />
             </el-tab-pane>
             <el-tab-pane label="小组通知" name="group">
-                <NotificationCenter :key="'group'" :title="'小组通知'" :type="getGroupNotificationTypes()" />
+                <NotificationCenter :key="'group'" :title="'小组通知'" :type="'GROUP_JOIN_APPLICATION,GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'" />
+            </el-tab-pane>
+            <el-tab-pane label="好友申请" name="friend">
+                <NotificationCenter :key="'friend'" :title="'好友申请'" :type="'FRIEND_REQUEST,FRIEND_REQUEST_ACCEPTED,FRIEND_REQUEST_REJECTED'" />
             </el-tab-pane>
         </el-tabs>
     </div>
@@ -28,7 +31,7 @@ const activeTab = ref('all')
 // 从路由参数获取初始标签页
 const initActiveTab = () => {
     const tab = route.query.tab as string
-    if (tab && ['all', 'system', 'help', 'group'].includes(tab)) {
+    if (tab && ['all', 'system', 'help', 'group', 'friend'].includes(tab)) {
         activeTab.value = tab
     }
 }
@@ -36,27 +39,6 @@ const initActiveTab = () => {
 // 处理标签页变化
 const handleTabChange = (tab: string) => {
     activeTab.value = tab
-}
-
-// 获取系统通知类型
-const getSystemNotificationTypes = () => {
-    const types = 'SYSTEM_ANNOUNCEMENT,SYSTEM_ACTIVITY'
-    console.log('System notification types:', types)
-    return types
-}
-
-// 获取互助通知类型
-const getHelpNotificationTypes = () => {
-    const types = 'HELP_NEW_APPLICATION,HELP_APPLICATION_ACCEPTED,HELP_APPLICATION_REJECTED,HELP_COMPLETED,HELP_NEW_REVIEW'
-    console.log('Help notification types:', types)
-    return types
-}
-
-// 获取小组通知类型
-const getGroupNotificationTypes = () => {
-    const types = 'GROUP_JOIN_APPLICATION,GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'
-    console.log('Group notification types:', types)
-    return types
 }
 
 // 初始化
