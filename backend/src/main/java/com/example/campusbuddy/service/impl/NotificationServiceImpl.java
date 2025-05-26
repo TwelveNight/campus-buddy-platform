@@ -347,7 +347,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         if (relatedId == null) {
             // 处理无需relatedId的类型
             return switch (type) {
-                case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
+                case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED" -> "/friends?tab=friends";
                 case "FRIEND_REQUEST" -> "/friends?tab=requests";
                 default -> null;
             };
