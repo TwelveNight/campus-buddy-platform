@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "HelpApplication", description = "互助申请相关接口")
+@Tag(name = "互助申请接口", description = "互助申请相关接口")
 @RestController
 @RequestMapping("/api/help-application")
 public class HelpApplicationController {

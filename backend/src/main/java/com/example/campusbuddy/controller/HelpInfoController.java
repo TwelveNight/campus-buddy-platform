@@ -30,7 +30,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/helpinfo")
-@Tag(name = "互助任务", description = "互助任务相关接口")
+@Tag(name = "互助任务接口", description = "互助任务相关接口")
 public class HelpInfoController {
     @Autowired
     private HelpInfoService helpInfoService;
