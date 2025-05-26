@@ -4,26 +4,45 @@
         <div class="session-list">
             <div class="session-header">
                 <h3>消息会话</h3>
+                <el-tooltip content="刷新会话列表" placement="top">
+                    <el-button size="small" type="text" circle @click="fetchSessions" :loading="sessionsLoading">
+                        <el-icon><Refresh /></el-icon>
+                    </el-button>
+                </el-tooltip>
             </div>
-            <el-divider />
             <div class="session-search">
-                <el-input v-model="searchKeyword" placeholder="搜索联系人" prefix-icon="Search" clearable />
+                <el-input v-model="searchKeyword" placeholder="搜索联系人" clearable>
+                    <template #prefix>
+                        <el-icon><Search /></el-icon>
+                    </template>
+                </el-input>
             </div>
             <div class="session-items">
-                <el-empty v-if="sessions.length === 0 && !sessionsLoading" description="暂无消息会话" />
+                <el-empty v-if="sessions.length === 0 && !sessionsLoading" description="暂无消息会话">
+                    <template #image>
+                        <el-icon class="empty-icon"><ChatDotRound /></el-icon>
+                    </template>
+                </el-empty>
                 <el-skeleton :rows="3" animated v-if="sessionsLoading" :count="3" />
                 <template v-else>
                     <div v-for="session in filteredSessions" :key="session.userId" class="session-item"
                         :class="{ 'session-active': currentChatUser?.userId === session.userId }"
                         @click="selectChat(session)">
-                        <el-badge :value="session.unreadCount" :hidden="!session.unreadCount" class="session-badge">
-                            <el-avatar :size="40" :src="session.avatarUrl || defaultAvatar" />
+                        <el-badge :value="session.unreadCount" :max="99" :hidden="!session.unreadCount" class="session-badge" type="danger">
+                            <el-avatar :size="48" :src="session.avatarUrl || defaultAvatar">
+                                {{ session.nickname ? session.nickname.substring(0, 1) : '用' }}
+                            </el-avatar>
                         </el-badge>
                         <div class="session-info">
                             <div class="session-name">{{ session.nickname }}</div>
-                            <div class="session-preview">{{ session.lastMessage }}</div>
+                            <div class="session-preview" :class="{'has-unread': session.unreadCount > 0}">
+                                {{ session.lastMessage || '暂无消息' }}
+                            </div>
                         </div>
-                        <div class="session-time">{{ formatTime(session.lastMessageTime) }}</div>
+                        <div class="session-meta">
+                            <div class="session-time">{{ formatTime(session.lastMessageTime) }}</div>
+                            <div v-if="session.unreadCount > 0" class="unread-indicator"></div>
+                        </div>
                     </div>
                 </template>
             </div>
@@ -34,53 +53,125 @@
             <template v-if="currentChatUser">
                 <div class="chat-header">
                     <div class="chat-user">
-                        <el-avatar :size="36" :src="currentChatUser.avatarUrl || defaultAvatar" />
-                        <span class="chat-username">{{ currentChatUser.nickname }}</span>
+                        <el-avatar :size="40" :src="currentChatUser.avatarUrl || defaultAvatar">
+                            {{ currentChatUser.nickname ? currentChatUser.nickname.substring(0, 1) : '用' }}
+                        </el-avatar>
+                        <div class="chat-user-info">
+                            <div class="chat-username">{{ currentChatUser.nickname }}</div>
+                            <div class="user-status">
+                                <el-tag size="small" type="success" effect="plain">在线</el-tag>
+                            </div>
+                        </div>
                     </div>
                     <div class="chat-actions">
-                        <el-button type="text" @click="markAllChatAsRead" :disabled="messagesLoading">
-                            标为已读
-                        </el-button>
+                        <el-tooltip content="标记为已读" placement="top">
+                            <el-button 
+                                type="primary" 
+                                size="small" 
+                                plain 
+                                circle 
+                                @click="markAllChatAsRead" 
+                                :disabled="messagesLoading || currentChatUser.unreadCount === 0">
+                                <el-icon><Check /></el-icon>
+                            </el-button>
+                        </el-tooltip>
+                        <el-tooltip content="查看资料" placement="top">
+                            <el-button type="info" size="small" plain circle @click="viewUserProfile">
+                                <el-icon><User /></el-icon>
+                            </el-button>
+                        </el-tooltip>
                     </div>
                 </div>
-                <el-divider />
+                
                 <div class="chat-messages" ref="messagesContainer">
-                    <el-empty v-if="messages.length === 0 && !messagesLoading" description="暂无消息记录" />
+                    <el-empty v-if="messages.length === 0 && !messagesLoading" description="暂无消息记录">
+                        <template #image>
+                            <el-icon class="empty-icon"><ChatDotRound /></el-icon>
+                        </template>
+                    </el-empty>
                     <el-skeleton :rows="3" animated v-if="messagesLoading" :count="3" />
                     <template v-else>
                         <div v-if="hasMoreMessages" class="load-more-messages">
-                            <el-button type="text" @click="loadMoreMessages" :loading="loadingMoreMessages">
-                                加载更多消息
+                            <el-button type="primary" plain size="small" @click="loadMoreMessages" :loading="loadingMoreMessages">
+                                <el-icon><ArrowUp /></el-icon> 加载更多消息
                             </el-button>
                         </div>
-                        <div v-for="message in messages" :key="message.messageId" class="message-item" :class="{
+                        <div class="messages-date-divider" v-if="messages.length > 0">
+                            <span>{{ formatDateDivider(messages[0].createdAt) }}</span>
+                        </div>
+                        <div v-for="(message, index) in messages" :key="message.messageId" class="message-item" :class="{
                             'message-self': message.senderId === currentUserId,
-                            'message-other': message.senderId !== currentUserId
+                            'message-other': message.senderId !== currentUserId,
+                            'message-consecutive': index > 0 && message.senderId === messages[index-1].senderId
                         }">
-                            <div class="message-avatar">
-                                <el-avatar :size="36" :src="message.senderId === currentUserId
+                            <div class="message-avatar" v-if="index === 0 || message.senderId !== messages[index-1].senderId">
+                                <el-avatar :size="40" :src="message.senderId === currentUserId
                                     ? currentUserAvatar || defaultAvatar
-                                    : currentChatUser.avatarUrl || defaultAvatar" />
+                                    : currentChatUser.avatarUrl || defaultAvatar">
+                                    {{ message.senderId === currentUserId ? '我' : currentChatUser.nickname.substring(0, 1) }}
+                                </el-avatar>
                             </div>
+                            <div class="message-avatar-placeholder" v-else></div>
                             <div class="message-content">
-                                <div class="message-bubble">{{ message.content }}</div>
-                                <div class="message-time">{{ formatTime(message.createdAt) }}</div>
+                                <div class="message-sender" v-if="index === 0 || message.senderId !== messages[index-1].senderId">
+                                    {{ message.senderId === currentUserId ? '我' : currentChatUser.nickname }}
+                                </div>
+                                <div class="message-bubble">
+                                    {{ message.content }}
+                                </div>
+                                <div class="message-time">
+                                    {{ formatMessageTime(message.createdAt) }}
+                                    <el-icon v-if="message.senderId === currentUserId" class="message-status-icon">
+                                        <el-icon v-if="message.isRead"><CircleCheck /></el-icon>
+                                        <el-icon v-else><Check /></el-icon>
+                                    </el-icon>
+                                </div>
                             </div>
                         </div>
                     </template>
                 </div>
                 <div class="chat-input">
-                    <el-input v-model="messageContent" type="textarea" :rows="3" placeholder="输入消息..."
-                        @keyup.enter.ctrl="sendMessage" />
+                    <el-input 
+                        v-model="messageContent" 
+                        type="textarea" 
+                        :rows="3" 
+                        placeholder="输入消息..." 
+                        resize="none"
+                        maxlength="500"
+                        show-word-limit
+                        @keyup.enter.ctrl="sendMessage" 
+                    />
                     <div class="input-actions">
-                        <span class="input-tip">Ctrl + Enter 发送</span>
-                        <el-button type="primary" @click="sendMessage" :disabled="!messageContent.trim()">
-                            发送
+                        <div class="input-tools">
+                            <el-tooltip content="表情" placement="top">
+                                <el-button type="text" class="tool-button">
+                                    <el-icon><Position /></el-icon>
+                                </el-button>
+                            </el-tooltip>
+                            <el-tooltip content="图片" placement="top">
+                                <el-button type="text" class="tool-button">
+                                    <el-icon><Picture /></el-icon>
+                                </el-button>
+                            </el-tooltip>
+                            <span class="input-tip">Ctrl + Enter 发送</span>
+                        </div>
+                        <el-button type="primary" @click="sendMessage" :disabled="!messageContent.trim()" :loading="sending">
+                            <el-icon class="send-icon"><Position /></el-icon> 发送
                         </el-button>
                     </div>
                 </div>
             </template>
-            <el-empty v-else description="选择一个联系人开始聊天" />
+            <div v-else class="empty-chat">
+                <el-empty description="选择一个联系人开始聊天">
+                    <template #image>
+                        <el-icon class="empty-icon-large"><ChatDotRound /></el-icon>
+                    </template>
+                    <template #description>
+                        <p>选择一个联系人开始聊天</p>
+                        <p class="empty-chat-tip">或者在"好友"页面添加新的联系人</p>
+                    </template>
+                </el-empty>
+            </div>
         </div>
     </div>
 </template>
@@ -89,7 +180,10 @@
 import { ref, computed, onMounted, nextTick, watch, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-// import { Search } from '@element-plus/icons-vue'
+import { 
+    Search, Refresh, Check, User, ArrowUp, 
+    CircleCheck, ChatDotRound, Picture, Position
+} from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -126,6 +220,7 @@ const pageSize = ref(20)
 const totalMessages = ref(0)
 const hasMoreMessages = ref(false)
 const defaultAvatar = ref('/avatar-placeholder.png')
+const sending = ref(false)
 
 // 当前用户信息
 const currentUserId = computed(() => authStore.user?.userId)
@@ -135,6 +230,35 @@ const currentUserAvatar = computed(() => authStore.user?.avatarUrl)
 const formatTime = (time: string | Date) => {
     if (!time) return ''
     return dayjs(typeof time === 'string' ? time : time.toISOString()).fromNow()
+}
+
+// 格式化消息时间 - 使用更精确的时间格式
+const formatMessageTime = (time: string | Date) => {
+    if (!time) return ''
+    return dayjs(typeof time === 'string' ? time : time.toISOString()).format('HH:mm')
+}
+
+// 格式化日期分隔线 - 按天分组消息
+const formatDateDivider = (time: string | Date) => {
+    if (!time) return ''
+    const messageDate = dayjs(typeof time === 'string' ? time : time.toISOString())
+    const today = dayjs()
+    
+    if (messageDate.isSame(today, 'day')) {
+        return '今天'
+    } else if (messageDate.isSame(today.subtract(1, 'day'), 'day')) {
+        return '昨天'
+    } else if (messageDate.isSame(today, 'year')) {
+        return messageDate.format('MM月DD日')
+    } else {
+        return messageDate.format('YYYY年MM月DD日')
+    }
+}
+
+// 查看用户资料
+const viewUserProfile = () => {
+    if (!currentChatUser.value) return
+    router.push(`/user/${currentChatUser.value.userId}`)
 }
 
 // 过滤后的会话列表
@@ -284,6 +408,7 @@ const fetchChatHistory = async () => {
 const sendMessage = async () => {
     if (!messageContent.value.trim() || !currentChatUser.value) return
 
+    sending.value = true
     try {
         const data = {
             recipientId: currentChatUser.value.userId,
@@ -327,6 +452,8 @@ const sendMessage = async () => {
     } catch (error) {
         console.error('发送消息失败', error)
         ElMessage.error('发送消息失败')
+    } finally {
+        sending.value = false
     }
 }
 
@@ -482,6 +609,7 @@ const handleNewMessage = (data: any) => {
         sessions.value.unshift({
             userId: senderId,
             nickname: data.senderName || `用户 #${senderId}`,
+            avatarUrl: data.senderAvatar,
             lastMessage: data.content,
             lastMessageTime: new Date(data.timestamp),
             unreadCount: 1
@@ -557,45 +685,64 @@ onBeforeUnmount(() => {
     height: 100%;
     display: flex;
     background-color: var(--el-bg-color);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .session-list {
-    width: 300px;
+    width: 320px;
     border-right: 1px solid var(--el-border-color-light);
     display: flex;
     flex-direction: column;
+    background-color: var(--card-bg, #ffffff);
 }
 
 .session-header {
-    padding: 15px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.session-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #303133);
 }
 
 .session-search {
-    padding: 0 15px 15px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .session-items {
     flex: 1;
     overflow-y: auto;
-    padding: 0 15px;
+    padding: 10px;
 }
 
 .session-item {
     display: flex;
     align-items: center;
     padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 8px;
+    border-radius: 10px;
+    margin-bottom: 10px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    position: relative;
 }
 
 .session-item:hover {
     background-color: var(--el-fill-color-light);
+    transform: translateY(-2px);
 }
 
 .session-active {
-    background-color: var(--el-color-primary-light-9);
+    background-color: var(--primary-color-light, rgba(64, 158, 255, 0.1));
+    border-left: 3px solid var(--primary-color, #409eff);
 }
 
 .session-badge {
@@ -605,40 +752,63 @@ onBeforeUnmount(() => {
 .session-info {
     flex: 1;
     overflow: hidden;
+    margin-right: 10px;
 }
 
 .session-name {
-    font-weight: bold;
-    margin-bottom: 4px;
-    color: var(--el-text-color-primary);
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary, #303133);
+    font-size: 15px;
 }
 
 .session-preview {
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
+    font-size: 13px;
+    color: var(--text-secondary, #909399);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    max-width: 180px;
+}
+
+.session-preview.has-unread {
+    color: var(--text-primary, #303133);
+    font-weight: 500;
+}
+
+.session-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
 
 .session-time {
     font-size: 12px;
-    color: var(--el-text-color-secondary);
-    align-self: flex-start;
+    color: var(--text-placeholder, #c0c4cc);
+    margin-bottom: 5px;
+}
+
+.unread-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--el-color-danger);
 }
 
 .chat-area {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0 20px;
+    background-color: var(--bg-color, #f5f7fa);
 }
 
 .chat-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
+    padding: 15px 20px;
+    background-color: var(--card-bg, #ffffff);
+    border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .chat-user {
@@ -646,78 +816,345 @@ onBeforeUnmount(() => {
     align-items: center;
 }
 
+.chat-user-info {
+    margin-left: 12px;
+}
+
 .chat-username {
-    margin-left: 10px;
-    font-weight: bold;
+    font-weight: 600;
+    color: var(--text-primary, #303133);
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.user-status {
+    font-size: 12px;
+}
+
+.chat-actions {
+    display: flex;
+    gap: 8px;
 }
 
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 0;
+    padding: 20px;
+    background-color: var(--bg-color, #f5f7fa);
+    display: flex;
+    flex-direction: column;
+}
+
+.messages-date-divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.messages-date-divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background-color: var(--el-border-color-lighter);
+    z-index: 1;
+}
+
+.messages-date-divider span {
+    position: relative;
+    background-color: var(--bg-color, #f5f7fa);
+    padding: 0 10px;
+    font-size: 13px;
+    color: var(--text-secondary, #909399);
+    z-index: 2;
 }
 
 .message-item {
     display: flex;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     align-items: flex-start;
+    max-width: 80%;
+}
+
+.message-consecutive {
+    margin-top: -10px;
 }
 
 .message-self {
     flex-direction: row-reverse;
+    align-self: flex-end;
 }
 
 .message-avatar {
     margin: 0 10px;
+    flex-shrink: 0;
+}
+
+.message-avatar-placeholder {
+    width: 40px;
+    margin: 0 10px;
+    flex-shrink: 0;
 }
 
 .message-content {
-    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.message-sender {
+    font-size: 13px;
+    color: var(--text-secondary, #909399);
+    margin-bottom: 4px;
 }
 
 .message-self .message-content {
-    display: flex;
-    flex-direction: column;
     align-items: flex-end;
 }
 
 .message-bubble {
-    padding: 10px 15px;
-    border-radius: 10px;
-    background-color: var(--el-color-primary-light-9);
+    padding: 12px 16px;
+    border-radius: 18px;
+    background-color: var(--card-bg, #ffffff);
     word-break: break-word;
+    font-size: 14px;
+    color: var(--text-primary, #303133);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 4px;
+    max-width: 100%;
+    line-height: 1.5;
 }
 
 .message-self .message-bubble {
-    background-color: var(--el-color-primary);
+    background-color: var(--primary-color, #409eff);
     color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message-other .message-bubble {
+    border-bottom-left-radius: 4px;
 }
 
 .message-time {
+    font-size: 11px;
+    color: var(--text-placeholder, #c0c4cc);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.message-status-icon {
     font-size: 12px;
-    color: var(--el-text-color-secondary);
-    margin-top: 5px;
+    margin-left: 2px;
 }
 
 .chat-input {
-    padding: 15px 0;
+    padding: 20px;
+    background-color: var(--card-bg, #ffffff);
+    border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .input-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 12px;
+}
+
+.input-tools {
+    display: flex;
+    align-items: center;
+}
+
+.tool-button {
+    font-size: 18px;
+    margin-right: 10px;
+    color: var(--text-secondary, #909399);
 }
 
 .input-tip {
     font-size: 12px;
-    color: var(--el-text-color-secondary);
+    color: var(--text-secondary, #909399);
+    margin-left: 10px;
+}
+
+.send-icon {
+    margin-right: 4px;
 }
 
 .load-more-messages {
     text-align: center;
     padding: 10px 0;
     margin-bottom: 15px;
+}
+
+.empty-chat {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-color, #f5f7fa);
+}
+
+.empty-icon {
+    font-size: 60px;
+    color: var(--text-secondary, #909399);
+    opacity: 0.3;
+}
+
+.empty-icon-large {
+    font-size: 80px;
+    color: var(--text-secondary, #909399);
+    opacity: 0.3;
+}
+
+.empty-chat-tip {
+    color: var(--text-secondary, #909399);
+    font-size: 14px;
+    margin-top: 8px;
+}
+
+/* 暗色主题适配 */
+[data-theme="dark"] .session-list {
+    background-color: var(--dark-card-bg, #252529);
+    border-color: var(--dark-border-color, #4c4d4f);
+}
+
+[data-theme="dark"] .session-header {
+    border-color: var(--dark-border-lighter, #2e2e2f);
+}
+
+[data-theme="dark"] .session-header h3 {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .session-search {
+    border-color: var(--dark-border-lighter, #2e2e2f);
+}
+
+[data-theme="dark"] .session-item:hover {
+    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05));
+}
+
+[data-theme="dark"] .session-active {
+    background-color: rgba(64, 158, 255, 0.15);
+    border-left-color: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .session-name {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .session-preview {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .session-preview.has-unread {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .session-time {
+    color: var(--dark-text-placeholder, #8d9095);
+}
+
+[data-theme="dark"] .chat-area {
+    background-color: var(--dark-bg, #1e1e20);
+}
+
+[data-theme="dark"] .chat-header {
+    background-color: var(--dark-card-bg, #252529);
+    border-color: var(--dark-border-lighter, #2e2e2f);
+}
+
+[data-theme="dark"] .chat-username {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .chat-messages {
+    background-color: var(--dark-bg, #1e1e20);
+}
+
+[data-theme="dark"] .messages-date-divider::before {
+    background-color: var(--dark-border-color, #4c4d4f);
+}
+
+[data-theme="dark"] .messages-date-divider span {
+    background-color: var(--dark-bg, #1e1e20);
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .message-sender {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .message-bubble {
+    background-color: var(--dark-card-bg, #252529);
+    color: var(--dark-text-primary, #e5eaf3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .message-self .message-bubble {
+    background-color: var(--primary-color-dark, #60a9ff);
+    color: white;
+}
+
+[data-theme="dark"] .message-time {
+    color: var(--dark-text-placeholder, #8d9095);
+}
+
+[data-theme="dark"] .chat-input {
+    background-color: var(--dark-card-bg, #252529);
+    border-color: var(--dark-border-lighter, #2e2e2f);
+}
+
+[data-theme="dark"] .tool-button {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .input-tip {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .empty-chat {
+    background-color: var(--dark-bg, #1e1e20);
+}
+
+[data-theme="dark"] .empty-icon,
+[data-theme="dark"] .empty-icon-large {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .empty-chat-tip {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+    .session-list {
+        width: 280px;
+    }
+    
+    .session-preview {
+        max-width: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .message-container {
+        flex-direction: column;
+        height: calc(100vh - 110px);
+    }
+    
+    .session-list {
+        width: 100%;
+        height: 200px;
+        overflow-y: auto;
+    }
+    
+    .message-item {
+        max-width: 90%;
+    }
 }
 </style>

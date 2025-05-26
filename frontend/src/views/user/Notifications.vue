@@ -61,4 +61,34 @@ initActiveTab()
 :deep(.el-tab-pane) {
     height: 100%;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .notification-page {
+    background-color: var(--dark-bg, #18181c) !important;
+}
+
+[data-theme="dark"] :deep(.el-tabs__header) {
+    background-color: var(--dark-card-bg);
+    border-color: var(--dark-border-light);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item) {
+    color: var(--dark-text-regular);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+}
+
+[data-theme="dark"] :deep(.el-tabs__nav-wrap::after) {
+    background-color: var(--dark-border-lighter);
+}
+
+[data-theme="dark"] :deep(.el-tabs__content) {
+    background-color: var(--dark-bg, #18181c) !important;
+}
+
+[data-theme="dark"] :deep(.el-tab-pane) {
+    background-color: var(--dark-bg, #18181c) !important;
+}
 </style>
