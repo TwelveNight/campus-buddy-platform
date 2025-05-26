@@ -432,7 +432,7 @@ const handleNewMessage = (data: any) => {
     if (!data || data.type !== 'PRIVATE_MESSAGE') return
 
     // 调试输出，便于排查
-    console.log('收到新消息', data, currentChatUser.value)
+    console.log('Messages.vue 收到新消息', data, currentChatUser.value)
 
     // 判断 senderId 类型一致
     const senderId = Number(data.senderId)
@@ -457,14 +457,10 @@ const handleNewMessage = (data: any) => {
         // 只有当前界面打开且处于活动状态时才自动标记为已读
         if (document.visibilityState === 'visible' && route.path.includes('/messages/')) {
             markAllChatAsRead()
-        } else {
-            // 当用户没有查看消息时，需要更新未读消息数量
-            refreshUnreadMessageCount();
-        }
-    } else {
-        // 刷新未读消息计数（如果不是当前聊天窗口）
-        refreshUnreadMessageCount();
-    }
+        } 
+        // 不再在这里更新未读消息计数，避免重复计数
+    } 
+    // 不再在这里更新未读消息计数，由NavBarWithWebSocket统一处理
 
     // 更新会话列表
     const sessionIndex = sessions.value.findIndex(s => Number(s.userId) === senderId)

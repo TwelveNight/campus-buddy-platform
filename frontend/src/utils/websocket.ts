@@ -11,6 +11,8 @@ class WebSocketService {
   private messageListeners: ((data: any) => void)[] = [];
   private notificationListeners: ((data: any) => void)[] = [];
   private connectionListeners: ((status: boolean) => void)[] = [];
+  // 用于跟踪已处理的消息，防止重复处理
+  private processedMessages: Set<string> = new Set();
   
   public isConnected = ref(false);
   public lastError = ref<string | null>(null);
@@ -193,6 +195,24 @@ class WebSocketService {
       // 解析WebSocket消息
       const data = JSON.parse(event.data);
       console.log('WebSocket message received:', data);
+      
+      // 生成消息标识符用于去重
+      const messageId = `${data.type}_${data.timestamp}_${data.messageId || ''}_${data.senderId || ''}`;
+      
+      // 检查消息是否已经处理过，如果处理过则跳过
+      if (this.processedMessages.has(messageId)) {
+        console.log('忽略重复消息:', messageId);
+        return;
+      }
+      
+      // 记录此消息已处理
+      this.processedMessages.add(messageId);
+      
+      // 保持处理过的消息集合在合理大小
+      if (this.processedMessages.size > 100) {
+        // 只保留最近的50条消息记录
+        this.processedMessages = new Set(Array.from(this.processedMessages).slice(-50));
+      }
       
       switch (data.type) {
         case 'NOTIFICATION':

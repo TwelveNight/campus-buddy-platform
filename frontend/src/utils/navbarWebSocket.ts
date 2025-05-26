@@ -63,10 +63,10 @@ export const setupNavBarWebSocket = (options) => {
   const handleWebSocketMessage = (data) => {
     if (!data || data.type !== 'PRIVATE_MESSAGE') return;
     
-    // 更新未读消息计数
+    // 仅更新未读消息计数，不弹窗
     fetchUnreadMessageCount();
     
-    // 注意：声音通知已移除以解决兼容性问题
+    // 不在这里处理任何弹窗通知，避免重复
   };
 
   // 初始化WebSocket连接
