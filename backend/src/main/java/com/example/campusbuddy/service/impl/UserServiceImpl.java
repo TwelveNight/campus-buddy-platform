@@ -193,4 +193,49 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         return voPage;
     }
+
+    @Override
+    public Page<UserVO> adminPageUsers(Integer page, Integer size, String keyword, String status) {
+        Page<User> userPage = new Page<>(page, size);
+        QueryWrapper<User> query = new QueryWrapper<>();
+        if (keyword != null && !keyword.isEmpty()) {
+            query.like("username", keyword)
+                .or().like("nickname", keyword)
+                .or().like("email", keyword);
+        }
+        if (status != null && !status.isEmpty()) {
+            query.eq("status", status);
+        }
+        Page<User> result = this.page(userPage, query);
+        Page<UserVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        List<UserVO> voList = new ArrayList<>();
+        for (User user : result.getRecords()) {
+            UserVO vo = new UserVO();
+            BeanUtils.copyProperties(user, vo);
+            vo.setRoles(userRoleService.getUserRoles(user.getUserId()));
+            voList.add(vo);
+        }
+        voPage.setRecords(voList);
+        return voPage;
+    }
+
+    @Override
+    public boolean adminUpdateUserStatus(Long userId, String status) {
+        User user = this.getById(userId);
+        if (user == null) return false;
+        user.setStatus(status);
+        return this.updateById(user);
+    }
+
+    @Override
+    public String adminResetPassword(Long userId) {
+        User user = this.getById(userId);
+        if (user == null) throw new IllegalArgumentException("用户不存在");
+        String newPwd = "U" + userId + ((int)(Math.random()*9000)+1000);
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        user.setPasswordHash(encoder.encode(newPwd));
+        this.updateById(user);
+        // TODO: 可通过邮件通知用户新密码
+        return newPwd;
+    }
 }

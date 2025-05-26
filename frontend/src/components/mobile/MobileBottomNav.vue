@@ -101,7 +101,7 @@ const navItems = computed(() => {
     // 如果是管理员，添加管理后台
     if (authStore.isAdmin) {
       items.push({
-        path: '/admin/helpinfo',
+        path: '/admin',
         label: '管理',
         icon: Setting,
         adminOnly: true

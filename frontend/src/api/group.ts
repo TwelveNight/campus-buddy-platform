@@ -174,3 +174,36 @@ export function getGroupStats(): Promise<ApiResponse> {
     method: 'get'
   });
 }
+
+// =============== 管理员相关API ===============
+
+// 管理员分页查询小组
+export function getAdminGroups(params: {
+  page?: number;
+  size?: number;
+  keyword?: string;
+  status?: string;
+}): Promise<ApiResponse> {
+  return request({
+    url: '/api/admin/group/page',
+    method: 'get',
+    params
+  });
+}
+
+// 管理员更新小组状态
+export function updateGroupStatus(groupId: number | string, status: string): Promise<ApiResponse> {
+  return request({
+    url: `/api/admin/group/${groupId}/status`,
+    method: 'post',
+    params: { status }
+  });
+}
+
+// 管理员删除小组
+export function adminDeleteGroup(groupId: number | string): Promise<ApiResponse> {
+  return request({
+    url: `/api/admin/group/${groupId}`,
+    method: 'delete'
+  });
+}

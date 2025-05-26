@@ -1,6 +1,7 @@
 package com.example.campusbuddy.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.entity.GroupPost;
 
@@ -31,4 +32,14 @@ public interface GroupPostService extends IService<GroupPost> {
     
     // 减少评论数
     void decreaseCommentCount(Long postId);
+    
+    // =============== 管理员方法 ===============
+    // 管理员分页查询帖子
+    Page<GroupPost> adminPagePosts(Integer page, Integer size, String keyword, Long groupId, String status);
+    
+    // 管理员更新帖子状态
+    boolean adminUpdatePostStatus(Long postId, String status);
+    
+    // 管理员删除帖子
+    boolean adminDeletePost(Long postId);
 }

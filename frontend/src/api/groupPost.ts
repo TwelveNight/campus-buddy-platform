@@ -100,3 +100,37 @@ export function getLikeStatus(postId: number | string): Promise<ApiResponse> {
     method: 'get'
   });
 }
+
+// =============== 管理员相关API ===============
+
+// 管理员分页查询帖子
+export function getAdminPosts(params: {
+  page?: number;
+  size?: number;
+  keyword?: string;
+  groupId?: number | string;
+  status?: string;
+}): Promise<ApiResponse> {
+  return request({
+    url: '/api/admin/post/page',
+    method: 'get',
+    params
+  });
+}
+
+// 管理员更新帖子状态
+export function updatePostStatus(postId: number | string, status: string): Promise<ApiResponse> {
+  return request({
+    url: `/api/admin/post/${postId}/status`,
+    method: 'post',
+    params: { status }
+  });
+}
+
+// 管理员删除帖子
+export function adminDeletePost(postId: number | string): Promise<ApiResponse> {
+  return request({
+    url: `/api/admin/post/${postId}`,
+    method: 'delete'
+  });
+}

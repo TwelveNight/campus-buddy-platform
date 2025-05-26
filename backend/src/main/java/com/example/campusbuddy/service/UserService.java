@@ -2,12 +2,18 @@ package com.example.campusbuddy.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.dto.LoginDTO;
 import com.example.campusbuddy.dto.PasswordUpdateDTO;
 import com.example.campusbuddy.dto.ProfileUpdateDTO;
 import com.example.campusbuddy.dto.RegisterDTO;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.vo.UserVO;
+import org.springframework.beans.BeanUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public interface UserService extends IService<User> {
     UserVO register(RegisterDTO dto);
@@ -47,4 +53,8 @@ public interface UserService extends IService<User> {
      * @return 用户分页结果
      */
     Page<UserVO> searchUsers(String keyword, Integer page, Integer size);
+
+    com.baomidou.mybatisplus.extension.plugins.pagination.Page<UserVO> adminPageUsers(Integer page, Integer size, String keyword, String status);
+    boolean adminUpdateUserStatus(Long userId, String status);
+    String adminResetPassword(Long userId);
 }

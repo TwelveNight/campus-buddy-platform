@@ -193,4 +193,53 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             updateById(post);
         }
     }
+    
+    // =============== 管理员方法实现 ===============
+    @Override
+    public Page<GroupPost> adminPagePosts(Integer page, Integer size, String keyword, Long groupId, String status) {
+        Page<GroupPost> pageInfo = new Page<>(page, size);
+        LambdaQueryWrapper<GroupPost> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 添加关键词搜索条件
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            queryWrapper.like(GroupPost::getTitle, keyword)
+                    .or()
+                    .like(GroupPost::getContent, keyword);
+        }
+        
+        // 添加小组ID过滤条件
+        if (groupId != null) {
+            queryWrapper.eq(GroupPost::getGroupId, groupId);
+        }
+        
+        // 添加状态过滤条件
+        if (status != null && !status.trim().isEmpty()) {
+            queryWrapper.eq(GroupPost::getStatus, status);
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(GroupPost::getCreatedAt);
+        
+        return page(pageInfo, queryWrapper);
+    }
+    
+    @Override
+    @Transactional
+    public boolean adminUpdatePostStatus(Long postId, String status) {
+        GroupPost post = getById(postId);
+        if (post == null) {
+            return false;
+        }
+        
+        post.setStatus(status);
+        post.setUpdatedAt(new Date());
+        
+        return updateById(post);
+    }
+    
+    @Override
+    @Transactional
+    public boolean adminDeletePost(Long postId) {
+        return removeById(postId);
+    }
 }

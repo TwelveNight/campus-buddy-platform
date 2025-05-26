@@ -87,9 +87,34 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuth: true }
       },
       {
+        path: 'admin',
+        redirect: '/admin/dashboard',
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
         path: 'admin/helpinfo',
         component: AdminHelpInfo,
-        meta: { requiresAuth: true }
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'admin/groups',
+        component: () => import('../views/admin/AdminGroupManage.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'admin/posts',
+        component: () => import('../views/admin/AdminPostManage.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'admin/dashboard',
+        component: () => import('../views/admin/AdminDashboard.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
+      },
+      {
+        path: 'admin/users',
+        component: () => import('../views/admin/AdminUserManage.vue'),
+        meta: { requiresAuth: true, requiresAdmin: true }
       },
       {
         path: 'user/:userId',
@@ -151,6 +176,9 @@ router.beforeEach((to, _from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     // 需要认证但未登录，重定向到登录页
     next('/login')
+  } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    // 需要管理员权限但不是管理员，重定向到首页
+    next('/')
   } else if (to.meta.guestOnly && authStore.isAuthenticated) {
     // 已登录用户不允许访问的页面(如登录页)，重定向到首页
     next('/')

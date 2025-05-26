@@ -1,6 +1,7 @@
 package com.example.campusbuddy.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.entity.Group;
 
@@ -31,4 +32,14 @@ public interface GroupService extends IService<Group> {
     
     // 统计小组各种状态的数量
     Map<String, Integer> getGroupStatusCounts();
+    
+    // =============== 管理员方法 ===============
+    // 管理员分页查询小组
+    Page<Group> adminPageGroups(Integer page, Integer size, String keyword, String status);
+    
+    // 管理员更新小组状态
+    boolean adminUpdateGroupStatus(Long groupId, String status);
+    
+    // 管理员删除小组
+    boolean adminDeleteGroup(Long groupId);
 }

@@ -24,4 +24,11 @@ public class User {
     private String status; // ACTIVE, INACTIVE, BANNED
     private Date createdAt;
     private Date updatedAt;
+
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 }

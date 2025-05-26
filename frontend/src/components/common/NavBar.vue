@@ -93,12 +93,44 @@
                     </el-sub-menu>
 
                     <!-- 管理后台 -->
-                    <el-menu-item index="/admin/helpinfo" v-if="isAdmin">
-                        <el-icon>
-                            <Setting />
-                        </el-icon>
-                        管理后台
-                    </el-menu-item>
+                    <el-sub-menu index="/admin" v-if="isAdmin">
+                        <template #title>
+                            <el-icon class="menu-icon">
+                                <Setting />
+                            </el-icon>
+                            管理后台
+                        </template>
+                        <el-menu-item index="/admin/dashboard">
+                            <el-icon>
+                                <Histogram />
+                            </el-icon>
+                            数据统计
+                        </el-menu-item>
+                        <el-menu-item index="/admin/users">
+                            <el-icon>
+                                <User />
+                            </el-icon>
+                            用户管理
+                        </el-menu-item>
+                        <el-menu-item index="/admin/helpinfo">
+                            <el-icon>
+                                <Document />
+                            </el-icon>
+                            互助任务管理
+                        </el-menu-item>
+                        <el-menu-item index="/admin/groups">
+                            <el-icon>
+                                <UserFilled />
+                            </el-icon>
+                            小组管理
+                        </el-menu-item>
+                        <el-menu-item index="/admin/posts">
+                            <el-icon>
+                                <List />
+                            </el-icon>
+                            帖子管理
+                        </el-menu-item>
+                    </el-sub-menu>
                 </el-menu>
             </div>
 
@@ -279,7 +311,8 @@ import {
     Collection,
     Bell,
     ArrowDown,
-    ChatDotRound
+    ChatDotRound,
+    Histogram
 } from '@element-plus/icons-vue'
 
 dayjs.extend(relativeTime)

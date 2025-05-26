@@ -108,9 +108,25 @@
               
               <template v-if="authStore.isAdmin">
                 <el-divider />
+                <el-menu-item index="/admin/dashboard">
+                  <el-icon><Histogram /></el-icon>
+                  <span>数据统计</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/users">
+                  <el-icon><User /></el-icon>
+                  <span>用户管理</span>
+                </el-menu-item>
                 <el-menu-item index="/admin/helpinfo">
-                  <el-icon><Setting /></el-icon>
-                  <span>管理后台</span>
+                  <el-icon><Document /></el-icon>
+                  <span>互助任务管理</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/groups">
+                  <el-icon><UserFilled /></el-icon>
+                  <span>小组管理</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/posts">
+                  <el-icon><List /></el-icon>
+                  <span>帖子管理</span>
                 </el-menu-item>
               </template>
             </template>
@@ -147,7 +163,8 @@ import {
   User, 
   Setting, 
   SwitchButton,
-  UserFilled
+  UserFilled,
+  Histogram
 } from '@element-plus/icons-vue'
 
 const router = useRouter()

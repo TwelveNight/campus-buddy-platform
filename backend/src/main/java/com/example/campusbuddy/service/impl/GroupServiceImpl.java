@@ -159,4 +159,54 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         
         return countMap;
     }
+    
+    // =============== 管理员方法实现 ===============
+    @Override
+    public Page<Group> adminPageGroups(Integer page, Integer size, String keyword, String status) {
+        Page<Group> pageInfo = new Page<>(page, size);
+        LambdaQueryWrapper<Group> queryWrapper = new LambdaQueryWrapper<>();
+        
+        // 添加关键词搜索条件
+        if (StringUtils.hasText(keyword)) {
+            queryWrapper.like(Group::getName, keyword)
+                    .or()
+                    .like(Group::getDescription, keyword);
+        }
+        
+        // 添加状态过滤条件
+        if (StringUtils.hasText(status)) {
+            queryWrapper.eq(Group::getStatus, status);
+        }
+        
+        // 按创建时间倒序排序
+        queryWrapper.orderByDesc(Group::getCreatedAt);
+        
+        return page(pageInfo, queryWrapper);
+    }
+    
+    @Override
+    @Transactional
+    public boolean adminUpdateGroupStatus(Long groupId, String status) {
+        Group group = getById(groupId);
+        if (group == null) {
+            return false;
+        }
+        
+        group.setStatus(status);
+        group.setUpdatedAt(new Date());
+        
+        return updateById(group);
+    }
+    
+    @Override
+    @Transactional
+    public boolean adminDeleteGroup(Long groupId) {
+        // 先删除小组成员关系
+        LambdaQueryWrapper<GroupMember> memberQuery = new LambdaQueryWrapper<>();
+        memberQuery.eq(GroupMember::getGroupId, groupId);
+        groupMemberMapper.delete(memberQuery);
+        
+        // 删除小组
+        return removeById(groupId);
+    }
 }
