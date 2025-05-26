@@ -1,8 +1,10 @@
 package com.example.campusbuddy.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
+import com.example.campusbuddy.vo.HelpInfoVO;
 
 public interface HelpInfoService extends IService<HelpInfo> {
     /**
@@ -29,4 +31,25 @@ public interface HelpInfoService extends IService<HelpInfo> {
      * @return 增加浏览量后的互助任务
      */
     HelpInfo incrementViewCount(Long infoId);
+
+    /**
+     * 管理员分页查询互助任务
+     * 
+     * @param page    页码
+     * @param size    每页大小
+     * @param keyword 关键词
+     * @param type    类型
+     * @param status  状态
+     * @return 分页结果
+     */
+    Page<HelpInfoVO> adminPageHelpInfo(Integer page, Integer size, String keyword, String type, String status);
+
+    /**
+     * 管理员更新互助任务状态
+     * 
+     * @param id     互助任务ID
+     * @param status 新状态
+     * @return 是否成功
+     */
+    boolean adminUpdateStatus(Long id, String status);
 }

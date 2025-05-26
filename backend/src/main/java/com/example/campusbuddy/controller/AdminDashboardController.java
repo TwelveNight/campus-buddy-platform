@@ -1,12 +1,10 @@
 package com.example.campusbuddy.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.common.ResultCode;
 import com.example.campusbuddy.entity.Group;
 import com.example.campusbuddy.entity.GroupPost;
-import com.example.campusbuddy.entity.PostComment;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.GroupService;
@@ -18,7 +16,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;

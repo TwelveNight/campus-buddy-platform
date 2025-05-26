@@ -61,6 +61,17 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="viewCount" label="浏览量" width="80" align="center"></el-table-column>
+                <el-table-column prop="reward" label="悬赏" width="100">
+                  <template #default="scope">
+                    <span v-if="scope.row.reward">{{ scope.row.reward }}</span>
+                    <span v-else style="color: #bbb;">无</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="location" label="地点" min-width="120" show-overflow-tooltip>
+                  <template #default="scope">
+                    <span>{{ scope.row.location }}</span>
+                  </template>
+                </el-table-column>
                 <el-table-column fixed="right" label="操作" width="220">
                     <template #default="scope">
                         <el-button-group>
@@ -99,7 +110,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { fetchHelpInfoList, deleteHelpInfo, updateHelpInfoStatus } from '../../api/helpinfo'
+import { adminPageHelpInfo, adminDeleteHelpInfo, adminUpdateHelpInfoStatus } from '../../api/adminHelpInfo'
 import { useAuthStore } from '../../store/auth'
 
 const router = useRouter()
@@ -174,13 +185,13 @@ async function fetchList() {
             status: filters.status || undefined
         }
 
-        const res = await fetchHelpInfoList(params)
-
-        if (res.data.code === 200) {
-            list.value = res.data.data.records || res.data.data || []
-            total.value = res.data.data.total || list.value.length
+        const res = await adminPageHelpInfo(params) as any
+        const pageData = res.data.data
+        if (pageData && pageData.records) {
+            list.value = pageData.records
+            total.value = pageData.total
         } else {
-            ElMessage.error(res.data.message || '获取列表失败')
+            ElMessage.error('获取列表失败')
         }
     } catch (error: any) {
         console.error('获取互助任务列表失败:', error)
@@ -221,14 +232,10 @@ function handleSizeChange(val: number) {
 // 更新互助任务状态
 async function handleUpdateStatus(id: number, status: string) {
     try {
-        const res = await updateHelpInfoStatus(id, status)
+        await adminUpdateHelpInfoStatus(id, status)
 
-        if (res.data.code === 200) {
-            ElMessage.success(`状态已更新为${getStatusLabel(status)}`)
-            fetchList()
-        } else {
-            ElMessage.error(res.data.message || '更新状态失败')
-        }
+        ElMessage.success(`状态已更新为${getStatusLabel(status)}`)
+        fetchList()
     } catch (error: any) {
         ElMessage.error('更新状态失败: ' + error.message)
     }
@@ -246,14 +253,9 @@ function confirmRemove(id: number) {
         }
     ).then(async () => {
         try {
-            const res = await deleteHelpInfo(id)
-
-            if (res.data.code === 200) {
-                ElMessage.success('删除成功')
-                fetchList()
-            } else {
-                ElMessage.error(res.data.message || '删除失败')
-            }
+            await adminDeleteHelpInfo(id)
+            ElMessage.success('删除成功')
+            fetchList()
         } catch (error: any) {
             ElMessage.error('删除失败: ' + error.message)
         }

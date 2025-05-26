@@ -1,6 +1,8 @@
 package com.example.campusbuddy.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.entity.HelpApplication;
@@ -11,10 +13,13 @@ import com.example.campusbuddy.mapper.HelpApplicationMapper;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.service.ReviewService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
+import com.example.campusbuddy.vo.HelpInfoVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> implements HelpInfoService {
@@ -147,5 +152,81 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         this.updateById(helpInfo);
 
         return helpInfo;
+    }
+
+    @Override
+    public Page<HelpInfoVO> adminPageHelpInfo(Integer page, Integer size, String keyword, String type, String status) {
+        Page<HelpInfo> helpInfoPage = new Page<>(page, size);
+        QueryWrapper<HelpInfo> queryWrapper = new QueryWrapper<>();
+        
+        // 关键词搜索
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            queryWrapper.and(wrapper -> wrapper
+                .like("title", keyword)
+                .or()
+                .like("description", keyword)
+            );
+        }
+        
+        // 类型过滤
+        if (type != null && !type.trim().isEmpty()) {
+            queryWrapper.eq("type", type);
+        }
+        
+        // 状态过滤
+        if (status != null && !status.trim().isEmpty()) {
+            queryWrapper.eq("status", status);
+        }
+        
+        queryWrapper.orderByDesc("created_at");
+        
+        Page<HelpInfo> result = this.page(helpInfoPage, queryWrapper);
+        
+        // 转换为VO
+        Page<HelpInfoVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        List<HelpInfoVO> voList = result.getRecords().stream().map(helpInfo -> {
+            HelpInfoVO vo = new HelpInfoVO();
+            vo.setInfoId(helpInfo.getInfoId());
+            vo.setTitle(helpInfo.getTitle());
+                        vo.setDescription(helpInfo.getDescription());
+            vo.setType(helpInfo.getType());
+            vo.setStatus(helpInfo.getStatus());
+            vo.setReward(helpInfo.getRewardAmount() != null ? helpInfo.getRewardAmount().toString() : null);
+            vo.setLocation(helpInfo.getExpectedLocation());
+            vo.setDeadline(helpInfo.getCreatedAt().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+            vo.setCreatedAt(helpInfo.getCreatedAt().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+            vo.setUpdatedAt(helpInfo.getUpdatedAt().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDateTime());
+            vo.setPublisherId(helpInfo.getPublisherId());
+            vo.setViewCount(helpInfo.getViewCount());
+            
+            // 获取发布者信息
+            User publisher = userMapper.selectById(helpInfo.getPublisherId());
+            if (publisher != null) {
+                vo.setPublisherName(publisher.getNickname());
+                vo.setPublisherAvatar(publisher.getAvatarUrl());
+            }
+            
+            // 获取申请数量
+            QueryWrapper<HelpApplication> appQueryWrapper = new QueryWrapper<>();
+            appQueryWrapper.eq("info_id", helpInfo.getInfoId());
+            long applicationCount = helpApplicationMapper.selectCount(appQueryWrapper);
+            vo.setApplicationCount((int) applicationCount);
+            
+            return vo;
+        }).collect(Collectors.toList());
+        
+        voPage.setRecords(voList);
+        return voPage;
+    }
+    
+    @Override
+    public boolean adminUpdateStatus(Long id, String status) {
+        HelpInfo helpInfo = this.getById(id);
+        if (helpInfo == null) {
+            return false;
+        }
+        
+        helpInfo.setStatus(status);
+        return this.updateById(helpInfo);
     }
 }

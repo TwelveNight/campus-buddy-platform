@@ -61,6 +61,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("用户名或密码错误");
         }
+        
+        // 检查用户状态
+        if ("BANNED".equals(user.getStatus())) {
+            throw new IllegalArgumentException("该账号已被禁用，请联系管理员");
+        }
+        if ("INACTIVE".equals(user.getStatus())) {
+            throw new IllegalArgumentException("该账号未激活，请联系管理员");
+        }
+        
         return jwtUtil.generateToken(user.getUserId(), user.getUsername());
     }
 
