@@ -13,8 +13,8 @@
             <el-tab-pane label="小组通知" name="group">
                 <NotificationCenter :key="'group'" :title="'小组通知'" :type="'GROUP_JOIN_APPLICATION,GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'" />
             </el-tab-pane>
-            <el-tab-pane label="好友申请" name="friend">
-                <NotificationCenter :key="'friend'" :title="'好友申请'" :type="'FRIEND_REQUEST,FRIEND_REQUEST_ACCEPTED,FRIEND_REQUEST_REJECTED'" />
+            <el-tab-pane label="好友通知" name="friend">
+                <NotificationCenter :key="'friend'" :title="'好友通知'" :type="'FRIEND_REQUEST,FRIEND_REQUEST_ACCEPTED,FRIEND_REQUEST_REJECTED,FRIEND_REMOVED'" />
             </el-tab-pane>
         </el-tabs>
     </div>
