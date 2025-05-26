@@ -150,7 +150,7 @@ import {
     MoreFilled, Check, Delete, Bell, Refresh, 
     CircleCheck, Timer, Link, InfoFilled, WarningFilled,
     ChatDotRound, User, Calendar, Setting, QuestionFilled,
-    Promotion, UserFilled, Connection
+    Promotion, UserFilled, Connection, Document, Service
 } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -266,6 +266,14 @@ const getTypeIcon = (type: string) => {
         'FRIEND_REQUEST_ACCEPTED': Check,
         'FRIEND_REQUEST_REJECTED': Delete,
         'FRIEND_REMOVED': Connection,
+        'USER_STATUS': Setting,
+        'USER_PASSWORD_RESET': User,
+        'POST_STATUS': Document,
+        'POST_DELETE': Delete,
+        'GROUP_STATUS': UserFilled,
+        'GROUP_DELETE': Delete,
+        'HELPINFO_STATUS': Service,
+        'HELPINFO_DELETE': Delete,
     }
     return typeMap[type] || WarningFilled
 }
@@ -290,6 +298,14 @@ const getTypeTagType = (type: string) => {
         'FRIEND_REQUEST_ACCEPTED': 'success',
         'FRIEND_REQUEST_REJECTED': 'danger',
         'FRIEND_REMOVED': 'danger',
+        'USER_STATUS': 'info',
+        'USER_PASSWORD_RESET': 'warning',
+        'POST_STATUS': 'info',
+        'POST_DELETE': 'danger',
+        'GROUP_STATUS': 'info',
+        'GROUP_DELETE': 'danger',
+        'HELPINFO_STATUS': 'info',
+        'HELPINFO_DELETE': 'danger',
     }
     return typeMap[type] || 'info'
 }
@@ -314,6 +330,14 @@ const getTypeLabel = (type: string) => {
         'FRIEND_REQUEST_ACCEPTED': '申请通过',
         'FRIEND_REQUEST_REJECTED': '申请拒绝',
         'FRIEND_REMOVED': '好友移除',
+        'USER_STATUS': '账号状态变更',
+        'USER_PASSWORD_RESET': '密码重置',
+        'POST_STATUS': '帖子状态变更',
+        'POST_DELETE': '帖子被删除',
+        'GROUP_STATUS': '小组状态变更',
+        'GROUP_DELETE': '小组被删除',
+        'HELPINFO_STATUS': '互助任务状态变更',
+        'HELPINFO_DELETE': '互助任务被删除',
     }
     return typeMap[type] || type
 }
@@ -380,53 +404,26 @@ const handleNotificationClick = (notification: NotificationItem) => {
     }
     
     if (notification.relatedLink) {
-        console.log('点击通知，跳转到:', notification.relatedLink)
-        
-        const currentPath = router.currentRoute.value.path
-        const currentQuery = router.currentRoute.value.query
-        console.log('当前路径:', currentPath, '当前查询参数:', currentQuery)
-        
-        const targetPath = notification.relatedLink
-        const targetUrl = new URL(targetPath, window.location.origin)
-        const targetPathOnly = targetUrl.pathname
-        const targetQuery = Object.fromEntries(targetUrl.searchParams.entries())
-        
-        console.log('目标路径:', targetPathOnly, '查询参数:', targetQuery)
-        
-        // 特殊处理好友相关通知
-        if (notification.type === 'FRIEND_REQUEST' || 
-            notification.type === 'FRIEND_REQUEST_ACCEPTED' || 
-            notification.type === 'FRIEND_REQUEST_REJECTED' ||
-            notification.type === 'FRIEND_REMOVED') {
-            console.log('处理好友相关通知:', notification.type)
+        // 管理员相关类型的跳转适配
+        if (notification.type === 'USER_STATUS' || notification.type === 'USER_PASSWORD_RESET') {
+            router.push('/profile')
+            return
         }
-        
-        if (currentPath === targetPathOnly) {
-            // 同一页面不同参数的情况
-            console.log('同页面跳转，使用replace')
-            
-            // 强制刷新参数
-            if (targetPathOnly === '/user/friends') {
-                console.log('好友页面跳转，强制刷新标签参数')
-                // 先将路由推入历史记录
-                router.push({ path: '/user/profile' }).then(() => {
-                    // 然后立即跳转到目标路径
-                    setTimeout(() => {
-                        router.replace({ path: targetPathOnly, query: targetQuery })
-                    }, 100)
-                }).catch(err => {
-                    console.error('路由跳转出错:', err)
-                    // 直接使用replace作为后备方案
-                    router.replace({ path: targetPathOnly, query: targetQuery })
-                })
-            } else {
-                router.replace({ path: targetPathOnly, query: targetQuery })
-            }
-        } else {
-            // 不同页面
-            console.log('不同页面跳转，使用push')
-            router.push(targetPath)
+        if ((notification.type === 'POST_STATUS' || notification.type === 'POST_DELETE') && notification.relatedId) {
+            // 假设后端relatedLink为/posts/:id 或 /groups/:gid/posts/:id
+            router.push(notification.relatedLink)
+            return
         }
+        if ((notification.type === 'GROUP_STATUS' || notification.type === 'GROUP_DELETE') && notification.relatedId) {
+            router.push(`/groups/${notification.relatedId}/detail`)
+            return
+        }
+        if ((notification.type === 'HELPINFO_STATUS' || notification.type === 'HELPINFO_DELETE') && notification.relatedId) {
+            router.push(`/helpinfo/${notification.relatedId}`)
+            return
+        }
+        // 其他类型默认
+        router.push(notification.relatedLink)
     } else {
         console.warn('通知没有关联链接')
     }
