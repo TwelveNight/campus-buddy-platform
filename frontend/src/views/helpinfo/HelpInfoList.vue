@@ -224,6 +224,7 @@ function formatDate(dateString: string | Date | number) {
     margin: 30px auto;
     padding: 0 20px;
     animation: fadeIn 0.5s ease-out;
+    box-sizing: border-box;
 }
 
 .page-header {
@@ -231,6 +232,7 @@ function formatDate(dateString: string | Date | number) {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
+    width: 100%;
 }
 
 .page-title {
@@ -374,6 +376,90 @@ function formatDate(dateString: string | Date | number) {
     animation: fadeIn 0.5s ease-out;
 }
 
+@media (max-width: 480px) {
+    .info-table :deep(.el-table) {
+        width: 100% !important;
+        border: none;
+        border-radius: 0;
+    }
+
+    .info-table :deep(.el-table__header-wrapper) {
+        display: none;
+    }
+
+    .info-table :deep(.el-table__body-wrapper) {
+        overflow-x: hidden;
+    }
+
+    .info-table :deep(.el-table__row) {
+        display: flex;
+        flex-direction: column;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-lighter);
+        position: relative;
+    }
+
+    .info-table :deep(.el-table__cell) {
+        display: flex;
+        padding: 3px 0;
+        border: none;
+        margin: 2px 0;
+    }
+
+    .info-table :deep(.cell) {
+        width: 100%;
+        white-space: normal;
+    }
+
+    .info-table :deep(.el-table__cell:first-child) {
+        font-size: 16px;
+        font-weight: 600;
+        padding-bottom: 8px;
+    }
+
+    .info-table :deep(.el-table__cell:last-child) {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
+}
+    
+    .page-title {
+        font-size: 1.5rem;
+        width: 100%;
+    }
+    
+    .publish-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .filter-section {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .search-input,
+    .filter-select {
+        width: 100%;
+    }
+    
+    .main-card {
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .pagination-container {
+        justify-content: center;
+        margin-top: 15px;
+    }
+    
+    .el-pagination {
+        padding: 0;
+        justify-content: center;
+    }
+
 @keyframes fadeIn {
     0% {
         opacity: 0;
@@ -382,34 +468,6 @@ function formatDate(dateString: string | Date | number) {
     100% {
         opacity: 1;
         transform: translateY(0);
-    }
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .helpinfo-list-page {
-        padding: 0 15px;
-    }
-    
-    .page-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: stretch;
-        text-align: center;
-    }
-    
-    .filter-section {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .search-input,
-    .filter-select {
-        width: 100%;
-    }
-    
-    .pagination-container {
-        justify-content: center;
     }
 }
 </style>

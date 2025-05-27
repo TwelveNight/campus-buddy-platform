@@ -1,6 +1,8 @@
 <template>
     <div class="main-layout">
         <NavBar />
+        <MobileNav />
+        <MobileBottomNav />
         <main class="main-content">
             <div class="page-container">
                 <router-view v-slot="{ Component }">
@@ -21,6 +23,8 @@ import { ref } from 'vue'
 import NavBar from '../components/common/NavBar.vue'
 import Footer from '../components/common/Footer.vue'
 import DebugPanel from '../components/common/DebugPanel.vue'
+import MobileNav from '../components/mobile/MobileNav.vue'
+import MobileBottomNav from '../components/mobile/MobileBottomNav.vue'
 
 // 通过 URL 参数控制是否显示调试面板
 const showDebugPanel = ref(window.location.search.includes('debug=true'))
@@ -32,6 +36,9 @@ const showDebugPanel = ref(window.location.search.includes('debug=true'))
     flex-direction: column;
     min-height: 100vh;
     background-color: var(--background-color);
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden; /* 防止水平溢出 */
 }
 
 .main-content {
@@ -39,6 +46,8 @@ const showDebugPanel = ref(window.location.search.includes('debug=true'))
     padding-top: 1rem;
     padding-bottom: 3rem;
     background-color: var(--background-color);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .page-container {
@@ -47,6 +56,19 @@ const showDebugPanel = ref(window.location.search.includes('debug=true'))
     margin: 0 auto;
     padding: 0 20px;
     background-color: var(--background-color);
+    box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        padding: 0 15px;
+        max-width: 100%;
+    }
+
+    .main-content {
+        padding-top: 0.5rem;
+        padding-bottom: 70px; /* 为底部导航留出空间 */
+    }
 }
 
 /* 暗色模式适配 */

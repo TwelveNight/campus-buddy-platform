@@ -1,0 +1,174 @@
+/* 移动端增强样式 */
+
+/* 卡片样式适配 */
+@media (max-width: 768px) {
+  .el-card {
+    margin-bottom: 16px;
+    border-radius: 8px;
+  }
+  
+  .el-card__header {
+    padding: 12px 16px;
+  }
+  
+  .el-card__body {
+    padding: 16px;
+  }
+  
+  /* 互助信息列表移动优化 */
+@media (max-width: 768px) {
+  /* 互助信息表格移动端卡片式布局 */
+  .info-table :deep(.el-table__header-wrapper) {
+    display: none;
+  }
+  
+  .info-table :deep(.el-table__body-wrapper) {
+    overflow-x: hidden;
+  }
+  
+  .info-table :deep(.el-table__row) {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-lighter);
+    position: relative;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background-color: var(--card-bg);
+  }
+  
+  .info-table :deep(.el-table__cell) {
+    display: flex;
+    padding: 4px 0;
+    border: none;
+    margin: 3px 0;
+  }
+  
+  .info-table :deep(.el-table__cell:first-child) {
+    padding-right: 80px; /* 为操作按钮留出空间 */
+  }
+  
+  .info-table :deep(.el-table__cell:last-child) {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+  }
+  
+  .info-table :deep(.cell) {
+    width: 100%;
+    white-space: normal;
+  }
+  
+  /* 在移动端添加标签前缀 */
+  .info-table :deep(.el-table__cell[data-label]):before {
+    content: attr(data-label);
+    min-width: 70px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 8px;
+  }
+}
+  
+  /* 互助列表页适配 */
+  .helpinfo-list-page .main-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  .helpinfo-list-page .search-input,
+  .helpinfo-list-page .filter-select {
+    margin-bottom: 8px;
+  }
+  
+  /* 底部导航补充样式 */
+  .mobile-bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* 移动端抽屉样式 */
+  .el-drawer__body {
+    padding: 0;
+    overflow-x: hidden;
+  }
+  
+  /* 页面通用内容区域 */
+  .page-container {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 15px;
+    box-sizing: border-box;
+  }
+  
+  /* 移动端按钮增强 */
+  .el-button {
+    font-size: 14px;
+    border-radius: 6px;
+  }
+  
+  .el-button--small {
+    font-size: 13px;
+  }
+  
+  /* 表单控件适配 */
+  .el-form-item__label {
+    line-height: 1.4;
+    margin-bottom: 5px;
+  }
+  
+  .el-input__wrapper,
+  .el-textarea__wrapper {
+    box-shadow: 0 0 0 1px var(--border-color) inset;
+  }
+  
+  /* 移动端弹窗适配 */
+  .el-dialog {
+    width: 92% !important;
+    margin: 10vh auto !important;
+    border-radius: 12px;
+  }
+  
+  .el-dialog__header {
+    padding: 16px;
+  }
+  
+  .el-dialog__body {
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  
+  .el-dialog__footer {
+    padding: 10px 16px 16px;
+  }
+}
+
+/* 极小屏幕适配 */
+@media (max-width: 480px) {
+  .el-card__header {
+    padding: 10px 12px;
+  }
+  
+  .el-card__body {
+    padding: 12px;
+  }
+  
+  .page-container {
+    padding: 0 10px;
+  }
+  
+  .el-dialog {
+    width: 95% !important;
+  }
+  
+  .el-dialog__header {
+    padding: 12px;
+  }
+  
+  .el-dialog__body {
+    padding: 12px;
+  }
+  
+  .el-dialog__footer {
+    padding: 8px 12px 12px;
+  }
+}

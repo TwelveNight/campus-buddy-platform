@@ -14,31 +14,77 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    font-size: 15px; /* 稍微减小基础字体大小 */
   }
   
   .main-content {
-    padding-top: 70px; /* 为移动端导航栏留空间 */
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: 16px;
+    padding-top: 66px; /* 为移动端导航栏留空间 */
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-bottom: 80px; /* 为底部导航栏留空间 */
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+/* 极小屏幕适配 (<=480px) */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
   }
   
-  /* 导航栏响应式 */
-  .navbar .container {
-    padding: 0 10px;
+  .main-content {
+    padding-left: 10px;
+    padding-right: 10px;
   }
   
-  .logo h1 {
-    font-size: 1.2rem;
+  .el-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
   }
   
-  .user-actions {
+  .el-pagination .el-pagination__sizes {
+    margin-bottom: 10px;
+  }
+  
+  /* 调整互助信息列表 */
+  .helpinfo-list-page .filter-section {
     gap: 8px;
   }
   
-  .user-avatar-container .user-name {
+  .helpinfo-list-page .page-title {
+    font-size: 1.4rem;
+  }
+  
+  /* 改进表格在移动端的显示 */
+  .el-table__header {
     display: none;
   }
+  
+  .el-table__body {
+    width: 100% !important;
+  }
+  
+  /* 移动端按钮间距和大小 */
+  .el-button + .el-button {
+    margin-left: 8px;
+  }
+  
+  .el-button--small {
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+  
+  /* 移动端表单元素间距 */
+  .el-form-item {
+    margin-bottom: 16px;
+  }
+  
+  /* 下拉菜单适配 */
+  .el-dropdown-menu {
+    min-width: 120px;
+    max-width: 90vw;
+  }
+}
   
   /* 隐藏桌面导航菜单 */
   .desktop-nav {

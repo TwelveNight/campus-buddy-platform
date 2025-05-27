@@ -224,13 +224,18 @@ onUnmounted(() => {
   border-top: 1px solid var(--border-lighter);
   backdrop-filter: blur(10px);
   box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bottom-nav-container {
   display: flex;
   padding: 8px 0 4px;
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
+  width: 100%;
+  justify-content: space-around;
+  box-sizing: border-box;
 }
 
 .nav-item {
@@ -352,19 +357,23 @@ onUnmounted(() => {
   .nav-item {
     padding: 6px 2px;
     margin: 0 2px;
-    min-height: 56px;
+    min-height: 58px;
+    width: 20%;
+    box-sizing: border-box;
   }
   
   .nav-icon .el-icon {
-    font-size: 20px;
-  }
-  
-  .nav-item.active .nav-icon .el-icon {
     font-size: 22px;
   }
   
+  .nav-item.active .nav-icon .el-icon {
+    font-size: 24px;
+  }
+  
   .nav-label {
-    font-size: 10px;
+    font-size: 12px;
+    margin-top: 4px;
+    white-space: nowrap;
   }
 }
 

@@ -286,32 +286,89 @@ const formatTime = (time: string) => {
 
 <style scoped>
 .mobile-help-card {
-  background: var(--card-bg);
-  border-radius: 12px;
-  box-shadow: var(--shadow-light);
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  margin-bottom: 20px;
   overflow: hidden;
   position: relative;
-  transition: all 0.3s ease;
-  border: 1px solid var(--border-lighter);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(20px);
+}
+
+.mobile-help-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent, rgba(64, 158, 255, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .mobile-help-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-regular);
+  transform: translateY(-6px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  border-color: rgba(64, 158, 255, 0.4);
+}
+
+.mobile-help-card:hover::before {
+  opacity: 1;
 }
 
 .mobile-help-card.featured {
-  border-color: var(--primary-color);
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.08) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(103, 194, 58, 0.08) 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.mobile-help-card.featured::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+  border-radius: 22px;
+  z-index: -1;
+}
+
+.mobile-help-card.featured {
+  box-shadow: 
+    0 8px 32px rgba(64, 158, 255, 0.25),
+    0 4px 16px rgba(64, 158, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .card-header {
-  padding: 16px 16px 12px;
+  padding: 20px 20px 16px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
+  position: relative;
+}
+
+.card-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
 }
 
 .header-content {
@@ -320,12 +377,24 @@ const formatTime = (time: string) => {
 }
 
 .help-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   line-height: 1.4;
   word-break: break-word;
+  background: linear-gradient(135deg, #2c3e50, #3498db);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+}
+
+.mobile-help-card:hover .help-title {
+  background: linear-gradient(135deg, #409eff, #67c23a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .help-type {
@@ -337,24 +406,35 @@ const formatTime = (time: string) => {
 }
 
 .favorite-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border-light);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+  border-color: var(--primary-color);
+  background: rgba(64, 158, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 .card-content {
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .help-description {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .description-text {
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-regular);
-  margin: 0 0 8px;
+  margin: 0 0 10px;
   word-break: break-word;
 }
 
@@ -364,23 +444,39 @@ const formatTime = (time: string) => {
   color: var(--primary-color);
   font-size: 13px;
   cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.expand-btn:hover {
+  background: rgba(64, 158, 255, 0.1);
+  transform: scale(1.05);
 }
 
 .help-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 13px;
   color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.meta-item:hover {
+  background: rgba(64, 158, 255, 0.1);
+  color: var(--primary-color);
+  transform: translateY(-1px);
 }
 
 .meta-item .el-icon {
@@ -410,12 +506,14 @@ const formatTime = (time: string) => {
 }
 
 .card-actions {
-  padding: 12px 16px 16px;
-  background: var(--background-color);
+  padding: 16px 20px 20px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.05));
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 .action-info {
@@ -448,35 +546,70 @@ const formatTime = (time: string) => {
 
 .detail-btn,
 .apply-btn {
-  height: 32px;
-  padding: 0 16px;
+  height: 36px;
+  padding: 0 20px;
   font-size: 14px;
-  border-radius: 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backdrop-filter: blur(10px);
 }
 
 .detail-btn {
-  border-color: var(--border-color);
+  border: 1px solid rgba(0, 0, 0, 0.15);
   color: var(--text-regular);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.detail-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: rgba(64, 158, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
 }
 
 .apply-btn {
-  min-width: 80px;
+  min-width: 90px;
+  background: linear-gradient(135deg, #409eff, #67c23a);
+  border: none;
+  color: white;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+.apply-btn:hover {
+  background: linear-gradient(135deg, #66b1ff, #85ce61);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
 }
 
 .urgent-badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: var(--danger-color);
+  top: 16px;
+  right: 16px;
+  background: linear-gradient(135deg, #f56c6c, #e6a23c);
   color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
+  padding: 6px 12px;
+  border-radius: 16px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 2px;
-  z-index: 1;
+  gap: 4px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(245, 108, 108, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(245, 108, 108, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(245, 108, 108, 0.6);
+  }
 }
 
 .urgent-badge .el-icon {
