@@ -64,6 +64,164 @@
             </el-descriptions-item>
           </el-descriptions>
         </el-tab-pane>
+
+        <el-tab-pane label="Redis缓存">
+          <div class="cache-section">
+            <h3>Redis连接状态</h3>
+            <div class="connection-status">
+              <el-button 
+                type="primary" 
+                :loading="testingConnection" 
+                @click="testRedisConnection"
+                icon="Connection"
+              >
+                测试Redis连接
+              </el-button>
+              <el-tag 
+                v-if="connectionStatus !== null" 
+                :type="connectionStatus ? 'success' : 'danger'"
+                class="ml-2"
+              >
+                {{ connectionStatus ? 'Redis连接正常' : 'Redis连接失败' }}
+              </el-tag>
+            </div>
+
+            <h3 class="mt-4">缓存统计信息</h3>
+            <div class="cache-stats">
+              <el-button 
+                type="info" 
+                :loading="loadingStats" 
+                @click="loadCacheStats"
+                icon="Refresh"
+              >
+                刷新统计
+              </el-button>
+              
+              <div v-if="cacheStats" class="mt-2">
+                <h4>应用缓存统计</h4>
+                <el-descriptions border>
+                  <el-descriptions-item label="用户缓存">{{ cacheStats.userCacheCount }}</el-descriptions-item>
+                  <el-descriptions-item label="用户VO缓存">{{ cacheStats.userVOCacheCount }}</el-descriptions-item>
+                  <el-descriptions-item label="Token缓存">{{ cacheStats.tokenCacheCount }}</el-descriptions-item>
+                  <el-descriptions-item label="用户名缓存">{{ cacheStats.usernameCacheCount }}</el-descriptions-item>
+                  <el-descriptions-item label="搜索缓存">{{ cacheStats.searchCacheCount }}</el-descriptions-item>
+                  <el-descriptions-item label="总缓存数">
+                    <el-tag type="primary">{{ cacheStats.totalCacheCount }}</el-tag>
+                  </el-descriptions-item>
+                </el-descriptions>
+
+                <h4 class="mt-3">Redis服务器信息</h4>
+                <el-descriptions v-if="cacheStats.redisInfo" border>
+                  <el-descriptions-item label="Redis版本">{{ cacheStats.redisInfo.version }}</el-descriptions-item>
+                  <el-descriptions-item label="运行时间">{{ formatUptime(cacheStats.redisInfo.uptime) }}</el-descriptions-item>
+                  <el-descriptions-item label="连接数">{{ cacheStats.redisInfo.connectedClients }}</el-descriptions-item>
+                  <el-descriptions-item label="内存使用">{{ formatMemory(cacheStats.redisInfo.usedMemory) }}</el-descriptions-item>
+                  <el-descriptions-item label="数据库总Key数">
+                    <el-tag type="warning">{{ cacheStats.redisInfo.totalKeys }}</el-tag>
+                  </el-descriptions-item>
+                </el-descriptions>
+              </div>
+            </div>
+
+            <h3 class="mt-4">缓存详细信息</h3>
+            <div class="cache-details">
+              <el-button 
+                type="info" 
+                :loading="loadingDetails" 
+                @click="loadCacheDetails"
+                icon="View"
+              >
+                查看详细信息
+              </el-button>
+              
+              <div v-if="cacheDetails" class="mt-2">
+                <h4>缓存类型分布</h4>
+                <el-descriptions border>
+                  <el-descriptions-item 
+                    v-for="(count, type) in cacheDetails.typeCount" 
+                    :key="type"
+                    :label="type + '类型'"
+                  >
+                    {{ count }} 个
+                  </el-descriptions-item>
+                </el-descriptions>
+
+                <h4 class="mt-3">Key详细信息</h4>
+                <el-table 
+                  :data="keyDetailsList" 
+                  style="width: 100%" 
+                  max-height="300"
+                  v-if="keyDetailsList.length > 0"
+                >
+                  <el-table-column prop="key" label="缓存Key" min-width="200">
+                    <template #default="{ row }">
+                      <el-tag size="small">{{ row.key }}</el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="type" label="类型" width="80" />
+                  <el-table-column prop="ttl" label="TTL(秒)" width="80">
+                    <template #default="{ row }">
+                      <el-tag 
+                        :type="row.ttl === -1 ? 'info' : (row.ttl > 0 ? 'success' : 'danger')"
+                        size="small"
+                      >
+                        {{ row.ttl === -1 ? '永久' : row.ttl }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="size" label="大小" width="80">
+                    <template #default="{ row }">
+                      {{ row.size > 0 ? row.size + 'B' : '-' }}
+                    </template>
+                  </el-table-column>
+                </el-table>
+
+                <h4 class="mt-3">所有缓存Key列表</h4>
+                <div class="cache-keys">
+                  <el-tag 
+                    v-for="key in cacheDetails.allKeys" 
+                    :key="key"
+                    size="small"
+                    class="cache-key-tag"
+                  >
+                    {{ key }}
+                  </el-tag>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="mt-4">缓存管理操作</h3>
+            <div class="cache-actions">
+              <el-button 
+                type="warning" 
+                :loading="clearingCache" 
+                @click="clearAllCache"
+                icon="Delete"
+              >
+                清空所有缓存
+              </el-button>
+              
+              <el-button 
+                type="warning" 
+                :loading="clearingUserCache" 
+                @click="clearCurrentUserCache"
+                icon="UserFilled"
+                :disabled="!authStore.user?.userId"
+              >
+                清空当前用户缓存
+              </el-button>
+              
+              <el-button 
+                type="warning" 
+                :loading="clearingSearchCache" 
+                @click="clearSearchCache"
+                icon="Search"
+              >
+                清空搜索缓存
+              </el-button>
+            </div>
+          </div>
+        </el-tab-pane>
       </el-tabs>
 
       <div class="actions mt-4">
@@ -76,16 +234,192 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../store/auth'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { cacheApi, type CacheStats, type CacheDetails } from '../api/cache'
 
 const route = useRoute()
 const authStore = useAuthStore()
 
+// Redis缓存相关状态
+const testingConnection = ref(false)
+const connectionStatus = ref<boolean | null>(null)
+const loadingStats = ref(false)
+const loadingDetails = ref(false)
+const clearingCache = ref(false)
+const clearingUserCache = ref(false)
+const clearingSearchCache = ref(false)
+const cacheStats = ref<CacheStats | null>(null)
+const cacheDetails = ref<CacheDetails | null>(null)
+
+// 计算属性：将key详细信息转换为表格数据
+const keyDetailsList = computed(() => {
+  if (!cacheDetails.value?.keyDetails) return []
+  
+  return Object.entries(cacheDetails.value.keyDetails).map(([key, details]) => ({
+    key,
+    type: details.type,
+    ttl: details.ttl,
+    size: details.size
+  }))
+})
+
+// 格式化运行时间
+function formatUptime(seconds: number): string {
+  if (seconds < 60) return `${seconds}秒`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}小时`
+  return `${Math.floor(seconds / 86400)}天`
+}
+
+// 格式化内存大小
+function formatMemory(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`
+}
+
 // 获取本地存储的数据
 function getLocalStorage(key: string): string | null {
   return localStorage.getItem(key)
+}
+
+// 测试Redis连接
+async function testRedisConnection() {
+  testingConnection.value = true
+  try {
+    await cacheApi.testConnection()
+    connectionStatus.value = true
+    ElMessage.success('Redis连接正常')
+  } catch (error) {
+    connectionStatus.value = false
+    ElMessage.error('Redis连接测试失败')
+    console.error('Redis连接测试失败:', error)
+  } finally {
+    testingConnection.value = false
+  }
+}
+
+// 加载缓存统计信息
+async function loadCacheStats() {
+  loadingStats.value = true
+  try {
+    const data = await cacheApi.getStats()
+    cacheStats.value = data // API已经提取了实际数据
+    ElMessage.success('缓存统计信息已刷新')
+  } catch (error) {
+    ElMessage.error('获取缓存统计信息失败')
+    console.error('获取缓存统计信息失败:', error)
+  } finally {
+    loadingStats.value = false
+  }
+}
+
+// 加载缓存详细信息
+async function loadCacheDetails() {
+  loadingDetails.value = true
+  try {
+    const data = await cacheApi.getDetails()
+    cacheDetails.value = data // API已经提取了实际数据
+    ElMessage.success('缓存详细信息已加载')
+  } catch (error) {
+    ElMessage.error('获取缓存详细信息失败')
+    console.error('获取缓存详细信息失败:', error)
+  } finally {
+    loadingDetails.value = false
+  }
+}
+
+// 清空所有缓存
+async function clearAllCache() {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清空所有Redis缓存吗？此操作将清除所有用户缓存数据。',
+      '确认清空缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingCache.value = true
+    await cacheApi.clearAll()
+    ElMessage.success('所有缓存已清空')
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空缓存失败')
+      console.error('清空缓存失败:', error)
+    }
+  } finally {
+    clearingCache.value = false
+  }
+}
+
+// 清空当前用户缓存
+async function clearCurrentUserCache() {
+  if (!authStore.user?.userId) {
+    ElMessage.warning('当前用户ID不存在')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要清空用户ID ${authStore.user.userId} 的缓存吗？`,
+      '确认清空用户缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingUserCache.value = true
+    await cacheApi.clearUser(authStore.user.userId)
+    ElMessage.success('当前用户缓存已清空')
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空用户缓存失败')
+      console.error('清空用户缓存失败:', error)
+    }
+  } finally {
+    clearingUserCache.value = false
+  }
+}
+
+// 清空搜索缓存
+async function clearSearchCache() {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清空所有搜索缓存吗？',
+      '确认清空搜索缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingSearchCache.value = true
+    await cacheApi.clearSearch()
+    ElMessage.success('搜索缓存已清空')
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空搜索缓存失败')
+      console.error('清空搜索缓存失败:', error)
+    }
+  } finally {
+    clearingSearchCache.value = false
+  }
 }
 
 // 刷新用户信息
@@ -137,6 +471,14 @@ async function checkAdminStatus() {
   margin-top: 1rem;
 }
 
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
 .mr-1 {
   margin-right: 0.25rem;
 }
@@ -152,5 +494,65 @@ pre {
   border-radius: 4px;
   overflow-x: auto;
   font-size: 12px;
+}
+
+/* Redis缓存相关样式 */
+.cache-section {
+  margin-bottom: 2rem;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cache-stats {
+  margin-bottom: 1.5rem;
+}
+
+.cache-details {
+  margin-bottom: 1.5rem;
+}
+
+.cache-keys {
+  margin-top: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.cache-key-tag {
+  margin: 2px 4px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+}
+
+.cache-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cache-actions .el-button {
+  margin-bottom: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .debug-page {
+    padding: 0 10px;
+  }
+  
+  .cache-actions {
+    flex-direction: column;
+  }
+  
+  .cache-actions .el-button {
+    width: 100%;
+  }
 }
 </style>

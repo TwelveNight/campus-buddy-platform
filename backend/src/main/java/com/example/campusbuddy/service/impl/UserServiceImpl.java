@@ -10,9 +10,11 @@ import com.example.campusbuddy.dto.RegisterDTO;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.security.JwtUtil;
+import com.example.campusbuddy.service.UserCacheService;
 import com.example.campusbuddy.service.UserRoleService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +27,7 @@ import java.util.Base64;
 import java.util.List;
 
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     @Autowired
     private JwtUtil jwtUtil;
@@ -34,6 +37,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private UserRoleService userRoleService;
+    
+    @Autowired
+    private UserCacheService userCacheService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -55,12 +61,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 为新用户分配默认角色
         userRoleService.addRoleToUser(user.getUserId(), "ROLE_USER");
 
-        return getUserVOById(user.getUserId());
+        UserVO userVO = getUserVOById(user.getUserId());
+        
+        // 缓存新用户信息
+        userCacheService.cacheUser(user);
+        userCacheService.cacheUserVO(userVO);
+        
+        log.info("用户注册成功: userId={}, username={}", user.getUserId(), user.getUsername());
+        
+        return userVO;
     }
 
     @Override
     public String login(LoginDTO dto) {
-        User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername()));
+        // 先尝试从缓存获取用户信息
+        User user = userCacheService.getUserByUsernameFromCache(dto.getUsername());
+        if (user == null) {
+            user = userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername()));
+            if (user != null) {
+                // 缓存用户信息
+                userCacheService.cacheUser(user);
+            }
+        }
+        
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("用户名或密码错误");
         }
@@ -73,11 +96,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new IllegalArgumentException("该账号未激活，请联系管理员");
         }
         
-        return jwtUtil.generateToken(user.getUserId(), user.getUsername());
+        String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
+        
+        // 缓存登录 token (设置较短的过期时间，如 2 小时)
+        userCacheService.cacheUserToken(user.getUserId(), token, 7200);
+        
+        return token;
     }
 
     @Override
     public UserVO getUserVOById(Long userId) {
+        // 先尝试从缓存获取
+        UserVO cachedUserVO = userCacheService.getUserVOFromCache(userId);
+        if (cachedUserVO != null) {
+            return cachedUserVO;
+        }
+        
         User user = userMapper.selectById(userId);
         if (user == null)
             return null;
@@ -87,6 +121,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 获取用户角色信息并设置到VO对象中
         List<String> roles = userRoleService.getUserRoles(userId);
         vo.setRoles(roles);
+        
+        // 缓存用户信息
+        userCacheService.cacheUserVO(vo);
         
         return vo;
     }
@@ -131,6 +168,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 保存更新
         this.updateById(user);
 
+        // 清除缓存
+        userCacheService.evictUserCache(userId);
+
         // 返回更新后的用户信息
         return getUserVOById(userId);
     }
@@ -150,6 +190,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 更新密码
         user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
         this.updateById(user);
+        
+        // 清除缓存
+        userCacheService.evictUserCache(userId);
     }
     
     @Override
@@ -171,6 +214,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     
     @Override
     public Page<UserVO> searchUsers(String keyword, Integer page, Integer size) {
+        // 先尝试从缓存获取搜索结果
+        Page<UserVO> cachedResult = userCacheService.getSearchResultFromCache(keyword, page, size);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
+        
         // 创建分页对象
         Page<User> userPage = new Page<>(page, size);
         
@@ -202,6 +251,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             voList.add(vo);
         }
         voPage.setRecords(voList);
+        
+        // 缓存搜索结果 (设置较短的过期时间，如 10 分钟)
+        userCacheService.cacheSearchResult(keyword, page, size, voPage, 600);
         
         return voPage;
     }
@@ -246,7 +298,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = this.getById(userId);
         if (user == null) return false;
         user.setStatus(status);
-        return this.updateById(user);
+        boolean result = this.updateById(user);
+        
+        // 清除缓存
+        if (result) {
+            userCacheService.evictUserCache(userId);
+        }
+        
+        return result;
     }
 
     @Override
@@ -260,6 +319,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String newPassword = generateRandomPassword(8);
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         this.updateById(user);
+        
+        // 清除缓存
+        userCacheService.evictUserCache(userId);
+        
         return newPassword;
     }
 
