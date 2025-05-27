@@ -37,12 +37,14 @@ public class CacheController {
             Set<String> tokenKeys = redisTemplate.keys("campus:user:token:*");
             Set<String> usernameKeys = redisTemplate.keys("campus:username:*");
             Set<String> searchKeys = redisTemplate.keys("campus:user:search:*");
+            Set<String> creditScoreKeys = redisTemplate.keys("campus:user:credit:*");
             
             stats.put("userCacheCount", userKeys != null ? userKeys.size() : 0);
             stats.put("userVOCacheCount", userVOKeys != null ? userVOKeys.size() : 0);
             stats.put("tokenCacheCount", tokenKeys != null ? tokenKeys.size() : 0);
             stats.put("usernameCacheCount", usernameKeys != null ? usernameKeys.size() : 0);
             stats.put("searchCacheCount", searchKeys != null ? searchKeys.size() : 0);
+            stats.put("creditScoreCacheCount", creditScoreKeys != null ? creditScoreKeys.size() : 0);
             
             // 总缓存数量
             Set<String> allKeys = redisTemplate.keys("campus:*");
@@ -143,6 +145,47 @@ public class CacheController {
         } catch (Exception e) {
             log.severe("清空搜索缓存失败: " + e.getMessage());
             return R.fail("清空搜索缓存失败");
+        }
+    }
+    
+    /**
+     * 清空信用分缓存
+     */
+    @DeleteMapping("/clear/credit")
+    public R<String> clearCreditScoreCache() {
+        try {
+            Set<String> keys = redisTemplate.keys("campus:user:credit:*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+                log.info("已清空信用分缓存，共清理 " + keys.size() + " 个key");
+                return R.ok("信用分缓存清理成功，共清理 " + keys.size() + " 个缓存项");
+            } else {
+                return R.ok("没有信用分缓存需要清理");
+            }
+        } catch (Exception e) {
+            log.severe("清空信用分缓存失败: " + e.getMessage());
+            return R.fail("清空信用分缓存失败");
+        }
+    }
+    
+    /**
+     * 清空指定用户的信用分缓存
+     */
+    @DeleteMapping("/clear/credit/{userId}")
+    public R<String> clearUserCreditScoreCache(@PathVariable Long userId) {
+        try {
+            String key = "campus:user:credit:" + userId;
+            Boolean hasKey = redisTemplate.hasKey(key);
+            if (hasKey != null && hasKey) {
+                redisTemplate.delete(key);
+                log.info("已清空用户" + userId + "的信用分缓存");
+                return R.ok("用户信用分缓存清理成功");
+            } else {
+                return R.ok("该用户没有信用分缓存数据");
+            }
+        } catch (Exception e) {
+            log.severe("清空用户信用分缓存失败: userId=" + userId + ", " + e.getMessage());
+            return R.fail("清空用户信用分缓存失败");
         }
     }
 

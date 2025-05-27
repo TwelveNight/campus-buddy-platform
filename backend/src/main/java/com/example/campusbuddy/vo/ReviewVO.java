@@ -19,4 +19,8 @@ public class ReviewVO {
     private String moduleType;
     private Date createdAt;
     private String reviewType; // PUBLISHER_TO_HELPER 或 HELPER_TO_PUBLISHER
+    
+    // 信用分相关字段
+    private Integer reviewerCreditScore; // 评价者信用积分
+    private String reviewerCreditLevel; // 评价者信用等级
 }

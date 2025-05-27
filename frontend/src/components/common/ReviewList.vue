@@ -40,6 +40,14 @@
                                         </el-tooltip>
                                         <span class="pulse-dot" v-if="review.reviewerUserId === currentUserId"></span>
                                     </div>
+                                    <div class="credit-level-badge" v-if="review.reviewerCreditLevel">
+                                        <el-tooltip content="用户信用等级" placement="top">
+                                            <el-tag size="small" effect="plain" :type="getCreditLevelTagType(review.reviewerCreditLevel)">
+                                                <span class="credit-level-icon">⭐</span>
+                                                {{ review.reviewerCreditLevel }}
+                                            </el-tag>
+                                        </el-tooltip>
+                                    </div>
                                 </div>
                                 <!-- 仅在当前用户是评价者且允许显示评价对象时显示评价对象 -->
                                 <div class="review-opposite-info" 
@@ -157,6 +165,8 @@ interface ReviewItem {
     relatedInfoSummary?: string; // 相关互助任务摘要
     reviewerRole?: string; // PUBLISHER (求助方) 或 HELPER (帮助方)
     reviewedRole?: string; // PUBLISHER (求助方) 或 HELPER (帮助方)
+    reviewerCreditLevel?: string; // 评价者信用等级
+    reviewerCreditScore?: number; // 评价者信用分数
 }
 
 const props = defineProps({
@@ -237,6 +247,7 @@ function getReviewedNickname(review: ReviewItem): string {
     return review.reviewedNickname || '昵称未知';
 }
 
+// 获取信用等级对应的标签类型
 // 获取模块类型对应的标签类型
 function getModuleTagType(moduleType: string | undefined): string {
     if (!moduleType) return '';
@@ -295,6 +306,19 @@ function getRelatedLink(review: ReviewItem) {
         return `/helpinfo/${review.relatedInfoId}`;
     }
     return '';
+}
+
+// 获取信用等级对应的标签类型
+function getCreditLevelTagType(creditLevel: string): string {
+    const typeMap: Record<string, string> = {
+        '优秀': 'success',
+        '良好': 'primary',
+        '中等': 'warning',
+        '及格': 'info',
+        '待提升': 'danger',
+        '未评级': ''
+    };
+    return typeMap[creditLevel] || '';
 }
 
 // 获取用户角色类型（标签样式）
@@ -478,6 +502,23 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.credit-level-badge {
+    margin-top: 4px;
+}
+
+.credit-level-badge .el-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 10px;
+}
+
+.credit-level-icon {
+    font-size: 12px;
 }
 
 .review-module {

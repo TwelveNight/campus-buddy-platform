@@ -28,7 +28,14 @@
                                     </div>
                                 </template>
                             </el-progress>
-                            <div class="credit-level">{{ getCreditLevel() }}</div>
+                            <div class="credit-level">
+                                {{ creditStats.creditLevel }}
+                                <el-tag v-if="creditStats.trend !== '稳定'" :type="getTrendType(creditStats.trend)" effect="light" size="small">
+                                    {{ creditStats.trend }}
+                                    <el-icon v-if="creditStats.trend.includes('上升')"><CaretTop /></el-icon>
+                                    <el-icon v-else-if="creditStats.trend.includes('下降')"><CaretBottom /></el-icon>
+                                </el-tag>
+                            </div>
                         </div>
                         <div class="user-stats">
                             <div class="stat-item">
@@ -413,10 +420,11 @@ import type { FormInstance } from "element-plus";
 import { useAuthStore } from "../../store/auth";
 import AvatarUploader from "../../components/form/AvatarUploader.vue";
 import { getUserProfile, updateUserProfile, changePassword } from "../../api/user";
-import { getUserReviews } from '../../api/review';
+import { getUserReviews, getUserCreditStats } from '../../api/review';
 import {
     User, UserFilled, Avatar, Key, Lock, Check,
-    RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View, MessageBox, ChatRound, Document, Collection, Promotion
+    RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View, MessageBox, ChatRound, Document, Collection, Promotion,
+    CaretTop, CaretBottom
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -577,6 +585,17 @@ const form = reactive<ProfileForm>({
     updatedAt: ''
 })
 
+// 信用分统计信息
+const creditStats = ref({
+  creditScore: 0,
+  creditLevel: '未评级',
+  totalReviews: 0,
+  averageScore: 0,
+  recentReviews: 0,
+  recentAverageScore: 0,
+  trend: '稳定'
+});
+
 // 修改密码表单数据
 const pwdForm = reactive({
     oldPassword: '',
@@ -725,6 +744,23 @@ async function fetchUserReviews() {
     }
 }
 
+// 获取用户信用分详细统计
+async function fetchCreditStats() {
+    if (!form.userId) return;
+    
+    try {
+        const res = await getUserCreditStats(form.userId);
+        if (res && res.data) {
+            creditStats.value = res.data;
+            // 更新表单中的信用分以确保显示一致
+            form.creditScore = creditStats.value.creditScore;
+            console.log('获取到的信用分统计：', creditStats.value);
+        }
+    } catch (error) {
+        console.error('获取信用分统计失败：', error);
+    }
+}
+
 // 获取用户角色的标签类型
 function getUserRoleType(reviewType: string | undefined, reviewerUserId: number): string {
     if (!reviewType) return 'info';
@@ -783,6 +819,13 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
         return reviewerUserId === currentUserId ? '您是帮助方' : '对方是求助方';
     }
     return '用户角色';
+}
+
+// 获取趋势标签类型
+function getTrendType(trend: string) {
+    if (trend.includes('上升')) return 'success';
+    if (trend.includes('下降')) return 'danger';
+    return 'info';
 }
 
 // 组件挂载时执行
@@ -863,6 +906,9 @@ onMounted(async () => {
 
         // 获取用户收到的评价
         await fetchUserReviews();
+
+        // 获取用户信用分统计
+        await fetchCreditStats();
 
     } catch (error) {
         console.error('加载个人信息失败:', error);

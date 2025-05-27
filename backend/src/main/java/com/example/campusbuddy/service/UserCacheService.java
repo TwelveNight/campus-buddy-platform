@@ -5,6 +5,7 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.vo.UserVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户缓存服务接口
@@ -127,4 +128,39 @@ public interface UserCacheService {
      * 清空用户搜索缓存
      */
     void evictSearchCache();
+    
+    /**
+     * 缓存用户信用积分
+     * @param userId 用户ID
+     * @param creditScore 信用积分
+     * @param expireSeconds 过期时间（秒）
+     */
+    void cacheCreditScore(Long userId, Integer creditScore, long expireSeconds);
+    
+    /**
+     * 从缓存获取用户信用积分
+     * @param userId 用户ID
+     * @return 信用积分，如果缓存中不存在则返回null
+     */
+    Integer getCachedCreditScore(Long userId);
+    
+    /**
+     * 删除用户信用积分缓存
+     * @param userId 用户ID
+     */
+    void evictCreditScoreCache(Long userId);
+    
+    /**
+     * 批量缓存用户信用积分
+     * @param creditScores 用户ID到信用积分的映射
+     * @param expireSeconds 过期时间（秒）
+     */
+    void batchCacheCreditScores(Map<Long, Integer> creditScores, long expireSeconds);
+    
+    /**
+     * 批量获取用户信用积分
+     * @param userIds 用户ID列表
+     * @return 用户ID到信用积分的映射
+     */
+    Map<Long, Integer> getBatchCachedCreditScores(List<Long> userIds);
 }

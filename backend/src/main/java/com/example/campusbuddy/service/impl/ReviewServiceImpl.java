@@ -11,6 +11,8 @@ import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.mapper.HelpInfoMapper;
 import com.example.campusbuddy.mapper.HelpApplicationMapper;
 import com.example.campusbuddy.service.ReviewService;
+import com.example.campusbuddy.service.CreditScoreCalculationService;
+import com.example.campusbuddy.service.UserCacheService;
 import com.example.campusbuddy.vo.PageResult;
 import com.example.campusbuddy.vo.ReviewVO;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     private HelpInfoMapper helpInfoMapper;
     @Autowired
     private HelpApplicationMapper helpApplicationMapper;
+    @Autowired
+    private CreditScoreCalculationService creditScoreCalculationService;
+    @Autowired
+    private UserCacheService userCacheService;
 
     @Override
     @Transactional
@@ -81,43 +87,36 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             log.info("准备插入评价记录: {}", review);
             // 保存评价
             int insertResult = reviewMapper.insert(review);
-            // 自动更新被评价用户的信用分（简单示例：平均分，实际可根据业务调整）
+            
+            // 使用新的信用积分计算服务更新用户信用分
             if (insertResult > 0 && review.getReviewedUserId() != null) {
                 log.info("评价插入成功，开始更新用户信用分，被评价用户ID: {}", review.getReviewedUserId());
-                List<Review> userReviews = reviewMapper.selectList(
-                        new QueryWrapper<Review>().eq("reviewed_user_id", review.getReviewedUserId()));
-
-                if (!userReviews.isEmpty()) {
-                    // 计算平均分（1-5分制）
-                    double avgRawScore = userReviews.stream().mapToInt(Review::getScore).sum()
-                            / (double) userReviews.size();
-                    log.info("用户收到的评价平均分（1-5分制）：{}", avgRawScore);
-
-                    // 将1-5分制转换为0-100分制
-                    // 转换公式: 0-100分 = (平均分 - 1) / 4 * 100
-                    // 这样 1分->0分，3分->50分，5分->100分
-                    int creditScoreValue = (int) Math.round((avgRawScore - 1) / 4.0 * 100);
-
-                    // 确保分数在0-100范围内
-                    creditScoreValue = Math.max(0, Math.min(100, creditScoreValue));
-
-                    log.info("转换后的信用分（0-100分制）：{}", creditScoreValue);
-
+                
+                try {
+                    // 使用增量更新方式计算新的信用积分
+                    Integer newCreditScore = creditScoreCalculationService.incrementalUpdateCreditScore(
+                        review.getReviewedUserId(), review);
+                    
+                    // 更新数据库中的用户信用分
                     User user = userMapper.selectById(review.getReviewedUserId());
                     if (user != null) {
-                        // 记录旧分数，用于日志
                         Integer oldScore = user.getCreditScore();
-
-                        // 更新用户信用分
-                        user.setCreditScore(creditScoreValue);
+                        user.setCreditScore(newCreditScore);
                         userMapper.updateById(user);
-
+                        
+                        // 清除用户相关缓存，确保数据一致性
+                        userCacheService.evictUserCache(review.getReviewedUserId());
+                        
                         log.info("用户信用分更新成功，用户ID: {}，旧分数: {}，新信用分: {}",
-                                user.getUserId(), oldScore, creditScoreValue);
+                                user.getUserId(), oldScore, newCreditScore);
                     } else {
                         log.warn("未找到用户信息，无法更新信用分，用户ID: {}", review.getReviewedUserId());
                     }
+                } catch (Exception e) {
+                    log.error("更新用户信用分时发生异常，用户ID: {}", review.getReviewedUserId(), e);
+                    // 不影响评价提交的成功，只记录错误
                 }
+                
                 return true;
             }
 
@@ -237,9 +236,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     @Override
     public Integer getUserCreditScore(Long userId) {
-        // 从用户表获取信用分
-        User user = userMapper.selectById(userId);
-        return user != null ? user.getCreditScore() : null;
+        // 使用新的信用积分计算服务
+        return creditScoreCalculationService.calculateCreditScore(userId);
     }
 
     @Override
@@ -277,6 +275,26 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                         log.error("错误: 收到的评价中，被评价人不是当前用户! reviewId={}, reviewedUserId={}, userId={}",
                                 review.getReviewId(), review.getReviewedUserId(), userId);
                     }
+                }
+            }
+            
+            // 为每条评价添加评价者的信用等级信息
+            for (ReviewVO review : items) {
+                try {
+                    // 获取评价者的信用分数
+                    Integer reviewerCreditScore = creditScoreCalculationService.calculateCreditScore(review.getReviewerUserId());
+                    // 获取评价者的信用等级
+                    String reviewerCreditLevel = creditScoreCalculationService.getCreditLevel(reviewerCreditScore);
+                    
+                    // 设置到评价VO对象中
+                    review.setReviewerCreditScore(reviewerCreditScore);
+                    review.setReviewerCreditLevel(reviewerCreditLevel);
+                    
+                    log.debug("添加评价者信用信息: reviewId={}, reviewerUserId={}, creditScore={}, creditLevel={}",
+                            review.getReviewId(), review.getReviewerUserId(), reviewerCreditScore, reviewerCreditLevel);
+                } catch (Exception e) {
+                    log.warn("获取评价者信用信息失败: reviewId={}, reviewerUserId={}", 
+                            review.getReviewId(), review.getReviewerUserId(), e);
                 }
             }
         } else {

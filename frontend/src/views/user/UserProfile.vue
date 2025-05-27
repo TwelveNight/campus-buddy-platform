@@ -38,6 +38,14 @@
               </div>
             </template>
           </el-progress>
+          <div class="credit-level">
+            {{ creditStats.creditLevel }}
+            <el-tag v-if="creditStats.trend !== '稳定'" :type="getTrendType(creditStats.trend)" effect="light" size="small">
+              {{ creditStats.trend }}
+              <el-icon v-if="creditStats.trend.includes('上升')"><CaretTop /></el-icon>
+              <el-icon v-else-if="creditStats.trend.includes('下降')"><CaretBottom /></el-icon>
+            </el-tag>
+          </div>
         </div>
       </div>
 
@@ -110,10 +118,10 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import ReviewList from '../../components/common/ReviewList.vue';
-import { getUserReviews } from '../../api/review';
+import { getUserReviews, getUserCreditStats } from '../../api/review';
 import { getUserById } from '../../api/user';
 import { applyFriend, getFriendList, checkFriendStatus } from '../../api/friend';
-import { Star, User, List, ChatDotRound, Plus, Check } from '@element-plus/icons-vue';
+import { Star, User, List, ChatDotRound, Plus, Check, CaretTop, CaretBottom } from '@element-plus/icons-vue';
 import { useAuthStore } from '../../store/auth';
 
 const route = useRoute();
@@ -131,6 +139,17 @@ const creditColors = [
   { color: '#1989fa', percentage: 80 },
   { color: '#6f7ad3', percentage: 100 }
 ];
+
+// 信用分统计信息
+const creditStats = ref({
+  creditScore: 0,
+  creditLevel: '未评级',
+  totalReviews: 0,
+  averageScore: 0,
+  recentReviews: 0,
+  recentAverageScore: 0,
+  trend: '稳定'
+});
 
 // 当前登录用户ID
 const currentUserId = computed(() => authStore.user?.userId);
@@ -213,6 +232,7 @@ const loadFriendIds = async () => {
 onMounted(() => {
   fetchUserInfo();
   fetchUserReviews();
+  fetchUserCreditStats();
   checkIsFriend();
 });
 
@@ -278,6 +298,13 @@ const getStatusType = (status: string) => {
   }
 };
 
+// 获取趋势标签类型
+const getTrendType = (trend: string) => {
+  if (trend.includes('上升')) return 'success';
+  if (trend.includes('下降')) return 'danger';
+  return 'info';
+};
+
 async function fetchUserInfo() {
   try {
     const res = await getUserById(userId.value);
@@ -327,6 +354,7 @@ watch(() => route.params.userId, (newUserId) => {
     userId.value = Number(newUserId);
     fetchUserInfo();
     fetchUserReviews();
+    fetchUserCreditStats();
     checkIsFriend();
   }
 }, { immediate: true });
@@ -336,8 +364,26 @@ watch(userId, (newId) => {
   console.log('用户ID变量发生变化：', newId);
   fetchUserInfo();
   fetchUserReviews();
+  fetchUserCreditStats();
   checkIsFriend();
 });
+
+// 获取用户信用分详细统计
+async function fetchUserCreditStats() {
+  if (!userId.value) return;
+  
+  try {
+    const res = await getUserCreditStats(userId.value);
+    if (res && res.data) {
+      creditStats.value = res.data;
+      // 更新用户信息中的信用分以确保显示一致
+      userInfo.value.creditScore = creditStats.value.creditScore;
+      console.log('获取到的信用分统计：', creditStats.value);
+    }
+  } catch (error) {
+    console.error('获取信用分统计失败：', error);
+  }
+}
 </script>
 
 <style scoped>
@@ -407,6 +453,22 @@ watch(userId, (newId) => {
 .credit-title {
   font-size: 13px;
   color: #909399;
+}
+
+.credit-level {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.credit-level .el-tag {
+  margin-left: 4px;
 }
 
 .user-details-section {

@@ -59,8 +59,33 @@ export function getReviewsByUserId(userId: number) {
 // 获取用户信用分
 export function getUserCreditScore(userId: number) {
   return request({
-    url: `/api/review/credit/${userId}`,
+    url: `/api/credit/score/${userId}`,
     method: 'get'
+  });
+}
+
+// 获取用户信用等级
+export function getUserCreditLevel(userId: number) {
+  return request({
+    url: `/api/credit/level/${userId}`,
+    method: 'get'
+  });
+}
+
+// 获取用户信用积分详细统计
+export function getUserCreditStats(userId: number) {
+  return request({
+    url: `/api/credit/stats/${userId}`,
+    method: 'get'
+  });
+}
+
+// 批量获取用户信用积分
+export function getBatchCreditScores(userIds: number[]) {
+  return request({
+    url: '/api/credit/batch',
+    method: 'post',
+    data: userIds
   });
 }
 

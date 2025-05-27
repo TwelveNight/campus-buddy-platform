@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,6 +35,7 @@ public class UserCacheServiceImpl implements UserCacheService {
     private static final String USER_TOKEN_KEY_PREFIX = "campus:user:token:";
     private static final String USER_SEARCH_KEY_PREFIX = "campus:user:search:";
     private static final String USERNAME_KEY_PREFIX = "campus:username:";
+    private static final String USER_CREDIT_KEY_PREFIX = "campus:user:credit:";
     
     // 缓存过期时间（秒）
     private static final long USER_CACHE_EXPIRE = 3600; // 1小时
@@ -248,5 +251,92 @@ public class UserCacheServiceImpl implements UserCacheService {
     @Override
     public String getUserTokenFromCache(Long userId) {
         return getCachedUserToken(userId);
+    }
+    
+    @Override
+    public void cacheCreditScore(Long userId, Integer creditScore, long expireSeconds) {
+        if (userId == null || creditScore == null) {
+            return;
+        }
+        try {
+            String key = USER_CREDIT_KEY_PREFIX + userId;
+            // 将Integer转换为String再存储，以适应StringRedisSerializer
+            redisTemplate.opsForValue().set(key, creditScore.toString(), expireSeconds, TimeUnit.SECONDS);
+            log.debug("缓存用户信用积分: userId={}, creditScore={}, expireSeconds={}", userId, creditScore, expireSeconds);
+        } catch (Exception e) {
+            log.error("缓存用户信用积分失败: userId={}, creditScore={}", userId, creditScore, e);
+        }
+    }
+    
+    @Override
+    public Integer getCachedCreditScore(Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        try {
+            String key = USER_CREDIT_KEY_PREFIX + userId;
+            Object value = redisTemplate.opsForValue().get(key);
+            if (value != null) {
+                // 从String转回Integer
+                Integer creditScore = value instanceof String ? 
+                    Integer.parseInt((String) value) : (Integer) value;
+                log.debug("从缓存获取用户信用积分: userId={}, creditScore={}", userId, creditScore);
+                return creditScore;
+            }
+        } catch (Exception e) {
+            log.error("从缓存获取用户信用积分失败: userId={}", userId, e);
+        }
+        return null;
+    }
+    
+    @Override
+    public void evictCreditScoreCache(Long userId) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            String key = USER_CREDIT_KEY_PREFIX + userId;
+            redisTemplate.delete(key);
+            log.debug("清除用户信用积分缓存: userId={}", userId);
+        } catch (Exception e) {
+            log.error("清除用户信用积分缓存失败: userId={}", userId, e);
+        }
+    }
+    
+    @Override
+    public void batchCacheCreditScores(Map<Long, Integer> creditScores, long expireSeconds) {
+        if (creditScores == null || creditScores.isEmpty()) {
+            return;
+        }
+        try {
+            for (Map.Entry<Long, Integer> entry : creditScores.entrySet()) {
+                cacheCreditScore(entry.getKey(), entry.getValue(), expireSeconds);
+            }
+            log.debug("批量缓存用户信用积分: count={}", creditScores.size());
+        } catch (Exception e) {
+            log.error("批量缓存用户信用积分失败", e);
+        }
+    }
+    
+    @Override
+    public Map<Long, Integer> getBatchCachedCreditScores(List<Long> userIds) {
+        Map<Long, Integer> result = new HashMap<>();
+        if (userIds == null || userIds.isEmpty()) {
+            return result;
+        }
+        
+        try {
+            for (Long userId : userIds) {
+                Integer creditScore = getCachedCreditScore(userId);
+                if (creditScore != null) {
+                    result.put(userId, creditScore);
+                }
+            }
+            log.debug("批量获取用户信用积分缓存: requestCount={}, foundCount={}", userIds.size(), result.size());
+        } catch (Exception e) {
+            log.error("批量获取用户信用积分缓存失败", e);
+        }
+        
+        return result;
     }
 }
