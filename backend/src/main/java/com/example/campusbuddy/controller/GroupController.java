@@ -65,7 +65,7 @@ public class GroupController {
     }
 
     /**
-     * 检查用户是否有访问小组的权限（管理员或小组成员）
+     * 检查用户是否有访问小组的权限（管理员、小组成员，或公开小组）
      */
     private boolean hasGroupAccess(Long groupId, Long userId, HttpServletRequest request) {
         // 如果是管理员，允许访问任何小组
@@ -73,7 +73,18 @@ public class GroupController {
             return true;
         }
         
-        // 检查是否为小组成员
+        // 检查小组是否存在并获取小组信息
+        Group group = groupService.getById(groupId);
+        if (group == null) {
+            return false;
+        }
+        
+        // 公开小组允许所有人查看
+        if ("PUBLIC".equals(group.getJoinType())) {
+            return true;
+        }
+        
+        // 对于非公开小组，检查是否为小组成员
         LambdaQueryWrapper<GroupMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupMember::getGroupId, groupId)
                 .eq(GroupMember::getUserId, userId)
