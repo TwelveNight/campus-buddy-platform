@@ -5,6 +5,7 @@ import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.entity.PostComment;
 import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.service.GroupPostCacheService;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.PostCommentService;
 import com.example.campusbuddy.service.PostLikeService;
@@ -40,8 +41,17 @@ public class GroupPostController {
     
     @Autowired
     private PostCommentService commentService;
+    
+    @Autowired
+    private GroupPostCacheService postCacheService;
 
     private static final Logger log = LoggerFactory.getLogger(GroupPostController.class);
+    
+    // 缓存过期时间（秒）
+    private static final long POSTS_CACHE_EXPIRE = 1800; // 30分钟
+    private static final long POST_DETAIL_CACHE_EXPIRE = 3600; // 1小时
+    private static final long USER_CACHE_EXPIRE = 3600; // 1小时
+    private static final long HOT_POSTS_CACHE_EXPIRE = 1800; // 30分钟
 
     /**
      * 获取当前认证用户
@@ -62,7 +72,41 @@ public class GroupPostController {
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize) {
 
+        // 先从缓存获取
+        IPage<GroupPostVO> cachedPosts = postCacheService.getCachedGroupPosts(groupId, pageNum, pageSize);
+        if (cachedPosts != null) {
+            log.info("从缓存获取小组帖子列表成功: groupId={}, pageNum={}, pageSize={}", groupId, pageNum, pageSize);
+            return R.ok(cachedPosts);
+        }
+
+        // 缓存未命中，从数据库获取
         IPage<GroupPost> posts = groupPostService.queryGroupPosts(groupId, pageNum, pageSize);
+        
+        // 提取所有作者ID，进行批量查询
+        List<Long> authorIds = posts.getRecords().stream()
+                .map(GroupPost::getAuthorId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 先从缓存获取用户信息
+        Map<Long, User> userMap = postCacheService.getBatchCachedUsers(authorIds);
+        
+        // 对于缓存未命中的用户，从数据库查询
+        List<Long> missingUserIds = authorIds.stream()
+                .filter(id -> !userMap.containsKey(id))
+                .collect(Collectors.toList());
+        
+        if (!missingUserIds.isEmpty()) {
+            List<User> users = userService.listByIds(missingUserIds);
+            for (User user : users) {
+                userMap.put(user.getUserId(), user);
+            }
+            
+            // 将新查询的用户信息加入缓存
+            postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+        }
+        
+        // 构建VO对象
         List<GroupPostVO> voList = posts.getRecords().stream().map(post -> {
             GroupPostVO vo = new GroupPostVO();
             vo.postId = post.getPostId();
@@ -76,13 +120,22 @@ public class GroupPostController {
             vo.status = post.getStatus();
             vo.createdAt = post.getCreatedAt();
             vo.updatedAt = post.getUpdatedAt();
-            // 查询作者昵称和头像
-            User user = userService.getById(post.getAuthorId());
+            
+            // 从用户Map中获取作者信息
+            User user = userMap.get(post.getAuthorId());
             vo.authorName = user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户";
             vo.authorAvatar = user != null ? user.getAvatarUrl() : null;
             return vo;
         }).collect(Collectors.toList());
-        IPage<GroupPostVO> voPage = posts.convert(post -> voList.stream().filter(vo -> vo.postId.equals(post.getPostId())).findFirst().orElse(null));
+        
+        IPage<GroupPostVO> voPage = posts.convert(post -> voList.stream()
+                .filter(vo -> vo.postId.equals(post.getPostId()))
+                .findFirst()
+                .orElse(null));
+        
+        // 将结果存入缓存
+        postCacheService.cacheGroupPosts(groupId, pageNum, pageSize, voPage, POSTS_CACHE_EXPIRE);
+        
         return R.ok(voPage);
     }
 
@@ -92,10 +145,19 @@ public class GroupPostController {
     @Operation(summary = "获取帖子详情")
     @GetMapping("/{postId}")
     public R<GroupPostVO> getPostDetail(@Parameter(description = "帖子ID") @PathVariable Long postId) {
+        // 先从缓存获取
+        GroupPostVO cachedPost = postCacheService.getCachedPostDetail(postId);
+        if (cachedPost != null) {
+            log.info("从缓存获取帖子详情成功: postId={}", postId);
+            return R.ok(cachedPost);
+        }
+        
+        // 缓存未命中，从数据库获取
         GroupPost post = groupPostService.getPostDetail(postId);
         if (post == null) {
             return R.fail("帖子不存在");
         }
+        
         GroupPostVO vo = new GroupPostVO();
         vo.postId = post.getPostId();
         vo.groupId = post.getGroupId();
@@ -108,9 +170,27 @@ public class GroupPostController {
         vo.status = post.getStatus();
         vo.createdAt = post.getCreatedAt();
         vo.updatedAt = post.getUpdatedAt();
-        User user = userService.getById(post.getAuthorId());
+        
+        // 先从缓存获取用户信息
+        User user = postCacheService.getCachedUser(post.getAuthorId());
+        
+        // 缓存未命中，从数据库获取
+        if (user == null) {
+            user = userService.getById(post.getAuthorId());
+            // 将用户信息存入缓存
+            if (user != null) {
+                Map<Long, User> userMap = new HashMap<>();
+                userMap.put(user.getUserId(), user);
+                postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+            }
+        }
+        
         vo.authorName = user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户";
         vo.authorAvatar = user != null ? user.getAvatarUrl() : null;
+        
+        // 将帖子详情存入缓存
+        postCacheService.cachePostDetail(postId, vo, POST_DETAIL_CACHE_EXPIRE);
+        
         return R.ok(vo);
     }
 
@@ -166,6 +246,10 @@ public class GroupPostController {
         }
 
         Long postId = groupPostService.createPost(post);
+        
+        // 清除小组帖子列表缓存
+        postCacheService.evictGroupPostsCache(post.getGroupId());
+        
         return R.ok("帖子发表成功", postId);
     }
 
@@ -181,6 +265,14 @@ public class GroupPostController {
         post.setAuthorId(currentUser.getUserId());
 
         boolean success = groupPostService.updatePost(post);
+        
+        if (success) {
+            // 清除帖子详情缓存
+            postCacheService.evictPostDetailCache(postId);
+            // 清除小组帖子列表缓存
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+        }
+        
         return success ? R.ok("帖子更新成功", null) : R.fail("更新失败，请确认您是帖子作者");
     }
 
@@ -190,9 +282,22 @@ public class GroupPostController {
     @Operation(summary = "删除帖子", description = "仅作者可删除帖子")
     @DeleteMapping("/{postId}")
     public R<Void> deletePost(@Parameter(description = "帖子ID") @PathVariable Long postId) {
+        // 先获取帖子信息，用于之后清除缓存
+        GroupPost post = groupPostService.getById(postId);
+        Long groupId = post != null ? post.getGroupId() : null;
+        
         User currentUser = getCurrentUser();
         boolean success = groupPostService.deletePost(postId, currentUser.getUserId());
-
+        
+        if (success && groupId != null) {
+            // 清除帖子详情缓存
+            postCacheService.evictPostDetailCache(postId);
+            // 清除小组帖子列表缓存
+            postCacheService.evictGroupPostsCache(groupId);
+            // 清除热门帖子缓存
+            postCacheService.evictHotPostsCache();
+        }
+        
         return success ? R.ok("帖子删除成功", null) : R.fail("删除失败，请确认您有权限删除该帖子");
     }
 

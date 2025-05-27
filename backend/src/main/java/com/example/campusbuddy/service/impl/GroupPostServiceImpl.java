@@ -11,6 +11,7 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.GroupMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
 import com.example.campusbuddy.mapper.GroupPostMapper;
+import com.example.campusbuddy.service.GroupPostCacheService;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.PostLikeService;
 import com.example.campusbuddy.service.UserService;
@@ -19,8 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,6 +37,13 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     
     @Autowired
     private PostLikeService postLikeService;
+    
+    @Autowired
+    private GroupPostCacheService postCacheService;
+    
+    // 缓存过期时间（秒）
+    private static final long USER_CACHE_EXPIRE = 3600; // 1小时
+    private static final long HOT_POSTS_CACHE_EXPIRE = 1800; // 30分钟
 
     @Override
     public IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize) {
@@ -185,7 +192,8 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     public void increaseCommentCount(Long postId) {
         GroupPost post = getById(postId);
         if (post != null) {
-            int count = post.getCommentCount() == null ? 0 : post.getCommentCount();
+            Integer commentCount = post.getCommentCount();
+            int count = commentCount == null ? 0 : commentCount.intValue();
             post.setCommentCount(count + 1);
             post.setUpdatedAt(new Date());
             updateById(post);
@@ -195,8 +203,9 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     @Override
     public void decreaseCommentCount(Long postId) {
         GroupPost post = getById(postId);
-        if (post != null && post.getCommentCount() != null && post.getCommentCount() > 0) {
-            post.setCommentCount(post.getCommentCount() - 1);
+        Integer commentCount = post != null ? post.getCommentCount() : null;
+        if (post != null && commentCount != null && commentCount > 0) {
+            post.setCommentCount(commentCount - 1);
             post.setUpdatedAt(new Date());
             updateById(post);
         }
@@ -233,13 +242,50 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     
     @Override
     public Page<GroupPostVO> adminPagePostVOs(Integer page, Integer size, String keyword, Long groupId, String status) {
-        // 先获取原始的 GroupPost 分页数据
+        // 先查询帖子基本信息
         Page<GroupPost> postPage = adminPagePosts(page, size, keyword, groupId, status);
-        
-        // 创建一个新的 GroupPostVO 分页对象
         Page<GroupPostVO> voPage = new Page<>(postPage.getCurrent(), postPage.getSize(), postPage.getTotal());
         
-        // 将 GroupPost 转换为 GroupPostVO
+        if (postPage.getRecords().isEmpty()) {
+            voPage.setRecords(new ArrayList<>());
+            return voPage;
+        }
+        
+        // 提取所有作者ID
+        List<Long> authorIds = postPage.getRecords().stream()
+                .map(GroupPost::getAuthorId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 从缓存获取用户信息
+        Map<Long, User> userMap = postCacheService.getBatchCachedUsers(authorIds);
+        
+        // 对于缓存未命中的用户，从数据库查询
+        List<Long> missingUserIds = authorIds.stream()
+                .filter(id -> !userMap.containsKey(id))
+                .collect(Collectors.toList());
+        
+        if (!missingUserIds.isEmpty()) {
+            List<User> users = userService.listByIds(missingUserIds);
+            for (User user : users) {
+                userMap.put(user.getUserId(), user);
+            }
+            
+            // 将新查询的用户信息加入缓存
+            postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+        }
+        
+        // 提取所有小组ID
+        List<Long> groupIds = postPage.getRecords().stream()
+                .map(GroupPost::getGroupId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 查询小组信息
+        Map<Long, Group> groupMap = new HashMap<>();
+        groupMapper.selectBatchIds(groupIds).forEach(group -> groupMap.put(group.getGroupId(), group));
+        
+        // 构建VO
         List<GroupPostVO> voList = postPage.getRecords().stream().map(post -> {
             GroupPostVO vo = new GroupPostVO();
             vo.setPostId(post.getPostId());
@@ -254,17 +300,13 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             vo.setCreatedAt(post.getCreatedAt());
             vo.setUpdatedAt(post.getUpdatedAt());
             
-            // 查询作者信息
-            User author = userService.getById(post.getAuthorId());
-            if (author != null) {
-                vo.setAuthorName(author.getNickname() != null ? author.getNickname() : author.getUsername());
-                vo.setAuthorAvatar(author.getAvatarUrl());
-            } else {
-                vo.setAuthorName("未知用户");
-            }
+            // 设置作者信息
+            User user = userMap.get(post.getAuthorId());
+            vo.setAuthorName(user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户");
+            vo.setAuthorAvatar(user != null ? user.getAvatarUrl() : null);
             
-            // 查询小组信息
-            Group group = groupMapper.selectById(post.getGroupId());
+            // 设置小组信息
+            Group group = groupMap.get(post.getGroupId());
             if (group != null) {
                 vo.setGroupName(group.getName());
                 vo.setGroupAvatar(group.getAvatarUrl());
@@ -277,6 +319,79 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         
         voPage.setRecords(voList);
         return voPage;
+    }
+    
+    /**
+     * 获取热门帖子
+     */
+    public List<GroupPostVO> getHotPosts(int limit) {
+        // 先从缓存获取
+        List<GroupPostVO> cachedHotPosts = postCacheService.getCachedHotPosts();
+        if (cachedHotPosts != null) {
+            return cachedHotPosts;
+        }
+        
+        // 缓存未命中，从数据库查询
+        LambdaQueryWrapper<GroupPost> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(GroupPost::getStatus, "PUBLISHED")
+                .orderByDesc(GroupPost::getLikeCount)
+                .orderByDesc(GroupPost::getCommentCount)
+                .orderByDesc(GroupPost::getCreatedAt)
+                .last("LIMIT " + limit);
+        
+        List<GroupPost> posts = baseMapper.selectList(queryWrapper);
+        
+        // 提取所有作者ID
+        List<Long> authorIds = posts.stream()
+                .map(GroupPost::getAuthorId)
+                .distinct()
+                .collect(Collectors.toList());
+        
+        // 从缓存获取用户信息
+        Map<Long, User> userMap = postCacheService.getBatchCachedUsers(authorIds);
+        
+        // 对于缓存未命中的用户，从数据库查询
+        List<Long> missingUserIds = authorIds.stream()
+                .filter(id -> !userMap.containsKey(id))
+                .collect(Collectors.toList());
+        
+        if (!missingUserIds.isEmpty()) {
+            List<User> users = userService.listByIds(missingUserIds);
+            for (User user : users) {
+                userMap.put(user.getUserId(), user);
+            }
+            
+            // 将新查询的用户信息加入缓存
+            postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+        }
+        
+        // 构建VO
+        List<GroupPostVO> hotPosts = posts.stream().map(post -> {
+            GroupPostVO vo = new GroupPostVO();
+            vo.setPostId(post.getPostId());
+            vo.setGroupId(post.getGroupId());
+            vo.setAuthorId(post.getAuthorId());
+            vo.setTitle(post.getTitle());
+            vo.setContent(post.getContent());
+            vo.setContentType(post.getContentType());
+            vo.setLikeCount(post.getLikeCount());
+            vo.setCommentCount(post.getCommentCount());
+            vo.setStatus(post.getStatus());
+            vo.setCreatedAt(post.getCreatedAt());
+            vo.setUpdatedAt(post.getUpdatedAt());
+            
+            // 设置作者信息
+            User user = userMap.get(post.getAuthorId());
+            vo.setAuthorName(user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户");
+            vo.setAuthorAvatar(user != null ? user.getAvatarUrl() : null);
+            
+            return vo;
+        }).collect(Collectors.toList());
+        
+        // 将热门帖子缓存
+        postCacheService.cacheHotPosts(hotPosts, HOT_POSTS_CACHE_EXPIRE);
+        
+        return hotPosts;
     }
     
     @Override

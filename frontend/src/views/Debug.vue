@@ -106,6 +106,10 @@
                   <el-descriptions-item label="用户名缓存">{{ cacheStats.usernameCacheCount }}</el-descriptions-item>
                   <el-descriptions-item label="搜索缓存">{{ cacheStats.searchCacheCount }}</el-descriptions-item>
                   <el-descriptions-item label="信用分缓存">{{ cacheStats.creditScoreCacheCount }}</el-descriptions-item>
+                  <el-descriptions-item label="小组帖子列表缓存">{{ cacheStats.groupPostsCacheCount || 0 }}</el-descriptions-item>
+                  <el-descriptions-item label="帖子详情缓存">{{ cacheStats.postDetailCacheCount || 0 }}</el-descriptions-item>
+                  <el-descriptions-item label="帖子用户缓存">{{ cacheStats.postUserCacheCount || 0 }}</el-descriptions-item>
+                  <el-descriptions-item label="热门帖子缓存">{{ cacheStats.hotPostsCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="总缓存数">
                     <el-tag type="primary">{{ cacheStats.totalCacheCount }}</el-tag>
                   </el-descriptions-item>
@@ -193,52 +197,163 @@
 
             <h3 class="mt-4">缓存管理操作</h3>
             <div class="cache-actions">
-              <el-button 
-                type="warning" 
-                :loading="clearingCache" 
-                @click="clearAllCache"
-                icon="Delete"
-              >
-                清空所有缓存
-              </el-button>
-              
-              <el-button 
-                type="warning" 
-                :loading="clearingUserCache" 
-                @click="clearCurrentUserCache"
-                icon="UserFilled"
-                :disabled="!authStore.user?.userId"
-              >
-                清空当前用户缓存
-              </el-button>
-              
-              <el-button 
-                type="warning" 
-                :loading="clearingSearchCache" 
-                @click="clearSearchCache"
-                icon="Search"
-              >
-                清空搜索缓存
-              </el-button>
-              
-              <el-button 
-                type="warning" 
-                :loading="clearingCreditScoreCache" 
-                @click="clearCreditScoreCache"
-                icon="StarFilled"
-              >
-                清空信用分缓存
-              </el-button>
-              
-              <el-button 
-                type="warning" 
-                :loading="clearingUserCreditScoreCache" 
-                @click="clearCurrentUserCreditScoreCache"
-                icon="Medal"
-                :disabled="!authStore.user?.userId"
-              >
-                清空当前用户信用分
-              </el-button>
+              <!-- 基础缓存操作 -->
+              <el-card class="action-card" shadow="never">
+                <template #header>
+                  <div class="card-header">
+                    <el-icon><Setting /></el-icon>
+                    <span class="header-title">基础缓存操作</span>
+                  </div>
+                </template>
+                
+                <div class="action-grid">
+                  <el-button 
+                    type="danger"
+                    :loading="clearingCache" 
+                    @click="clearAllCache"
+                    icon="Delete"
+                    class="action-btn"
+                  >
+                    清空所有缓存
+                  </el-button>
+                  
+                  <el-button 
+                    type="warning" 
+                    :loading="clearingSearchCache" 
+                    @click="clearSearchCache"
+                    icon="Search"
+                    class="action-btn"
+                  >
+                    清空搜索缓存
+                  </el-button>
+                </div>
+              </el-card>
+
+              <!-- 用户缓存操作 -->
+              <el-card class="action-card" shadow="never">
+                <template #header>
+                  <div class="card-header">
+                    <el-icon><User /></el-icon>
+                    <span class="header-title">用户缓存操作</span>
+                  </div>
+                </template>
+                
+                <div class="action-grid">
+                  <el-button 
+                    type="primary" 
+                    :loading="clearingUserCache" 
+                    @click="clearCurrentUserCache"
+                    icon="UserFilled"
+                    :disabled="!authStore.user?.userId"
+                    class="action-btn"
+                  >
+                    清空当前用户缓存
+                  </el-button>
+                  
+                  <el-button 
+                    type="warning" 
+                    :loading="clearingCreditScoreCache" 
+                    @click="clearCreditScoreCache"
+                    icon="StarFilled"
+                    class="action-btn"
+                  >
+                    清空信用分缓存
+                  </el-button>
+                  
+                  <el-button 
+                    type="warning" 
+                    :loading="clearingUserCreditScoreCache" 
+                    @click="clearCurrentUserCreditScoreCache"
+                    icon="Medal"
+                    :disabled="!authStore.user?.userId"
+                    class="action-btn"
+                  >
+                    清空当前用户信用分
+                  </el-button>
+                </div>
+              </el-card>
+
+              <!-- 帖子缓存操作 -->
+              <el-card class="action-card" shadow="never">
+                <template #header>
+                  <div class="card-header">
+                    <el-icon><Document /></el-icon>
+                    <span class="header-title">帖子缓存操作</span>
+                  </div>
+                </template>
+                
+                <div class="action-grid">
+                  <el-button 
+                    type="danger" 
+                    :loading="clearingAllPostsCache" 
+                    @click="clearAllPostsCache"
+                    icon="Document"
+                    class="action-btn"
+                  >
+                    清空所有帖子缓存
+                  </el-button>
+                  
+                  <el-button 
+                    type="warning" 
+                    :loading="clearingHotPostsCache" 
+                    @click="clearHotPostsCache"
+                    icon="Star"
+                    class="action-btn"
+                  >
+                    清空热门帖子缓存
+                  </el-button>
+                </div>
+
+                <!-- 小组帖子缓存操作 -->
+                <el-divider content-position="left">小组帖子缓存</el-divider>
+                <div class="input-action-group">
+                  <div class="input-with-label">
+                    <label class="input-label">小组ID:</label>
+                    <el-input-number 
+                      v-model="groupIdInput" 
+                      :min="1" 
+                      placeholder="请输入小组ID"
+                      class="input-field"
+                      controls-position="right"
+                    />
+                  </div>
+                  <el-button 
+                    type="warning" 
+                    :loading="clearingGroupPostsCache" 
+                    @click="clearGroupPostsCache"
+                    icon="Folder"
+                    :disabled="!groupIdInput"
+                    class="action-btn"
+                  >
+                    清空小组帖子缓存
+                  </el-button>
+                </div>
+
+                <!-- 帖子详情缓存操作 -->
+                <el-divider content-position="left">帖子详情缓存</el-divider>
+                <div class="input-action-group">
+                  <div class="input-with-label">
+                    <label class="input-label">帖子ID:</label>
+                    <el-input-number 
+                      v-model="postIdInput" 
+                      :min="1" 
+                      placeholder="请输入帖子ID"
+                      class="input-field"
+                      controls-position="right"
+                    />
+                  </div>
+                  <el-button 
+                    type="warning" 
+                    :loading="clearingPostDetailCache" 
+                    @click="clearPostDetailCache"
+                    icon="DocumentCopy"
+                    :disabled="!postIdInput"
+                    class="action-btn"
+                  >
+                    清空帖子详情缓存
+                  </el-button>
+                </div>
+              </el-card>
             </div>
           </div>
         </el-tab-pane>
@@ -258,6 +373,7 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Setting, User, Document } from '@element-plus/icons-vue'
 import { cacheApi, type CacheStats, type CacheDetails } from '../api/cache'
 
 const route = useRoute()
@@ -273,6 +389,13 @@ const clearingUserCache = ref(false)
 const clearingSearchCache = ref(false)
 const clearingCreditScoreCache = ref(false)
 const clearingUserCreditScoreCache = ref(false)
+// 帖子缓存相关状态
+const clearingAllPostsCache = ref(false)
+const clearingGroupPostsCache = ref(false)
+const clearingPostDetailCache = ref(false)
+const clearingHotPostsCache = ref(false)
+const groupIdInput = ref<number | null>(null)
+const postIdInput = ref<number | null>(null)
 const cacheStats = ref<CacheStats | null>(null)
 const cacheDetails = ref<CacheDetails | null>(null)
 
@@ -526,6 +649,128 @@ async function checkAdminStatus() {
     console.error('检查管理员权限失败:', error)
   }
 }
+
+// 清空所有帖子缓存
+async function clearAllPostsCache() {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清空所有帖子相关缓存吗？这将包括帖子列表、详情、用户信息等。',
+      '确认清空所有帖子缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingAllPostsCache.value = true
+    await cacheApi.clearAllPosts()
+    ElMessage.success('所有帖子缓存已清空')
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空帖子缓存失败')
+      console.error('清空帖子缓存失败:', error)
+    }
+  } finally {
+    clearingAllPostsCache.value = false
+  }
+}
+
+// 清空热门帖子缓存
+async function clearHotPostsCache() {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清空热门帖子缓存吗？',
+      '确认清空热门帖子缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingHotPostsCache.value = true
+    await cacheApi.clearHotPosts()
+    ElMessage.success('热门帖子缓存已清空')
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空热门帖子缓存失败')
+      console.error('清空热门帖子缓存失败:', error)
+    }
+  } finally {
+    clearingHotPostsCache.value = false
+  }
+}
+
+// 清空小组帖子缓存
+async function clearGroupPostsCache() {
+  if (!groupIdInput.value) {
+    ElMessage.warning('请输入小组ID')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要清空小组ID ${groupIdInput.value} 的帖子列表缓存吗？`,
+      '确认清空小组帖子缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingGroupPostsCache.value = true
+    await cacheApi.clearGroupPosts(groupIdInput.value)
+    ElMessage.success(`小组ID ${groupIdInput.value} 的帖子列表缓存已清空`)
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空小组帖子缓存失败')
+      console.error('清空小组帖子缓存失败:', error)
+    }
+  } finally {
+    clearingGroupPostsCache.value = false
+  }
+}
+
+// 清空帖子详情缓存
+async function clearPostDetailCache() {
+  if (!postIdInput.value) {
+    ElMessage.warning('请输入帖子ID')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要清空帖子ID ${postIdInput.value} 的详情缓存吗？`,
+      '确认清空帖子详情缓存',
+      {
+        confirmButtonText: '确定清空',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+
+    clearingPostDetailCache.value = true
+    await cacheApi.clearPostDetail(postIdInput.value)
+    ElMessage.success(`帖子ID ${postIdInput.value} 的详情缓存已清空`)
+    // 刷新统计信息
+    await loadCacheStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空帖子详情缓存失败')
+      console.error('清空帖子详情缓存失败:', error)
+    }
+  } finally {
+    clearingPostDetailCache.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -616,12 +861,89 @@ pre {
 
 .cache-actions {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 10px;
 }
 
-.cache-actions .el-button {
+.action-card {
+  flex: 1 1 320px;
+  min-width: 300px;
+  margin-bottom: 0;
+  background: #fafbfc;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.action-card .card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  font-size: 16px;
+  color: #409eff;
+}
+
+.header-title {
+  margin-left: 4px;
+}
+
+.action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 10px;
+}
+
+.input-action-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.input-with-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-label {
+  font-size: 14px;
+  color: #666;
+  min-width: 56px;
+}
+
+.input-field {
+  width: 120px;
+}
+
+.action-btn {
+  min-width: 120px;
+}
+
+@media (max-width: 900px) {
+  .cache-actions {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .action-card {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .action-grid {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-action-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
 }
 
 /* 响应式设计 */

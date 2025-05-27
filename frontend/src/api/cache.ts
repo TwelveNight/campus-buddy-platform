@@ -7,6 +7,11 @@ export interface CacheStats {
   usernameCacheCount: number
   searchCacheCount: number
   creditScoreCacheCount: number
+  // 帖子缓存相关计数
+  groupPostsCacheCount: number
+  postDetailCacheCount: number
+  postUserCacheCount: number
+  hotPostsCacheCount: number
   totalCacheCount: number
   redisInfo: {
     version: string
@@ -85,5 +90,33 @@ export interface CacheDetails {
      */
     clearUserCreditScore: (userId: number) => {
       return request.delete(`/api/cache/clear/credit/${userId}`).then(res => res.data.data)
+    },
+
+    /**
+     * 清空所有帖子相关缓存
+     */
+    clearAllPosts: () => {
+      return request.delete('/api/cache/clear/posts').then(res => res.data.data)
+    },
+
+    /**
+     * 清空指定小组的帖子列表缓存
+     */
+    clearGroupPosts: (groupId: number) => {
+      return request.delete(`/api/cache/clear/group-posts/${groupId}`).then(res => res.data.data)
+    },
+
+    /**
+     * 清空指定帖子的详情缓存
+     */
+    clearPostDetail: (postId: number) => {
+      return request.delete(`/api/cache/clear/post-detail/${postId}`).then(res => res.data.data)
+    },
+
+    /**
+     * 清空热门帖子缓存
+     */
+    clearHotPosts: () => {
+      return request.delete('/api/cache/clear/hot-posts').then(res => res.data.data)
     }
   }
