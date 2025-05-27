@@ -2,6 +2,7 @@ package com.example.campusbuddy.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import com.example.campusbuddy.vo.HelpInfoVO;
@@ -52,4 +53,17 @@ public interface HelpInfoService extends IService<HelpInfo> {
      * @return 是否成功
      */
     boolean adminUpdateStatus(Long id, String status);
+
+    /**
+     * 带缓存的分页查询互助任务列表
+     * 
+     * @param page 分页参数
+     * @param queryWrapper 查询条件
+     * @param type 任务类型
+     * @param status 任务状态
+     * @param publisherId 发布者ID
+     * @param keyword 关键词
+     * @return 分页查询结果
+     */
+    Page<HelpInfo> pageWithCache(Page<HelpInfo> page, QueryWrapper<HelpInfo> queryWrapper, String type, String status, String publisherId, String keyword);
 }

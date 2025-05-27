@@ -2,6 +2,7 @@ package com.example.campusbuddy.controller;
 
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.service.GroupPostCacheService;
+import com.example.campusbuddy.service.HelpInfoCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -25,6 +26,9 @@ public class CacheController {
     
     @Autowired
     private GroupPostCacheService postCacheService;
+    
+    @Autowired
+    private HelpInfoCacheService helpInfoCacheService;
 
     /**
      * 获取缓存统计信息
@@ -48,6 +52,13 @@ public class CacheController {
             Set<String> postUserKeys = redisTemplate.keys("campus:post:user:*");
             Set<String> hotPostsKeys = redisTemplate.keys("campus:post:hot");
             
+            // 获取互助信息相关缓存数量
+            Set<String> helpInfoListKeys = redisTemplate.keys("campus:helpinfo:list:*");
+            Set<String> helpInfoDetailKeys = redisTemplate.keys("campus:helpinfo:detail:*");
+            Set<String> helpInfoUserKeys = redisTemplate.keys("campus:helpinfo:user:*");
+            Set<String> helpInfoAdminKeys = redisTemplate.keys("campus:helpinfo:admin:*");
+            Set<String> helpInfoSearchKeys = redisTemplate.keys("campus:helpinfo:search:*");
+            
             stats.put("userCacheCount", userKeys != null ? userKeys.size() : 0);
             stats.put("userVOCacheCount", userVOKeys != null ? userVOKeys.size() : 0);
             stats.put("tokenCacheCount", tokenKeys != null ? tokenKeys.size() : 0);
@@ -60,6 +71,13 @@ public class CacheController {
             stats.put("postDetailCacheCount", postDetailKeys != null ? postDetailKeys.size() : 0);
             stats.put("postUserCacheCount", postUserKeys != null ? postUserKeys.size() : 0);
             stats.put("hotPostsCacheCount", hotPostsKeys != null ? hotPostsKeys.size() : 0);
+            
+            // 添加互助信息缓存统计
+            stats.put("helpInfoListCacheCount", helpInfoListKeys != null ? helpInfoListKeys.size() : 0);
+            stats.put("helpInfoDetailCacheCount", helpInfoDetailKeys != null ? helpInfoDetailKeys.size() : 0);
+            stats.put("helpInfoUserCacheCount", helpInfoUserKeys != null ? helpInfoUserKeys.size() : 0);
+            stats.put("helpInfoAdminCacheCount", helpInfoAdminKeys != null ? helpInfoAdminKeys.size() : 0);
+            stats.put("helpInfoSearchCacheCount", helpInfoSearchKeys != null ? helpInfoSearchKeys.size() : 0);
             
             // 总缓存数量
             Set<String> allKeys = redisTemplate.keys("campus:*");
@@ -278,6 +296,66 @@ public class CacheController {
         } catch (Exception e) {
             log.error("清空热门帖子缓存失败: {}", e.getMessage());
             return R.fail("清空热门帖子缓存失败");
+        }
+    }
+
+    /**
+     * 清空所有互助信息缓存
+     */
+    @DeleteMapping("/clear/helpinfo")
+    public R<String> clearAllHelpInfoCache() {
+        try {
+            helpInfoCacheService.clearAllHelpInfoCache();
+            log.info("已清空所有互助信息缓存");
+            return R.ok("互助信息缓存清理成功");
+        } catch (Exception e) {
+            log.error("清空互助信息缓存失败: {}", e.getMessage());
+            return R.fail("清空互助信息缓存失败");
+        }
+    }
+    
+    /**
+     * 清空指定互助信息详情缓存
+     */
+    @DeleteMapping("/clear/helpinfo-detail/{infoId}")
+    public R<String> clearHelpInfoDetailCache(@PathVariable Long infoId) {
+        try {
+            helpInfoCacheService.clearHelpInfoCache(infoId);
+            log.info("已清空互助信息{}的详情缓存", infoId);
+            return R.ok("互助信息详情缓存清理成功");
+        } catch (Exception e) {
+            log.error("清空互助信息详情缓存失败: infoId={}, {}", infoId, e.getMessage());
+            return R.fail("清空互助信息详情缓存失败");
+        }
+    }
+    
+    /**
+     * 清空互助信息列表缓存
+     */
+    @DeleteMapping("/clear/helpinfo-list")
+    public R<String> clearHelpInfoListCache() {
+        try {
+            helpInfoCacheService.clearHelpInfoListCache();
+            log.info("已清空互助信息列表缓存");
+            return R.ok("互助信息列表缓存清理成功");
+        } catch (Exception e) {
+            log.error("清空互助信息列表缓存失败: {}", e.getMessage());
+            return R.fail("清空互助信息列表缓存失败");
+        }
+    }
+    
+    /**
+     * 强制刷新浏览量计数到数据库
+     */
+    @PostMapping("/flush/helpinfo-viewcount")
+    public R<String> flushHelpInfoViewCounts() {
+        try {
+            helpInfoCacheService.flushViewCounts();
+            log.info("已强制刷新互助信息浏览量计数到数据库");
+            return R.ok("浏览量计数刷新成功");
+        } catch (Exception e) {
+            log.error("刷新浏览量计数失败: {}", e.getMessage());
+            return R.fail("刷新浏览量计数失败");
         }
     }
 

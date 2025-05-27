@@ -11,9 +11,11 @@ import com.example.campusbuddy.mapper.HelpInfoMapper;
 import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.mapper.HelpApplicationMapper;
 import com.example.campusbuddy.service.HelpInfoService;
+import com.example.campusbuddy.service.HelpInfoCacheService;
 import com.example.campusbuddy.service.ReviewService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import com.example.campusbuddy.vo.HelpInfoVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> implements HelpInfoService {
 
@@ -32,9 +35,19 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
 
     @Autowired
     private ReviewService reviewService;
+    
+    @Autowired
+    private HelpInfoCacheService helpInfoCacheService;
 
     @Override
     public HelpInfoDetailVO getHelpInfoDetail(Long infoId) {
+        // 先尝试从缓存获取
+        HelpInfoDetailVO cachedVo = helpInfoCacheService.getCachedHelpInfoDetail(infoId);
+        if (cachedVo != null) {
+            log.info("从缓存获取互助信息详情成功, id: " + infoId);
+            return cachedVo;
+        }
+
         // 获取互助任务
         HelpInfo helpInfo = this.getById(infoId);
         if (helpInfo == null) {
@@ -44,8 +57,16 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         // 转换为VO
         HelpInfoDetailVO vo = HelpInfoDetailVO.fromEntity(helpInfo);
 
-        // 获取发布者信息
-        User publisher = userMapper.selectById(helpInfo.getPublisherId());
+        // 获取发布者信息 - 先从缓存查找
+        User publisher = helpInfoCacheService.getCachedUser(helpInfo.getPublisherId());
+        if (publisher == null) {
+            publisher = userMapper.selectById(helpInfo.getPublisherId());
+            if (publisher != null) {
+                // 缓存用户信息
+                helpInfoCacheService.cacheUser(helpInfo.getPublisherId(), publisher, 3600); // 1小时
+            }
+        }
+        
         if (publisher != null) {
             vo.setPublisherName(publisher.getNickname());
             vo.setPublisherAvatar(publisher.getAvatarUrl());
@@ -57,6 +78,9 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             String nickname = helpApplicationMapper.getApplicantNicknameByApplicationId(acceptedAppId);
             vo.setAcceptedApplicantNickname(nickname);
         }
+
+        // 缓存详情信息
+        helpInfoCacheService.cacheHelpInfoDetail(infoId, vo, 1800); // 30分钟
 
         return vo;
     }
@@ -147,15 +171,27 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             throw new ResourceNotFoundException("互助任务", infoId);
         }
 
-        // 增加浏览量
-        helpInfo.setViewCount(helpInfo.getViewCount() + 1);
-        this.updateById(helpInfo);
-
+        // 使用缓存服务增加浏览量，延迟批量更新
+        helpInfoCacheService.incrementViewCount(infoId);
+        
+        // 为了保持API兼容性，直接返回当前互助信息对象
+        // 注意：此时返回的浏览量可能不是最新的，因为实际更新会在批处理中进行
         return helpInfo;
     }
 
     @Override
     public Page<HelpInfoVO> adminPageHelpInfo(Integer page, Integer size, String keyword, String type, String status) {
+        // 生成缓存键
+        String cacheKey = helpInfoCacheService.generateAdminCacheKey(page, size, keyword, type, status);
+        
+        // 先尝试从缓存获取
+        Page<HelpInfoVO> cachedResult = helpInfoCacheService.getCachedAdminHelpInfoList(cacheKey);
+        if (cachedResult != null) {
+            log.debug("从缓存获取管理员查询结果成功, key: {}", cacheKey);
+            return cachedResult;
+        }
+        
+        // 缓存未命中，从数据库查询
         Page<HelpInfo> helpInfoPage = new Page<>(page, size);
         QueryWrapper<HelpInfo> queryWrapper = new QueryWrapper<>();
         
@@ -188,7 +224,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             HelpInfoVO vo = new HelpInfoVO();
             vo.setInfoId(helpInfo.getInfoId());
             vo.setTitle(helpInfo.getTitle());
-                        vo.setDescription(helpInfo.getDescription());
+            vo.setDescription(helpInfo.getDescription());
             vo.setType(helpInfo.getType());
             vo.setStatus(helpInfo.getStatus());
             vo.setReward(helpInfo.getRewardAmount() != null ? helpInfo.getRewardAmount().toString() : null);
@@ -216,6 +252,10 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         }).collect(Collectors.toList());
         
         voPage.setRecords(voList);
+        
+        // 将结果存入缓存
+        helpInfoCacheService.cacheAdminHelpInfoList(cacheKey, voPage, 1800); // 30分钟
+        
         return voPage;
     }
     
@@ -228,5 +268,35 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         
         helpInfo.setStatus(status);
         return this.updateById(helpInfo);
+    }
+
+    @Override
+    public Page<HelpInfo> pageWithCache(Page<HelpInfo> page, QueryWrapper<HelpInfo> queryWrapper, String type, String status, String publisherId, String keyword) {
+        // 生成缓存键
+        String cacheKey = helpInfoCacheService.generateListCacheKey(
+                page.getCurrent(), 
+                page.getSize(),
+                type,
+                status,
+                publisherId,
+                keyword
+        );
+        
+        // 先尝试从缓存获取
+        Page<HelpInfo> cachedResult = helpInfoCacheService.getCachedHelpInfoList(cacheKey);
+        if (cachedResult != null) {
+            log.info("成功从缓存获取互助信息列表, 缓存键: " + cacheKey);
+            return cachedResult;
+        }
+        
+        // 缓存未命中，从数据库查询
+        log.info("缓存未命中，从数据库查询互助信息列表");
+        Page<HelpInfo> result = super.page(page, queryWrapper);
+        
+        // 缓存结果
+        helpInfoCacheService.cacheHelpInfoList(cacheKey, result, 600); // 缓存10分钟
+        log.info("互助信息列表已存入缓存, 缓存键: " + cacheKey);
+        
+        return result;
     }
 }

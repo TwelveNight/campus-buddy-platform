@@ -12,6 +12,12 @@ export interface CacheStats {
   postDetailCacheCount: number
   postUserCacheCount: number
   hotPostsCacheCount: number
+  // 互助信息缓存相关计数
+  helpInfoListCacheCount: number
+  helpInfoDetailCacheCount: number
+  helpInfoUserCacheCount: number
+  helpInfoAdminCacheCount: number
+  helpInfoSearchCacheCount: number
   totalCacheCount: number
   redisInfo: {
     version: string
@@ -118,5 +124,33 @@ export interface CacheDetails {
      */
     clearHotPosts: () => {
       return request.delete('/api/cache/clear/hot-posts').then(res => res.data.data)
+    },
+
+    /**
+     * 清空所有互助信息缓存
+     */
+    clearAllHelpInfo: () => {
+      return request.delete('/api/cache/clear/helpinfo').then(res => res.data.data)
+    },
+
+    /**
+     * 清空指定互助信息的详情缓存
+     */
+    clearHelpInfoDetail: (infoId: number) => {
+      return request.delete(`/api/cache/clear/helpinfo-detail/${infoId}`).then(res => res.data.data)
+    },
+
+    /**
+     * 清空互助信息列表缓存
+     */
+    clearHelpInfoList: () => {
+      return request.delete('/api/cache/clear/helpinfo-list').then(res => res.data.data)
+    },
+
+    /**
+     * 强制刷新互助信息浏览量计数
+     */
+    flushHelpInfoViewCounts: () => {
+      return request.post('/api/cache/flush/helpinfo-viewcount').then(res => res.data.data)
     }
   }

@@ -16,12 +16,14 @@ import com.example.campusbuddy.exception.UnauthorizedException;
 import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.HelpApplicationService;
 import com.example.campusbuddy.service.HelpInfoService;
+import com.example.campusbuddy.service.HelpInfoCacheService;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/helpinfo")
 @Tag(name = "互助任务接口", description = "互助任务相关接口")
+@Slf4j
 public class HelpInfoController {
     @Autowired
     private HelpInfoService helpInfoService;
@@ -43,6 +46,9 @@ public class HelpInfoController {
     
     @Autowired
     private HelpApplicationService helpApplicationService;
+    
+    @Autowired
+    private HelpInfoCacheService helpInfoCacheService;
 
     @PostMapping
     @Operation(summary = "发布互助任务")
@@ -111,8 +117,9 @@ public class HelpInfoController {
                 }
             }
         }
-
-        IPage<HelpInfo> result = helpInfoService.page(new Page<>(page, size), wrapper);
+        
+        // 使用带缓存的分页查询方法
+        IPage<HelpInfo> result = helpInfoService.pageWithCache(new Page<>(page, size), wrapper, type, status, publisherId, keyword);
 
         // 处理结果，添加发布者名称信息
         for (HelpInfo info : result.getRecords()) {
