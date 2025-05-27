@@ -37,12 +37,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
+import { getUnreadMessageCount } from '@/api/message'
 import {
   House,
   InfoFilled,
   User,
   Setting,
-  UserFilled
+  UserFilled,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 
 interface NavItem {
@@ -63,8 +65,10 @@ const isMobile = ref(false)
 
 // 检查是否为移动端
 const checkMobile = () => {
-  isMobile.value = window.innerWidth <= 768
+  isMobile.value = typeof window !== 'undefined' && window.innerWidth <= 768
 }
+
+const unreadMessageCount = ref(0)
 
 // 导航项配置
 const baseNavItems: NavItem[] = [
@@ -85,6 +89,12 @@ const baseNavItems: NavItem[] = [
     requireAuth: true
   },
   {
+    path: '/messages',
+    label: '消息',
+    icon: ChatDotRound,
+    requireAuth: true
+  },
+  {
     path: '/profile',
     label: '个人',
     icon: User,
@@ -94,8 +104,14 @@ const baseNavItems: NavItem[] = [
 
 // 计算显示的导航项
 const navItems = computed(() => {
-  let items = [...baseNavItems]
-  
+  let items = baseNavItems.map(item => ({ ...item }))
+
+  // 动态设置消息 badge
+  const msgIdx = items.findIndex(i => i.path === '/messages')
+  if (msgIdx !== -1 && authStore.isAuthenticated) {
+    items[msgIdx].badge = unreadMessageCount.value > 0 ? unreadMessageCount.value : undefined
+  }
+
   // 如果用户已登录，显示完整菜单
   if (authStore.isAuthenticated) {
     // 如果是管理员，添加管理后台
@@ -126,7 +142,7 @@ const navItems = computed(() => {
 const shouldShowBottomNav = computed(() => {
   // 在某些页面隐藏底部导航
   const hiddenPaths = ['/login', '/register']
-  return !hiddenPaths.includes(route.path)
+  return isMobile.value && !hiddenPaths.includes(route.path)
 })
 
 // 判断导航项是否激活
@@ -160,9 +176,26 @@ const handleResize = () => {
   checkMobile()
 }
 
+// 获取未读消息数量
+const fetchUnreadMessageCount = async () => {
+  try {
+    const { data } = await getUnreadMessageCount()
+    if (data.code === 200) {
+      unreadMessageCount.value = data.data.count || 0
+    }
+  } catch (error) {
+    console.error('获取未读消息数量失败', error)
+  }
+}
+
 onMounted(() => {
   checkMobile()
   window.addEventListener('resize', handleResize)
+
+  // 如果用户已登录，获取未读消息数量
+  if (authStore.isAuthenticated) {
+    fetchUnreadMessageCount()
+  }
 })
 
 onUnmounted(() => {
@@ -170,7 +203,17 @@ onUnmounted(() => {
 })
 </script>
 
+<!-- 只在移动端显示 -->
 <style scoped>
+.mobile-bottom-nav {
+  display: none;
+}
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: block;
+  }
+}
+
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;

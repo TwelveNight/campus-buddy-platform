@@ -382,10 +382,10 @@ const fetchChatHistory = async () => {
                 // 记录当前页码，便于后续加载更多旧消息
                 currentPage.value = latestPage
                 
-                // 检查是否还有更多历史消息可以加载
+                // 检查是��还有更多历史消息可以加载
                 hasMoreMessages.value = currentPage.value > 1
 
-                // 更新会话中的未读数
+                // 更新��话中的未读数
                 const index = sessions.value.findIndex(s => currentChatUser.value && s.userId === currentChatUser.value.userId)
                 if (index !== -1) {
                     sessions.value[index].unreadCount = 0
@@ -494,7 +494,7 @@ const loadMoreMessages = async () => {
         if (res.data.code === 200) {
             const oldMessages = res.data.data.records || []
             if (oldMessages.length > 0) {
-                // 保存当前滚动位置
+                // 保存当��滚动位置
                 const messagesEl = messagesContainer.value
                 const scrollHeight = messagesEl ? messagesEl.scrollHeight : 0
                 const scrollTop = messagesEl ? messagesEl.scrollTop : 0
@@ -1145,16 +1145,98 @@ onBeforeUnmount(() => {
     .message-container {
         flex-direction: column;
         height: calc(100vh - 110px);
+        min-height: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
-    
     .session-list {
         width: 100%;
-        height: 200px;
-        overflow-y: auto;
+        height: 56px;
+        min-height: 0;
+        max-height: 56px;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        background: var(--card-bg, #fff);
+        padding: 0;
     }
-    
+    .session-header,
+    .session-search {
+        display: none;
+    }
+    .session-items {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 0 4px;
+        height: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+    .session-item {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 64px;
+        max-width: 80px;
+        margin: 0 4px 0 0;
+        padding: 4px 2px;
+        border-radius: 8px;
+        background: none;
+        box-shadow: none;
+        transition: background 0.2s;
+    }
+    .session-item:hover {
+        background: var(--el-fill-color-light);
+        transform: none;
+    }
+    .session-active {
+        background: var(--primary-color-light, rgba(64,158,255,0.08));
+        border-left: none;
+        border-bottom: 2px solid var(--primary-color, #409eff);
+    }
+    .session-badge {
+        margin: 0 auto 2px auto;
+    }
+    .session-info {
+        display: none;
+    }
+    .session-meta {
+        display: none;
+    }
+    .chat-area {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-color, #f5f7fa);
+    }
+    .chat-header {
+        padding: 10px 12px;
+    }
+    .chat-messages {
+        padding: 10px 4px;
+    }
     .message-item {
-        max-width: 90%;
+        max-width: 98%;
+        font-size: 15px;
+    }
+    .chat-input {
+        padding: 10px 4px;
+    }
+    .input-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .input-tip {
+        margin-left: 0;
+        margin-top: 4px;
+    }
+    .empty-chat {
+        padding: 0;
     }
 }
 </style>
