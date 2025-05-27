@@ -142,6 +142,88 @@
   }
 }
 
+/* 暗色模式下移动端核心组件适配 */
+[data-theme="dark"] .el-card {
+  background: #232326 !important;
+  color: var(--dark-text-primary) !important;
+  border-color: #333 !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18) !important;
+}
+
+[data-theme="dark"] .el-card__header {
+  color: var(--dark-text-primary) !important;
+  border-bottom: 1px solid #333 !important;
+}
+
+[data-theme="dark"] .el-card__body {
+  color: var(--dark-text-primary) !important;
+}
+
+[data-theme="dark"] .el-dialog {
+  background: #232326 !important;
+  color: var(--dark-text-primary) !important;
+  border-radius: 12px !important;
+  border: 1px solid #333 !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.32) !important;
+}
+
+[data-theme="dark"] .el-dialog__header {
+  color: var(--dark-text-primary) !important;
+  border-bottom: 1px solid #333 !important;
+}
+
+[data-theme="dark"] .el-dialog__body {
+  color: var(--dark-text-primary) !important;
+}
+
+[data-theme="dark"] .el-dialog__footer {
+  border-top: 1px solid #333 !important;
+}
+
+[data-theme="dark"] .el-button {
+  background: #232326 !important;
+  color: var(--primary-color-dark) !important;
+  border-color: #333 !important;
+}
+
+[data-theme="dark"] .el-button--primary {
+  background: var(--primary-color-dark) !important;
+  color: #fff !important;
+  border-color: var(--primary-color-dark) !important;
+}
+
+[data-theme="dark"] .mobile-bottom-nav {
+  background: #232326 !important;
+  border-top: 1px solid #333 !important;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.18) !important;
+}
+
+[data-theme="dark"] .el-input__wrapper,
+[data-theme="dark"] .el-textarea__wrapper {
+  background: #18181a !important;
+  color: var(--dark-text-primary) !important;
+  box-shadow: 0 0 0 1px #333 inset !important;
+}
+
+[data-theme="dark"] .el-form-item__label {
+  color: var(--dark-text-secondary) !important;
+}
+
+[data-theme="dark"] .info-table :deep(.el-table__row) {
+  background: #232326 !important;
+  color: var(--dark-text-primary) !important;
+  border-bottom: 1px solid #333 !important;
+}
+
+[data-theme="dark"] .info-table :deep(.el-table__cell[data-label]):before {
+  color: var(--dark-text-secondary) !important;
+}
+
+[data-theme="dark"] .page-container {
+  background: transparent !important;
+  color: var(--dark-text-primary) !important;
+}
+
 /* 极小屏幕适配 */
 @media (max-width: 480px) {
   .el-card__header {

@@ -662,16 +662,16 @@ const formatTime = (time: string) => {
 }
 
 /* 暗色主题适配 */
-.dark-theme .mobile-help-card {
+[data-theme="dark"] .mobile-help-card {
   background: var(--card-bg);
   border-color: var(--border-color);
 }
 
-.dark-theme .mobile-help-card.featured {
+[data-theme="dark"] .mobile-help-card.featured {
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
-.dark-theme .card-actions {
+[data-theme="dark"] .card-actions {
   background: var(--background-color);
 }
 

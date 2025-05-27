@@ -722,13 +722,41 @@ const showCreateGroupDialog = () => {
 
 <style scoped>
 .navbar {
-    background-color: var(--card-bg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    padding: 0.5rem 0;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%, 
+        rgba(248, 250, 252, 0.9) 50%, 
+        rgba(241, 245, 249, 0.85) 100%);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.05),
+        0 4px 20px rgba(59, 130, 246, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 添加粒子动画背景 */
+.navbar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+    animation: particlesFloat 20s ease-in-out infinite;
+    pointer-events: none;
 }
 
 .navbar.auth-page {
@@ -738,15 +766,14 @@ const showCreateGroupDialog = () => {
 
 .container {
     max-width: 1280px;
-    /* 增加最大宽度 */
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 24px;
-    /* 增加水平内边距 */
-    height: 64px;
-    /* 增加高度 */
+    height: 68px;
+    position: relative;
+    z-index: 2;
 }
 
 .logo {
@@ -754,28 +781,56 @@ const showCreateGroupDialog = () => {
     align-items: center;
     text-decoration: none;
     gap: 12px;
-    /* 增加间距 */
-    transition: transform 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     margin-right: 10px;
-    /* 增加与菜单的间距 */
+    position: relative;
+    padding: 8px 16px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        rgba(139, 92, 246, 0.05) 100%);
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.logo:hover::before {
+    opacity: 1;
 }
 
 .logo:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
 }
 
 .logo img {
     height: 36px;
-    /* 增加图标大小 */
     width: auto;
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
+    animation: logoFloat 4s ease-in-out infinite;
 }
 
 .logo h1 {
     font-size: 1.6rem;
-    /* 增加字体大小 */
-    font-weight: 600;
-    color: var(--primary-color);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .menu {
@@ -791,36 +846,81 @@ const showCreateGroupDialog = () => {
 }
 
 :deep(.el-menu--horizontal > .el-menu-item) {
-    height: 64px;
-    /* 增加高度与容器一致 */
-    line-height: 64px;
+    height: 68px;
+    line-height: 68px;
     padding: 0 20px;
-    /* 增加水平内边距 */
-    border-bottom: 2px solid transparent !important;
-    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 12px 12px 0 0;
+    margin: 0 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+:deep(.el-menu--horizontal > .el-menu-item::before) {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.05) 0%, 
+        rgba(139, 92, 246, 0.03) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+:deep(.el-menu--horizontal > .el-menu-item:hover::before) {
+    opacity: 1;
 }
 
 :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
-    height: 64px;
-    /* 增加高度与容器一致 */
-    line-height: 64px;
+    height: 68px;
+    line-height: 68px;
     padding: 0 20px;
-    /* 增加水平内边距 */
-    border-bottom: 2px solid transparent !important;
-    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border-radius: 12px 12px 0 0;
+    margin: 0 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+:deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title::before) {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.05) 0%, 
+        rgba(139, 92, 246, 0.03) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+:deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title::before) {
+    opacity: 1;
 }
 
 :deep(.el-menu--horizontal > .el-menu-item.is-active),
 :deep(.el-menu--horizontal > .el-sub-menu.is-active .el-sub-menu__title) {
-    border-bottom: 2px solid var(--primary-color) !important;
-    font-weight: 500;
+    border-bottom: 3px solid var(--primary-color) !important;
+    font-weight: 600;
     color: var(--primary-color) !important;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        rgba(139, 92, 246, 0.05) 100%);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
 }
 
 :deep(.el-menu--horizontal > .el-menu-item:hover),
 :deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title) {
     color: var(--primary-color) !important;
-    background-color: rgba(64, 158, 255, 0.05) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
 }
 
 /* 子菜单样式优化 */
@@ -879,7 +979,8 @@ const showCreateGroupDialog = () => {
     display: flex;
     align-items: center;
     gap: 20px;
-    /* 增加间距 */
+    position: relative;
+    z-index: 2;
 }
 
 .notification-icon,
@@ -887,104 +988,213 @@ const showCreateGroupDialog = () => {
 .search-user-icon,
 .friends-icon {
     cursor: pointer;
-    padding: 10px;
-    /* 增加内边距 */
+    padding: 12px;
     border-radius: 50%;
-    transition: background-color 0.3s;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+}
+
+.notification-icon::before,
+.message-icon::before,
+.search-user-icon::before,
+.friends-icon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.2) 0%, 
+        rgba(139, 92, 246, 0.1) 100%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.notification-icon:hover::before,
+.message-icon:hover::before,
+.search-user-icon:hover::before,
+.friends-icon:hover::before {
+    opacity: 1;
 }
 
 .notification-icon:hover,
 .message-icon:hover,
 .search-user-icon:hover,
 .friends-icon:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
-    /* 添加悬浮效果 */
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
 }
 
 .bell-icon,
 .icon-button {
     font-size: 22px;
-    /* 增加图标大小 */
     color: var(--text-secondary);
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease;
+}
+
+.notification-icon:hover .bell-icon,
+.message-icon:hover .icon-button,
+.search-user-icon:hover .icon-button,
+.friends-icon:hover .icon-button {
+    color: var(--primary-color);
 }
 
 .user-avatar-container {
     display: flex;
     align-items: center;
     margin-left: 8px;
-    /* 增加左边距 */
 }
 
 .avatar-wrapper {
     display: flex;
     align-items: center;
     cursor: pointer;
-    padding: 6px 14px;
-    /* 增加水平内边距 */
-    border-radius: 22px;
-    /* 增加圆角 */
-    transition: all 0.3s;
+    padding: 8px 16px;
+    border-radius: 25px;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+.avatar-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.1) 0%, 
+        rgba(139, 92, 246, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.avatar-wrapper:hover::before {
+    opacity: 1;
 }
 
 .avatar-wrapper:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+:deep(.el-avatar) {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    transition: all 0.3s ease;
+}
+
+.avatar-wrapper:hover :deep(.el-avatar) {
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
 }
 
 .user-name {
     margin: 0 10px;
-    /* 增加间距 */
     font-size: 15px;
-    /* 增加字体大小 */
     color: var(--text-primary);
-    font-weight: 500;
-    /* 增加字重 */
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
 }
 
 .dropdown-icon {
     color: var(--text-secondary);
     font-size: 12px;
-    transition: transform 0.3s;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
 }
 
 .avatar-wrapper:hover .dropdown-icon {
     transform: rotate(180deg);
+    color: var(--primary-color);
 }
 
 .login-btn {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    font-weight: 500;
-    transition: all 0.3s;
-    padding: 10px 24px;
-    /* 增加内边距 */
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    border: none;
+    font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 12px 28px;
     font-size: 15px;
-    /* 增加字体大小 */
+    position: relative;
+    overflow: hidden;
+}
+
+.login-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.login-btn:hover::before {
+    left: 100%;
 }
 
 .login-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
 }
 
 .register-btn {
     color: var(--primary-color);
-    border-color: var(--primary-color);
-    background: transparent;
-    transition: all 0.3s;
-    padding: 10px 24px;
-    /* 增加内边距 */
+    border: 2px solid var(--primary-color);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(10px);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 12px 28px;
     font-size: 15px;
-    /* 增加字体大小 */
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+}
+
+.register-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.register-btn:hover::before {
+    opacity: 1;
 }
 
 .register-btn:hover {
-    transform: translateY(-2px);
-    background-color: rgba(64, 158, 255, 0.1);
+    transform: translateY(-3px) scale(1.05);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+}
+
+.register-btn span {
+    position: relative;
+    z-index: 1;
 }
 
 :deep(.el-dropdown-menu) {
@@ -1084,9 +1294,17 @@ const showCreateGroupDialog = () => {
 
 /* 暗色主题适配 */
 [data-theme="dark"] .navbar {
-    background-color: var(--dark-bg, #1e1e20);
-    /* 使用 theme.css 变量，并提供备用值 */
-    box-shadow: var(--dark-shadow-light, 0 4px 12px rgba(0, 0, 0, 0.3));
+    background: linear-gradient(135deg, rgba(30,30,32,0.98) 0%, rgba(26,26,30,0.92) 50%, rgba(22,22,26,0.88) 100%);
+    border-bottom: 1.5px solid rgba(76,77,79,0.25);
+    box-shadow: 0 2px 16px 0 rgba(0,0,0,0.25), 0 1.5px 0 rgba(255,255,255,0.04) inset;
+    backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .navbar::before {
+    background: 
+        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
 }
 
 [data-theme="dark"] .navbar.auth-page {
@@ -1094,83 +1312,137 @@ const showCreateGroupDialog = () => {
     box-shadow: none;
 }
 
-[data-theme="dark"] .logo h1 {
-    color: var(--primary-color);
+[data-theme="dark"] .navbar .logo h1 {
+    background: linear-gradient(135deg, #8b5cf6, #2c65dd, #10b981);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 2px 8px #8b5cf6cc);
 }
 
-[data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item) {
-    color: var(--dark-text-primary, #e5eaf3) !important;
+[data-theme="dark"] .navbar .logo img {
+    filter: drop-shadow(0 2px 8px #8b5cf6cc) brightness(0.9);
 }
 
-[data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
-    color: var(--dark-text-primary, #e5eaf3) !important;
+[data-theme="dark"] .navbar .menu {
+    background: transparent;
 }
 
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item),
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu__title) {
+    color: #e5eaf3 !important;
+    text-shadow: 0 1px 8px #23294655;
+    transition: color 0.2s;
+}
+
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item.is-active),
 [data-theme="dark"] :deep(.el-menu--horizontal > .el-menu-item:hover),
-[data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title) {
-    color: var(--primary-color) !important;
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05)) !important;
-    /* 使用 theme.css 变量 */
+[data-theme="dark"] :deep(.el-menu--horizontal > .el-sub-menu__title:hover) {
+    color: #8b5cf6 !important;
+    text-shadow: 0 2px 12px #8b5cf6cc;
 }
 
-/* 更新 el-menu--popup 的暗色主题样式 */
+[data-theme="dark"] .navbar .user-actions {
+    background: linear-gradient(135deg, rgba(45,55,72,0.7), rgba(36,41,61,0.7));
+    border-radius: 18px;
+    box-shadow: 0 2px 12px rgba(139,92,246,0.08);
+}
+
+[data-theme="dark"] .navbar .user-avatar {
+    box-shadow: 0 2px 8px #23294655;
+    border: 2px solid #8b5cf6;
+}
+
+[data-theme="dark"] .navbar .user-name {
+    color: #e5eaf3;
+}
+
+[data-theme="dark"] .navbar .login-btn,
+[data-theme="dark"] .navbar .register-btn {
+    background: linear-gradient(90deg, #8b5cf6 0%, #2c65dd 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px #8b5cf655;
+    border: none;
+}
+
+[data-theme="dark"] .navbar .login-btn:hover,
+[data-theme="dark"] .navbar .register-btn:hover {
+    background: linear-gradient(90deg, #2c65dd 0%, #10b981 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px #10b98155;
+}
+
+/* 暗色主题子菜单样式 */
 [data-theme="dark"] :deep(.el-menu--popup) {
     background-color: var(--dark-bg-secondary, #2a2a2e) !important;
-    /* 使用 theme.css 变量 */
     border: 1px solid var(--dark-border-color, #4c4d4f) !important;
-    /* 使用 theme.css 变量 */
-    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important;
-    /* 使用 theme.css 变量 */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item) {
     background-color: transparent !important;
-    /* 子菜单项背景透明，依赖父级 popup 背景 */
     color: var(--dark-text-regular, #cfd3dc) !important;
-    /* 使用 theme.css 变量 */
-    border-bottom: none !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item .el-icon) {
     color: var(--dark-text-regular, #cfd3dc) !important;
-    /* 确保图标颜色与文本一致 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover) {
     background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important;
-    /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
     color: var(--primary-color) !important;
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item:hover .el-icon) {
     color: var(--primary-color) !important;
-    /* 确保 hover 时图标颜色也改变 */
 }
 
 [data-theme="dark"] :deep(.el-menu--popup .el-menu-item.is-active) {
-    background-color: var(--primary-color-dark-transparent, rgba(64, 158, 255, 0.2)) !important;
-    /* 使用 theme.css 变量 */
+    background-color: rgba(59, 130, 246, 0.2) !important;
     color: var(--primary-color) !important;
 }
 
-[data-theme="dark"] .notification-icon:hover {
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1));
+/* 暗色主题用户操作区域 */
+[data-theme="dark"] .notification-icon,
+[data-theme="dark"] .message-icon,
+[data-theme="dark"] .search-user-icon,
+[data-theme="dark"] .friends-icon {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] .bell-icon {
-    color: var(--dark-text-primary, #e5eaf3);
+[data-theme="dark"] .notification-icon::before,
+[data-theme="dark"] .message-icon::before,
+[data-theme="dark"] .search-user-icon::before,
+[data-theme="dark"] .friends-icon::before {
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.3) 0%, 
+        rgba(139, 92, 246, 0.15) 100%);
 }
 
-[data-theme="dark"] .message-icon:hover {
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1));
-}
-
+[data-theme="dark"] .bell-icon,
 [data-theme="dark"] .icon-button {
     color: var(--dark-text-primary, #e5eaf3);
 }
 
-[data-theme="dark"] .avatar-wrapper:hover {
-    background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1));
+[data-theme="dark"] .notification-icon:hover .bell-icon,
+[data-theme="dark"] .message-icon:hover .icon-button,
+[data-theme="dark"] .search-user-icon:hover .icon-button,
+[data-theme="dark"] .friends-icon:hover .icon-button {
+    color: var(--primary-color);
+}
+
+/* 暗色主题用户头像区域 */
+[data-theme="dark"] .avatar-wrapper {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .avatar-wrapper::before {
+    background: linear-gradient(135deg, 
+        rgba(59, 130, 246, 0.15) 0%, 
+        rgba(139, 92, 246, 0.08) 100%);
 }
 
 [data-theme="dark"] .user-name {
@@ -1181,297 +1453,72 @@ const showCreateGroupDialog = () => {
     color: var(--dark-text-secondary, #a3a6ad);
 }
 
-/* 更新 el-dropdown-menu 的暗色主题样式 */
+[data-theme="dark"] .avatar-wrapper:hover .dropdown-icon {
+    color: var(--primary-color);
+}
+
+/* 暗色主题下拉菜单 */
 [data-theme="dark"] :deep(.el-dropdown-menu) {
     background-color: var(--dark-bg-secondary, #2a2a2e) !important;
-    /* 使用 theme.css 变量 */
     border: 1px solid var(--dark-border-color, #4c4d4f) !important;
-    /* 使用 theme.css 变量 */
-    box-shadow: var(--dark-shadow-regular, 0 6px 16px rgba(0, 0, 0, 0.5)) !important;
-    /* 使用 theme.css 变量 */
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item) {
     color: var(--dark-text-regular, #cfd3dc) !important;
-    /* 使用 theme.css 变量 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item .el-icon) {
     color: var(--dark-text-regular, #cfd3dc) !important;
-    /* 确保图标颜色与文本一致 */
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item:hover) {
     background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.1)) !important;
-    /* 保持现有 hover 效果或统一为 theme.css 的 var(--hover-bg) */
     color: var(--primary-color) !important;
 }
 
 [data-theme="dark"] :deep(.el-dropdown-menu__item:hover .el-icon) {
     color: var(--primary-color) !important;
-    /* 确保 hover 时图标颜色也改变 */
 }
 
-/* 通知下拉菜单样式 */
-:deep(.notification-dropdown) {
-    width: 380px;
-    /* 增加宽度 */
-    max-height: 520px;
-    /* 增加高度 */
-    overflow: hidden;
-    border-radius: 12px;
-    /* 增加圆角 */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18);
-    /* 增强阴影 */
+/* 暗色主题登录注册按钮 */
+[data-theme="dark"] .login-btn {
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-.notification-dropdown-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    /* 增加内边距 */
-    background-color: var(--card-bg);
-    border-bottom: 1px solid var(--border-color);
-    /* 添加边框 */
+[data-theme="dark"] .login-btn:hover {
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
 }
 
-.notification-dropdown-header h3 {
-    margin: 0;
-    font-size: 18px;
-    /* 增加字体大小 */
-    font-weight: 600;
-    color: var(--text-primary);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.unread-count-badge {
-    background-color: var(--el-color-danger);
-    color: white;
-    font-size: 12px;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-weight: 500;
-    min-width: 20px;
-    text-align: center;
-}
-
-.notification-list {
-    max-height: 340px;
-    /* 增加高度 */
-    overflow-y: auto;
-    min-height: 120px;
-    /* 增加最小高度 */
-    padding: 8px 0;
-    /* 添加内边距 */
-}
-
-.notification-item {
-    padding: 0 !important;
-    border-bottom: 1px solid var(--border-color);
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin: 0 6px;
-    /* 添加外边距，增加空间感 */
-    border-radius: 8px;
-    /* 添加圆角 */
-}
-
-.notification-item:hover {
-    background-color: var(--bg-hover) !important;
-    transform: translateX(2px);
-    /* 添加悬浮效果 */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    /* 添加悬浮阴影 */
-}
-
-.notification-item.notification-unread {
-    background-color: rgba(64, 158, 255, 0.1);
-    position: relative;
-    font-weight: 500;
-    border-left: 4px solid var(--primary-color);
-    margin-bottom: 6px;
-    /* 添加下边距 */
-}
-
-.notification-item.notification-unread::before {
-    content: '';
-    position: absolute;
-    left: -4px;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background-color: var(--primary-color);
-}
-
-.notification-item.notification-read {
-    background-color: var(--bg-color);
-    opacity: 0.85;
-    margin-bottom: 6px;
-    /* 添加下边距 */
-}
-
-.notification-content {
-    padding: 14px 18px;
-    /* 增加内边距 */
-    width: 100%;
-}
-
-.notification-title {
-    font-size: 15px;
-    /* 增加字体大小 */
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 6px;
-    /* 增加下边距 */
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.unread-indicator {
+[data-theme="dark"] .register-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border-color: var(--primary-color);
     color: var(--primary-color);
-    font-size: 14px;
-    /* 增加大小 */
-    margin-right: 8px;
-    /* 增加间距 */
-    animation: pulse 1.5s ease-in-out infinite;
 }
 
-.read-indicator {
-    color: var(--el-text-color-secondary);
-    font-size: 14px;
-    /* 增加大小 */
-    margin-right: 8px;
-    /* 增加间距 */
-    opacity: 0.6;
+[data-theme="dark"] .register-btn::before {
+    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
 }
 
-.unread-badge {
-    background-color: var(--el-color-danger);
-    color: white;
-    font-size: 11px;
-    /* 增加字体大小 */
-    padding: 2px 8px;
-    /* 增加内边距 */
-    border-radius: 12px;
-    /* 增加圆角 */
-    font-weight: 500;
-    margin-left: auto;
-    flex-shrink: 0;
+[data-theme="dark"] .register-btn:hover {
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
 }
 
-.read-badge {
-    background-color: var(--el-color-success);
-    color: white;
-    font-size: 11px;
-    /* 增加字体大小 */
-    padding: 2px 8px;
-    /* 增加内边距 */
-    border-radius: 12px;
-    /* 增加圆角 */
-    font-weight: 500;
-    margin-left: auto;
-    flex-shrink: 0;
-    opacity: 0.8;
+/* 暗色主题通知下拉菜单 */
+[data-theme="dark"] :deep(.notification-dropdown) {
+    background-color: var(--dark-bg-secondary, #2a2a2e) !important;
+    border: 1px solid var(--dark-border-color, #4c4d4f) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
 }
 
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
-.notification-body {
-    font-size: 14px;
-    /* 增加字体大小 */
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    /* 增加下边距 */
-    line-height: 1.5;
-    /* 增加行高 */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-clamp: 2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.notification-read .notification-title {
-    color: var(--text-secondary);
-    font-weight: normal;
-}
-
-.notification-read .notification-body {
-    color: var(--text-tertiary);
-}
-
-.notification-read .notification-time {
-    color: var(--text-placeholder);
-}
-
-.notification-time {
-    font-size: 13px;
-    /* 增加字体大小 */
-    color: var(--text-tertiary);
-    margin-top: 2px;
-    /* 添加上边距 */
-}
-
-.notification-footer {
-    padding: 10px 18px;
-    /* 增加内边距 */
-    text-align: center;
-    border-top: 1px solid var(--border-color);
-    background-color: var(--card-bg);
-}
-
-.notification-footer a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-size: 15px;
-    /* 增加字体大小 */
-    font-weight: 500;
-    transition: color 0.2s;
-    padding: 6px 10px;
-    /* 添加内边距增加可点击区域 */
-    border-radius: 6px;
-    /* 添加圆角 */
-    display: inline-block;
-    /* 使内边距生效 */
-}
-
-.notification-footer a:hover {
-    color: var(--primary-color-hover);
-    background-color: rgba(64, 158, 255, 0.08);
-    /* 添加悬浮背景色 */
-}
-
-/* 暗色主题通知样式 */
 [data-theme="dark"] .notification-dropdown-header {
     background-color: var(--dark-bg-secondary, #2a2a2e);
+    border-bottom-color: var(--dark-border-color, #4c4d4f);
 }
 
 [data-theme="dark"] .notification-dropdown-header h3 {
     color: var(--dark-text-primary, #e5eaf3);
-}
-
-[data-theme="dark"] .unread-count-badge {
-    background-color: var(--el-color-danger);
-    color: white;
 }
 
 [data-theme="dark"] .notification-item {
@@ -1483,33 +1530,12 @@ const showCreateGroupDialog = () => {
 }
 
 [data-theme="dark"] .notification-item.notification-unread {
-    background-color: rgba(64, 158, 255, 0.15);
+    background-color: rgba(59, 130, 246, 0.15);
     border-left-color: var(--primary-color);
 }
 
 [data-theme="dark"] .notification-item.notification-read {
     background-color: var(--dark-bg-secondary);
-    opacity: 0.8;
-}
-
-[data-theme="dark"] .unread-indicator {
-    color: var(--primary-color);
-}
-
-[data-theme="dark"] .read-indicator {
-    color: var(--dark-text-secondary, #a3a6ad);
-    opacity: 0.6;
-}
-
-[data-theme="dark"] .unread-badge {
-    background-color: var(--el-color-danger);
-    color: white;
-}
-
-[data-theme="dark"] .read-badge {
-    background-color: var(--el-color-success);
-    color: white;
-    opacity: 0.8;
 }
 
 [data-theme="dark"] .notification-title {
@@ -1524,20 +1550,46 @@ const showCreateGroupDialog = () => {
     color: var(--dark-text-secondary, #a3a6ad);
 }
 
-[data-theme="dark"] .notification-read .notification-title {
-    color: var(--dark-text-secondary, #a3a6ad);
-}
-
-[data-theme="dark"] .notification-read .notification-body {
-    color: var(--dark-text-placeholder, #6c6e72);
-}
-
-[data-theme="dark"] .notification-read .notification-time {
-    color: var(--dark-text-placeholder, #6c6e72);
-}
-
 [data-theme="dark"] .notification-footer {
     background-color: var(--dark-bg-secondary, #2a2a2e);
     border-top-color: var(--dark-border-color, #4c4d4f);
+}
+
+[data-theme="dark"] .notification-footer a:hover {
+    background-color: rgba(59, 130, 246, 0.15);
+}
+
+/* 动画关键帧 */
+@keyframes particlesFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.8;
+    }
+    33% {
+        transform: translateY(-20px) rotate(5deg);
+        opacity: 1;
+    }
+    66% {
+        transform: translateY(-10px) rotate(-3deg);
+        opacity: 0.9;
+    }
+}
+
+@keyframes logoFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-3px) rotate(2deg);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
 }
 </style>

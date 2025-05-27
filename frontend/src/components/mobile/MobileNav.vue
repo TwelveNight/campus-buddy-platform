@@ -223,22 +223,20 @@ const checkMobile = () => {
 
 // 检查主题模式
 const checkTheme = () => {
-  isDarkMode.value = document.documentElement.classList.contains('dark-theme')
+  isDarkMode.value = document.documentElement.getAttribute('data-theme') === 'dark'
 }
 
 // 切换主题
 const toggleTheme = () => {
   const html = document.documentElement
-  const isDark = html.classList.contains('dark-theme')
-  
+  const isDark = html.getAttribute('data-theme') === 'dark'
   if (isDark) {
-    html.classList.remove('dark-theme')
+    html.setAttribute('data-theme', 'light')
     localStorage.setItem('theme', 'light')
   } else {
-    html.classList.add('dark-theme')
+    html.setAttribute('data-theme', 'dark')
     localStorage.setItem('theme', 'dark')
   }
-  
   isDarkMode.value = !isDark
 }
 
@@ -983,7 +981,7 @@ onUnmounted(() => {
 }
 
 /* 暗色主题适配 */
-.dark-theme .mobile-nav-bar {
+[data-theme="dark"] .mobile-nav-bar {
   background: linear-gradient(135deg, 
     rgba(30, 30, 30, 0.95) 0%, 
     rgba(40, 40, 40, 0.9) 50%,
@@ -991,7 +989,7 @@ onUnmounted(() => {
   border-bottom-color: var(--border-color);
 }
 
-.dark-theme .mobile-nav-bar::before {
+[data-theme="dark"] .mobile-nav-bar::before {
   background: linear-gradient(90deg, 
     transparent, 
     rgba(64, 158, 255, 0.2), 
@@ -999,23 +997,23 @@ onUnmounted(() => {
     transparent);
 }
 
-.dark-theme .mobile-nav-drawer :deep(.el-drawer) {
+[data-theme="dark"] .mobile-nav-drawer :deep(.el-drawer) {
   background: linear-gradient(145deg, 
     rgba(30, 30, 30, 0.95) 0%,
     rgba(40, 40, 40, 0.9) 50%,
     rgba(50, 50, 50, 0.85) 100%);
 }
 
-.dark-theme .mobile-menu .el-menu-item {
+[data-theme="dark"] .mobile-menu .el-menu-item {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark-theme .mobile-menu .el-menu-item:hover {
+[data-theme="dark"] .mobile-menu .el-menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.dark-theme .mobile-menu .el-menu-item.is-active {
+[data-theme="dark"] .mobile-menu .el-menu-item.is-active {
   background-color: var(--primary-light);
   color: var(--primary-color);
 }

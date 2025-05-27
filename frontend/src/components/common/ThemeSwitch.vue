@@ -17,36 +17,26 @@ const isDarkMode = ref(false)
 
 // 初始化主题
 onMounted(() => {
-  // 检查本地存储的主题偏好
   const savedTheme = localStorage.getItem('theme')
-  
-  // 检查系统偏好
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  
-  // 如果有本地存储的主题，使用它；否则使用系统偏好
   isDarkMode.value = savedTheme ? savedTheme === 'dark' : prefersDark
-  
-  // 应用初始主题
   applyTheme(isDarkMode.value)
 })
 
-// 监听主题变化
 watch(isDarkMode, (newValue) => {
   localStorage.setItem('theme', newValue ? 'dark' : 'light')
+  applyTheme(newValue)
 })
 
-// 切换主题
 const toggleTheme = () => {
   isDarkMode.value = !isDarkMode.value
-  applyTheme(isDarkMode.value)
 }
 
-// 应用主题
 const applyTheme = (dark: boolean) => {
   if (dark) {
-    document.documentElement.classList.add('dark-theme')
+    document.documentElement.setAttribute('data-theme', 'dark')
   } else {
-    document.documentElement.classList.remove('dark-theme')
+    document.documentElement.setAttribute('data-theme', 'light')
   }
 }
 </script>

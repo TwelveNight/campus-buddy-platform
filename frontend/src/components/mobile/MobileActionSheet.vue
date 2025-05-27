@@ -259,8 +259,8 @@ const handleActionClick = async (action: ActionItem) => {
   color: var(--text-primary);
   background: linear-gradient(135deg, #409eff, #67c23a);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   animation: title-gradient 4s ease-in-out infinite;
 }
 
@@ -632,30 +632,30 @@ const handleActionClick = async (action: ActionItem) => {
 }
 
 /* 暗色主题适配 */
-.dark-theme .action-sheet-panel {
+[data-theme="dark"] .action-sheet-panel {
   background: linear-gradient(135deg, 
     rgba(30, 30, 30, 0.95) 0%, 
     rgba(40, 40, 40, 0.9) 100%);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-.dark-theme .action-sheet-overlay {
+[data-theme="dark"] .action-sheet-overlay {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-.dark-theme .action-sheet-overlay::before {
+[data-theme="dark"] .action-sheet-overlay::before {
   background: 
     radial-gradient(circle at 20% 30%, rgba(64, 158, 255, 0.2) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(103, 194, 58, 0.2) 0%, transparent 50%),
     radial-gradient(circle at 40% 80%, rgba(230, 162, 60, 0.2) 0%, transparent 50%);
 }
 
-.dark-theme .action-item {
+[data-theme="dark"] .action-item {
   background: rgba(255, 255, 255, 0.03);
   border-bottom-color: rgba(255, 255, 255, 0.05);
 }
 
-.dark-theme .action-item:hover {
+[data-theme="dark"] .action-item:hover {
   background: rgba(64, 158, 255, 0.1);
 }
 
