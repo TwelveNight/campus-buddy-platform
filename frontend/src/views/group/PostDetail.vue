@@ -1,75 +1,78 @@
 <template>
-  <div class="post-detail-page">
-    <el-card v-loading="loading">
+  <div class="post-detail-page animated-page">
+    <el-card v-loading="loading" class="main-card">
       <template #header>
-        <div class="post-detail-header">
-          <el-button @click="goBack" type="primary" plain>
-            <el-icon><ArrowLeft /></el-icon>
+        <div class="post-detail-header animated-header">
+          <el-button @click="goBack" type="primary" plain class="back-btn magical-btn">
+            <el-icon class="floating-icon"><ArrowLeft /></el-icon>
             返回
           </el-button>
-          <h2>帖子详情</h2>
+          <h2 class="gradient-title">帖子详情</h2>
         </div>
       </template>
 
-      <div v-if="post" class="post-content">
+      <div v-if="post" class="post-content animated-content">
         <!-- 帖子基本信息 -->
-        <div class="post-info">
-          <h1 class="post-title">{{ post.title }}</h1>
+        <div class="post-info floating-section">
+          <h1 class="post-title magical-title">{{ post.title }}</h1>
           <div class="post-meta">
-            <div class="author-info">
-              <el-avatar :size="32" :src="post.authorAvatar" @click="goToUserProfile(post.authorId)">
+            <div class="author-info animated-author">
+              <el-avatar :size="32" :src="post.authorAvatar" @click="goToUserProfile(post.authorId)" class="magical-avatar">
                 {{ post.authorName?.substring(0, 1) }}
               </el-avatar>
               <span class="author-name" @click="goToUserProfile(post.authorId)">{{ post.authorName }}</span>
             </div>
-            <div class="post-stats">
-              <span>发布时间: {{ formatTime(post.createdAt) }}</span>
-              <span>点赞数: {{ post.likeCount || 0 }}</span>
-              <span>评论数: {{ post.commentCount || 0 }}</span>
+            <div class="post-stats stats-container">
+              <span class="stat-item">发布时间: {{ formatTime(post.createdAt) }}</span>
+              <span class="stat-item">点赞数: {{ post.likeCount || 0 }}</span>
+              <span class="stat-item">评论数: {{ post.commentCount || 0 }}</span>
             </div>
           </div>
         </div>
 
         <!-- 帖子内容 -->
-        <div class="post-body">
+        <div class="post-body content-section">
           <div v-if="post.contentType === 'MARKDOWN'" class="markdown-content" v-html="renderMarkdown(post.content)"></div>
           <div v-else class="text-content" v-html="renderText(post.content)"></div>
         </div>
 
         <!-- 操作按钮 -->
-        <div class="post-actions">
-          <el-button :type="post.liked ? 'primary' : 'default'" @click="handleLike" :disabled="!authStore.isAuthenticated">
-            <el-icon><Pointer /></el-icon>
+        <div class="post-actions actions-container">
+          <el-button :type="post.liked ? 'primary' : 'default'" @click="handleLike" :disabled="!authStore.isAuthenticated" class="action-btn like-btn">
+            <el-icon class="pulsing-icon"><Pointer /></el-icon>
             {{ post.liked ? '已点赞' : '点赞' }} ({{ post.likeCount || 0 }})
           </el-button>
-          <el-button @click="showComments = !showComments">
-            <el-icon><ChatDotRound /></el-icon>
+          <el-button @click="showComments = !showComments" class="action-btn comment-btn">
+            <el-icon class="bouncing-icon"><ChatDotRound /></el-icon>
             {{ showComments ? '收起评论' : '查看评论' }} ({{ post.commentCount || 0 }})
           </el-button>
         </div>
 
         <!-- 评论区域 -->
         <el-collapse-transition>
-          <div v-if="showComments" class="comments-section">
-            <div class="comment-input">
-              <h3>发表评论</h3>
-              <RichEditor v-model="newComment" placeholder="请输入评论内容" />
-              <el-button type="primary" @click="submitComment" :disabled="!authStore.isAuthenticated || !newComment?.trim()">发表评论</el-button>
+          <div v-if="showComments" class="comments-section animated-comments">
+            <div class="comment-input input-section">
+              <h3 class="section-title">发表评论</h3>
+              <RichEditor v-model="newComment" placeholder="请输入评论内容" class="editor-container" />
+              <el-button type="primary" @click="submitComment" :disabled="!authStore.isAuthenticated || !newComment?.trim()" class="submit-btn magical-btn">发表评论</el-button>
             </div>
 
-            <div class="comments-list" v-loading="commentsLoading">
-              <div v-for="comment in comments" :key="comment.commentId" class="comment-item">
-                <div class="comment-author">
+            <div class="comments-list comments-container" v-loading="commentsLoading">
+              <div v-for="(comment, index) in comments" :key="comment.commentId" 
+                   class="comment-item floating-comment" 
+                   :style="{ '--animation-delay': `${index * 0.1}s` }">
+                <div class="comment-author author-container">
                   <el-avatar
                     :size="24"
                     :src="comment.avatar || comment.authorAvatar || defaultAvatar"
                     style="cursor:pointer"
                     @click="goToUserProfile(comment.userId || comment.authorId)"
+                    class="comment-avatar magical-avatar"
                   >
                     {{ (comment.nickname || comment.authorName || comment.username || '').substring(0, 1) }}
                   </el-avatar>
                   <el-link
-                    class="comment-author-name"
+                    class="comment-author-name gradient-link"
                     type="primary"
                     :underline="true"
                     style="font-weight:500"
@@ -77,15 +80,15 @@
                   >
                     {{ comment.nickname || comment.authorName || comment.username || '匿名' }}
                   </el-link>
-                  <span class="comment-time">{{ formatTime(comment.createdAt) }}</span>
+                  <span class="comment-time time-badge">{{ formatTime(comment.createdAt) }}</span>
                 </div>
-                <div class="comment-content markdown-content" v-html="renderCommentContent(comment.content)"></div>
+                <div class="comment-content markdown-content animated-content" v-html="renderCommentContent(comment.content)"></div>
               </div>
-              <el-empty v-if="comments.length === 0 && !commentsLoading" description="暂无评论" />
+              <el-empty v-if="comments.length === 0 && !commentsLoading" description="暂无评论" class="empty-state" />
             </div>
 
             <!-- 评论分页 -->
-            <div class="comment-pagination" v-if="commentTotal > commentPageSize">
+            <div class="comment-pagination pagination-container" v-if="commentTotal > commentPageSize">
               <el-pagination 
                 v-model:current-page="commentCurrentPage" 
                 v-model:page-size="commentPageSize"
@@ -384,6 +387,432 @@ watch(() => showComments.value, (newValue) => {
 </script>
 
 <style scoped>
+/* 动画效果定义 */
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes floatUp {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 2px 10px rgba(64, 158, 255, 0.2);
+    }
+    50% {
+        box-shadow: 0 4px 20px rgba(64, 158, 255, 0.4);
+    }
+}
+
+@keyframes magicalSparkle {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(0.8) rotate(0deg);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.2) rotate(180deg);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-8px);
+    }
+    60% {
+        transform: translateY(-4px);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* 页面整体动画 */
+.animated-page {
+    animation: slideInFromTop 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.main-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.main-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+/* 头部动画 */
+.animated-header {
+    animation: fadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
+}
+
+.back-btn.magical-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-btn.magical-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: linear-gradient(45deg, rgba(64, 158, 255, 0.1), rgba(64, 158, 255, 0.3));
+    border-radius: 50%;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+.back-btn.magical-btn:hover::before {
+    width: 200%;
+    height: 200%;
+}
+
+.back-btn.magical-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(64, 158, 255, 0.25);
+}
+
+.floating-icon {
+    animation: floatUp 2s ease-in-out infinite;
+}
+
+.gradient-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
+/* 内容区域动画 */
+.animated-content {
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
+}
+
+.floating-section {
+    animation: fadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.6s both;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-section:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.magical-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: 200% 200%;
+    animation: gradient 4s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.magical-title:hover {
+    transform: scale(1.02);
+    text-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+/* 作者信息动画 */
+.animated-author {
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.8s both;
+}
+
+.magical-avatar {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.magical-avatar::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    border-radius: 50%;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.magical-avatar:hover::before {
+    opacity: 1;
+}
+
+.magical-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 统计信息动画 */
+.stats-container {
+    animation: fadeInUp 1.4s cubic-bezier(0.25, 0.8, 0.25, 1) 1s both;
+}
+
+.stat-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.stat-item:hover {
+    background: rgba(64, 158, 255, 0.1);
+    transform: scale(1.05);
+}
+
+/* 内容区域动画 */
+.content-section {
+    animation: fadeInUp 1.6s cubic-bezier(0.25, 0.8, 0.25, 1) 1.2s both;
+}
+
+/* 操作按钮动画 */
+.actions-container {
+    animation: fadeInUp 1.8s cubic-bezier(0.25, 0.8, 0.25, 1) 1.4s both;
+}
+
+.action-btn {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translate(-50%, -50%);
+    z-index: 0;
+}
+
+.action-btn:hover::before {
+    width: 200%;
+    height: 200%;
+}
+
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(64, 158, 255, 0.25);
+}
+
+.like-btn:hover {
+    animation: pulse 0.6s ease-in-out;
+}
+
+.comment-btn:hover {
+    animation: bounce 0.8s ease-in-out;
+}
+
+.pulsing-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.bouncing-icon {
+    animation: bounce 2s ease-in-out infinite;
+}
+
+/* 评论区域动画 */
+.animated-comments {
+    animation: fadeInUp 2s cubic-bezier(0.25, 0.8, 0.25, 1) 1.6s both;
+}
+
+.input-section {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
+}
+
+.section-title {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.editor-container {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-container:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 15px rgba(64, 158, 255, 0.1);
+}
+
+.submit-btn.magical-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.submit-btn.magical-btn::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #667eea);
+    background-size: 200% 200%;
+    animation: shimmer 3s linear infinite;
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.submit-btn.magical-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* 评论项动画 */
+.comments-container {
+    animation: fadeInUp 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
+}
+
+.floating-comment {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1) var(--animation-delay, 0s) both;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-comment:hover {
+    transform: translateX(10px);
+    background: rgba(64, 158, 255, 0.05);
+    border-radius: 8px;
+    padding: 8px;
+    margin: 4px 0;
+}
+
+.author-container {
+    animation: fadeInUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
+}
+
+.comment-avatar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.comment-avatar:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 10px rgba(64, 158, 255, 0.3);
+}
+
+.gradient-link {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gradient-link:hover {
+    transform: scale(1.05);
+}
+
+.time-badge {
+    background: rgba(64, 158, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.time-badge:hover {
+    background: rgba(64, 158, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* 分页动画 */
+.pagination-container {
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.6s both;
+}
+
+.pagination-container :deep(.el-pagination__button) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination-container :deep(.el-pagination__button):hover {
+    transform: scale(1.1);
+}
+
+/* 空状态动画 */
+.empty-state {
+    animation: fadeInUp 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.8s both;
+}
+
 .post-detail-page {
   max-width: 1000px;
   margin: 0 auto;
@@ -777,5 +1206,108 @@ watch(() => showComments.value, (newValue) => {
     flex-direction: column;
     gap: 8px;
   }
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .animated-page {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+[data-theme="dark"] .main-card {
+    background: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .main-card:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .gradient-title {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .magical-title {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background-size: 200% 200%;
+    animation: gradient 4s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .magical-avatar::before {
+    background: linear-gradient(45deg, #4facfe, #00f2fe, #4facfe);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+}
+
+[data-theme="dark"] .stat-item:hover {
+    background: rgba(79, 172, 254, 0.2);
+}
+
+[data-theme="dark"] .section-title {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .gradient-link {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .time-badge {
+    background: rgba(79, 172, 254, 0.2);
+}
+
+[data-theme="dark"] .time-badge:hover {
+    background: rgba(79, 172, 254, 0.3);
+}
+
+[data-theme="dark"] .floating-comment:hover {
+    background: rgba(79, 172, 254, 0.1);
+}
+
+[data-theme="dark"] .editor-container:hover {
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.2);
+}
+
+[data-theme="dark"] .submit-btn.magical-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+[data-theme="dark"] .submit-btn.magical-btn::before {
+    background: linear-gradient(45deg, #4facfe, #00f2fe, #4facfe);
+    background-size: 200% 200%;
+    animation: shimmer 3s linear infinite;
+}
+
+[data-theme="dark"] .submit-btn.magical-btn:hover {
+    box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+[data-theme="dark"] .action-btn:hover {
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3);
+}
+
+[data-theme="dark"] .back-btn.magical-btn:hover {
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3);
+}
+
+[data-theme="dark"] .comment-avatar:hover {
+    box-shadow: 0 3px 10px rgba(79, 172, 254, 0.4);
 }
 </style>

@@ -1,12 +1,16 @@
 <template>
   <div class="group-list-page">
-    <h1 class="page-title">学习小组</h1>
+    <h1 class="page-title animated-title">
+      <span class="title-text">学习小组</span>
+      <div class="title-decoration"></div>
+    </h1>
 
     <div class="group-actions">
-      <el-button type="primary" @click="showCreateGroupDialog">
-        <el-icon>
+      <el-button type="primary" @click="showCreateGroupDialog" class="create-btn glowing-btn">
+        <el-icon class="rotating-icon">
           <Plus />
-        </el-icon> 创建小组
+        </el-icon> 
+        <span>创建小组</span>
       </el-button>
 
       <div class="group-filters">
@@ -29,19 +33,25 @@
       <el-tab-pane label="所有小组" name="all">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="暂无小组" />
-          <el-card v-for="group in groups" :key="group.groupId" 
-            class="group-card"
-            :class="{'group-card-disbanded': group.status === 'DISBANDED'}"
+          <el-card v-for="(group, index) in groups" :key="group.groupId" 
+            class="group-card card-entrance"
+            :style="{ '--animation-delay': `${index * 0.1}s` }"
+            :class="{
+              'group-card-disbanded': group.status === 'DISBANDED',
+              'group-card-inactive': group.status === 'INACTIVE'
+            }"
             @click="group.status === 'DISBANDED' ? null : goToGroupDetail(group.groupId)">
-            <div class="group-avatar">
+            <div class="group-avatar floating-avatar">
               <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
+              <div class="avatar-glow"></div>
             </div>
             <div class="group-info">
               <h3 class="group-name">
                 {{ group.name }}
                 <el-tag v-if="group.status === 'DISBANDED'" type="danger" size="small" style="margin-left:8px;">已解散</el-tag>
+                <el-tag v-else-if="group.status === 'INACTIVE'" type="warning" size="small" style="margin-left:8px;">已禁用</el-tag>
                 <el-tag v-else-if="group.joinType === 'PUBLIC'" type="success" size="small" style="margin-left:8px;">公开</el-tag>
                 <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning" size="small" style="margin-left:8px;">需审批</el-tag>
               </h3>
@@ -72,14 +82,14 @@
             <div class="group-actions">
               <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
               <template v-else>
-                <el-button v-if="!group.memberStatus" type="primary" size="small" plain @click.stop="handleJoinGroup(group)">
-                  加入小组
+                <el-button v-if="!group.memberStatus" type="primary" size="small" plain @click.stop="handleJoinGroup(group)" class="action-btn pulse-btn">
+                  <span>加入小组</span>
                 </el-button>
-                <el-button v-else-if="group.memberStatus === 'PENDING' || group.memberStatus === 'PENDING_APPROVAL'" type="warning" size="small" plain disabled>
-                  等待审批
+                <el-button v-else-if="group.memberStatus === 'PENDING' || group.memberStatus === 'PENDING_APPROVAL'" type="warning" size="small" plain disabled class="action-btn">
+                  <span>等待审批</span>
                 </el-button>
-                <el-button v-else-if="group.memberStatus === 'ACTIVE'" type="success" size="small" plain disabled>
-                  已加入
+                <el-button v-else-if="group.memberStatus === 'ACTIVE'" type="success" size="small" plain disabled class="action-btn">
+                  <span>已加入</span>
                 </el-button>
               </template>
             </div>
@@ -96,19 +106,25 @@
       <el-tab-pane label="我创建的" name="created">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="您暂未创建任何小组" />
-          <el-card v-for="group in groups" :key="group.groupId" 
-            class="group-card"
-            :class="{'group-card-disbanded': group.status === 'DISBANDED'}"
+          <el-card v-for="(group, index) in groups" :key="group.groupId" 
+            class="group-card card-entrance"
+            :style="{ '--animation-delay': `${index * 0.1}s` }"
+            :class="{
+              'group-card-disbanded': group.status === 'DISBANDED',
+              'group-card-inactive': group.status === 'INACTIVE'
+            }"
             @click="group.status === 'DISBANDED' ? null : goToGroupDetail(group.groupId)">
-            <div class="group-avatar">
+            <div class="group-avatar floating-avatar">
               <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
+              <div class="avatar-glow"></div>
             </div>
             <div class="group-info">
               <h3 class="group-name">
                 {{ group.name }}
                 <el-tag v-if="group.status === 'DISBANDED'" type="danger" size="small" style="margin-left:8px;">已解散</el-tag>
+                <el-tag v-else-if="group.status === 'INACTIVE'" type="warning" size="small" style="margin-left:8px;">已禁用</el-tag>
                 <el-tag v-else-if="group.joinType === 'PUBLIC'" type="success" size="small" style="margin-left:8px;">公开</el-tag>
                 <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning" size="small" style="margin-left:8px;">需审批</el-tag>
               </h3>
@@ -136,9 +152,9 @@
               </div>
             </div>
             <div class="group-actions">
-              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
-              <el-button v-else type="success" size="small" plain disabled>
-                我创建的
+              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled class="action-btn">已解散</el-button>
+              <el-button v-else type="success" size="small" plain disabled class="action-btn creator-badge">
+                <span>我创建的</span>
               </el-button>
             </div>
           </el-card>
@@ -152,19 +168,22 @@
       <el-tab-pane label="我加入的" name="joined">
         <div class="group-grid" v-loading="loading">
           <el-empty v-if="groups.length === 0 && !loading" description="您暂未加入任何小组" />
-          <el-card v-for="group in groups" :key="group.groupId" 
-            class="group-card"
-            :class="{'group-card-disbanded': group.status === 'DISBANDED'}"
+          <el-card v-for="(group, index) in groups" :key="group.groupId" 
+            class="group-card card-entrance"
+            :style="{ '--animation-delay': `${index * 0.1}s` }"
+            :class="{'group-card-disbanded': group.status === 'DISBANDED', 'group-card-inactive': group.status === 'INACTIVE'}"
             @click="group.status === 'DISBANDED' ? null : goToGroupDetail(group.groupId)">
-            <div class="group-avatar">
+            <div class="group-avatar floating-avatar">
               <el-avatar :size="64" :src="group.avatar || group.avatarUrl || defaultAvatar">
                 {{ group.name?.substring(0, 1) }}
               </el-avatar>
+              <div class="avatar-glow"></div>
             </div>
             <div class="group-info">
               <h3 class="group-name">
                 {{ group.name }}
                 <el-tag v-if="group.status === 'DISBANDED'" type="danger" size="small" style="margin-left:8px;">已解散</el-tag>
+                <el-tag v-else-if="group.status === 'INACTIVE'" type="warning" size="small" style="margin-left:8px;">已禁用</el-tag>
                 <el-tag v-else-if="group.joinType === 'PUBLIC'" type="success" size="small" style="margin-left:8px;">公开</el-tag>
                 <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning" size="small" style="margin-left:8px;">需审批</el-tag>
               </h3>
@@ -192,9 +211,10 @@
               </div>
             </div>
             <div class="group-actions">
-              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
-              <el-button v-else type="success" size="small" plain disabled>
-                已加入
+              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled class="action-btn">已解散</el-button>
+              <el-button v-else-if="group.status === 'INACTIVE'" type="warning" size="small" plain disabled class="action-btn">已禁用</el-button>
+              <el-button v-else type="success" size="small" plain disabled class="action-btn member-badge">
+                <span>已加入</span>
               </el-button>
             </div>
           </el-card>
@@ -648,206 +668,566 @@ const goToGroupDetail = (groupId) => {
 <style scoped>
 .group-list-page {
   padding: 20px;
+  animation: pageEnter 0.6s ease-out;
+}
+
+/* 页面进入动画 */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 炫酷的页面标题动画 */
+.animated-title {
+  position: relative;
+  text-align: center;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+
+.title-text {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titleFloat 3s ease-in-out infinite;
+  display: inline-block;
+}
+
+.title-decoration {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
+  border-radius: 2px;
+  animation: decorationGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes titleFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes decorationGlow {
+  from { 
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+    transform: translateX(-50%) scaleX(1);
+  }
+  to { 
+    box-shadow: 0 0 20px rgba(118, 75, 162, 0.8);
+    transform: translateX(-50%) scaleX(1.2);
+  }
+}
+
+/* 创建按钮发光效果 */
+.create-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.create-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.create-btn:hover::before {
+  left: 100%;
+}
+
+/* 旋转图标动画 */
+.rotating-icon {
+  transition: transform 0.3s ease;
+}
+
+.create-btn:hover .rotating-icon {
+  transform: rotate(180deg);
 }
 
 .page-title {
-  margin-bottom: 20px;
-  color: #333;
+  font-size: 2rem;
+  margin-bottom: 24px;
+  text-align: center;
+  font-weight: 600;
 }
 
 .group-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .group-filters {
   display: flex;
-  gap: 10px;
+  gap: 16px;
+  flex: 1;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .search-input {
-  width: 250px;
+  max-width: 280px;
 }
 
 .group-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 20px;
-  margin-top: 20px;
+  margin-bottom: 30px;
+}
+
+/* 小组卡片进入动画 */
+.card-entrance {
+  animation: cardSlideIn 0.6s ease-out forwards;
+  animation-delay: var(--animation-delay, 0s);
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+}
+
+@keyframes cardSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .group-card {
+  border-radius: 16px;
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
-  height: 100%;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 24px;
+  position: relative;
+  background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+.group-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.group-card:hover::before {
+  opacity: 1;
 }
 
 .group-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(102, 126, 234, 0.15),
+    0 0 0 1px rgba(102, 126, 234, 0.1);
+}
+
+/* 头像浮动效果 */
+.floating-avatar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.floating-avatar .el-avatar {
+  transition: all 0.3s ease;
+  border: 3px solid rgba(102, 126, 234, 0.1);
+  animation: avatarFloat 4s ease-in-out infinite;
+}
+
+.group-card:hover .floating-avatar .el-avatar {
+  transform: scale(1.1);
+  border-color: rgba(102, 126, 234, 0.3);
+}
+
+.avatar-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.group-card:hover .avatar-glow {
+  opacity: 1;
+  animation: glowPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes avatarFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.1; }
 }
 
 .group-card-disbanded {
-  background: #f5f5f5 !important;
-  filter: grayscale(0.7);
+  opacity: 0.6;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+.group-card-disbanded::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(0, 0, 0, 0.03) 10px,
+    rgba(0, 0, 0, 0.03) 20px
+  );
   pointer-events: none;
-  opacity: 0.7;
-  border: 1.5px dashed #e57373;
 }
 
-/* 暗色模式适配 */
+.group-card-disbanded:hover {
+  transform: none;
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.group-card-inactive {
+  opacity: 0.85;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 235, 59, 0.05) 100%);
+  border-left: 4px solid #f39c12;
+  position: relative;
+}
+
+.group-card-inactive::before {
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.05) 0%, rgba(255, 193, 7, 0.05) 100%);
+}
+
+.group-card-inactive:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 
+    0 15px 35px rgba(243, 156, 18, 0.2),
+    0 0 0 1px rgba(243, 156, 18, 0.1);
+}
+
+/* 按钮动画效果 */
+.action-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border-radius: 20px;
+}
+
+.pulse-btn {
+  animation: buttonPulse 2s ease-in-out infinite;
+}
+
+.pulse-btn:hover {
+  animation: none;
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.creator-badge {
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border: none;
+  color: white;
+}
+
+.member-badge {
+  background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+  border: none;
+  color: white;
+}
+
+@keyframes buttonPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+  }
+}
+
+/* 小组信息动画 */
+.group-info {
+  margin-top: 16px;
+  flex: 1;
+  animation: contentSlideUp 0.6s ease-out 0.2s both;
+}
+
+@keyframes contentSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.group-name {
+  font-size: 1.4rem;
+  margin-bottom: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  color: #2c3e50;
+  transition: color 0.3s ease;
+}
+
+.group-card:hover .group-name {
+  color: #667eea;
+}
+
+.group-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.group-creator {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.creator-link {
+  color: var(--primary-color);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.creator-link:hover {
+  color: var(--primary-color-light);
+}
+
+.group-description {
+  margin: 12px 0;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.group-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tag {
+  margin: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.tag:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+@media (max-width: 768px) {
+  .group-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .group-filters {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-input {
+    max-width: none;
+    width: 100%;
+  }
+
+  .group-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 学习小组列表卡片暗色模式优化 */
 [data-theme="dark"] .group-list-page {
-  background-color: var(--dark-bg);
-  color: var(--dark-text-primary);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
 }
 
-[data-theme="dark"] .page-title {
-  color: var(--dark-text-primary);
+[data-theme="dark"] .title-text {
+  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 50%, #2196f3 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .title-decoration {
+  background: linear-gradient(90deg, transparent, #64b5f6, #2196f3, transparent);
+}
+
+[data-theme="dark"] .create-btn {
+  background: linear-gradient(135deg, #64b5f6 0%, #2196f3 100%);
+}
+
+[data-theme="dark"] .create-btn:hover {
+  box-shadow: 0 8px 25px rgba(100, 181, 246, 0.4);
 }
 
 [data-theme="dark"] .group-card {
-  background-color: var(--dark-card-bg);
-  color: var(--dark-text-primary);
-  border-color: var(--dark-border-color);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, rgba(36,41,61,0.95) 0%, rgba(22,33,62,0.95) 100%);
+  border: 1px solid rgba(100, 181, 246, 0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .group-card::before {
+  background: linear-gradient(135deg, rgba(100, 181, 246, 0.05) 0%, rgba(33, 150, 243, 0.05) 100%);
 }
 
 [data-theme="dark"] .group-card:hover {
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(100, 181, 246, 0.2),
+    0 0 0 1px rgba(100, 181, 246, 0.15);
+  border-color: rgba(100, 181, 246, 0.2);
+}
+
+[data-theme="dark"] .floating-avatar .el-avatar {
+  border-color: rgba(100, 181, 246, 0.2);
+}
+
+[data-theme="dark"] .group-card:hover .floating-avatar .el-avatar {
+  border-color: rgba(100, 181, 246, 0.4);
+}
+
+[data-theme="dark"] .avatar-glow {
+  background: radial-gradient(circle, rgba(100, 181, 246, 0.15) 0%, transparent 70%);
 }
 
 [data-theme="dark"] .group-card-disbanded {
-  background: var(--dark-bg-secondary) !important;
-  border: 1.5px dashed #ef5350;
+  background: linear-gradient(135deg, rgba(36,41,61,0.7) 0%, rgba(45,45,50,0.7) 100%);
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .group-card-disbanded::after {
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.02) 10px,
+    rgba(255, 255, 255, 0.02) 20px
+  );
+}
+
+[data-theme="dark"] .group-card-inactive {
+  background: linear-gradient(135deg, rgba(36,41,61,0.8) 0%, rgba(255, 193, 7, 0.08) 100%);
+  border-left: 4px solid #e67e22;
+  opacity: 0.85;
+}
+
+[data-theme="dark"] .group-card-inactive::before {
+  background: linear-gradient(135deg, rgba(230, 126, 34, 0.05) 0%, rgba(255, 193, 7, 0.05) 100%);
+}
+
+[data-theme="dark"] .group-card-inactive:hover {
+  box-shadow: 
+    0 15px 35px rgba(230, 126, 34, 0.25),
+    0 0 0 1px rgba(230, 126, 34, 0.15);
 }
 
 [data-theme="dark"] .group-name {
-  color: var(--dark-text-primary);
+  color: #e5eaf3;
 }
 
-[data-theme="dark"] .group-meta {
-  color: var(--dark-text-secondary);
-}
-
-[data-theme="dark"] .group-creator {
-  color: var(--dark-text-secondary);
-}
-
-[data-theme="dark"] .creator-link {
-  color: var(--primary-color-dark);
-}
-
-[data-theme="dark"] .creator-link:hover {
-  color: var(--primary-color-dark-hover);
+[data-theme="dark"] .group-card:hover .group-name {
+  color: #64b5f6;
 }
 
 [data-theme="dark"] .group-description {
-  color: var(--dark-text-secondary);
+  color: #a3a6ad;
+}
+
+[data-theme="dark"] .group-meta {
+  color: #a3a6ad;
+}
+
+[data-theme="dark"] .creator-link {
+  color: #64b5f6;
+}
+
+[data-theme="dark"] .creator-link:hover {
+  color: #42a5f5;
 }
 
 [data-theme="dark"] .group-tags .tag {
-  background-color: var(--dark-bg-secondary);
-  color: var(--dark-text-secondary);
-  border-color: var(--dark-border-color);
+  background-color: rgba(100, 181, 246, 0.1);
+  border-color: rgba(100, 181, 246, 0.2);
+  color: #a3a6ad;
 }
 
-/* 暗色模式下的Element Plus组件样式 */
-[data-theme="dark"] :deep(.el-tabs__nav-wrap::after) {
-  background-color: var(--dark-border-color);
+[data-theme="dark"] .tag:hover {
+  box-shadow: 0 4px 12px rgba(100, 181, 246, 0.3);
+  background-color: rgba(100, 181, 246, 0.15);
 }
 
-[data-theme="dark"] :deep(.el-tabs__active-bar) {
-  background-color: var(--primary-color-dark);
+[data-theme="dark"] .pulse-btn:hover {
+  box-shadow: 0 4px 15px rgba(100, 181, 246, 0.4);
 }
 
-[data-theme="dark"] :deep(.el-tabs__item) {
-  color: var(--dark-text-secondary);
+[data-theme="dark"] .creator-badge {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
 }
 
-[data-theme="dark"] :deep(.el-tabs__item.is-active) {
-  color: var(--primary-color-dark);
-}
-
-[data-theme="dark"] :deep(.el-tabs__item:hover) {
-  color: var(--primary-color-dark-hover);
-}
-
-[data-theme="dark"] :deep(.el-input__inner) {
-  background-color: var(--dark-input-bg);
-  border-color: var(--dark-border-color);
-  color: var(--dark-text-primary);
-}
-
-[data-theme="dark"] :deep(.el-input__prefix) {
-  color: var(--dark-text-secondary);
-}
-
-[data-theme="dark"] :deep(.el-select) {
-  --el-select-input-focus-border-color: var(--primary-color-dark);
-}
-
-[data-theme="dark"] :deep(.el-select-dropdown__item) {
-  color: var(--dark-text-primary);
-}
-
-[data-theme="dark"] :deep(.el-select-dropdown__item.hover, .el-select-dropdown__item:hover) {
-  background-color: var(--dark-bg-hover);
-}
-
-[data-theme="dark"] :deep(.el-select-dropdown__item.selected) {
-  background-color: var(--primary-color-dark-transparent);
-  color: var(--primary-color-dark);
-}
-
-[data-theme="dark"] :deep(.el-empty__description) {
-  color: var(--dark-text-secondary);
-}
-
-[data-theme="dark"] :deep(.el-pagination) {
-  --el-pagination-button-color: var(--dark-text-secondary);
-  --el-pagination-button-bg-color: var(--dark-bg-secondary);
-  --el-pagination-button-disabled-color: var(--dark-text-disabled);
-  --el-pagination-button-disabled-bg-color: var(--dark-bg);
-  --el-pagination-hover-color: var(--primary-color-dark);
-}
-
-[data-theme="dark"] :deep(.el-pagination .btn-prev, .el-pagination .btn-next) {
-  background-color: var(--dark-bg-secondary);
-  color: var(--dark-text-secondary);
-}
-
-[data-theme="dark"] :deep(.el-pagination .el-select .el-input) {
-  width: 100px;
-}
-
-[data-theme="dark"] :deep(.el-dialog) {
-  background-color: var(--dark-card-bg);
-  border-color: var(--dark-border-color);
-}
-
-[data-theme="dark"] :deep(.el-dialog__header) {
-  border-bottom: 1px solid var(--dark-border-color);
-}
-
-[data-theme="dark"] :deep(.el-dialog__title) {
-  color: var(--dark-text-primary);
-}
-
-[data-theme="dark"] :deep(.el-form-item__label) {
-  color: var(--dark-text-primary);
-}
-
-[data-theme="dark"] :deep(.el-textarea__inner) {
-  background-color: var(--dark-input-bg);
-  border-color: var(--dark-border-color);
-  color: var(--dark-text-primary);
-}
-
-[data-theme="dark"] :deep(.el-textarea__inner:focus) {
-  border-color: var(--primary-color-dark);
+[data-theme="dark"] .member-badge {
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
 }
 </style>

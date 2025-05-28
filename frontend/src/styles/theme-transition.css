@@ -1,0 +1,107 @@
+/* 主题切换动画增强 */
+
+/* 确保所有元素都有平滑的过渡效果 */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; /* 减短过渡时间 */
+}
+
+/* 页面整体切换动画 */
+body {
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* 减短过渡时间 */
+}
+
+/* 主题切换时的炫酷效果 */
+.theme-toggle-transition {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at var(--x) var(--y), 
+                             rgba(0, 0, 0, 0.1) 0%, /* 减轻背景效果 */
+                             rgba(0, 0, 0, 0.5) 100%); /* 减轻背景效果 */
+  opacity: 0;
+  transition: opacity 0.7s cubic-bezier(0.19, 1, 0.22, 1); /* 减短过渡时间 */
+}
+
+[data-theme="dark"] .theme-toggle-transition {
+  background: radial-gradient(circle at var(--x) var(--y), 
+                             rgba(255, 255, 255, 0.1) 0%, /* 减轻背景效果 */
+                             rgba(255, 255, 255, 0.5) 100%); /* 减轻背景效果 */
+}
+
+.theme-toggle-transition.active {
+  opacity: 1;
+}
+
+/* 切换主题时的微妙缩放效果 */
+#app {
+  animation: themeSwitch 0.7s ease-out;
+}
+
+@keyframes themeSwitch {
+  0% {
+    transform: scale(0.99); /* 减小缩放效果 */
+    opacity: 0.9; /* 增加初始不透明度 */
+  }
+  50% {
+    transform: scale(0.995); /* 减小缩放效果 */
+    opacity: 0.95; /* 增加中间不透明度 */
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 为部分关键UI元素添加特殊的主题切换效果 */
+.el-card, 
+.el-dialog,
+.el-dropdown-menu,
+.el-message,
+.el-notification,
+.el-popover,
+.el-select-dropdown,
+.el-tabs__nav-wrap,
+.notification-item,
+.el-button,
+.el-input__wrapper,
+.el-menu-item {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* 滚动条样式随主题变化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--el-bg-color);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--el-border-color);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--el-border-color-darker);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #2c2c2c;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

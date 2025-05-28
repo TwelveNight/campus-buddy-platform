@@ -394,47 +394,46 @@ async function fetchUserCreditStats() {
 }
 
 .user-profile-card {
-  border-radius: 18px;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 20px;
   box-shadow: 0 2px 16px 0 rgba(60, 60, 60, 0.06);
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .user-profile-header {
   display: flex;
   align-items: center;
-  gap: 32px;
-  flex-wrap: wrap;
-  padding-bottom: 12px;
+  gap: 24px;
 }
 
 .user-profile-info {
   flex: 1;
-  min-width: 200px;
 }
 
 .user-profile-info h2 {
-  margin: 0 0 12px 0;
-  font-size: 1.7rem;
-  font-weight: 700;
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  font-weight: 600;
   color: #222;
 }
 
 .user-basic-info {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 8px;
+  margin-bottom: 15px;
 }
 
 .user-profile-actions {
+  margin-top: 12px;
   display: flex;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .user-credit {
-  margin-top: 8px;
-  min-width: 120px;
+  text-align: center;
 }
 
 .credit-label {
@@ -445,57 +444,46 @@ async function fetchUserCreditStats() {
 }
 
 .credit-value {
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: bold;
   color: #409eff;
 }
 
 .credit-title {
-  font-size: 13px;
+  font-size: 14px;
   color: #909399;
 }
 
 .credit-level {
-  text-align: center;
-  margin-top: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #555;
+  margin-top: 10px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
+  color: #555;
 }
 
 .credit-level .el-tag {
   margin-left: 4px;
 }
 
-.user-details-section {
-  margin-top: 24px;
-  background: #f8fafd;
-  border-radius: 12px;
-  padding: 18px 20px 10px 20px;
-  box-shadow: 0 1px 6px 0 rgba(60, 60, 60, 0.04);
+.user-details-section,
+.user-skills-section {
+  padding: 16px 0;
 }
 
-.details-row {
-  margin-top: 10px;
-}
-
-.user-details-section h3 {
+.user-details-section h3,
+.user-skills-section h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 18px;
-  font-size: 17px;
-  color: #409eff;
-  font-weight: 600;
 }
 
 .detail-item {
-  margin-bottom: 14px;
-  line-height: 1.7;
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
 }
@@ -511,20 +499,6 @@ async function fetchUserCreditStats() {
 .detail-value {
   color: #333;
   font-size: 15px;
-}
-
-.user-skills-section {
-  margin-top: 22px;
-}
-
-.user-skills-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
-  font-size: 16px;
-  color: #67c23a;
-  font-weight: 600;
 }
 
 .skill-tags {
@@ -548,5 +522,87 @@ async function fetchUserCreditStats() {
 
 .card-header h2 {
   flex: 1;
+}
+
+/* 用户详情页暗色模式优化 */
+[data-theme="dark"] .user-profile-page {
+  background: transparent;
+}
+
+[data-theme="dark"] .user-profile-card {
+  background: linear-gradient(135deg, rgba(36,41,61,0.92), rgba(45,55,72,0.88));
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+  border: 1px solid rgba(64,158,255,0.1);
+}
+
+[data-theme="dark"] .user-profile-header h2 {
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .credit-value {
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .credit-title {
+  color: #a3a6ad;
+}
+
+[data-theme="dark"] .credit-level {
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .detail-label {
+  color: #a3a6ad;
+}
+
+[data-theme="dark"] .detail-value {
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .user-skills-section h3,
+[data-theme="dark"] .user-details-section h3 {
+  color: #60a9ff;
+}
+
+[data-theme="dark"] .skill-tag {
+  background: rgba(64, 158, 255, 0.15);
+  color: #60a9ff;
+  border-color: rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .skill-tag:hover {
+  background: rgba(64, 158, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(64, 158, 255, 0.2);
+}
+
+[data-theme="dark"] .el-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .user-profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .user-profile-info {
+    width: 100%;
+  }
+  
+  .user-basic-info,
+  .user-profile-actions {
+    justify-content: center;
+  }
+  
+  .details-row {
+    display: block;
+  }
+  
+  .details-row .el-col {
+    width: 100%;
+    margin-bottom: 16px;
+  }
 }
 </style>

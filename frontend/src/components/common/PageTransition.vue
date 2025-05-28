@@ -19,16 +19,16 @@ const uiStore = useUiStore();
 /* 页面过渡动画 */
 .fade-transform-enter-active,
 .fade-transform-leave-active {
-  transition: all 0.3s;
+  transition: all 0.25s; /* 减短过渡时间 */
 }
 
 .fade-transform-enter-from {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(5px); /* 减小位移效果 */
 }
 
 .fade-transform-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
+  transform: translateY(-5px); /* 减小位移效果 */
 }
 </style>

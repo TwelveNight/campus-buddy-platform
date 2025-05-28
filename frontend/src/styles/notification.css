@@ -71,3 +71,79 @@
     padding: 10px 15px;
     text-align: center;
 }
+
+/* 暗色模式适配 */
+[data-theme="dark"] .bell-icon {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-dropdown {
+    background: linear-gradient(135deg, rgba(36,41,61,0.95), rgba(45,55,72,0.92));
+    border: 1.5px solid var(--dark-border-color, #333);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.28);
+}
+
+[data-theme="dark"] .notification-dropdown-header {
+    border-bottom: 1px solid var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] .notification-dropdown-header h3 {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-track {
+    background: var(--dark-bg-secondary, #292933);
+    border-radius: 3px;
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-thumb {
+    background: var(--dark-border-color, #333);
+    border-radius: 3px;
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .notification-item {
+    border-bottom-color: var(--dark-border-color, #333);
+    background: rgba(36,41,61,0.82);
+}
+
+[data-theme="dark"] .notification-item:hover {
+    background: linear-gradient(135deg, rgba(64,158,255,0.08), rgba(36,41,61,0.98));
+}
+
+[data-theme="dark"] .notification-unread {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.15), rgba(36,41,61,0.92));
+    border-left: 4px solid var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .notification-title {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-body {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-time {
+    color: var(--dark-text-tertiary, #7a7e85);
+}
+
+[data-theme="dark"] .notification-footer {
+    border-top: 1px solid var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] .notification-footer a {
+    color: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .unread-count-badge {
+    background: linear-gradient(135deg, var(--el-color-danger), #ff7875);
+    color: white;
+}

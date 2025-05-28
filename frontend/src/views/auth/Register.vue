@@ -83,10 +83,6 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
 import {
-    User,
-    EditPen,
-    Lock,
-    Key,
     Connection,
     UserFilled,
     School
@@ -159,159 +155,231 @@ async function onSubmit() {
 </script>
 
 <style scoped>
+/* 统一暗色模式适配 */
+[data-theme="dark"] .register-page {
+    background: linear-gradient(135deg, #1a1a1c 0%, #2d2d30 100%);
+}
+
+[data-theme="dark"] .auth-container {
+    background: rgba(45, 45, 48, 0.95);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+[data-theme="dark"] .auth-welcome {
+    background: linear-gradient(135deg, #4a90e2 0%, #50a3a2 100%);
+    color: #ffffff;
+    border-radius: 8px 0 0 8px;
+}
+
+[data-theme="dark"] .auth-card {
+    background: #2d2d30;
+    box-shadow: none;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #404040;
+}
+
+[data-theme="dark"] .auth-header h2,
+[data-theme="dark"] .auth-header p {
+    color: #e5eaf3;
+}
+
+[data-theme="dark"] .feature .el-icon {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .submit-btn {
+    background: linear-gradient(90deg, #4a90e2 0%, #50a3a2 100%);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(74, 144, 226, 0.3);
+    border: none;
+}
+
+[data-theme="dark"] .submit-btn:hover {
+    background: linear-gradient(90deg, #50a3a2 0%, #4a90e2 100%);
+    box-shadow: 0 4px 12px rgba(80, 163, 162, 0.4);
+    transform: translateY(-1px);
+}
+
+[data-theme="dark"] .login-link {
+    color: #60a9ff;
+}
+
+[data-theme="dark"] .el-input__inner,
+[data-theme="dark"] .el-input__wrapper {
+    background: #404040 !important;
+    color: #e5eaf3 !important;
+    border-color: #555 !important;
+}
+
+[data-theme="dark"] .el-checkbox__input.is-checked .el-checkbox__inner {
+    background: #4a90e2;
+    border-color: #4a90e2;
+}
+
+[data-theme="dark"] .el-checkbox__label {
+    color: #e5eaf3;
+}
+
+/* 亮色模式优化，保持简洁专业 */
 .register-page {
+    background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
     padding: 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
 }
 
 .auth-container {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.08);
+    border-radius: 8px;
     display: flex;
-    width: 900px;
-    min-height: 600px;
-    border-radius: 16px;
+    width: 1000px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
 }
 
 .auth-welcome {
+    background: linear-gradient(135deg, #4a90e2 0%, #50a3a2 100%);
+    color: #ffffff;
+    border-radius: 8px 0 0 8px;
     flex: 1;
-    padding: 40px;
-    background: linear-gradient(135deg, var(--secondary-color) 0%, #3aa67c 100%);
-    color: white;
+    padding: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-
-.auth-welcome h1 {
-    font-size: 2.4rem;
-    margin-bottom: 10px;
-    font-weight: 700;
-}
-
-.auth-welcome .highlight {
-    color: #ffeb3b;
-}
-
-.auth-welcome p {
-    font-size: 1.2rem;
-    opacity: 0.9;
-    margin-bottom: 40px;
-}
-
-.auth-features {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-top: auto;
-}
-
-.feature {
-    display: flex;
     align-items: center;
-    gap: 15px;
-    font-size: 1.1rem;
-    opacity: 0.9;
+    text-align: center;
 }
 
 .auth-card {
-    flex: 1;
-    border: none;
+    background: #ffffff;
     box-shadow: none;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #e8e8e8;
+    flex: 1;
+    padding: 40px;
 }
 
-.auth-card :deep(.el-card__body) {
-    padding: 30px;
+.auth-header h2,
+.auth-header p {
+    color: #333333;
 }
 
+.feature .el-icon {
+    color: #ffffff;
+}
+
+.submit-btn {
+    background: linear-gradient(90deg, #4a90e2 0%, #50a3a2 100%);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(74, 144, 226, 0.3);
+    border: none;
+    width: 100%;
+    height: 48px;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+    background: linear-gradient(90deg, #50a3a2 0%, #4a90e2 100%);
+    box-shadow: 0 4px 12px rgba(80, 163, 162, 0.4);
+    transform: translateY(-1px);
+}
+
+.login-link {
+    color: #4a90e2;
+}
+
+/* 其它细节优化，保持简洁专业 */
 .auth-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
 }
 
 .auth-header h2 {
     font-size: 1.8rem;
-    color: var(--text-primary);
     margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .auth-header p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 1rem;
+    color: #666;
 }
 
-.submit-btn {
-    width: 100%;
-    height: 50px;
-    font-size: 1.1rem;
-    margin-top: 10px;
-}
-
-.terms {
-    margin-bottom: 20px;
-    color: var(--text-secondary);
+.feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     font-size: 0.9rem;
+    color: #ffffff;
+    transition: transform 0.2s ease;
 }
 
-.terms a {
-    color: var(--primary-color);
-    text-decoration: none;
+.feature:hover {
+    transform: translateY(-2px);
+}
+
+.feature .el-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    padding: 8px;
+}
+
+.feature:hover .el-icon {
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .auth-footer {
     text-align: center;
     margin-top: 20px;
-    color: var(--text-secondary);
+    color: #666;
     font-size: 0.9rem;
 }
 
-.login-link {
-    color: var(--primary-color);
-    font-weight: 500;
-    margin-left: 5px;
+.terms {
+    margin-bottom: 20px;
 }
 
-/* 适配移动设备 */
+.terms a {
+    color: #4a90e2;
+    text-decoration: none;
+}
+
+.terms a:hover {
+    text-decoration: underline;
+}
+
 @media (max-width: 768px) {
     .auth-container {
         flex-direction: column;
         width: 100%;
+        max-width: 450px;
     }
-
+    
     .auth-welcome {
+        padding: 40px 30px;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .auth-welcome h1 {
+        font-size: 1.8rem;
+    }
+    
+    .auth-card {
+        border-radius: 0 0 8px 8px;
         padding: 30px;
     }
+    
+    .submit-btn {
+        height: 44px;
+        font-size: 1rem;
+    }
 }
-
-/* Dark Theme Styles */
-html.dark-theme .register-page {
-    background-color: var(--background-color); /* 使用主题的主要背景色 */
-    background-image: none; /* 确保覆盖渐变 */
-}
-
-[data-theme="dark"] .auth-container, /* Keep for consistency if data-theme is also used */
-html.dark-theme .auth-container {
-    background-color: var(--card-bg-color); /* 使用主题的卡片背景色 */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* 为暗色背景调整阴影 */
-}
-
-[data-theme="dark"] .auth-welcome, /* Keep for consistency */
-html.dark-theme .auth-welcome {
-    background: linear-gradient(135deg, var(--secondary-color) 0%, #1d2b38 100%); /* 使用新的 --secondary-color 和一个深色 */
-}
-
-/*
-  使用 var(--text-primary), var(--text-secondary), var(--primary-color) 等变量的文本颜色
-  应根据 theme.css 中为 [data-theme="dark"] 所做的定义自动适应。
-  Element Plus 组件（如输入框、按钮、复选框）也应在全局暗色主题激活时自动适应。
-*/
 </style>

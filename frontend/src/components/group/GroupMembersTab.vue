@@ -467,31 +467,290 @@ const formatTime = (timestamp: string | undefined) => {
 </script>
 
 <style scoped>
+/* 动画效果定义 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(64, 158, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px rgba(64, 158, 255, 0.6);
+    }
+}
+
+@keyframes shakeX {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-3px);
+    }
+    75% {
+        transform: translateX(3px);
+    }
+}
+
+@keyframes floatY {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* 组件整体动画 */
 .group-members-tab {
     padding: 20px 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .members-section {
     background: #fff;
-    border-radius: 4px;
+    border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
 }
 
+.members-section:hover {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 筛选区域动画 */
 .members-filter {
     display: flex;
     gap: 15px;
     margin-bottom: 20px;
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
 }
 
+.members-filter .el-input,
+.members-filter .el-select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.members-filter .el-input:hover,
+.members-filter .el-select:hover {
+    transform: translateY(-2px);
+}
+
+/* 成员信息动画 */
 .member-info {
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.member-info:hover {
+    transform: translateX(5px);
+}
+
+.member-info .el-avatar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.member-info .el-avatar:hover {
+    transform: scale(1.1);
+    animation: pulseGlow 1.5s ease-in-out;
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.4);
 }
 
 .member-name {
     display: flex;
     flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.nickname {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.nickname:hover {
+    color: #409eff;
+    transform: translateX(3px);
+}
+
+/* 角色标签动画 */
+.el-tag {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-tag:hover {
+    transform: scale(1.05);
+    animation: floatY 1s ease-in-out infinite;
+}
+
+/* 操作按钮动画 */
+.member-actions {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.member-actions .el-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.member-actions .el-button:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.member-actions .el-button.el-button--danger:hover {
+    box-shadow: 0 4px 12px rgba(245, 108, 108, 0.3);
+    animation: shakeX 0.5s ease-in-out;
+}
+
+/* 表格行动画 */
+.el-table :deep(.el-table__row) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-table :deep(.el-table__row):hover {
+    background-color: rgba(64, 158, 255, 0.05) !important;
+    transform: scale(1.01);
+}
+
+/* 下拉菜单动画 */
+.el-dropdown-menu :deep(.el-dropdown-menu__item) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-dropdown-menu :deep(.el-dropdown-menu__item):hover {
+    background-color: rgba(64, 158, 255, 0.1);
+    transform: translateX(5px);
+}
+
+.danger-item:hover {
+    background-color: rgba(245, 108, 108, 0.1) !important;
+    color: #f56c6c !important;
+}
+
+/* 空状态动画 */
+.el-empty {
+    animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.6s both;
+}
+
+/* 加载状态优化 */
+.el-loading-mask {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+/* 标签页动画 */
+.el-tabs :deep(.el-tabs__item) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-tabs :deep(.el-tabs__item):hover {
+    transform: translateY(-2px);
+}
+
+.el-tabs :deep(.el-tabs__active-bar) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 审批按钮特殊动画 */
+.approve-btn {
+    background: linear-gradient(45deg, #67c23a, #85ce61);
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.approve-btn:hover {
+    background: linear-gradient(45deg, #85ce61, #67c23a);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(103, 194, 58, 0.4);
+}
+
+.reject-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reject-btn:hover {
+    animation: shakeX 0.5s ease-in-out;
+    box-shadow: 0 4px 12px rgba(245, 108, 108, 0.4);
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .members-section {
+    background: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .members-section:hover {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .member-info .el-avatar:hover {
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .nickname:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .member-actions .el-button:hover {
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+}
+
+[data-theme="dark"] .member-actions .el-button.el-button--danger:hover {
+    box-shadow: 0 4px 12px rgba(245, 108, 108, 0.2);
+}
+
+[data-theme="dark"] .el-table :deep(.el-table__row):hover {
+    background-color: rgba(64, 158, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .approve-btn:hover {
+    box-shadow: 0 6px 20px rgba(103, 194, 58, 0.3);
+}
+
+[data-theme="dark"] .reject-btn:hover {
+    box-shadow: 0 4px 12px rgba(245, 108, 108, 0.3);
 }
 
 .member-detail {

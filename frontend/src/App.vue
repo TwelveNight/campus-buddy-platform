@@ -1,16 +1,52 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import GlobalLoading from './components/common/GlobalLoading.vue'
 import PageTransition from './components/common/PageTransition.vue'
 import MobileNav from './components/mobile/MobileNav.vue'
 import MobileBottomNav from './components/mobile/MobileBottomNav.vue'
+import './styles/theme-transition.css'
+
+// 主题切换动画元素
+const themeTransitionActive = ref(false)
 
 // 初始化主题
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme') || 'light'
-  if (savedTheme === 'dark') {
-    document.documentElement.classList.add('dark-theme')
+  document.documentElement.setAttribute('data-theme', savedTheme)
+  
+  // 检测系统主题变化并应用
+  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)')
+  const handleThemeChange = (e) => {
+    if (!localStorage.getItem('theme')) {
+      document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light')
+    }
   }
+  
+  prefersDarkScheme.addEventListener('change', handleThemeChange)
+  
+  // 监听自定义主题切换事件
+  window.addEventListener('themeToggle', (e: any) => {
+    const { x, y } = e.detail || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+    
+    // 创建主题切换动画元素
+    const transitionEl = document.querySelector('.theme-toggle-transition') || document.createElement('div')
+    transitionEl.className = 'theme-toggle-transition'
+    transitionEl.style.setProperty('--x', `${x}px`)
+    transitionEl.style.setProperty('--y', `${y}px`)
+    
+    if (!document.querySelector('.theme-toggle-transition')) {
+      document.body.appendChild(transitionEl)
+    }
+    
+    // 触发动画
+    setTimeout(() => {
+      transitionEl.classList.add('active')
+      
+      setTimeout(() => {
+        transitionEl.classList.remove('active')
+      }, 1000)
+    }, 50)
+  })
 })
 </script>
 

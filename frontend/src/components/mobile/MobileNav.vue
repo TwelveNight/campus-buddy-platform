@@ -227,7 +227,7 @@ const checkTheme = () => {
 }
 
 // 切换主题
-const toggleTheme = () => {
+const toggleTheme = (event) => {
   const html = document.documentElement
   const isDark = html.getAttribute('data-theme') === 'dark'
   if (isDark) {
@@ -238,6 +238,14 @@ const toggleTheme = () => {
     localStorage.setItem('theme', 'dark')
   }
   isDarkMode.value = !isDark
+  
+  // 触发带有点击位置的主题切换事件
+  window.dispatchEvent(new CustomEvent('themeToggle', {
+    detail: {
+      x: event ? event.clientX : window.innerWidth / 2,
+      y: event ? event.clientY : window.innerHeight / 2
+    }
+  }))
 }
 
 // 切换菜单
@@ -371,56 +379,9 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.mobile-nav-bar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(64, 158, 255, 0.1), 
-    rgba(103, 194, 58, 0.1), 
-    transparent);
-  opacity: 0;
-  transition: opacity 0.6s ease;
-  pointer-events: none;
-}
-
-.mobile-nav-bar:hover::before {
-  opacity: 1;
-}
-
-/* 粒子效果 */
+/* 移除粒子效果 */
 .mobile-nav-bar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(64, 158, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(103, 194, 58, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 70%, rgba(230, 162, 60, 0.1) 0%, transparent 50%);
-  animation: particle-float 8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes particle-float {
-  0%, 100% { 
-    opacity: 0.5;
-    transform: translateY(0) scale(1);
-  }
-  33% { 
-    opacity: 0.8;
-    transform: translateY(-2px) scale(1.05);
-  }
-  66% { 
-    opacity: 0.6;
-    transform: translateY(1px) scale(0.95);
-  }
+  display: none; /* 禁用粒子效果 */
 }
 
 .mobile-nav-header {
@@ -468,36 +429,26 @@ onUnmounted(() => {
 
 .brand-link:hover {
   text-shadow: 
-    0 0 5px rgba(64, 158, 255, 0.5),
-    0 0 10px rgba(64, 158, 255, 0.3),
-    0 0 15px rgba(64, 158, 255, 0.2);
+    0 0 2px rgba(64, 158, 255, 0.2), /* 减轻阴影效果 */
+    0 0 4px rgba(64, 158, 255, 0.1); /* 减轻阴影效果 */
 }
 
 .brand-link:hover .brand-logo {
-  animation: logo-special 0.8s ease-in-out;
-  filter: drop-shadow(0 4px 16px rgba(64, 158, 255, 0.5));
-}
-
-@keyframes logo-special {
-  0% { transform: translateY(0) rotate(0deg) scale(1); }
-  25% { transform: translateY(-4px) rotate(5deg) scale(1.1); }
-  50% { transform: translateY(0) rotate(0deg) scale(1.15); }
-  75% { transform: translateY(-2px) rotate(-3deg) scale(1.05); }
-  100% { transform: translateY(0) rotate(0deg) scale(1); }
+  animation: none; /* 移除动画 */
+  filter: drop-shadow(0 2px 6px rgba(64, 158, 255, 0.3)); /* 轻微的阴影效果 */
 }
 
 .brand-logo {
   height: 32px;
   width: auto;
-  filter: drop-shadow(0 2px 8px rgba(64, 158, 255, 0.3));
-  animation: gentle-float 3s ease-in-out infinite;
+  filter: drop-shadow(0 1px 4px rgba(64, 158, 255, 0.2)); /* 减轻阴影效果 */
 }
 
 @keyframes gentle-float {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-2px) rotate(1deg); }
+  25% { transform: translateY(-1px) rotate(0.5deg); } /* 减小动画幅度 */
   50% { transform: translateY(0) rotate(0deg); }
-  75% { transform: translateY(-1px) rotate(-1deg); }
+  75% { transform: translateY(-0.5px) rotate(-0.5deg); } /* 减小动画幅度 */
 }
 
 /* 磁性按钮效果 */
@@ -562,12 +513,12 @@ onUnmounted(() => {
 .action-btn:hover,
 .theme-toggle-btn:hover {
   background: linear-gradient(135deg, 
-    rgba(64, 158, 255, 0.1), 
+    rgba(64, 158, 255, 0.05), /* 减轻背景效果 */
     rgba(255, 255, 255, 0.9));
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-1px); /* 减小上移效果 */
   box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.15),
-    0 4px 8px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.12), /* 减轻阴影效果 */
+    0 2px 4px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   color: var(--primary-color);
 }
@@ -580,28 +531,12 @@ onUnmounted(() => {
 
 .action-btn:active,
 .theme-toggle-btn:active {
-  transform: translateY(0) scale(0.95);
+  transform: translateY(0) scale(0.98);
 }
 
 .action-btn:active::before,
 .theme-toggle-btn:active::before {
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(64, 158, 255, 0.4), transparent);
-  animation: ripple 0.6s ease-out;
-}
-
-@keyframes ripple {
-  0% {
-    width: 0;
-    height: 0;
-    opacity: 1;
-  }
-  100% {
-    width: 200%;
-    height: 200%;
-    opacity: 0;
-  }
+  display: none; /* 禁用涟漪动画效果 */
 }
 
 .notification-icon,
@@ -630,11 +565,11 @@ onUnmounted(() => {
 }
 
 .user-avatar-container:hover::before {
-  opacity: 0.6;
+  opacity: 0.3; /* 降低不透明度 */
 }
 
 .user-avatar-container:hover {
-  transform: translateY(-2px) scale(1.1);
+  transform: translateY(-1px); /* 减小上移效果 */
 }
 
 .user-avatar-container:active {
@@ -664,11 +599,11 @@ onUnmounted(() => {
 @keyframes badge-pulse {
   0%, 100% { 
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.4);
+    opacity: 1;
   }
   50% { 
-    transform: scale(1.1);
-    box-shadow: 0 0 0 8px rgba(245, 108, 108, 0);
+    transform: scale(1.05); /* 减小缩放效果 */
+    opacity: 0.9; /* 减小不透明度变化 */
   }
 }
 
@@ -738,7 +673,6 @@ onUnmounted(() => {
 
 @keyframes header-shine {
   0% { left: -100%; }
-  50% { left: 100%; }
   100% { left: 100%; }
 }
 
@@ -863,45 +797,23 @@ onUnmounted(() => {
   transform-style: preserve-3d;
 }
 
-.mobile-menu .el-menu-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 0;
-  background: linear-gradient(90deg, rgba(64, 158, 255, 0.2), rgba(103, 194, 58, 0.2));
-  transition: width 0.3s ease;
-}
-
 .mobile-menu .el-menu-item:hover {
   background: rgba(255, 255, 255, 0.5);
-  transform: translateX(8px) translateZ(20px) rotateY(5deg) scale(1.02);
-  box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.1),
-    0 2px 8px rgba(0, 0, 0, 0.06);
+  transform: translateX(4px); /* 简化变换效果 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-menu .el-menu-item:hover::before {
-  width: 4px;
+  width: 3px;
 }
 
 .mobile-menu .el-menu-item.is-active {
-  background: linear-gradient(135deg, 
-    rgba(64, 158, 255, 0.15), 
-    rgba(103, 194, 58, 0.1));
+  background: rgba(64, 158, 255, 0.15);
   color: var(--primary-color);
   font-weight: 600;
-  transform: translateX(12px) translateZ(30px) rotateY(8deg) scale(1.03);
-  box-shadow: 
-    0 12px 32px rgba(64, 158, 255, 0.2),
-    0 4px 12px rgba(64, 158, 255, 0.1);
+  transform: translateX(6px); /* 简化变换效果 */
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
   border-color: rgba(64, 158, 255, 0.3);
-}
-
-.mobile-menu .el-menu-item.is-active::before {
-  width: 4px;
-  background: linear-gradient(90deg, #409eff, #67c23a);
 }
 
 .mobile-menu .el-menu-item .el-icon {

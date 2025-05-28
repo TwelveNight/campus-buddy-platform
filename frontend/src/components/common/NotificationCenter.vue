@@ -411,26 +411,19 @@ onMounted(() => {
     padding: 2px 8px;
     border-radius: 12px;
     font-weight: 500;
-    box-shadow: 0 2px 4px rgba(245, 34, 45, 0.3);
+    box-shadow: 0 1px 3px rgba(245, 34, 45, 0.2); /* 减轻阴影效果 */
     animation: bounce 2s ease-in-out infinite;
 }
 
 @keyframes bounce {
-
-    0%,
-    20%,
-    50%,
-    80%,
-    100% {
+    0%, 20%, 50%, 80%, 100% {
         transform: translateY(0);
     }
-
     40% {
-        transform: translateY(-3px);
+        transform: translateY(-2px); /* 减小跳跃高度 */
     }
-
     60% {
-        transform: translateY(-2px);
+        transform: translateY(-1px); /* 减小跳跃高度 */
     }
 }
 
@@ -639,16 +632,13 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-
-    0%,
-    100% {
+    0%, 100% {
         opacity: 1;
         transform: scale(1);
     }
-
     50% {
-        opacity: 0.7;
-        transform: scale(0.95);
+        opacity: 0.9; /* 减小不透明度变化 */
+        transform: scale(0.98); /* 减小缩放效果 */
     }
 }
 
@@ -683,23 +673,131 @@ onMounted(() => {
 }
 
 /* 暗色主题适配 */
-html.dark .notification-unread {
-    background: linear-gradient(135deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.1));
-    border-left-color: var(--el-color-primary);
+[data-theme="dark"] .notification-center {
+    background-color: var(--dark-bg, #18181a) !important;
+    color: var(--dark-text-primary, #e5eaf3);
 }
 
-html.dark .notification-unread:hover {
-    background: linear-gradient(135deg, rgba(64, 158, 255, 0.2), rgba(64, 158, 255, 0.15));
+[data-theme="dark"] .notification-header h2 {
+    color: var(--dark-text-primary, #e5eaf3);
 }
 
-html.dark .sender-name {
+[data-theme="dark"] .notification-item {
+    background: linear-gradient(135deg, rgba(36,41,61,0.92), rgba(45,55,72,0.88));
+    border: 1px solid var(--dark-border-color, #333);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+[data-theme="dark"] .notification-item:hover {
+    background: linear-gradient(135deg, rgba(64,158,255,0.08), rgba(36,41,61,0.98));
+    border-color: var(--primary-color-dark, #60a9ff);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+}
+
+[data-theme="dark"] .notification-unread {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.15), rgba(36,41,61,0.92));
+    border-left: 4px solid var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .notification-unread:hover {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.22), rgba(36,41,61,0.98));
+}
+
+[data-theme="dark"] .notification-read {
+    background: rgba(36,41,61,0.82);
+    opacity: 0.92;
+}
+
+[data-theme="dark"] .notification-avatar .el-avatar {
+    border-color: var(--dark-border-color, #333);
+    background: #232326;
+}
+
+[data-theme="dark"] .sender-name {
     background-color: rgba(64, 158, 255, 0.15);
-    color: var(--el-color-primary-light-3);
+    color: var(--primary-color-dark, #60a9ff);
 }
 
-html.dark .notification-read .sender-name {
-    background-color: var(--el-fill-color-dark);
-    color: var(--el-text-color-secondary);
+[data-theme="dark"] .notification-read .sender-name {
+    background-color: var(--dark-bg-secondary, #292933);
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-track {
+    background: var(--dark-bg-secondary, #292933);
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-thumb {
+    background: var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] .notification-list::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .notification-title {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-time {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-body {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] .notification-read .notification-title {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-read .notification-body {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-read .notification-time {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .read-badge {
+    background-color: var(--dark-bg-secondary, #292933);
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .unread-badge {
+    background: linear-gradient(135deg, var(--el-color-danger), #ff7875);
+}
+
+[data-theme="dark"] .notification-type-tag .el-tag {
+    background: rgba(64,158,255,0.12) !important;
+    color: var(--primary-color-dark, #60a9ff) !important;
+    border: 1px solid var(--primary-color-dark, #60a9ff) !important;
+}
+
+[data-theme="dark"] .notification-actions .el-dropdown-link {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .notification-actions .el-dropdown-link:hover {
+    background: rgba(64,158,255,0.08);
+    color: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] .el-divider {
+    border-color: var(--dark-border-color, #333) !important;
+}
+
+[data-theme="dark"] .notification-pagination {
+    border-top-color: var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] .el-empty {
+    color: var(--dark-text-secondary, #a3a6ad) !important;
+}
+
+[data-theme="dark"] .el-skeleton {
+    background: #232326 !important;
+    border-radius: 12px;
 }
 
 /* 空状态样式优化 */

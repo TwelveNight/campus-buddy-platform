@@ -1,31 +1,33 @@
 <template>
-    <div class="group-detail-page" v-loading="loading">
+    <div class="group-detail-page animated-page" v-loading="loading">
         <div v-if="!loading && group">
             <!-- 小组基本信息 -->
-            <div class="group-header">
-                <div class="group-avatar">
+            <div class="group-header floating-header">
+                <div class="group-avatar magical-avatar">
                     <el-avatar :size="80" :src="group.avatar || group.avatarUrl || defaultAvatar">
                         {{ group.name?.substring(0, 1) }}
                     </el-avatar>
+                    <div class="avatar-ring"></div>
+                    <div class="avatar-glow-effect"></div>
                 </div>
-                <div class="group-header-info">
-                    <h1 class="group-name">{{ group.name }}</h1>
-                    <div class="group-meta">
-                        <el-tag>{{ group.category }}</el-tag>
-                        <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
-                        <span class="member-count">
-                            <el-icon>
+                <div class="group-header-info slide-in-content">
+                    <h1 class="group-name gradient-text">{{ group.name }}</h1>
+                    <div class="group-meta animated-tags">
+                        <el-tag class="bouncing-tag">{{ group.category }}</el-tag>
+                        <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag bouncing-tag">{{ tag }}</el-tag>
+                        <span class="member-count pulsing-icon">
+                            <el-icon class="rotating-slowly">
                                 <User />
                             </el-icon> {{ group.memberCount }} 成员
                         </span>
                         <span class="join-type">
-                            <el-tag v-if="group.joinType === 'PUBLIC'" type="success">公开小组</el-tag>
-                            <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning">需审批</el-tag>
+                            <el-tag v-if="group.joinType === 'PUBLIC'" type="success" class="shimmering-tag">公开小组</el-tag>
+                            <el-tag v-else-if="group.joinType === 'APPROVAL'" type="warning" class="shimmering-tag">需审批</el-tag>
                         </span>
                         <!-- 小组状态标签 -->
                         <span class="group-status">
-                            <el-tag v-if="group.status === 'INACTIVE'" type="danger">已禁用</el-tag>
-                            <el-tag v-else-if="group.status === 'DISBANDED'" type="info">已解散</el-tag>
+                            <el-tag v-if="group.status === 'INACTIVE'" type="danger" class="warning-pulse">已禁用</el-tag>
+                            <el-tag v-else-if="group.status === 'DISBANDED'" type="info" class="disbanded-tag">已解散</el-tag>
                         </span>
                     </div>
                     <!-- 创建者信息展示 -->
@@ -38,39 +40,39 @@
                     </div>
                     <p class="group-description">{{ group.description }}</p>
                 </div>
-                <div class="group-actions">
+                <div class="group-actions slide-in-actions">
                     <!-- 小组已解散时不显示任何操作按钮 -->
                     <template v-if="group.status === 'DISBANDED'">
-                        <el-button type="info" disabled>小组已解散</el-button>
+                        <el-button type="info" disabled class="disabled-btn">小组已解散</el-button>
                     </template>
                     <!-- 小组被禁用时的处理 -->
                     <template v-else-if="group.status === 'INACTIVE'">
                         <template v-if="userRole">
-                            <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog" disabled>
+                            <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog" disabled class="disabled-btn glow-disabled">
                                 编辑小组（已禁用）
                             </el-button>
-                            <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup">
+                            <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup" class="danger-btn hover-shake">
                                 退出小组
                             </el-button>
                         </template>
                         <template v-else>
-                            <el-button type="primary" disabled>加入小组（已禁用）</el-button>
+                            <el-button type="primary" disabled class="disabled-btn">加入小组（已禁用）</el-button>
                         </template>
                     </template>
                     <!-- 正常状态下的操作 -->
                     <template v-else>
                         <template v-if="!userRole">
-                            <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup">加入小组</el-button>
-                            <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
+                            <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup" class="primary-btn magic-hover">加入小组</el-button>
+                            <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled class="pending-btn pulse-animation">等待审批</el-button>
                         </template>
                         <template v-else>
-                            <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog">
+                            <el-button v-if="userRole === 'CREATOR'" type="primary" @click="showEditGroupDialog" class="primary-btn magic-hover">
                                 编辑小组
                             </el-button>
-                            <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup">
+                            <el-button v-if="userRole !== 'CREATOR'" type="danger" @click="handleQuitGroup" class="danger-btn hover-shake">
                                 退出小组
                             </el-button>
-                            <el-button v-if="userRole === 'CREATOR'" type="danger" @click="confirmDisbandGroup">
+                            <el-button v-if="userRole === 'CREATOR'" type="danger" @click="confirmDisbandGroup" class="danger-btn hover-shake">
                                 解散小组
                             </el-button>
                         </template>
@@ -100,19 +102,25 @@
             </div>
 
             <!-- 小组功能区 -->
-            <el-tabs v-model="activeTab" class="group-tabs" :disabled="group.status === 'DISBANDED'">
+            <el-tabs v-model="activeTab" class="group-tabs animated-tabs" :disabled="group.status === 'DISBANDED'">
                 <el-tab-pane label="讨论区" name="posts">
-                    <group-posts-tab :group-id="groupId" :user-role="userRole" :disabled="group.status !== 'ACTIVE'" />
+                    <transition name="tab-content" mode="out-in">
+                        <group-posts-tab :group-id="groupId" :user-role="userRole" :disabled="group.status !== 'ACTIVE'" />
+                    </transition>
                 </el-tab-pane>
 
                 <el-tab-pane label="文件资源" name="files">
-                    <group-files-tab :group-id="groupId" :user-role="userRole" :disabled="group.status !== 'ACTIVE'" />
+                    <transition name="tab-content" mode="out-in">
+                        <group-files-tab :group-id="groupId" :user-role="userRole" :disabled="group.status !== 'ACTIVE'" />
+                    </transition>
                 </el-tab-pane>
 
                 <el-tab-pane label="成员管理" name="members">
-                    <group-members-tab :group-id="groupId" :user-role="userRole" :group="group"
-                        :subtab="route.query.subtab"
-                        @member-updated="refreshGroupDetail" />
+                    <transition name="tab-content" mode="out-in">
+                        <group-members-tab :group-id="groupId" :user-role="userRole" :group="group"
+                            :subtab="route.query.subtab"
+                            @member-updated="refreshGroupDetail" />
+                    </transition>
                 </el-tab-pane>
             </el-tabs>
 
@@ -525,6 +533,374 @@ const confirmDisbandGroup = () => {
 </script>
 
 <style scoped>
+/* 动画效果定义 */
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes floatUp {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(64, 158, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(64, 158, 255, 0.6), 0 0 30px rgba(64, 158, 255, 0.4);
+    }
+}
+
+@keyframes magicSparkle {
+    0% {
+        transform: rotate(0deg) scale(1);
+        filter: hue-rotate(0deg);
+    }
+    25% {
+        transform: rotate(90deg) scale(1.05);
+        filter: hue-rotate(90deg);
+    }
+    50% {
+        transform: rotate(180deg) scale(1);
+        filter: hue-rotate(180deg);
+    }
+    75% {
+        transform: rotate(270deg) scale(1.05);
+        filter: hue-rotate(270deg);
+    }
+    100% {
+        transform: rotate(360deg) scale(1);
+        filter: hue-rotate(360deg);
+    }
+}
+
+@keyframes buttonPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(50px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05) translateY(-10px);
+    }
+    70% {
+        transform: scale(0.9) translateY(0);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes rotateSlowly {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shakeX {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* 页面整体动画 */
+.animated-page {
+    animation: slideInFromTop 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 浮动头部区域 */
+.floating-header {
+    animation: bounceIn 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-header:hover {
+    transform: translateY(-3px);
+}
+
+/* 魔法头像效果 */
+.magical-avatar {
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.magical-avatar:hover {
+    transform: scale(1.05);
+}
+
+.avatar-ring {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #409eff, #67c23a, #e6a23c, #f56c6c, #409eff);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.magical-avatar:hover .avatar-ring {
+    opacity: 1;
+}
+
+.avatar-glow-effect {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(64, 158, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.magical-avatar:hover .avatar-glow-effect {
+    opacity: 1;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* 滑入内容 */
+.slide-in-content {
+    animation: slideInFromTop 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
+}
+
+.slide-in-actions {
+    animation: slideInFromTop 1.4s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
+}
+
+/* 渐变文字效果 */
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s ease infinite;
+    background-size: 200% 200%;
+}
+
+/* 动画标签 */
+.animated-tags {
+    animation: slideInFromTop 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.6s both;
+}
+
+.bouncing-tag {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.bouncing-tag:nth-child(2) { animation-delay: 0.1s; }
+.bouncing-tag:nth-child(3) { animation-delay: 0.2s; }
+.bouncing-tag:nth-child(4) { animation-delay: 0.3s; }
+
+.bouncing-tag:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.shimmering-tag {
+    background: linear-gradient(90deg, 
+        var(--el-tag-bg-color) 0%, 
+        rgba(255, 255, 255, 0.8) 50%, 
+        var(--el-tag-bg-color) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+/* 脉冲图标 */
+.pulsing-icon {
+    animation: buttonPulse 2s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.pulsing-icon:hover {
+    transform: scale(1.1);
+    color: #409eff;
+}
+
+.rotating-slowly {
+    animation: rotateSlowly 8s linear infinite;
+}
+
+/* 按钮动效 */
+.primary-btn {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+}
+
+.magic-hover {
+    background: linear-gradient(45deg, #409eff, #67c23a);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+.magic-hover:hover {
+    animation: magicSparkle 1s ease-in-out, gradientShift 3s ease infinite;
+}
+
+.danger-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.danger-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(245, 108, 108, 0.4);
+}
+
+.hover-shake:hover {
+    animation: shakeX 0.5s ease-in-out;
+}
+
+.pending-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.pulse-animation {
+    animation: buttonPulse 2s ease-in-out infinite;
+}
+
+.pulse-animation:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    animation: ripple 1.5s infinite;
+}
+
+@keyframes ripple {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+    }
+}
+
+.disabled-btn {
+    position: relative;
+    opacity: 0.6;
+}
+
+.glow-disabled {
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.warning-pulse {
+    animation: buttonPulse 2s ease-in-out infinite;
+    box-shadow: 0 0 15px rgba(245, 108, 108, 0.5);
+}
+
+.disbanded-tag {
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+/* 暗色模式动效适配 */
+[data-theme="dark"] .gradient-text {
+    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .magical-avatar:hover .avatar-glow-effect {
+    background: radial-gradient(circle, rgba(64, 158, 255, 0.4) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .primary-btn:hover {
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .danger-btn:hover {
+    box-shadow: 0 8px 25px rgba(245, 108, 108, 0.3);
+}
+
+[data-theme="dark"] .bouncing-tag:hover {
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+}
+
+[data-theme="dark"] .warning-pulse {
+    box-shadow: 0 0 15px rgba(245, 108, 108, 0.4);
+}
+
+/* 基础样式 */
 .group-detail-page {
     padding: 20px;
 }
@@ -591,6 +967,77 @@ const confirmDisbandGroup = () => {
     flex-direction: column;
     gap: 10px;
     margin-left: 20px;
+}
+
+/* 标签页切换动画 */
+.animated-tabs {
+    margin-top: 30px;
+    animation: fadeInUp 1.6s cubic-bezier(0.25, 0.8, 0.25, 1) 0.8s both;
+}
+
+.animated-tabs :deep(.el-tabs__header) {
+    position: relative;
+    z-index: 1;
+}
+
+.animated-tabs :deep(.el-tabs__item) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.animated-tabs :deep(.el-tabs__item):hover {
+    transform: translateY(-2px);
+    color: #409eff;
+}
+
+.animated-tabs :deep(.el-tabs__item):before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #409eff, #67c23a);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+}
+
+.animated-tabs :deep(.el-tabs__item):hover:before {
+    width: 100%;
+}
+
+.animated-tabs :deep(.el-tabs__item.is-active) {
+    color: #409eff;
+    font-weight: 600;
+}
+
+.animated-tabs :deep(.el-tabs__active-bar) {
+    background: linear-gradient(90deg, #409eff, #67c23a);
+    height: 3px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 标签页内容切换动画 */
+.tab-content-enter-active,
+.tab-content-leave-active {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab-content-enter-from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+}
+
+.tab-content-leave-to {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+}
+
+.tab-content-enter-to,
+.tab-content-leave-from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 .group-tabs {

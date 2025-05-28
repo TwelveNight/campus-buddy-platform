@@ -9,7 +9,7 @@
         <div class="skeleton-line medium"></div>
       </div>
     </div>
-    
+
     <div v-else-if="type === 'list'" class="skeleton-list">
       <div v-for="i in count" :key="i" class="skeleton-list-item">
         <div class="skeleton-avatar"></div>
@@ -19,7 +19,7 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else-if="type === 'table'" class="skeleton-table">
       <div class="skeleton-table-header">
         <div class="skeleton-line"></div>
@@ -28,14 +28,15 @@
         <div class="skeleton-line"></div>
       </div>
     </div>
-    
-    <div v-else-if="type === 'avatar'" class="skeleton-avatar" :style="{ width: `${size}px`, height: `${size}px` }"></div>
-    
+
+    <div v-else-if="type === 'avatar'" class="skeleton-avatar" :style="{ width: `${size}px`, height: `${size}px` }">
+    </div>
+
     <div v-else-if="type === 'image'" class="skeleton-image" :style="imageStyle"></div>
-    
+
     <div v-else class="skeleton-text">
-      <div v-for="i in count" :key="i" class="skeleton-line" :class="{ 
-        short: i % 4 === 0, 
+      <div v-for="i in count" :key="i" class="skeleton-line" :class="{
+        short: i % 4 === 0,
         medium: i % 3 === 0,
         full: i % 5 === 0
       }"></div>
@@ -195,13 +196,15 @@ const imageStyle = computed(() => ({
     var(--skeleton-highlight), 
     transparent
   );
-  animation: shimmer 1.5s infinite;
+  opacity: 0.7; /* 降低不透明度 */
+  animation: shimmer 2s infinite; /* 减慢动画速度 */
 }
 
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }

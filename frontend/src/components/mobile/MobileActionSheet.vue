@@ -162,21 +162,8 @@ const handleActionClick = async (action: ActionItem) => {
 }
 
 @keyframes overlay-particles {
-  0%, 100% { 
-    opacity: 0.3;
-    transform: scale(1) rotate(0deg);
-  }
-  25% { 
-    opacity: 0.6;
-    transform: scale(1.1) rotate(2deg);
-  }
-  50% { 
-    opacity: 0.4;
-    transform: scale(0.9) rotate(1deg);
-  }
-  75% { 
-    opacity: 0.7;
-    transform: scale(1.05) rotate(-1deg);
+  0%, 50%, 100% { 
+    opacity: 0.1; /* 降低不透明度，并移除变化 */
   }
 }
 
@@ -243,40 +230,20 @@ const handleActionClick = async (action: ActionItem) => {
 @keyframes handle-breathe {
   0%, 100% { 
     width: 36px;
-    opacity: 0.3;
+    opacity: 0.15; /* 降低不透明度 */
   }
   50% { 
-    width: 48px;
-    opacity: 0.6;
+    width: 36px; /* 移除宽度变化 */
+    opacity: 0.15; /* 降低不透明度并保持固定值 */
   }
 }
 
-/* 标题的渐变动画 */
+/* 标题样式，移除渐变动画 */
 .action-sheet-title {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: var(--text-primary);
-  background: linear-gradient(135deg, #409eff, #67c23a);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: title-gradient 4s ease-in-out infinite;
-}
-
-@keyframes title-gradient {
-  0%, 100% {
-    background: linear-gradient(135deg, #409eff, #67c23a);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  50% {
-    background: linear-gradient(135deg, #67c23a, #e6a23c);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 }
 
 .close-btn {
@@ -483,19 +450,18 @@ const handleActionClick = async (action: ActionItem) => {
 }
 
 .action-item:hover .action-icon::before {
-  opacity: 1;
-  animation: icon-pulse 1s ease-in-out infinite;
+  opacity: 0.4; /* 降低不透明度 */
 }
 
 @keyframes icon-pulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.03); } /* 减小缩放效果 */
 }
 
 .action-item:hover .action-icon {
-  background: rgba(64, 158, 255, 0.15);
+  background: rgba(64, 158, 255, 0.1); /* 减轻背景色效果 */
   color: var(--primary-color);
-  transform: scale(1.1);
+  transform: scale(1.05); /* 减小缩放效果 */
 }
 
 .action-content {

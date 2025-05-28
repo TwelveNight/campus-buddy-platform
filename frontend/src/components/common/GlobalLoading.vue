@@ -92,7 +92,7 @@ const uiStore = useUiStore()
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95); /* 减小缩放效果 */
   }
   to {
     opacity: 1;

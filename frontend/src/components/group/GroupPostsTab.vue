@@ -684,57 +684,244 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 </script>
 
 <style scoped>
+/* 动画效果定义 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(64, 158, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(64, 158, 255, 0.6), 0 0 30px rgba(64, 158, 255, 0.4);
+    }
+}
+
+@keyframes floatY {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes typewriter {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    20% {
+        transform: scale(25);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(40);
+        opacity: 0;
+    }
+}
+
+/* 组件整体动画 */
 .group-posts-tab {
     margin-top: 20px;
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* 发布按钮区域动画 */
 .post-actions {
     margin-bottom: 20px;
+    animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
 }
 
+.post-actions .el-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(45deg, #409eff, #67c23a);
+    border: none;
+}
+
+.post-actions .el-button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+}
+
+.post-actions .el-button:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.post-actions .el-button:active:before {
+    width: 300px;
+    height: 300px;
+}
+
+/* 帖子容器动画 */
 .posts-container {
     margin-top: 20px;
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
 }
 
+/* 帖子项动画 */
 .post-item {
     margin-bottom: 30px;
     padding: 20px;
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s, border-color 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
+
+.post-item:nth-child(1) { animation-delay: 0.1s; }
+.post-item:nth-child(2) { animation-delay: 0.2s; }
+.post-item:nth-child(3) { animation-delay: 0.3s; }
+.post-item:nth-child(4) { animation-delay: 0.4s; }
+.post-item:nth-child(5) { animation-delay: 0.5s; }
 
 .post-item:hover {
-    box-shadow: 0 4px 24px rgba(64,158,255,0.12);
-    border-color: #409eff;
+    box-shadow: 0 8px 30px rgba(64,158,255,0.15);
+    transform: translateY(-5px) scale(1.01);
 }
 
+.post-item:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, #409eff, #67c23a, #e6a23c, #f56c6c);
+    transition: left 0.5s ease;
+}
+
+.post-item:hover:before {
+    left: 0;
+}
+
+/* 帖子头部动画 */
 .post-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
+    animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.1s both;
 }
 
+/* 作者信息动画 */
 .author-info {
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.author-info:hover {
+    transform: translateX(5px);
+}
+
+.author-info .el-avatar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+.author-info .el-avatar:hover {
+    transform: scale(1.1);
+    animation: pulseGlow 1.5s ease-in-out;
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.4);
 }
 
 .author-name {
     font-weight: 500;
     color: #333;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.author-name:hover {
+    color: #409eff;
+    transform: translateX(3px);
 }
 
 .post-time {
     font-size: 12px;
     color: #999;
+    transition: all 0.3s ease;
 }
 
+.post-time:hover {
+    color: #666;
+}
+
+/* 帖子内容动画 */
 .post-content {
     margin-bottom: 15px;
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
 }
 
 .post-title {
@@ -744,14 +931,16 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     color: #333;
     cursor: pointer;
     text-decoration: underline dotted #409eff 1.5px;
-    transition: color 0.2s, text-decoration 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
+    position: relative;
 }
 
 .post-title:hover {
     color: #409eff;
     text-decoration: underline solid #409eff 2px;
+    transform: translateX(5px);
 }
 
 .post-title .el-icon {
@@ -759,25 +948,227 @@ const handleCommentPageChange = async (post: Post, val: number) => {
     font-size: 16px;
     color: #409eff;
     opacity: 0.7;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-title:hover .el-icon {
+    opacity: 1;
+    transform: translateX(3px);
+    animation: floatY 1s ease-in-out infinite;
 }
 
 .post-body {
     line-height: 1.6;
     color: #666;
     word-break: break-word;
+    transition: all 0.3s ease;
 }
 
+.post-body:hover {
+    color: #333;
+}
+
+/* 帖子底部动画 */
 .post-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-top: 1px solid #eee;
     padding-top: 15px;
+    animation: fadeInUp 1.4s cubic-bezier(0.25, 0.8, 0.25, 1) 0.3s both;
 }
 
 .post-stats {
     display: flex;
     gap: 15px;
+}
+
+.post-stats .stat-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-stats .stat-item:hover {
+    transform: scale(1.1);
+    color: #409eff;
+}
+
+/* 操作按钮动画 */
+.post-actions .el-dropdown {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-actions .el-dropdown:hover {
+    transform: scale(1.1);
+}
+
+.post-actions .el-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.post-actions .el-button:hover {
+    background-color: rgba(64, 158, 255, 0.1);
+    color: #409eff;
+    transform: scale(1.2);
+}
+
+/* 下拉菜单动画 */
+.el-dropdown-menu :deep(.el-dropdown-menu__item) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-dropdown-menu :deep(.el-dropdown-menu__item):hover {
+    background-color: rgba(64, 158, 255, 0.1);
+    transform: translateX(5px);
+}
+
+/* 分页动画 */
+.pagination {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    animation: fadeInUp 1.6s cubic-bezier(0.25, 0.8, 0.25, 1) 0.8s both;
+}
+
+.pagination :deep(.el-pagination__button) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination :deep(.el-pagination__button):hover {
+    transform: scale(1.1);
+}
+
+/* 空状态动画 */
+.el-empty {
+    animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 1s both;
+}
+
+/* 对话框动画 */
+.el-dialog :deep(.el-dialog__header) {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    animation: shimmer 3s infinite;
+    background-size: 200% 100%;
+}
+
+.el-dialog :deep(.el-dialog__body) {
+    animation: fadeInUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 富文本编辑器动画 */
+.editor-container {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-container:hover {
+    box-shadow: 0 4px 20px rgba(64, 158, 255, 0.1);
+    transform: scale(1.01);
+}
+
+/* 表单项动画 */
+.el-form-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-form-item:hover {
+    transform: translateX(5px);
+}
+
+/* 输入框动画 */
+.el-input :deep(.el-input__inner),
+.el-textarea :deep(.el-textarea__inner) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-input :deep(.el-input__inner):focus,
+.el-textarea :deep(.el-textarea__inner):focus {
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.3);
+    transform: scale(1.02);
+}
+
+/* 点赞、评论按钮动画 */
+.like-btn,
+.comment-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.like-btn:hover,
+.comment-btn:hover {
+    transform: scale(1.1);
+    color: #409eff;
+}
+
+.like-btn.liked {
+    color: #f56c6c;
+    animation: pulseGlow 0.5s ease-in-out;
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .post-item {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .post-item:hover {
+    box-shadow: 0 8px 30px rgba(64,158,255,0.2);
+}
+
+[data-theme="dark"] .author-name {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .author-name:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .post-title {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .post-title:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .post-body {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .post-body:hover {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .post-time {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .post-time:hover {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .author-info .el-avatar:hover {
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .post-actions .el-button:hover {
+    background-color: rgba(64, 158, 255, 0.15);
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .post-actions .el-button:hover {
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .editor-container:hover {
+    box-shadow: 0 4px 20px rgba(64, 158, 255, 0.15);
+}
+
+[data-theme="dark"] .el-input :deep(.el-input__inner):focus,
+[data-theme="dark"] .el-textarea :deep(.el-textarea__inner):focus {
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.2);
+}
+
+[data-theme="dark"] .like-btn:hover,
+[data-theme="dark"] .comment-btn:hover {
+    color: var(--primary-color-dark);
 }
 
 .post-stats .el-button {

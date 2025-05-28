@@ -82,9 +82,70 @@
   
   /* 底部导航补充样式 */
   .mobile-bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 62px;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: 0 -2px 16px #409eff22, 0 0 0 2px #8b5cf622 inset;
+    border-top: 1.5px solid #e0e7ef;
+    border-radius: 18px 18px 0 0;
+    overflow: visible;
+    transition: background 0.3s, box-shadow 0.3s;
   }
-  
+
+  .mobile-bottom-nav .nav-item {
+    flex: 1;
+    text-align: center;
+    color: #232946;
+    font-size: 1.1rem;
+    position: relative;
+    padding: 0 2px;
+    transition: color 0.2s;
+  }
+
+  .mobile-bottom-nav .nav-item.active {
+    color: #409eff;
+    font-weight: bold;
+    text-shadow: 0 2px 8px #409eff44;
+  }
+
+  .mobile-bottom-nav .nav-item .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: 0 auto 2px;
+    border-radius: 50%;
+    background: rgba(64, 158, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(64, 158, 255, 0.2);
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .mobile-bottom-nav .nav-item.active .nav-icon {
+    background: rgba(64, 158, 255, 0.2);
+    box-shadow: 0 1px 4px rgba(64, 158, 255, 0.2);
+    border-color: rgba(64, 158, 255, 0.4);
+  }
+
+  .mobile-bottom-nav .nav-item .nav-label {
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    font-weight: 500;
+    margin-top: 0;
+    transition: color 0.2s;
+  }
+
+  /* 移除旋转和发光动画 */
+
   /* 移动端抽屉样式 */
   .el-drawer__body {
     padding: 0;
@@ -140,6 +201,32 @@
   .el-dialog__footer {
     padding: 10px 16px 16px;
   }
+
+  /* 简化弹窗样式 */
+  .mobile-dialog {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e7ef;
+    overflow: hidden;
+  }
+
+  /* 移动端按钮样式 */
+  .mobile-btn {
+    background: #409eff;
+    color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 10px 0;
+    transition: background-color 0.2s;
+  }
+  .mobile-btn:active {
+    background: #3a8ee6;
+  }
 }
 
 /* 暗色模式下移动端核心组件适配 */
@@ -193,9 +280,43 @@
 }
 
 [data-theme="dark"] .mobile-bottom-nav {
-  background: #232326 !important;
-  border-top: 1px solid #333 !important;
-  box-shadow: 0 -2px 12px rgba(0,0,0,0.18) !important;
+  background: rgba(36,41,61,0.98);
+  box-shadow: 0 -2px 16px #232946cc, 0 0 0 2px #409eff22 inset;
+  border-top: 1px solid #232946;
+}
+[data-theme="dark"] .mobile-bottom-nav .nav-item {
+  color: #e0e7ef;
+}
+[data-theme="dark"] .mobile-bottom-nav .nav-item.active {
+  color: #60a9ff;
+}
+[data-theme="dark"] .mobile-bottom-nav .nav-item .nav-icon {
+  background: rgba(64, 158, 255, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+}
+[data-theme="dark"] .mobile-bottom-nav .nav-item.active .nav-icon {
+  background: rgba(64, 158, 255, 0.2);
+  box-shadow: 0 1px 4px rgba(64, 158, 255, 0.2);
+  border-color: rgba(64, 158, 255, 0.4);
+}
+[data-theme="dark"] .mobile-bottom-nav .nav-item .nav-label {
+  color: #e0e7ef;
+}
+
+[data-theme="dark"] .mobile-dialog {
+  background: rgba(36,41,61,0.95);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  border: 1px solid #232946;
+}
+
+[data-theme="dark"] .mobile-btn {
+  background: #60a9ff;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .mobile-btn:active {
+  background: #409eff;
 }
 
 [data-theme="dark"] .el-input__wrapper,

@@ -118,51 +118,217 @@ initActiveTab()
     height: 100%;
     padding: 20px;
     box-sizing: border-box;
-    background-color: var(--el-bg-color);
+    background-color: var(--background-color);
+    transition: all 0.4s ease;
+    animation: fadeIn 0.5s ease-out;
 }
 
-/* .notification-header-bar {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 10px;
-} */
+:deep(.el-tabs__header) {
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(var(--el-color-primary-rgb), 0.1);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 8px 12px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+:deep(.el-tabs__nav-wrap::after) {
+    height: 1px;
+    background: rgba(var(--el-color-primary-rgb), 0.1);
+}
+
+:deep(.el-tabs__item) {
+    transition: all 0.3s ease;
+    height: 40px;
+    line-height: 40px;
+    font-size: 15px;
+    color: var(--el-text-color-regular);
+    position: relative;
+}
+
+:deep(.el-tabs__item:hover) {
+    color: var(--el-color-primary);
+}
+
+:deep(.el-tabs__item.is-active) {
+    color: var(--el-color-primary);
+    font-weight: 600;
+}
+
+:deep(.el-tabs__item.is-active::after) {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--el-color-primary), var(--el-color-primary-light-3));
+    transition: all 0.3s ease;
+}
 
 :deep(.el-tabs__content) {
-    height: calc(100% - 55px);
+    height: calc(100% - 65px);
     overflow-y: auto;
+    padding: 4px;
 }
 
 :deep(.el-tab-pane) {
     height: 100%;
+    padding: 4px;
+}
+
+/* 覆盖弹出对话框样式 */
+:deep(.el-dialog) {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.el-dialog__header) {
+    background: rgba(var(--el-color-primary-rgb), 0.05);
+    padding: 16px 20px;
+}
+
+:deep(.el-dialog__title) {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--el-text-color-primary);
+}
+
+:deep(.el-dialog__body) {
+    padding: 24px 20px;
+}
+
+:deep(.el-dialog__footer) {
+    padding: 16px 20px;
+    border-top: 1px solid var(--el-border-color-lighter);
 }
 
 /* 暗色模式适配 */
 [data-theme="dark"] .notification-page {
-    background-color: var(--dark-bg, #18181c) !important;
+    background-color: var(--dark-bg, #18181a) !important;
+    color: var(--dark-text-primary, #e5eaf3) !important;
 }
 
 [data-theme="dark"] :deep(.el-tabs__header) {
-    background-color: var(--dark-card-bg);
-    border-color: var(--dark-border-light);
-}
-
-[data-theme="dark"] :deep(.el-tabs__item) {
-    color: var(--dark-text-regular);
-}
-
-[data-theme="dark"] :deep(.el-tabs__item.is-active) {
-    color: var(--el-color-primary);
+    background: rgba(36,41,61,0.82);
+    border-bottom: 1px solid var(--dark-border-color, #333);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 }
 
 [data-theme="dark"] :deep(.el-tabs__nav-wrap::after) {
-    background-color: var(--dark-border-lighter);
+    background-color: var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item) {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item.is-active) {
+    color: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] :deep(.el-tabs__item.is-active::after) {
+    background: linear-gradient(90deg, var(--primary-color-dark, #60a9ff), #232326);
 }
 
 [data-theme="dark"] :deep(.el-tabs__content) {
-    background-color: var(--dark-bg, #18181c) !important;
+    background: transparent !important;
 }
 
 [data-theme="dark"] :deep(.el-tab-pane) {
-    background-color: var(--dark-bg, #18181c) !important;
+    background: transparent !important;
+}
+
+[data-theme="dark"] :deep(.el-dialog) {
+    background: linear-gradient(135deg, rgba(36,41,61,0.95), rgba(45,55,72,0.92));
+    border: 1.5px solid var(--dark-border-color, #333);
+    color: var(--dark-text-primary, #e5eaf3);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.28);
+}
+
+[data-theme="dark"] :deep(.el-dialog__header) {
+    background: rgba(36,41,61,0.85);
+    border-bottom: 1px solid var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] :deep(.el-dialog__title) {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] :deep(.el-dialog__body) {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] :deep(.el-dialog__footer) {
+    border-top: 1px solid var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] :deep(.el-form-item__label) {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] :deep(.el-input__wrapper) {
+    background-color: rgba(36,41,61,0.6);
+    box-shadow: 0 0 0 1px var(--dark-border-color, #333) inset;
+}
+
+[data-theme="dark"] :deep(.el-textarea__wrapper) {
+    background-color: rgba(36,41,61,0.6);
+    box-shadow: 0 0 0 1px var(--dark-border-color, #333) inset;
+}
+
+[data-theme="dark"] :deep(.el-input__inner),
+[data-theme="dark"] :deep(.el-textarea__inner) {
+    color: var(--dark-text-primary, #e5eaf3);
+}
+
+[data-theme="dark"] :deep(.el-button--primary) {
+    background: var(--primary-color-dark, #60a9ff);
+    border-color: var(--primary-color-dark, #60a9ff);
+}
+
+[data-theme="dark"] :deep(.el-button--primary:hover) {
+    background: var(--primary-color-dark-hover, #79b8ff);
+    border-color: var(--primary-color-dark-hover, #79b8ff);
+}
+
+[data-theme="dark"] :deep(.el-divider) {
+    border-color: var(--dark-border-color, #333) !important;
+}
+
+/* 过渡动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .notification-page {
+        padding: 16px 12px;
+    }
+    
+    :deep(.el-tabs__header) {
+        padding: 6px 8px 0;
+    }
+    
+    :deep(.el-tabs__item) {
+        padding: 0 12px;
+        font-size: 14px;
+    }
+    
+    :deep(.el-dialog) {
+        width: 90% !important;
+        margin: 0 auto;
+    }
 }
 </style>

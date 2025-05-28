@@ -71,7 +71,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
-import { User, Lock, ChatLineRound, Share, Trophy } from '@element-plus/icons-vue'
+import { ChatLineRound, Share, Trophy } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -162,7 +162,7 @@ async function onSubmit() {
                         router.push('/')
                     }
                 })
-                
+
                 // 添加短暂延迟以显示成功消息
                 setTimeout(() => {
                     router.push('/')
@@ -192,121 +192,110 @@ async function onSubmit() {
 
 <style scoped>
 .login-page {
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
     padding: 20px;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
 }
 
 .auth-container {
     display: flex;
-    width: 900px;
-    min-height: 550px;
-    border-radius: 16px;
+    width: 1000px;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    background-color: var(--card-bg);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .auth-welcome {
     flex: 1;
-    padding: 40px;
-    background: linear-gradient(135deg, var(--primary-color) 0%, #2c65dd 100%);
+    background: linear-gradient(135deg, #4a90e2 0%, #50a3a2 100%);
     color: white;
+    padding: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
 .auth-welcome h1 {
     font-size: 2.4rem;
-    margin-bottom: 10px;
-    font-weight: 700;
+    margin-bottom: 15px;
 }
 
-.auth-welcome .highlight {
-    color: #ffeb3b;
-}
-
-.auth-welcome p {
-    font-size: 1.2rem;
-    opacity: 0.9;
-    margin-bottom: 40px;
+.highlight {
+    font-weight: 600;
+    color: #ffffff;
 }
 
 .auth-features {
+    margin-top: 30px;
     display: flex;
-    flex-direction: column;
+    justify-content: space-around;
+    width: 100%;
     gap: 20px;
 }
 
 .feature {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 15px;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.feature:hover {
+    transform: translateY(-2px);
 }
 
 .feature .el-icon {
-    background-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 50%;
     padding: 8px;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    transition: background-color 0.2s ease;
+}
+
+.feature:hover .el-icon {
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .auth-card {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 20px;
     border: none;
+    border-radius: 0;
     box-shadow: none;
+    padding: 40px;
 }
 
 .auth-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
 }
 
 .auth-header h2 {
-    font-size: 1.8rem;
+    font-size: 2rem;
+    color: #333;
     margin-bottom: 10px;
-    color: var(--text-primary);
 }
 
 .auth-header p {
-    color: var(--text-secondary);
+    color: #888;
     font-size: 1rem;
-}
-
-:deep(.el-input__wrapper) {
-    border-radius: 8px;
-}
-
-:deep(.el-input__inner) {
-    height: 50px;
-}
-
-:deep(.el-form-item) {
-    margin-bottom: 20px;
 }
 
 .remember-me {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     margin-bottom: 20px;
-    color: var(--text-regular);
 }
 
 .forgot-password {
-    color: var(--primary-color);
+    color: #409eff;
     text-decoration: none;
-    font-size: 0.9rem;
-    transition: color 0.3s;
 }
 
 .forgot-password:hover {
@@ -315,116 +304,83 @@ async function onSubmit() {
 
 .submit-btn {
     width: 100%;
-    height: 50px;
+    height: 48px;
     font-size: 1.1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
 }
 
 .submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(64, 158, 255, 0.2);
 }
 
 .auth-footer {
     text-align: center;
     margin-top: 20px;
-    color: var(--text-regular);
+    color: #888;
+    font-size: 0.9rem;
 }
 
 .register-link {
-    color: var(--primary-color);
-    text-decoration: none;
+    color: #409eff;
     font-weight: 500;
     margin-left: 5px;
-    transition: color 0.3s;
 }
 
-.register-link:hover {
-    text-decoration: underline;
-}
-
-/* 响应式布局 */
-@media (max-width: 992px) {
-    .auth-container {
-        width: 700px;
-    }
-    
-    .auth-welcome h1 {
-        font-size: 2rem;
-    }
-    
-    .auth-welcome p {
-        font-size: 1.1rem;
-    }
-}
-
+/* 适配移动设备 */
 @media (max-width: 768px) {
     .auth-container {
         flex-direction: column;
         width: 100%;
-        max-width: 500px;
+        max-width: 450px;
     }
-    
+
     .auth-welcome {
+        padding: 40px 30px;
+    }
+
+    .auth-welcome h1 {
+        font-size: 2rem;
+    }
+
+    .auth-card {
         padding: 30px;
     }
-    
-    .auth-features {
-        flex-direction: row;
-        justify-content: space-around;
-        margin-bottom: 10px;
-    }
-    
-    .feature {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
-    }
-}
 
-@media (max-width: 480px) {
-    .login-page {
-        padding: 10px;
-    }
-    
-    .auth-welcome {
-        padding: 20px;
-    }
-    
-    .auth-welcome h1 {
-        font-size: 1.5rem;
-    }
-    
-    .auth-welcome p {
-        font-size: 1rem;
+    .auth-features {
+        margin-top: 20px;
         margin-bottom: 20px;
     }
-    
-    .auth-features {
-        gap: 5px;
-    }
-    
-    .feature {
-        font-size: 0.9rem;
-    }
-    
-    .feature .el-icon {
-        padding: 5px;
-    }
-    
+
     .auth-header h2 {
         font-size: 1.5rem;
     }
-    
+
+    .auth-features {
+        gap: 5px;
+    }
+
+    .feature {
+        font-size: 0.9rem;
+    }
+
+    .feature .el-icon {
+        padding: 5px;
+    }
+
+    .auth-header h2 {
+        font-size: 1.5rem;
+    }
+
     .auth-header p {
         font-size: 0.9rem;
     }
-    
+
     :deep(.el-input__inner) {
         height: 45px;
     }
-    
+
     .submit-btn {
         height: 45px;
         font-size: 1rem;
@@ -432,7 +388,41 @@ async function onSubmit() {
 }
 
 /* 暗色主题适配 */
-.dark-theme .login-page {
-    background: linear-gradient(135deg, #1e1e20 0%, #2a2a2e 100%);
+[data-theme="dark"] .login-page {
+    background: linear-gradient(135deg, #1a1a1c 0%, #2d2d30 100%);
+}
+
+[data-theme="dark"] .auth-container {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .auth-welcome {
+    background: linear-gradient(135deg, #4a90e2 0%, #50a3a2 100%);
+}
+
+[data-theme="dark"] .auth-card {
+    background-color: #2d2d30;
+    color: #e5eaf3;
+}
+
+[data-theme="dark"] .auth-header h2 {
+    color: #e5eaf3;
+}
+
+[data-theme="dark"] .auth-header p {
+    color: #a3a6ad;
+}
+
+[data-theme="dark"] .el-checkbox__label {
+    color: #e5eaf3;
+}
+
+[data-theme="dark"] .auth-footer {
+    color: #a3a6ad;
+}
+
+[data-theme="dark"] .forgot-password,
+[data-theme="dark"] .register-link {
+    color: #60a9ff;
 }
 </style>

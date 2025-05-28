@@ -248,7 +248,7 @@ onUnmounted(() => {
   cursor: pointer;
   position: relative;
   transition: all 0.3s ease;
-  border-radius: 12px;
+  border-radius: 8px;
   margin: 0 4px;
   min-height: 60px;
 }
@@ -258,7 +258,8 @@ onUnmounted(() => {
 }
 
 .nav-item:active {
-  transform: scale(0.95);
+  /* 减轻按下效果，更加微妙 */
+  transform: scale(0.98);
 }
 
 .nav-item.disabled {
@@ -292,6 +293,7 @@ onUnmounted(() => {
 
 .nav-item.active .nav-icon .el-icon {
   font-size: 24px;
+  /* 移除旋转效果，只保留轻微的上移动画 */
   transform: translateY(-1px);
 }
 
@@ -314,24 +316,15 @@ onUnmounted(() => {
   top: -1px;
   left: 50%;
   transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
+  width: 20px;
+  height: 3px;
   background-color: var(--primary-color);
-  border-radius: 50%;
-  animation: bounce 0.5s ease;
+  border-radius: 3px;
+  /* 使用更简单的过渡动画替代弹跳动画 */
+  transition: all 0.3s ease;
 }
 
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  40% {
-    transform: translateX(-50%) translateY(-4px);
-  }
-  60% {
-    transform: translateX(-50%) translateY(-2px);
-  }
-}
+/* 移除弹跳动画 */
 
 .safe-area-placeholder {
   height: env(safe-area-inset-bottom, 0px);
@@ -397,14 +390,27 @@ onUnmounted(() => {
 }
 
 /* 暗色主题适配 */
-.dark-theme .mobile-bottom-nav {
-  background-color: var(--card-bg);
-  border-top-color: var(--border-color);
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.3);
+[data-theme="dark"] .mobile-bottom-nav {
+  background-color: var(--dark-card-bg, #1e1e1e);
+  border-top-color: var(--dark-border-color, #333);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.dark-theme .nav-item.active {
-  background-color: var(--primary-light);
+[data-theme="dark"] .nav-item {
+  color: var(--dark-text-secondary, #aaa);
+}
+
+[data-theme="dark"] .nav-item:hover {
+  background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05));
+}
+
+[data-theme="dark"] .nav-item.active {
+  background-color: var(--dark-primary-light, rgba(64, 158, 255, 0.1));
+  color: var(--primary-color-dark, #79bbff);
+}
+
+[data-theme="dark"] .active-indicator {
+  background-color: var(--primary-color-dark, #79bbff);
 }
 
 /* 高分辨率屏幕 */

@@ -28,15 +28,44 @@ watch(isDarkMode, (newValue) => {
   applyTheme(newValue)
 })
 
-const toggleTheme = () => {
+const toggleTheme = (event: MouseEvent) => {
   isDarkMode.value = !isDarkMode.value
+  
+  // 获取鼠标位置信息
+  const x = event.clientX;
+  const y = event.clientY;
+  
+  // 为主题切换动画设置原点
+  const transitionEl = document.querySelector('.theme-toggle-transition') as HTMLElement;
+  if (transitionEl) {
+    transitionEl.style.setProperty('--x', `${x}px`);
+    transitionEl.style.setProperty('--y', `${y}px`);
+    transitionEl.classList.add('active');
+    
+    // 动画结束后移除active类
+    setTimeout(() => {
+      transitionEl.classList.remove('active');
+    }, 1000);
+  }
+
+  applyTheme(isDarkMode.value);
 }
 
+// 应用主题切换特效
 const applyTheme = (dark: boolean) => {
+  // 创建主题切换特效元素
+  const existingTransition = document.querySelector('.theme-toggle-transition');
+  if (!existingTransition) {
+    const transitionEl = document.createElement('div');
+    transitionEl.className = 'theme-toggle-transition';
+    document.body.appendChild(transitionEl);
+  }
+
+  // 设置主题
   if (dark) {
-    document.documentElement.setAttribute('data-theme', 'dark')
+    document.documentElement.setAttribute('data-theme', 'dark');
   } else {
-    document.documentElement.setAttribute('data-theme', 'light')
+    document.documentElement.setAttribute('data-theme', 'light');
   }
 }
 </script>

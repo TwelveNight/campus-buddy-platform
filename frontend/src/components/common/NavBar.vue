@@ -171,7 +171,7 @@
                     <!-- 通知图标 -->
                     <div class="notification-icon">
                         <el-dropdown trigger="click" @visible-change="handleNotificationDropdownToggle">
-                            <div>
+                            <div style="cursor:pointer;display:inline-block">
                                 <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0" type="danger">
                                     <el-icon class="bell-icon">
                                         <Bell />
@@ -727,37 +727,15 @@ const showCreateGroupDialog = () => {
     left: 0;
     right: 0;
     z-index: 1000;
-    background: linear-gradient(135deg, 
-        rgba(255, 255, 255, 0.95) 0%, 
-        rgba(248, 250, 252, 0.9) 50%, 
-        rgba(241, 245, 249, 0.85) 100%);
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: 
-        0 1px 3px rgba(0, 0, 0, 0.05),
-        0 4px 20px rgba(59, 130, 246, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    position: relative;
-    overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
 }
 
-/* 添加粒子动画背景 */
-.navbar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
-    animation: particlesFloat 20s ease-in-out infinite;
-    pointer-events: none;
-}
+/* 删除粒子动画背景 */
 
 .navbar.auth-page {
     background-color: transparent;
@@ -772,8 +750,6 @@ const showCreateGroupDialog = () => {
     justify-content: space-between;
     padding: 0 24px;
     height: 68px;
-    position: relative;
-    z-index: 2;
 }
 
 .logo {
@@ -781,56 +757,26 @@ const showCreateGroupDialog = () => {
     align-items: center;
     text-decoration: none;
     gap: 12px;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.3s ease;
     margin-right: 10px;
-    position: relative;
     padding: 8px 16px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.logo::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.1) 0%, 
-        rgba(139, 92, 246, 0.05) 100%);
-    border-radius: 16px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.logo:hover::before {
-    opacity: 1;
+    border-radius: 8px;
 }
 
 .logo:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
 }
 
 .logo img {
     height: 36px;
     width: auto;
-    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.2));
-    animation: logoFloat 4s ease-in-out infinite;
 }
 
 .logo h1 {
     font-size: 1.6rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--primary-color);
     margin: 0;
-    position: relative;
-    z-index: 1;
 }
 
 .menu {
@@ -850,29 +796,9 @@ const showCreateGroupDialog = () => {
     line-height: 68px;
     padding: 0 20px;
     border-bottom: 3px solid transparent !important;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border-radius: 12px 12px 0 0;
+    transition: all 0.3s ease;
+    border-radius: 8px 8px 0 0;
     margin: 0 4px;
-    position: relative;
-    overflow: hidden;
-}
-
-:deep(.el-menu--horizontal > .el-menu-item::before) {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.05) 0%, 
-        rgba(139, 92, 246, 0.03) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-:deep(.el-menu--horizontal > .el-menu-item:hover::before) {
-    opacity: 1;
 }
 
 :deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title) {
@@ -880,29 +806,9 @@ const showCreateGroupDialog = () => {
     line-height: 68px;
     padding: 0 20px;
     border-bottom: 3px solid transparent !important;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border-radius: 12px 12px 0 0;
+    transition: all 0.3s ease;
+    border-radius: 8px 8px 0 0;
     margin: 0 4px;
-    position: relative;
-    overflow: hidden;
-}
-
-:deep(.el-menu--horizontal > .el-sub-menu .el-sub-menu__title::before) {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.05) 0%, 
-        rgba(139, 92, 246, 0.03) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-:deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title::before) {
-    opacity: 1;
 }
 
 :deep(.el-menu--horizontal > .el-menu-item.is-active),
@@ -910,17 +816,13 @@ const showCreateGroupDialog = () => {
     border-bottom: 3px solid var(--primary-color) !important;
     font-weight: 600;
     color: var(--primary-color) !important;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.1) 0%, 
-        rgba(139, 92, 246, 0.05) 100%);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    background: rgba(64, 158, 255, 0.08);
 }
 
 :deep(.el-menu--horizontal > .el-menu-item:hover),
 :deep(.el-menu--horizontal > .el-sub-menu:hover .el-sub-menu__title) {
     color: var(--primary-color) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
+    background: rgba(64, 158, 255, 0.05);
 }
 
 /* 子菜单样式优化 */
@@ -937,27 +839,19 @@ const showCreateGroupDialog = () => {
 
 :deep(.el-menu--popup .el-menu-item) {
     height: 44px;
-    /* 增加高度 */
     line-height: 44px;
     padding: 0 20px;
-    /* 增加内边距 */
     display: flex;
     align-items: center;
     gap: 10px;
-    /* 增加图标与文字的间距 */
-    border-radius: 6px;
-    /* 增加圆角 */
+    border-radius: 4px;
     margin: 0 6px;
-    /* 增加外边距 */
     transition: all 0.2s ease;
     font-size: 15px;
-    /* 增加字体大小 */
 }
 
 :deep(.el-menu--popup .el-menu-item:hover) {
     background-color: rgba(64, 158, 255, 0.1) !important;
-    transform: translateX(4px);
-    /* 添加悬浮效果 */
 }
 
 :deep(.el-menu--popup .el-menu-item.is-active) {
@@ -990,56 +884,28 @@ const showCreateGroupDialog = () => {
     cursor: pointer;
     padding: 12px;
     border-radius: 50%;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-}
-
-.notification-icon::before,
-.message-icon::before,
-.search-user-icon::before,
-.friends-icon::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.2) 0%, 
-        rgba(139, 92, 246, 0.1) 100%);
-    border-radius: 50%;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.notification-icon:hover::before,
-.message-icon:hover::before,
-.search-user-icon:hover::before,
-.friends-icon:hover::before {
-    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .notification-icon:hover,
 .message-icon:hover,
 .search-user-icon:hover,
 .friends-icon:hover {
-    transform: translateY(-3px) scale(1.1);
-    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
+    background: rgba(64, 158, 255, 0.1);
 }
 
 .bell-icon,
 .icon-button {
-    font-size: 22px;
+    font-size: 20px;
     color: var(--text-secondary);
     position: relative;
-    z-index: 1;
-    transition: color 0.3s ease;
 }
 
 .notification-icon:hover .bell-icon,
@@ -1061,46 +927,25 @@ const showCreateGroupDialog = () => {
     cursor: pointer;
     padding: 8px 16px;
     border-radius: 25px;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    position: relative;
-    overflow: hidden;
-}
-
-.avatar-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.1) 0%, 
-        rgba(139, 92, 246, 0.05) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.avatar-wrapper:hover::before {
-    opacity: 1;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .avatar-wrapper:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
+    background: rgba(64, 158, 255, 0.08);
 }
 
 :deep(.el-avatar) {
     border: 2px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
 }
 
 .avatar-wrapper:hover :deep(.el-avatar) {
     border-color: var(--primary-color);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.2); /* 减轻阴影效果 */
 }
 
 .user-name {
@@ -1121,112 +966,60 @@ const showCreateGroupDialog = () => {
 }
 
 .avatar-wrapper:hover .dropdown-icon {
-    transform: rotate(180deg);
+    transform: rotate(90deg); /* 减小旋转角度 */
     color: var(--primary-color);
 }
 
 .login-btn {
-    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
+    background: var(--primary-color);
     border: none;
     font-weight: 600;
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: all 0.3s ease;
     padding: 12px 28px;
     font-size: 15px;
-    position: relative;
-    overflow: hidden;
-}
-
-.login-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    transition: left 0.6s ease;
-}
-
-.login-btn:hover::before {
-    left: 100%;
 }
 
 .login-btn:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px); /* 减小上移效果 */
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2); /* 减轻阴影效果 */
 }
 
 .register-btn {
     color: var(--primary-color);
-    border: 2px solid var(--primary-color);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    backdrop-filter: blur(10px);
-    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    transition: all 0.3s ease;
     padding: 12px 28px;
     font-size: 15px;
     font-weight: 600;
-    position: relative;
-    overflow: hidden;
-}
-
-.register-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.register-btn:hover::before {
-    opacity: 1;
 }
 
 .register-btn:hover {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateY(-1px);
     color: white;
-    border-color: transparent;
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
-}
-
-.register-btn span {
-    position: relative;
-    z-index: 1;
+    background-color: var(--primary-color);
 }
 
 :deep(.el-dropdown-menu) {
     border-radius: 10px;
-    /* 增加圆角 */
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    /* 增强阴影 */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     padding: 10px 0;
-    /* 增加内边距 */
 }
 
 :deep(.el-dropdown-menu__item) {
     display: flex;
     align-items: center;
     gap: 10px;
-    /* 增加图标与文字的间距 */
     padding: 12px 20px;
-    /* 增加内边距 */
     transition: all 0.2s;
-    border-radius: 6px;
-    /* 增加圆角 */
+    border-radius: 4px;
     margin: 0 6px;
-    /* 增加外边距 */
     font-size: 15px;
-    /* 增加字体大小 */
 }
 
 :deep(.el-dropdown-menu__item:hover) {
     background-color: rgba(64, 158, 255, 0.1);
     color: var(--primary-color);
-    transform: translateX(4px);
-    /* 添加悬浮效果 */
 }
 
 :deep(.el-dropdown-menu__item i) {
@@ -1294,17 +1087,9 @@ const showCreateGroupDialog = () => {
 
 /* 暗色主题适配 */
 [data-theme="dark"] .navbar {
-    background: linear-gradient(135deg, rgba(30,30,32,0.98) 0%, rgba(26,26,30,0.92) 50%, rgba(22,22,26,0.88) 100%);
-    border-bottom: 1.5px solid rgba(76,77,79,0.25);
-    box-shadow: 0 2px 16px 0 rgba(0,0,0,0.25), 0 1.5px 0 rgba(255,255,255,0.04) inset;
-    backdrop-filter: blur(12px);
-}
-
-[data-theme="dark"] .navbar::before {
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+    background: rgba(30, 30, 32, 0.95);
+    border-bottom: 1px solid rgba(76, 77, 79, 0.25);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .navbar.auth-page {
@@ -1313,16 +1098,11 @@ const showCreateGroupDialog = () => {
 }
 
 [data-theme="dark"] .navbar .logo h1 {
-    background: linear-gradient(135deg, #8b5cf6, #2c65dd, #10b981);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    filter: drop-shadow(0 2px 8px #8b5cf6cc);
+    color: var(--primary-color);
 }
 
 [data-theme="dark"] .navbar .logo img {
-    filter: drop-shadow(0 2px 8px #8b5cf6cc) brightness(0.9);
+    filter: brightness(0.9);
 }
 
 [data-theme="dark"] .navbar .menu {
@@ -1344,9 +1124,8 @@ const showCreateGroupDialog = () => {
 }
 
 [data-theme="dark"] .navbar .user-actions {
-    background: linear-gradient(135deg, rgba(45,55,72,0.7), rgba(36,41,61,0.7));
-    border-radius: 18px;
-    box-shadow: 0 2px 12px rgba(139,92,246,0.08);
+    background: rgba(36, 41, 61, 0.7);
+    border-radius: 12px;
 }
 
 [data-theme="dark"] .navbar .user-avatar {
@@ -1483,26 +1262,24 @@ const showCreateGroupDialog = () => {
 
 /* 暗色主题登录注册按钮 */
 [data-theme="dark"] .login-btn {
-    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    background: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 [data-theme="dark"] .login-btn:hover {
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .register-btn {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    background: transparent;
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
 
-[data-theme="dark"] .register-btn::before {
-    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
-}
-
 [data-theme="dark"] .register-btn:hover {
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 /* 暗色主题通知下拉菜单 */
@@ -1560,36 +1337,12 @@ const showCreateGroupDialog = () => {
 }
 
 /* 动画关键帧 */
-@keyframes particlesFloat {
-    0%, 100% {
-        transform: translateY(0px) rotate(0deg);
-        opacity: 0.8;
-    }
-    33% {
-        transform: translateY(-20px) rotate(5deg);
-        opacity: 1;
-    }
-    66% {
-        transform: translateY(-10px) rotate(-3deg);
-        opacity: 0.9;
-    }
-}
-
-@keyframes logoFloat {
-    0%, 100% {
-        transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-3px) rotate(2deg);
-    }
-}
-
 @keyframes pulse {
     0%, 100% {
         opacity: 1;
     }
     50% {
-        opacity: 0.5;
+        opacity: 0.9; /* 减小不透明度变化 */
     }
 }
 </style>

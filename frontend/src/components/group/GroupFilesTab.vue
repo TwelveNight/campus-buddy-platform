@@ -482,42 +482,366 @@ const handleCurrentChange = (val: number) => {
 </script>
 
 <style scoped>
-.group-files-tab {
-    padding: 20px 0;
+/* 动画效果定义 */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseScale {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes floatIcon {
+    0%, 100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-3px) rotate(3deg);
+    }
+    75% {
+        transform: translateY(-3px) rotate(-3deg);
+    }
+}
+
+@keyframes shimmerEffect {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes downloadPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(103, 194, 58, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(103, 194, 58, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(103, 194, 58, 0);
+    }
+}
+
+/* 组件整体动画 */
+.group-files-tab {
+    padding: 20px 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 文件操作区动画 */
 .file-actions {
     margin-bottom: 20px;
     display: flex;
     justify-content: flex-end;
+    animation: slideInRight 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
 }
 
+.file-actions .el-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.file-actions .el-button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+}
+
+.file-actions .el-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.file-actions .el-button:hover:before {
+    left: 100%;
+}
+
+/* 文件容器动画 */
 .files-container {
     background: #fff;
-    border-radius: 4px;
+    border-radius: 8px;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
 }
 
+.files-container:hover {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 文件名单元格动画 */
 .file-name-cell {
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-name-cell:hover {
+    transform: translateX(8px);
 }
 
 .file-name {
     word-break: break-all;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.file-name:hover {
+    color: #409eff;
+    text-decoration: underline;
+}
+
+/* 文件图标动画 */
 .file-icon {
     flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.file-icon:hover {
+    animation: floatIcon 1s ease-in-out infinite;
+    color: #409eff;
+}
+
+/* 不同文件类型的图标颜色 */
+.file-name-cell:hover .file-icon {
+    transform: scale(1.2);
+}
+
+/* 文档文件图标 */
+.file-name-cell .file-icon:has(+ .file-name[title*=".doc"]),
+.file-name-cell .file-icon:has(+ .file-name[title*=".pdf"]) {
+    color: #f56c6c;
+}
+
+/* 图片文件图标 */
+.file-name-cell .file-icon:has(+ .file-name[title*=".jpg"]),
+.file-name-cell .file-icon:has(+ .file-name[title*=".png"]) {
+    color: #67c23a;
+}
+
+/* 视频文件图标 */
+.file-name-cell .file-icon:has(+ .file-name[title*=".mp4"]),
+.file-name-cell .file-icon:has(+ .file-name[title*=".avi"]) {
+    color: #e6a23c;
+}
+
+/* 表格行动画 */
+.el-table :deep(.el-table__row) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-table :deep(.el-table__row):hover {
+    background-color: rgba(64, 158, 255, 0.05) !important;
+    transform: scale(1.01);
+}
+
+/* 操作按钮动画 */
+.el-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-button:hover {
+    transform: translateY(-2px);
+}
+
+.el-button--success:hover {
+    animation: downloadPulse 1s ease-in-out;
+    box-shadow: 0 4px 15px rgba(103, 194, 58, 0.4);
+}
+
+.el-button--danger:hover {
+    box-shadow: 0 4px 15px rgba(245, 108, 108, 0.4);
+    animation: pulseScale 0.3s ease-in-out;
+}
+
+/* 分页动画 */
 .pagination {
     margin-top: 20px;
     display: flex;
     justify-content: center;
+    animation: fadeInUp 1.4s cubic-bezier(0.25, 0.8, 0.25, 1) 0.6s both;
 }
 
+.pagination :deep(.el-pagination__button) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination :deep(.el-pagination__button):hover {
+    transform: scale(1.1);
+}
+
+/* 空状态动画 */
+.el-empty {
+    animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.8s both;
+}
+
+/* 文件上传器动画 */
+.file-uploader {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.file-uploader:hover {
+    transform: scale(1.02);
+}
+
+/* 上传拖拽区域动画 */
+.el-upload-dragger {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-upload-dragger:hover {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.1), rgba(103, 194, 58, 0.1));
+    animation: shimmerEffect 2s infinite;
+    background-size: 200% 100%;
+}
+
+.el-upload-dragger.is-dragover {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.2), rgba(103, 194, 58, 0.2));
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+}
+
+/* 进度条动画 */
+.el-progress :deep(.el-progress-bar__outer) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-progress :deep(.el-progress-bar__inner) {
+    background: linear-gradient(90deg, #409eff, #67c23a);
+    animation: shimmerEffect 2s infinite;
+    background-size: 200% 100%;
+}
+
+/* 对话框动画 */
+.el-dialog :deep(.el-dialog__header) {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+}
+
+.el-dialog :deep(.el-dialog__body) {
+    animation: fadeInUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 表单项动画 */
+.el-form-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-form-item:hover {
+    transform: translateX(5px);
+}
+
+/* 输入框动画 */
+.el-input :deep(.el-input__inner),
+.el-textarea :deep(.el-textarea__inner) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-input :deep(.el-input__inner):focus,
+.el-textarea :deep(.el-textarea__inner):focus {
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.3);
+    transform: scale(1.02);
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .files-container {
+    background: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .files-container:hover {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .file-name:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .file-icon:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .el-table :deep(.el-table__row):hover {
+    background-color: rgba(64, 158, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .file-actions .el-button:hover {
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .el-button--success:hover {
+    box-shadow: 0 4px 15px rgba(103, 194, 58, 0.3);
+}
+
+[data-theme="dark"] .el-button--danger:hover {
+    box-shadow: 0 4px 15px rgba(245, 108, 108, 0.3);
+}
+
+[data-theme="dark"] .el-upload-dragger:hover {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.15), rgba(103, 194, 58, 0.15));
+}
+
+[data-theme="dark"] .el-upload-dragger.is-dragover {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.25), rgba(103, 194, 58, 0.25));
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.2);
+}
+
+[data-theme="dark"] .el-input :deep(.el-input__inner):focus,
+[data-theme="dark"] .el-textarea :deep(.el-textarea__inner):focus {
+    box-shadow: 0 0 15px rgba(64, 158, 255, 0.2);
+}
+
+/* 上传组件宽度修正 */
 .file-uploader {
     width: 100%;
 }

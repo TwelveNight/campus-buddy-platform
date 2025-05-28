@@ -216,27 +216,144 @@ const handleJoinGroup = async () => {
 </script>
 
 <style scoped>
-.group-preview-page {
-    padding: 20px;
+/* 动画效果定义 */
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(64, 158, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(64, 158, 255, 0.6), 0 0 30px rgba(64, 158, 255, 0.4);
+    }
+}
+
+@keyframes floatY {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* 页面整体动画 */
+.group-preview-page {
+    padding: 20px;
+    animation: slideInFromTop 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 小组头部动画 */
 .group-header {
     display: flex;
     align-items: flex-start;
     margin-bottom: 30px;
     padding: 20px;
     background-color: #f5f7fa;
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s both;
 }
 
+.group-header:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    animation: floatY 3s ease-in-out infinite;
+}
+
+/* 头像动画 */
 .group-avatar {
     margin-right: 20px;
     flex-shrink: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
+.group-avatar:hover {
+    transform: scale(1.1);
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.group-avatar .el-avatar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.group-avatar:before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #409eff, #67c23a, #e6a23c, #f56c6c);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.group-avatar:hover:before {
+    opacity: 1;
+}
+
+/* 头部信息动画 */
 .group-header-info {
     flex: 1;
+    animation: slideInFromTop 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
 }
 
 .group-name {
@@ -244,6 +361,250 @@ const handleJoinGroup = async () => {
     font-size: 24px;
     font-weight: 600;
     color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 3s ease infinite;
+    background-size: 200% 200%;
+}
+
+/* 元信息动画 */
+.group-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+    animation: slideInFromTop 1.4s cubic-bezier(0.25, 0.8, 0.25, 1) 0.6s both;
+}
+
+.group-meta .el-tag {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.group-meta .el-tag:nth-child(1) { animation-delay: 0.1s; }
+.group-meta .el-tag:nth-child(2) { animation-delay: 0.2s; }
+.group-meta .el-tag:nth-child(3) { animation-delay: 0.3s; }
+
+.group-meta .el-tag:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+}
+
+.member-count,
+.join-type {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.member-count:hover,
+.join-type:hover {
+    color: #409eff;
+    transform: scale(1.05);
+}
+
+.member-count .el-icon {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.member-count:hover .el-icon {
+    transform: rotate(360deg);
+}
+
+/* 创建者信息动画 */
+.group-creator {
+    margin-bottom: 15px;
+    animation: slideInFromTop 1.6s cubic-bezier(0.25, 0.8, 0.25, 1) 0.8s both;
+}
+
+.creator-link {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+}
+
+.creator-link:hover {
+    transform: translateX(5px);
+    color: #409eff;
+}
+
+.creator-link .el-avatar {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.creator-link:hover .el-avatar {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(64, 158, 255, 0.4);
+}
+
+/* 描述动画 */
+.group-description {
+    color: #666;
+    line-height: 1.6;
+    white-space: pre-line;
+    transition: all 0.3s ease;
+    animation: slideInFromTop 1.8s cubic-bezier(0.25, 0.8, 0.25, 1) 1s both;
+}
+
+.group-description:hover {
+    color: #333;
+}
+
+/* 操作按钮动画 */
+.group-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-left: 20px;
+    animation: slideInFromTop 2s cubic-bezier(0.25, 0.8, 0.25, 1) 1.2s both;
+}
+
+.group-actions .el-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.group-actions .el-button:hover {
+    transform: translateY(-3px) scale(1.05);
+}
+
+.group-actions .el-button--primary {
+    background: linear-gradient(45deg, #409eff, #67c23a);
+    border: none;
+}
+
+.group-actions .el-button--primary:hover {
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+}
+
+.group-actions .el-button--warning:hover {
+    box-shadow: 0 8px 25px rgba(230, 162, 60, 0.4);
+}
+
+.group-actions .el-button--success:hover {
+    box-shadow: 0 8px 25px rgba(103, 194, 58, 0.4);
+}
+
+.group-actions .el-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.group-actions .el-button:hover:before {
+    left: 100%;
+}
+
+/* 介绍区域动画 */
+.group-intro {
+    animation: slideInFromTop 2.2s cubic-bezier(0.25, 0.8, 0.25, 1) 1.4s both;
+}
+
+.group-intro .el-alert {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+}
+
+.group-intro .el-alert:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(64, 158, 255, 0.1);
+}
+
+/* 卡片动画 */
+.info-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+}
+
+.info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h3 {
+    background: linear-gradient(135deg, #409eff, #67c23a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .group-header {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .group-header:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .group-name {
+    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .group-description {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .group-description:hover {
+    color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] .member-count,
+[data-theme="dark"] .join-type {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .member-count:hover,
+[data-theme="dark"] .join-type:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .creator-link:hover {
+    color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] .creator-link:hover .el-avatar {
+    box-shadow: 0 0 10px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .group-actions .el-button--primary:hover {
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .group-actions .el-button--warning:hover {
+    box-shadow: 0 8px 25px rgba(230, 162, 60, 0.3);
+}
+
+[data-theme="dark"] .group-actions .el-button--success:hover {
+    box-shadow: 0 8px 25px rgba(103, 194, 58, 0.3);
+}
+
+[data-theme="dark"] .group-meta .el-tag:hover {
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+}
+
+[data-theme="dark"] .group-intro .el-alert:hover {
+    box-shadow: 0 4px 15px rgba(64, 158, 255, 0.15);
+}
+
+[data-theme="dark"] .info-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .group-meta {
@@ -311,7 +672,7 @@ const handleJoinGroup = async () => {
 }
 
 .feature-item .el-icon {
-    font-size: 24px;
+    font-size: 20px;
     color: #409EFF;
     margin-top: 4px;
 }
@@ -337,7 +698,7 @@ const handleJoinGroup = async () => {
 [data-theme="dark"] .group-header {
     background-color: #1a1a1a;
     border: 1px solid #333333;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .group-name {
@@ -378,7 +739,7 @@ const handleJoinGroup = async () => {
 [data-theme="dark"] .feature-card {
     background-color: #1a1a1a;
     border: 1px solid #333333;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] .card-header h3 {
@@ -416,7 +777,7 @@ const handleJoinGroup = async () => {
     --el-card-bg-color: #1a1a1a;
     --el-card-border-color: #333333;
     color: #ffffff;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 [data-theme="dark"] :deep(.el-card__header) {

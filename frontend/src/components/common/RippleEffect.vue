@@ -1,7 +1,7 @@
 <template>
   <div 
     class="ripple-container" 
-    :class="{ disabled: disabled }"
+    :class="{ disabled: props.disabled }"
     @click="createRipple"
   >
     <slot></slot>
@@ -26,7 +26,7 @@ interface Ripple {
   timestamp: number
 }
 
-defineProps({
+const props = defineProps({
   color: {
     type: String,
     default: '#fff'
@@ -41,7 +41,7 @@ const ripples = ref<Ripple[]>([])
 
 // 创建波纹效果
 const createRipple = (event: MouseEvent) => {
-  if (disabled) return
+  if (props.disabled) return
   
   const target = event.currentTarget as HTMLElement
   const rect = target.getBoundingClientRect()
@@ -55,8 +55,8 @@ const createRipple = (event: MouseEvent) => {
     style: {
       left: `${left}px`,
       top: `${top}px`,
-      backgroundColor: color,
-      opacity: 0.4
+      backgroundColor: props.color,
+      opacity: 0.25
     },
     timestamp: Date.now()
   }
@@ -74,7 +74,7 @@ const createRipple = (event: MouseEvent) => {
     if (index !== -1) {
       ripples.value.splice(index, 1)
     }
-  }, 1000)
+  }, 600) // 缩短动画时间
 }
 </script>
 
@@ -95,13 +95,14 @@ const createRipple = (event: MouseEvent) => {
   position: absolute;
   border-radius: 50%;
   transform: scale(0);
-  animation: ripple 800ms linear;
+  animation: ripple 600ms linear; /* 缩短动画时间 */
   pointer-events: none;
+  opacity: 0.25; /* 降低初始不透明度 */
 }
 
 @keyframes ripple {
   to {
-    transform: scale(4);
+    transform: scale(2); /* 减小最终缩放大小 */
     opacity: 0;
   }
 }

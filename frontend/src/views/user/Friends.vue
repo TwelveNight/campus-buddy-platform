@@ -412,87 +412,165 @@ const formatTime = (time: string) => {
 
 <style scoped>
 .friends-list-container {
-  max-width: 900px;
+  padding: 20px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 10px 60px;
+  transition: all 0.3s ease;
 }
 
 .friends-card {
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--el-color-primary-rgb), 0.1);
+  animation: fadeIn 0.5s ease-out;
+}
+
+[data-theme="dark"] .friends-card {
+  background-color: rgba(30, 30, 30, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 16px 20px !important;
+  background: linear-gradient(to right, rgba(var(--el-color-primary-rgb), 0.05), transparent);
+}
+
+[data-theme="dark"] .card-header {
+  background: linear-gradient(to right, rgba(var(--el-color-primary-rgb), 0.1), rgba(30, 30, 30, 0.2));
 }
 
 .title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .title h2 {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 24px;
+  background: linear-gradient(45deg, var(--el-color-primary), var(--el-color-primary-light-3));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 15px rgba(var(--el-color-primary-rgb), 0.2);
+}
+
+.title .el-icon {
+  font-size: 24px;
+  color: var(--el-color-primary);
 }
 
 .filter-section {
-  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(var(--el-color-primary-rgb), 0.1);
 }
 
-.friend-item, .request-item {
+[data-theme="dark"] .filter-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.el-input {
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.el-input:hover .el-input__inner,
+.el-input:focus-within .el-input__inner {
+  box-shadow: 0 0 0 2px rgba(var(--el-color-primary-rgb), 0.2);
+}
+
+.friends-list,
+.friend-requests {
+  padding: 20px;
+}
+
+.friend-item,
+.request-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.2s;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: rgba(var(--el-color-primary-rgb), 0.03);
+  border: 1px solid rgba(var(--el-color-primary-rgb), 0.05);
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.friend-item:hover, .request-item:hover {
-  background-color: #f9f9f9;
+[data-theme="dark"] .friend-item,
+[data-theme="dark"] .request-item {
+  background: rgba(40, 40, 40, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.friend-info, .request-info {
+.friend-item:hover,
+.request-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+  background: rgba(var(--el-color-primary-rgb), 0.06);
+}
+
+[data-theme="dark"] .friend-item:hover,
+[data-theme="dark"] .request-item:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  background: rgba(var(--el-color-primary-rgb), 0.1);
+}
+
+.friend-info,
+.request-info {
   display: flex;
   align-items: center;
-  cursor: pointer;
+  gap: 16px;
   flex: 1;
 }
 
-.friend-details, .request-details {
-  margin-left: 15px;
+.friend-details,
+.request-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.friend-name, .request-name {
-  font-weight: 500;
+.friend-name,
+.request-name {
   font-size: 16px;
-  color: #333;
+  font-weight: 500;
 }
 
-.friend-meta, .request-meta {
-  font-size: 13px;
-  color: #999;
-  margin-top: 3px;
+.friend-meta,
+.request-meta {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
 }
 
 .request-message {
-  font-size: 13px;
-  color: #666;
-  margin-top: 3px;
+  font-size: 14px;
+  margin-top: 4px;
+  padding: 8px;
+  background: rgba(var(--el-color-primary-rgb), 0.05);
+  border-radius: 6px;
   max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
-.friend-actions, .request-actions {
+[data-theme="dark"] .request-message {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.friend-actions,
+.request-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .pagination {
@@ -502,35 +580,51 @@ const formatTime = (time: string) => {
 }
 
 .danger-item {
-  color: #f56c6c;
+  color: var(--el-color-danger) !important;
 }
 
-/* 暗色模式适配 */
-[data-theme="dark"] .friend-item, 
-[data-theme="dark"] .request-item {
-  border-bottom-color: #333;
+.empty-tip {
+  text-align: center;
+  padding: 30px 0;
+  color: var(--el-text-color-secondary);
 }
 
-[data-theme="dark"] .friend-item:hover, 
-[data-theme="dark"] .request-item:hover {
-  background-color: #2b2b2b;
+/* 过渡动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-[data-theme="dark"] .friend-name, 
-[data-theme="dark"] .request-name {
-  color: #e0e0e0;
-}
-
-[data-theme="dark"] .friend-meta, 
-[data-theme="dark"] .request-meta {
-  color: #aaa;
-}
-
-[data-theme="dark"] .request-message {
-  color: #bbb;
-}
-
-[data-theme="dark"] .danger-item {
-  color: #f78989;
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .friends-list-container {
+    padding: 16px 12px;
+  }
+  
+  .friend-item,
+  .request-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .friend-info,
+  .request-info {
+    width: 100%;
+  }
+  
+  .friend-actions,
+  .request-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .request-message {
+    max-width: 100%;
+  }
 }
 </style>

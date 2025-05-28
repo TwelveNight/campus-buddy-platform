@@ -20,173 +20,174 @@
       </div>
 
       <div v-else-if="info" class="info-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="发布者">
-            <div class="publisher-info">
-              <el-avatar :size="30"
-                :src="info.publisherAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
-              <router-link :to="`/user/${info.publisherId}`" class="user-link">{{ info.publisherName }}</router-link>
-            </div>
-          </el-descriptions-item>
-          <el-descriptions-item label="发布时间">{{ formatDate(info.createdAt) }}</el-descriptions-item>
-          <el-descriptions-item label="类型">
-            <el-tag>{{ getTypeLabel(info.type) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="状态">
-            <el-tag :type="getStatusType(info.status)">{{ getStatusLabel(info.status) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="预期时间">{{ info.expectedTime }}</el-descriptions-item>
-          <el-descriptions-item label="预期地点">{{ info.expectedLocation }}</el-descriptions-item>
-          <el-descriptions-item label="联系方式">{{ info.contactMethod }}</el-descriptions-item>
-          <el-descriptions-item label="悬赏金额" v-if="info.rewardAmount">{{ info.rewardAmount }} 元</el-descriptions-item>
-          <el-descriptions-item label="浏览次数">{{ info.viewCount }}</el-descriptions-item>
-          <el-descriptions-item label="帮助者" v-if="info.acceptedApplicantNickname">
-            <div class="helper-info">
-              <router-link :to="`/user/${info.helperId}`" class="user-link">{{ info.acceptedApplicantNickname }}</router-link>
-              <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
-            </div>
-          </el-descriptions-item>
-        </el-descriptions>
-
-        <!-- 描述部分单独占据一栏 -->
-        <div class="description-section">
-          <h3 class="description-title">详细描述</h3>
-          <div class="markdown-content description" v-html="renderMarkdown(info.description)"></div>
-        </div>
-        
-        <!-- 相关图片 -->
-        <div class="images-section" v-if="imageList.length > 0">
-          <h3 class="section-title">相关图片</h3>
-          <div class="image-gallery">
-            <el-image v-for="(url, index) in imageList" :key="index" :src="url" :preview-src-list="imageList"
-              :initial-index="index" fit="cover" class="gallery-image">
-            </el-image>
-          </div>
-        </div>
-
-        <!-- 申请列表 - 仅发布者可见 -->
-        <div class="applications-section" v-if="isPublisher && applications.length > 0">
-          <h3>申请列表</h3>
-          <el-table :data="applications" style="width: 100%">
-            <el-table-column prop="applicantNickname" label="申请人" width="120"></el-table-column>
-            <el-table-column prop="message" label="申请消息" min-width="220">
-              <template #default="scope">
-                <div class="message-content" v-html="formatMessage(scope.row.message)"></div>
-              </template>
-            </el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
-              <template #default="scope">
-                <el-tag :type="getApplicationStatusType(scope.row.status)">
-                  {{ getApplicationStatusLabel(scope.row.status) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="180" v-if="info.status === 'OPEN' || info.status === 'IN_PROGRESS'">
-              <template #default="scope">
-                <div class="action-buttons">
-                  <template v-if="scope.row.status === 'PENDING'">
-                    <el-button size="small" type="success" @click="handleAcceptApplication(scope.row)">接受</el-button>
-                    <el-button size="small" type="danger" @click="handleRejectApplication(scope.row)">拒绝</el-button>
-                  </template>
-                  <template v-else>
-                    <span>-</span>
-                  </template>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-
-        <!-- 进度信息 - 当互助任务状态为处理中时显示 -->
-        <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
-          <h3>处理进度</h3>
-          <el-alert title="此互助任务正在处理中" type="warning" :closable="false"
-            :description="`由 ${acceptedApplication.applicantNickname} 提供帮助`">
-          </el-alert>
-
-          <div class="action-buttons" v-if="isPublisher">
-            <el-button type="success" @click="handleComplete">标记为已解决</el-button>
-            <el-button @click="confirmCancel">取消合作</el-button>
-          </div>
-        </div>
-
-        <!-- 操作按钮 - 非发布者且互助任务状态为进行中可见 -->
-        <div class="action-container" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
-          <!-- 错误信息 -->
-          <el-alert v-if="!hasToken" title="请先登录" type="warning" show-icon :closable="false"
-            style="margin-bottom: 10px" />
-
-          <template v-if="hasApplied && myApplication">
-            <el-button-group>
-              <template v-if="myApplication.status === 'PENDING'">
-                <el-button type="info">申请处理中</el-button>
-                <el-button @click="handleCancelApplication">取消申请</el-button>
-              </template>
-              <template v-else-if="myApplication.status === 'ACCEPTED'">
-                <el-button type="success">已被接受</el-button>
-              </template>
-              <template v-else-if="myApplication.status === 'REJECTED'">
-                <el-button type="danger">已被拒绝</el-button>
-                <el-button @click="applyDialogVisible = true">重新申请</el-button>
-              </template>
-              <template v-else-if="myApplication.status === 'CANCELED'">
-                <el-button type="info" disabled style="margin-right: 10px;">已取消</el-button>
-                <el-button type="primary" @click="applyDialogVisible = true">重新申请</el-button>
-              </template>
-            </el-button-group>
-          </template>
-          <template v-else>
-            <el-button type="primary" @click="handleApplyClick">申请帮助</el-button>
-          </template>
-        </div>
-
-        <!-- 提示信息 - 发布者查看自己发布的互助任务时显示 -->
-        <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
-          <el-alert title="这是您发布的互助任务" type="info" description="您不能申请自己发布的互助任务，请等待其他用户申请帮助。" show-icon
-            :closable="false">
-          </el-alert>
-        </div>
-
-        <!-- 评价入口：支持双向评价 - 只有发布者或帮助者才能看到 -->
-        <div class="review-section animate-enter"
-          v-if="(isPublisher || (reviewInfo.helperId === authStore.user?.userId)) && (reviewInfo.showPublisherReview || reviewInfo.showHelperReview || reviewInfo.publisherHasReviewed || reviewInfo.helperHasReviewed)">
-          <h3>评价中心</h3>
-
-          <div class="reviewer-info" v-if="info.status === 'RESOLVED' && reviewInfo.helperId">
-            <div class="publisher-helper-info">
-              <div class="info-row">
-                <strong>发布者：</strong>
+        <div class="helpinfo-detail-card">
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="发布者">
+              <div class="publisher-info">
+                <el-avatar :size="30"
+                  :src="info.publisherAvatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'"></el-avatar>
                 <router-link :to="`/user/${info.publisherId}`" class="user-link">{{ info.publisherName }}</router-link>
-                <el-tag size="small" type="primary" class="role-tag">求助方</el-tag>
               </div>
-              <div class="info-row">
-                <strong>帮助者：</strong>
-                <router-link :to="`/user/${reviewInfo.helperId}`" class="user-link">{{ reviewInfo.helperName || '未知用户' }}</router-link>
+            </el-descriptions-item>
+            <el-descriptions-item label="发布时间">{{ formatDate(info.createdAt) }}</el-descriptions-item>
+            <el-descriptions-item label="类型">
+              <el-tag>{{ getTypeLabel(info.type) }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag :type="getStatusType(info.status)">{{ getStatusLabel(info.status) }}</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="预期时间">{{ info.expectedTime }}</el-descriptions-item>
+            <el-descriptions-item label="预期地点">{{ info.expectedLocation }}</el-descriptions-item>
+            <el-descriptions-item label="联系方式">{{ info.contactMethod }}</el-descriptions-item>
+            <el-descriptions-item label="悬赏金额" v-if="info.rewardAmount">{{ info.rewardAmount }} 元</el-descriptions-item>
+            <el-descriptions-item label="浏览次数">{{ info.viewCount }}</el-descriptions-item>
+            <el-descriptions-item label="帮助者" v-if="info.acceptedApplicantNickname">
+              <div class="helper-info">
+                <router-link :to="`/user/${info.helperId}`" class="user-link">{{ info.acceptedApplicantNickname }}</router-link>
                 <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
               </div>
+            </el-descriptions-item>
+          </el-descriptions>
+
+          <!-- 描述部分单独占据一栏 -->
+          <div class="description-section">
+            <h3 class="description-title">详细描述</h3>
+            <div class="markdown-content description" v-html="renderMarkdown(info.description)"></div>
+          </div>
+          
+          <!-- 相关图片 -->
+          <div class="images-section" v-if="imageList.length > 0">
+            <h3 class="section-title">相关图片</h3>
+            <div class="image-gallery">
+              <el-image v-for="(url, index) in imageList" :key="index" :src="url" :preview-src-list="imageList"
+                :initial-index="index" fit="cover" class="gallery-image">
+              </el-image>
             </div>
           </div>
 
-          <div class="review-buttons">
-            <!-- 发布者评价帮助者 -->
-            <el-button v-if="isPublisher && reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview"
-              class="review-btn" icon="Star">
-              评价帮助者
-            </el-button>
-            <el-button v-if="isPublisher && reviewInfo.publisherHasReviewed" type="info" disabled class="reviewed-btn"
-              icon="Check">
-              已评价帮助者
-            </el-button>
+          <!-- 申请列表 - 仅发布者可见 -->
+          <div class="applications-section" v-if="isPublisher && applications.length > 0">
+            <h3>申请列表</h3>
+            <el-table :data="applications" style="width: 100%">
+              <el-table-column prop="applicantNickname" label="申请人" width="120"></el-table-column>
+              <el-table-column prop="message" label="申请消息" min-width="220">
+                <template #default="scope">
+                  <div class="message-content" v-html="formatMessage(scope.row.message)"></div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="scope">
+                  <el-tag :type="getApplicationStatusType(scope.row.status)">
+                    {{ getApplicationStatusLabel(scope.row.status) }}
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="180" v-if="info.status === 'OPEN' || info.status === 'IN_PROGRESS'">
+                <template #default="scope">
+                  <div class="action-buttons">
+                    <template v-if="scope.row.status === 'PENDING'">
+                      <el-button size="small" type="success" @click="handleAcceptApplication(scope.row)">接受</el-button>
+                      <el-button size="small" type="danger" @click="handleRejectApplication(scope.row)">拒绝</el-button>
+                    </template>
+                    <template v-else>
+                      <span>-</span>
+                    </template>
+                  </div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
 
-            <!-- 帮助者评价发布者 -->
-            <el-button v-if="!isPublisher && reviewInfo.showHelperReview" type="success" @click="openHelperReview"
-              class="review-btn" icon="Star">
-              评价发布者
-            </el-button>
-            <el-button v-if="!isPublisher && reviewInfo.helperHasReviewed" type="info" disabled class="reviewed-btn"
-              icon="Check">
-              已评价发布者
-            </el-button>
+          <!-- 进度信息 - 当互助任务状态为处理中时显示 -->
+          <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
+            <h3>处理进度</h3>
+            <el-alert title="此互助任务正在处理中" type="warning" :closable="false"
+              :description="`由 ${acceptedApplication.applicantNickname} 提供帮助`">
+            </el-alert>
+
+            <div class="action-buttons" v-if="isPublisher">
+              <el-button type="success" @click="handleComplete">标记为已解决</el-button>
+              <el-button @click="confirmCancel">取消合作</el-button>
+            </div>
+          </div>
+
+          <!-- 操作按钮 - 非发布者且互助任务状态为进行中可见 -->
+          <div class="action-container" v-if="info.status === 'OPEN' && (!authStore.user || !isPublisher)">
+            <!-- 错误信息 -->
+            <el-alert v-if="!hasToken" title="请先登录" type="warning" show-icon :closable="false"
+              style="margin-bottom: 10px" />
+
+            <template v-if="hasApplied && myApplication">
+              <el-button-group>
+                <template v-if="myApplication.status === 'PENDING'">
+                  <el-button type="info">申请处理中</el-button>
+                  <el-button @click="handleCancelApplication">取消申请</el-button>
+                </template>
+                <template v-else-if="myApplication.status === 'ACCEPTED'">
+                  <el-button type="success">已被接受</el-button>
+                </template>
+                <template v-else-if="myApplication.status === 'REJECTED'">
+                  <el-button type="danger">已被拒绝</el-button>
+                  <el-button @click="applyDialogVisible = true">重新申请</el-button>
+                </template>
+                <template v-else-if="myApplication.status === 'CANCELED'">
+                  <el-button type="info" disabled style="margin-right: 10px;">已取消</el-button>
+                  <el-button type="primary" @click="applyDialogVisible = true">重新申请</el-button>
+                </template>
+              </el-button-group>
+            </template>
+            <template v-else>
+              <el-button type="primary" @click="handleApplyClick">申请帮助</el-button>
+            </template>
+          </div>
+
+          <!-- 提示信息 - 发布者查看自己发布的互助任务时显示 -->
+          <div class="info-section" v-if="isPublisher && info.status === 'OPEN'">
+            <el-alert title="这是您发布的互助任务" type="info" show-icon :closable="false">
+            </el-alert>
+          </div>
+
+          <!-- 评价入口：支持双向评价 - 只有发布者或帮助者才能看到 -->
+          <div class="review-section animate-enter"
+            v-if="(isPublisher || (reviewInfo.helperId === authStore.user?.userId)) && (reviewInfo.showPublisherReview || reviewInfo.showHelperReview || reviewInfo.publisherHasReviewed || reviewInfo.helperHasReviewed)">
+            <h3>评价中心</h3>
+
+            <div class="reviewer-info" v-if="info.status === 'RESOLVED' && reviewInfo.helperId">
+              <div class="publisher-helper-info">
+                <div class="info-row">
+                  <strong>发布者：</strong>
+                  <router-link :to="`/user/${info.publisherId}`" class="user-link">{{ info.publisherName }}</router-link>
+                  <el-tag size="small" type="primary" class="role-tag">求助方</el-tag>
+                </div>
+                <div class="info-row">
+                  <strong>帮助者：</strong>
+                  <router-link :to="`/user/${reviewInfo.helperId}`" class="user-link">{{ reviewInfo.helperName || '未知用户' }}</router-link>
+                  <el-tag size="small" type="success" class="role-tag">帮助方</el-tag>
+                </div>
+              </div>
+            </div>
+
+            <div class="review-buttons">
+              <!-- 发布者评价帮助者 -->
+              <el-button v-if="isPublisher && reviewInfo.showPublisherReview" type="primary" @click="openPublisherReview"
+                class="review-btn" icon="Star">
+                评价帮助者
+              </el-button>
+              <el-button v-if="isPublisher && reviewInfo.publisherHasReviewed" type="info" disabled class="reviewed-btn"
+                icon="Check">
+                已评价帮助者
+              </el-button>
+
+              <!-- 帮助者评价发布者 -->
+              <el-button v-if="!isPublisher && reviewInfo.showHelperReview" type="success" @click="openHelperReview"
+                class="review-btn" icon="Star">
+                评价发布者
+              </el-button>
+              <el-button v-if="!isPublisher && reviewInfo.helperHasReviewed" type="info" disabled class="reviewed-btn"
+                icon="Check">
+                已评价发布者
+              </el-button>
+            </div>
           </div>
         </div>
       </div>
@@ -948,6 +949,25 @@ async function handleApplySuccess() {
   margin-top: 10px;
 }
 
+.helpinfo-detail-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.85) 100%);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 28px 24px;
+  margin: 0 auto 28px auto;
+  max-width: 720px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(230,230,230,0.5);
+  transition: box-shadow 0.3s, background 0.3s;
+}
+
+[data-theme="dark"] .helpinfo-detail-card {
+  background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(40,40,40,0.9) 100%);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  border: 1px solid rgba(60,60,60,0.5);
+}
+
 .publisher-info {
   display: flex;
   align-items: center;
@@ -1150,29 +1170,11 @@ async function handleApplySuccess() {
 }
 
 .review-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.review-btn:hover::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 120%;
-  height: 120%;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  animation: ripple 0.6s ease-out;
-}
-
-@keyframes ripple {
-  to {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0;
-  }
-}
+/* 简化悬停动画效果，移除波纹效果 */
 
 @media screen and (max-width: 576px) {
   .review-buttons {
@@ -1500,5 +1502,42 @@ async function handleApplySuccess() {
 
 [data-theme="dark"] .el-dialog__footer {
   border-top: 1px solid var(--dark-border-color);
+}
+
+/* 评价中心相关样式 - 暗色模式 */
+[data-theme="dark"] .review-section {
+  background-color: var(--dark-bg-secondary, #1a1a1a);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] .review-section h3 {
+  color: var(--dark-text-primary, #e0e0e0);
+}
+
+[data-theme="dark"] .review-section h3::before {
+  color: var(--primary-color-dark, #79bbff);
+}
+
+[data-theme="dark"] .reviewer-info {
+  background-color: rgba(30, 30, 30, 0.7);
+  border-color: var(--dark-border-color, #333);
+}
+
+[data-theme="dark"] .role-tag {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .contact-info {
+  background-color: rgba(103, 194, 58, 0.1);
+  color: #95d475;
+  border: 1px solid rgba(103, 194, 58, 0.2);
+}
+
+/* 解决暗色模式下的联系信息对比度问题 */
+[data-theme="dark"] .message-content .contact-info {
+  background-color: rgba(103, 194, 58, 0.15);
+  color: #95d475;
+  border: 1px solid rgba(103, 194, 58, 0.25);
 }
 </style>
