@@ -417,9 +417,6 @@ public class GroupPostController {
         
         Long commentId = commentService.addComment(comment);
         
-        // 新增：更新帖子评论数
-        groupPostService.increaseCommentCount(postId);
-        
         return R.ok(commentId);
     }
 
@@ -437,11 +434,6 @@ public class GroupPostController {
         }
         
         boolean success = commentService.deleteComment(commentId, currentUser.getUserId());
-        
-        if (success) {
-            // 新增：减少帖子评论数
-            groupPostService.decreaseCommentCount(postId);
-        }
         
         return success ? R.ok("删除成功", null) : R.fail("删除失败，可能没有权限或评论不存在");
     }
