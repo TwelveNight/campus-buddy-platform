@@ -5,6 +5,7 @@ import './styles/theme.css' // 引入主题样式
 import './styles/responsive.css' // 引入响应式样式
 import './styles/notification.css' // 引入通知样式
 import './styles/mobile.css' // 引入移动端增强样式
+import './styles/group-disabled.css' // 引入小组禁用状态样式
 import App from './App.vue'
 import router from './router/index'
 import { createPinia } from 'pinia'

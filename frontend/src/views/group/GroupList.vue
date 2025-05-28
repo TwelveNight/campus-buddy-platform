@@ -78,21 +78,23 @@
               <div class="group-tags">
                 <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
               </div>
-            </div>
-            <div class="group-actions">
-              <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled>已解散</el-button>
-              <template v-else>
-                <el-button v-if="!group.memberStatus" type="primary" size="small" plain @click.stop="handleJoinGroup(group)" class="action-btn pulse-btn">
-                  <span>加入小组</span>
+            </div>              <div class="group-actions">
+                <el-button v-if="group.status === 'DISBANDED'" type="info" size="small" plain disabled class="action-btn">已解散</el-button>
+                <el-button v-else-if="group.status === 'INACTIVE'" type="warning" size="small" plain class="action-btn inactive-btn">
+                  <span>已禁用</span>
                 </el-button>
-                <el-button v-else-if="group.memberStatus === 'PENDING' || group.memberStatus === 'PENDING_APPROVAL'" type="warning" size="small" plain disabled class="action-btn">
-                  <span>等待审批</span>
-                </el-button>
-                <el-button v-else-if="group.memberStatus === 'ACTIVE'" type="success" size="small" plain disabled class="action-btn">
-                  <span>已加入</span>
-                </el-button>
-              </template>
-            </div>
+                <template v-else>
+                  <el-button v-if="!group.memberStatus" type="primary" size="small" plain @click.stop="handleJoinGroup(group)" class="action-btn pulse-btn">
+                    <span>加入小组</span>
+                  </el-button>
+                  <el-button v-else-if="group.memberStatus === 'PENDING' || group.memberStatus === 'PENDING_APPROVAL'" type="warning" size="small" plain disabled class="action-btn">
+                    <span>等待审批</span>
+                  </el-button>
+                  <el-button v-else-if="group.memberStatus === 'ACTIVE'" type="success" size="small" plain disabled class="action-btn">
+                    <span>已加入</span>
+                  </el-button>
+                </template>
+              </div>
           </el-card>
         </div>
 

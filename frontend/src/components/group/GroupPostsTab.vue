@@ -587,8 +587,8 @@ const loadComments = async (post: Post) => {
         if (response.data && response.data.code === 200) {
             post.comments = response.data.data.comments || [];
             post.commentTotal = response.data.data.total || 0;
-            // 强制同步评论数
-            post.commentCount = post.commentTotal;
+            // 注释掉：让评论数完全依赖后端数据，不进行前端同步
+            // post.commentCount = post.commentTotal;
         } else {
             ElMessage.error(response.data?.message || '加载评论失败');
         }
@@ -625,6 +625,9 @@ const submitComment = async (post: Post) => {
             // 重新加载评论列表，显示最新评论
             post.commentCurrentPage = 1; // 重置到第一页
             await loadComments(post);
+            
+            // 重新加载帖子列表以获取最新的评论数
+            await loadPosts();
         } else {
             ElMessage.error(response.data?.message || '评论失败');
         }
@@ -658,6 +661,9 @@ const deleteCommentItem = async (post: Post, comment: any) => {
                 
                 // 重新加载评论列表
                 await loadComments(post);
+                
+                // 重新加载帖子列表以获取最新的评论数
+                await loadPosts();
             } else {
                 ElMessage.error(response.data?.message || '删除评论失败');
             }
@@ -998,7 +1004,7 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 }
 
 .post-actions .el-dropdown:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .post-actions .el-button {
@@ -1006,9 +1012,9 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 }
 
 .post-actions .el-button:hover {
-    background-color: rgba(64, 158, 255, 0.1);
+    background-color: rgba(64, 158, 255, 0.08);
     color: #409eff;
-    transform: scale(1.2);
+    transform: scale(1.05);
 }
 
 /* 下拉菜单动画 */

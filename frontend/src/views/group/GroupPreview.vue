@@ -306,8 +306,8 @@ const handleJoinGroup = async () => {
 
 .group-header:hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    transform: translateY(-5px);
-    animation: floatY 3s ease-in-out infinite;
+    transform: translateY(-3px); /* 减小位移 */
+    /* animation: floatY 3s ease-in-out infinite; */ /* 移除无限动画 */
 }
 
 /* 头像动画 */
@@ -319,8 +319,9 @@ const handleJoinGroup = async () => {
 }
 
 .group-avatar:hover {
-    transform: scale(1.1);
-    animation: pulseGlow 2s ease-in-out infinite;
+    transform: scale(1.05);
+    /* 移除无限动画 */
+    /* animation: pulseGlow 2s ease-in-out infinite; */
 }
 
 .group-avatar .el-avatar {
@@ -332,13 +333,13 @@ const handleJoinGroup = async () => {
 .group-avatar:before {
     content: '';
     position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
     border: 2px solid transparent;
     border-radius: 50%;
-    background: linear-gradient(45deg, #409eff, #67c23a, #e6a23c, #f56c6c);
+    background: linear-gradient(45deg, #409eff, #67c23a);
     background-size: 200% 200%;
     animation: gradientShift 3s ease infinite;
     opacity: 0;
@@ -347,7 +348,7 @@ const handleJoinGroup = async () => {
 }
 
 .group-avatar:hover:before {
-    opacity: 1;
+    opacity: 0.6; /* 降低不透明度，使效果更加柔和 */
 }
 
 /* 头部信息动画 */
@@ -389,8 +390,8 @@ const handleJoinGroup = async () => {
 .group-meta .el-tag:nth-child(3) { animation-delay: 0.3s; }
 
 .group-meta .el-tag:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
 .member-count,
@@ -471,7 +472,7 @@ const handleJoinGroup = async () => {
 }
 
 .group-actions .el-button:hover {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateY(-2px);
 }
 
 .group-actions .el-button--primary {
@@ -480,15 +481,15 @@ const handleJoinGroup = async () => {
 }
 
 .group-actions .el-button--primary:hover {
-    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 .group-actions .el-button--warning:hover {
-    box-shadow: 0 8px 25px rgba(230, 162, 60, 0.4);
+    box-shadow: 0 4px 12px rgba(230, 162, 60, 0.3);
 }
 
 .group-actions .el-button--success:hover {
-    box-shadow: 0 8px 25px rgba(103, 194, 58, 0.4);
+    box-shadow: 0 4px 12px rgba(103, 194, 58, 0.3);
 }
 
 .group-actions .el-button:before {

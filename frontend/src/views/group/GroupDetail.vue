@@ -550,7 +550,7 @@ const confirmDisbandGroup = () => {
         transform: translateY(0);
     }
     50% {
-        transform: translateY(-8px);
+        transform: translateY(-4px); /* 减小浮动幅度 */
     }
 }
 
@@ -755,8 +755,8 @@ const confirmDisbandGroup = () => {
 .bouncing-tag:nth-child(4) { animation-delay: 0.3s; }
 
 .bouncing-tag:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
 .shimmering-tag {
@@ -792,7 +792,7 @@ const confirmDisbandGroup = () => {
 
 .primary-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 .magic-hover {

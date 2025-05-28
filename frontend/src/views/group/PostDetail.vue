@@ -30,6 +30,9 @@
           </div>
         </div>
 
+        <!-- 小组禁用警告 -->
+        <DisabledGroupWarning :is-disabled="groupStatus === 'INACTIVE'" />
+
         <!-- 帖子内容 -->
         <div class="post-body content-section">
           <div v-if="post.contentType === 'MARKDOWN'" class="markdown-content" v-html="renderMarkdown(post.content)"></div>
@@ -54,7 +57,12 @@
             <div class="comment-input input-section">
               <h3 class="section-title">发表评论</h3>
               <RichEditor v-model="newComment" placeholder="请输入评论内容" class="editor-container" />
-              <el-button type="primary" @click="submitComment" :disabled="!authStore.isAuthenticated || !newComment?.trim()" class="submit-btn magical-btn">发表评论</el-button>
+              <el-button type="primary" @click="submitComment" :disabled="isCommentDisabled" class="submit-btn magical-btn">
+                {{ groupStatus === 'INACTIVE' ? '小组已禁用，无法评论' : '发表评论' }}
+              </el-button>
+              <div v-if="groupStatus === 'INACTIVE'" class="disabled-tip">
+                <el-tag type="warning" effect="dark">该小组已被禁用，无法发表评论</el-tag>
+              </div>
             </div>
 
             <div class="comments-list comments-container" v-loading="commentsLoading">
@@ -119,6 +127,7 @@ import { getPostDetail, likePost, unlikePost, getLikeStatus } from '../../api/gr
 import { getPostComments, addComment } from '../../api/postComment'
 import { useAuthStore } from '../../store/auth'
 import RichEditor from '../../components/form/RichEditor.vue'
+import DisabledGroupWarning from '../../components/group/DisabledGroupWarning.vue'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -139,6 +148,7 @@ const post = ref<any>(null)
 const comments = ref<any[]>([])
 const showComments = ref(false)
 const newComment = ref('')
+const groupStatus = ref('ACTIVE') // 新增: 存储小组状态
 
 // 分页数据
 const commentCurrentPage = ref(1)
@@ -147,6 +157,11 @@ const commentTotal = ref(0)
 
 // 默认头像
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+
+// 计算属性：根据小组状态判断是否禁用评论
+const isCommentDisabled = computed(() => {
+  return !authStore.isAuthenticated || !newComment.value?.trim() || groupStatus.value !== 'ACTIVE'
+})
 
 // 加载帖子详情
 const loadPostDetail = async () => {
@@ -157,6 +172,11 @@ const loadPostDetail = async () => {
     const response = await getPostDetail(postId.value)
     if (response.data && response.data.code === 200) {
       post.value = response.data.data
+      
+      // 保存小组状态 (如果API返回了该字段)
+      if (post.value.group && post.value.group.status) {
+        groupStatus.value = post.value.group.status
+      }
       
       // 检查点赞状态
       if (authStore.isAuthenticated) {
@@ -255,6 +275,11 @@ const submitComment = async () => {
     return
   }
 
+  if (groupStatus.value === 'INACTIVE') {
+    ElMessage.warning('小组已被禁用，无法发表评论')
+    return
+  }
+
   try {
     const response = await addComment({
       postId: postId.value,
@@ -269,10 +294,8 @@ const submitComment = async () => {
       commentCurrentPage.value = 1
       await loadComments()
       
-      // 更新帖子评论数
-      if (post.value) {
-        post.value.commentCount = (post.value.commentCount || 0) + 1
-      }
+      // 重新加载帖子详情以获取最新的评论数
+      await loadPostDetail()
     } else {
       ElMessage.error(response.data?.message || '评论失败')
     }
@@ -736,6 +759,11 @@ watch(() => showComments.value, (newValue) => {
 .submit-btn.magical-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.disabled-tip {
+    margin-top: 10px;
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 /* 评论项动画 */

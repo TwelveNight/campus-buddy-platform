@@ -145,12 +145,5 @@ export interface CacheDetails {
      */
     clearHelpInfoList: () => {
       return request.delete('/api/cache/clear/helpinfo-list').then(res => res.data.data)
-    },
-
-    /**
-     * 强制刷新互助信息浏览量计数
-     */
-    flushHelpInfoViewCounts: () => {
-      return request.post('/api/cache/flush/helpinfo-viewcount').then(res => res.data.data)
     }
   }

@@ -99,10 +99,10 @@
           </div>
 
           <!-- 进度信息 - 当互助任务状态为处理中时显示 -->
-          <div class="progress-section" v-if="info.status === 'IN_PROGRESS' && acceptedApplication">
+          <div class="progress-section" v-if="info.status === 'IN_PROGRESS'">
             <h3>处理进度</h3>
             <el-alert title="此互助任务正在处理中" type="warning" :closable="false"
-              :description="`由 ${acceptedApplication.applicantNickname} 提供帮助`">
+              :description="acceptedApplication ? `由 ${acceptedApplication.applicantNickname} 提供帮助` : '正在进行中'">
             </el-alert>
 
             <div class="action-buttons" v-if="isPublisher">
@@ -291,7 +291,10 @@ const isPublisher = computed(() => {
 
 // 获取已接受的申请
 const acceptedApplication = computed(() => {
-  return applications.value.find(app => app.status === 'ACCEPTED')
+  console.log('当前申请列表状态:', applications.value.map(app => ({ id: app.id || app.applicationId, status: app.status, name: app.applicantNickname })));
+  const accepted = applications.value.find(app => app.status === 'ACCEPTED');
+  console.log('找到的已接受申请:', accepted);
+  return accepted;
 })
 
 // 解析图片列表
@@ -381,6 +384,7 @@ watch([info, () => authStore.user?.userId], () => {
 
 // 获取申请列表
 async function fetchApplications() {
+  // 修改条件：如果是发布者，或者任务状态是IN_PROGRESS，就获取申请列表
   if (!isPublisher.value && info.value?.status !== 'IN_PROGRESS') return;
 
   try {
@@ -388,30 +392,29 @@ async function fetchApplications() {
     const res = await getApplications(id);
     if (res.data.code === 200) {
       let apps = res.data.data || [];
-      // 如果是发布者，或者互助任务在进行中，则需要获取申请人昵称
-      if (isPublisher.value || info.value?.status === 'IN_PROGRESS') {
-        const userPromises = apps.map(async (app: any) => {
-          if (app.applicantId && !app.applicantNickname) {
-            try {
-              const userRes = await getUserById(app.applicantId);
-              if (userRes.data.code === 200 && userRes.data.data) {
-                app.applicantNickname = userRes.data.data.nickname;
-                app.applicantAvatar = userRes.data.data.avatarUrl; // 同时获取头像
-              }
-            } catch (e) {
-              console.error(`获取用户 ${app.applicantId} 信息失败:`, e);
-              app.applicantNickname = '未知用户';
+      
+      // 获取所有申请人的昵称，不再限制条件
+      const userPromises = apps.map(async (app: any) => {
+        if (app.applicantId && !app.applicantNickname) {
+          try {
+            const userRes = await getUserById(app.applicantId);
+            if (userRes.data.code === 200 && userRes.data.data) {
+              app.applicantNickname = userRes.data.data.nickname;
+              app.applicantAvatar = userRes.data.data.avatarUrl; // 同时获取头像
             }
+          } catch (e) {
+            console.error(`获取用户 ${app.applicantId} 信息失败:`, e);
+            app.applicantNickname = '未知用户';
           }
-          return app;
-        });
-        applications.value = await Promise.all(userPromises);
-      } else {
-        applications.value = apps;
-      }
+        }
+        return app;
+      });
+      
+      applications.value = await Promise.all(userPromises);
+      console.log('获取到的申请列表:', applications.value);
     }
   } catch (e: any) {
-    console.error('获取申请列表失败');
+    console.error('获取申请列表失败', e);
   }
 }
 
@@ -430,6 +433,10 @@ async function handleAcceptApplication(application: any) {
       ElMessage.success('已接受申请')
       await helpInfoStore.fetchDetail(id) // 刷新互助任务状态
       await fetchApplications() // 刷新申请列表
+      
+      // 强制重新加载整个互助任务详情，确保状态完全更新
+      loadData()
+      
       // 如果接受成功，并且当前用户是发布者，则重新检查用户（自己）的申请状态，以更新视图
       if (isPublisher.value) {
         await checkUserApplication();

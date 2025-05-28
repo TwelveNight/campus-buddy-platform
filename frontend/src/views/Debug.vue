@@ -390,16 +390,6 @@
                   >
                     清空互助信息列表缓存
                   </el-button>
-
-                  <el-button 
-                    type="success" 
-                    :loading="flushingHelpInfoViewCounts" 
-                    @click="flushHelpInfoViewCounts"
-                    icon="View"
-                    class="action-btn"
-                  >
-                    刷新浏览量计数
-                  </el-button>
                 </div>
 
                 <!-- 互助信息详情缓存操作 -->
@@ -473,7 +463,6 @@ const postIdInput = ref<number | null>(null)
 const clearingAllHelpInfoCache = ref(false)
 const clearingHelpInfoListCache = ref(false)
 const clearingHelpInfoDetailCache = ref(false)
-const flushingHelpInfoViewCounts = ref(false)
 const helpInfoIdInput = ref<number | null>(null)
 const cacheStats = ref<CacheStats | null>(null)
 const cacheDetails = ref<CacheDetails | null>(null)
@@ -940,33 +929,7 @@ async function clearHelpInfoDetailCache() {
   }
 }
 
-// 刷新互助信息浏览量计数
-async function flushHelpInfoViewCounts() {
-  try {
-    await ElMessageBox.confirm(
-      '确定要将缓存中的互助信息浏览量计数刷新到数据库吗？',
-      '确认刷新浏览量计数',
-      {
-        confirmButtonText: '确定刷新',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
 
-    flushingHelpInfoViewCounts.value = true
-    await cacheApi.flushHelpInfoViewCounts()
-    ElMessage.success('互助信息浏览量计数已刷新到数据库')
-    // 刷新统计信息
-    await loadCacheStats()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('刷新互助信息浏览量计数失败')
-      console.error('刷新互助信息浏览量计数失败:', error)
-    }
-  } finally {
-    flushingHelpInfoViewCounts.value = false
-  }
-}
 </script>
 
 <style scoped>
