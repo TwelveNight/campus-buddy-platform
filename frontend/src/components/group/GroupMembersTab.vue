@@ -325,6 +325,7 @@ const filterMembers = () => {
     filteredMembers.value = members.value.filter(member => {
         const matchesSearch = !searchQuery.value ||
             (member.username && member.username.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+            (member.nickname && member.nickname.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
             (member.realName && member.realName.toLowerCase().includes(searchQuery.value.toLowerCase()));
 
         const matchesRole = !roleFilter.value || member.role === roleFilter.value;
