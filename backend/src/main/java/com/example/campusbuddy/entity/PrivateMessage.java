@@ -43,6 +43,16 @@ public class PrivateMessage implements Serializable {
     private String content;
 
     /**
+     * 消息类型: TEXT, IMAGE, EMOJI
+     */
+    private String messageType;
+
+    /**
+     * 图片URL（当messageType为IMAGE时使用）
+     */
+    private String imageUrl;
+
+    /**
      * 是否已读
      */
     private Boolean isRead;

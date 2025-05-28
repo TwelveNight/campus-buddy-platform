@@ -11,9 +11,16 @@ import type {
  * @param {Object} data - 私信数据
  * @param {number} data.recipientId - 接收者ID
  * @param {string} data.content - 消息内容
+ * @param {string} [data.messageType] - 消息类型：TEXT, IMAGE, EMOJI
+ * @param {string} [data.imageUrl] - 图片URL（当messageType为IMAGE时）
  * @returns {Promise<{data: SendMessageResponse}>} 发送结果
  */
-export const sendPrivateMessage = (data: { recipientId: number; content: string }) => {
+export const sendPrivateMessage = (data: { 
+  recipientId: number; 
+  content: string;
+  messageType?: 'TEXT' | 'IMAGE' | 'EMOJI';
+  imageUrl?: string;
+}) => {
   return request({
     url: '/api/messages',
     method: 'post',

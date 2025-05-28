@@ -14,6 +14,8 @@ export interface ChatMessage {
   senderId: number;
   recipientId: number;
   content: string;
+  messageType?: 'TEXT' | 'IMAGE' | 'EMOJI'; // 消息类型
+  imageUrl?: string; // 图片URL（当messageType为IMAGE时）
   createdAt: string | Date;
   isRead: boolean;
 }

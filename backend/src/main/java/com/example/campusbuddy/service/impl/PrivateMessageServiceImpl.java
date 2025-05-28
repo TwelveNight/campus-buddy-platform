@@ -12,6 +12,7 @@ import com.example.campusbuddy.service.PrivateMessageService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.PrivateMessageVO;
 import com.example.campusbuddy.websocket.UserWebSocketHandler;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,9 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
     @Transactional
     public Long sendMessage(Long senderId, PrivateMessageDTO dto) {
@@ -40,6 +44,8 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         message.setSenderId(senderId);
         message.setRecipientId(dto.getRecipientId());
         message.setContent(dto.getContent());
+        message.setMessageType(dto.getMessageType() != null ? dto.getMessageType() : "TEXT");
+        message.setImageUrl(dto.getImageUrl());
         message.setIsRead(false);
         
         save(message);
@@ -47,13 +53,25 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 通过WebSocket发送实时消息
         User sender = userService.getById(senderId);
         if (sender != null) {
-            UserWebSocketHandler.sendPrivateMessage(
-                dto.getRecipientId(), 
-                senderId, 
-                sender.getNickname(), 
-                dto.getContent(), 
-                message.getMessageId()
-            );
+            try {
+                Map<String, Object> messageData = new HashMap<>();
+                messageData.put("type", "PRIVATE_MESSAGE");
+                messageData.put("messageId", message.getMessageId());
+                messageData.put("senderId", senderId);
+                messageData.put("senderName", sender.getNickname());
+                messageData.put("senderAvatar", sender.getAvatarUrl());
+                messageData.put("content", message.getContent());
+                messageData.put("messageType", message.getMessageType());
+                messageData.put("imageUrl", message.getImageUrl());
+                messageData.put("timestamp", System.currentTimeMillis());
+                
+                // 将Map转换为JSON字符串并发送
+                String jsonMessage = objectMapper.writeValueAsString(messageData);
+                UserWebSocketHandler.sendToUser(dto.getRecipientId(), jsonMessage);
+            } catch (Exception e) {
+                // 如果WebSocket发送失败，记录日志但不影响消息保存
+                e.printStackTrace();
+            }
         }
         
         return message.getMessageId();

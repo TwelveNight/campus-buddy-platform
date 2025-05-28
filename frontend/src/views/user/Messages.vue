@@ -96,35 +96,78 @@
                                 <el-icon><ArrowUp /></el-icon> 加载更多消息
                             </el-button>
                         </div>
-                        <div class="messages-date-divider" v-if="messages.length > 0">
-                            <span>{{ formatDateDivider(messages[0].createdAt) }}</span>
-                        </div>
-                        <div v-for="(message, index) in messages" :key="message.messageId" class="message-item" :class="{
-                            'message-self': message.senderId === currentUserId,
-                            'message-other': message.senderId !== currentUserId,
-                            'message-consecutive': index > 0 && message.senderId === messages[index-1].senderId
-                        }">
-                            <div class="message-avatar" v-if="index === 0 || message.senderId !== messages[index-1].senderId">
-                                <el-avatar :size="40" :src="message.senderId === currentUserId
-                                    ? currentUserAvatar || defaultAvatar
-                                    : currentChatUser.avatarUrl || defaultAvatar">
-                                    {{ message.senderId === currentUserId ? '我' : currentChatUser.nickname.substring(0, 1) }}
-                                </el-avatar>
+                        
+                        <div v-for="(message, index) in messages" :key="message.messageId">
+                            <!-- 日期分隔线 - 当日期发生变化时显示 -->
+                            <div v-if="shouldShowDateDivider(message, index)" class="messages-date-divider">
+                                <span>{{ formatDateDivider(message.createdAt) }}</span>
                             </div>
-                            <div class="message-avatar-placeholder" v-else></div>
-                            <div class="message-content">
-                                <div class="message-sender" v-if="index === 0 || message.senderId !== messages[index-1].senderId">
-                                    {{ message.senderId === currentUserId ? '我' : currentChatUser.nickname }}
+                            
+                            <div class="message-item" :class="{
+                                'message-self': message.senderId === currentUserId,
+                                'message-other': message.senderId !== currentUserId,
+                                'message-consecutive': index > 0 && message.senderId === messages[index-1].senderId && isSameDay(message.createdAt, messages[index-1].createdAt)
+                            }">
+                                <div class="message-avatar" v-if="shouldShowAvatar(message, index)">
+                                    <el-avatar :size="40" :src="message.senderId === currentUserId
+                                        ? currentUserAvatar || defaultAvatar
+                                        : currentChatUser.avatarUrl || defaultAvatar">
+                                        {{ message.senderId === currentUserId ? '我' : currentChatUser.nickname.substring(0, 1) }}
+                                    </el-avatar>
                                 </div>
-                                <div class="message-bubble">
-                                    {{ message.content }}
-                                </div>
-                                <div class="message-time">
-                                    {{ formatMessageTime(message.createdAt) }}
-                                    <el-icon v-if="message.senderId === currentUserId" class="message-status-icon">
-                                        <el-icon v-if="message.isRead"><CircleCheck /></el-icon>
-                                        <el-icon v-else><Check /></el-icon>
-                                    </el-icon>
+                                <div class="message-avatar-placeholder" v-else></div>
+                                <div class="message-content">
+                                    <div class="message-sender" v-if="shouldShowAvatar(message, index)">
+                                        {{ message.senderId === currentUserId ? '我' : currentChatUser.nickname }}
+                                    </div>
+                                    <div class="message-bubble" :class="{ 'emoji-bubble': message.messageType === 'EMOJI' }">
+                                        <!-- 文本消息 -->
+                                        <template v-if="!message.messageType || message.messageType === 'TEXT'">
+                                            {{ message.content }}
+                                        </template>
+                                        
+                                        <!-- 表情消息 -->
+                                        <template v-else-if="message.messageType === 'EMOJI'">
+                                            <span class="emoji-message">{{ message.content }}</span>
+                                        </template>
+                                        
+                                        <!-- 图片消息 -->
+                                        <template v-else-if="message.messageType === 'IMAGE'">
+                                            <div class="image-message">
+                                                <el-image
+                                                    :src="message.imageUrl || message.content"
+                                                    :preview-src-list="[message.imageUrl || message.content]"
+                                                    fit="cover"
+                                                    class="message-image"
+                                                    lazy
+                                                    :preview-teleported="true"
+                                                >
+                                                    <template #placeholder>
+                                                        <div class="image-loading">
+                                                            <el-icon class="is-loading"><Loading /></el-icon>
+                                                            <span>加载中...</span>
+                                                        </div>
+                                                    </template>
+                                                    <template #error>
+                                                        <div class="image-error">
+                                                            <el-icon><Picture /></el-icon>
+                                                            <span>图片加载失败</span>
+                                                        </div>
+                                                    </template>
+                                                </el-image>
+                                                <div v-if="message.content && message.content !== message.imageUrl && message.content !== '图片'" class="image-caption">
+                                                    {{ message.content }}
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div class="message-time">
+                                        {{ formatMessageTime(message.createdAt) }}
+                                        <el-icon v-if="message.senderId === currentUserId" class="message-status-icon">
+                                            <el-icon v-if="message.isRead"><CircleCheck /></el-icon>
+                                            <el-icon v-else><Check /></el-icon>
+                                        </el-icon>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -143,16 +186,8 @@
                     />
                     <div class="input-actions">
                         <div class="input-tools">
-                            <el-tooltip content="表情" placement="top">
-                                <el-button type="text" class="tool-button">
-                                    <el-icon><Position /></el-icon>
-                                </el-button>
-                            </el-tooltip>
-                            <el-tooltip content="图片" placement="top">
-                                <el-button type="text" class="tool-button">
-                                    <el-icon><Picture /></el-icon>
-                                </el-button>
-                            </el-tooltip>
+                            <EmojiPicker @select="insertEmoji" />
+                            <ImageUploader @success="sendImage" @error="handleImageError" />
                             <span class="input-tip">Ctrl + Enter 发送</span>
                         </div>
                         <el-button type="primary" @click="sendMessage" :disabled="!messageContent.trim()" :loading="sending">
@@ -182,7 +217,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
     Search, Refresh, Check, User, ArrowUp, 
-    CircleCheck, ChatDotRound, Picture, Position
+    CircleCheck, ChatDotRound, Picture, Position, Loading
 } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -198,6 +233,8 @@ import {
 import { getUserById } from '@/api/user'
 import type { ChatSession, ChatMessage } from '@/types/message'
 import webSocketService from '@/utils/websocket'
+import EmojiPicker from '@/components/chat/EmojiPicker.vue'
+import ImageUploader from '@/components/chat/ImageUploader.vue'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -226,19 +263,63 @@ const sending = ref(false)
 const currentUserId = computed(() => authStore.user?.userId)
 const currentUserAvatar = computed(() => authStore.user?.avatarUrl)
 
-// 格式化时间
+// 格式化会话列表中的时间
 const formatTime = (time: string | Date) => {
     if (!time) return ''
-    return dayjs(typeof time === 'string' ? time : time.toISOString()).fromNow()
+    const messageTime = dayjs(typeof time === 'string' ? time : time.toISOString())
+    const now = dayjs()
+    
+    // 如果是今天，显示具体时间
+    if (messageTime.isSame(now, 'day')) {
+        return messageTime.format('HH:mm')
+    }
+    // 如果是昨天，显示"昨天"
+    else if (messageTime.isSame(now.subtract(1, 'day'), 'day')) {
+        return '昨天'
+    }
+    // 如果是本周内，显示星期几
+    else if (messageTime.isAfter(now.subtract(7, 'day'))) {
+        return messageTime.format('dddd')
+    }
+    // 如果是今年，显示月日
+    else if (messageTime.isSame(now, 'year')) {
+        return messageTime.format('MM/DD')
+    }
+    // 更早的消息显示年月日
+    else {
+        return messageTime.format('YY/MM/DD')
+    }
 }
 
-// 格式化消息时间 - 使用更精确的时间格式
+// 格式化消息时间 - 显示具体时间和日期信息
 const formatMessageTime = (time: string | Date) => {
     if (!time) return ''
-    return dayjs(typeof time === 'string' ? time : time.toISOString()).format('HH:mm')
+    const messageTime = dayjs(typeof time === 'string' ? time : time.toISOString())
+    const now = dayjs()
+    
+    // 如果是今天，只显示时间
+    if (messageTime.isSame(now, 'day')) {
+        return messageTime.format('HH:mm')
+    }
+    // 如果是昨天，显示"昨天 HH:mm"
+    else if (messageTime.isSame(now.subtract(1, 'day'), 'day')) {
+        return `昨天 ${messageTime.format('HH:mm')}`
+    }
+    // 如果是本周内，显示"星期X HH:mm"
+    else if (messageTime.isAfter(now.subtract(7, 'day'))) {
+        return `${messageTime.format('dddd')} ${messageTime.format('HH:mm')}`
+    }
+    // 如果是今年，显示"MM/DD HH:mm"
+    else if (messageTime.isSame(now, 'year')) {
+        return messageTime.format('MM/DD HH:mm')
+    }
+    // 更早的消息显示完整日期时间
+    else {
+        return messageTime.format('YY/MM/DD HH:mm')
+    }
 }
 
-// 格式化日期分隔线 - 按天分组消息
+// 格式化日期分隔线 - 按天分组消息，提供更好的时间感知
 const formatDateDivider = (time: string | Date) => {
     if (!time) return ''
     const messageDate = dayjs(typeof time === 'string' ? time : time.toISOString())
@@ -248,11 +329,40 @@ const formatDateDivider = (time: string | Date) => {
         return '今天'
     } else if (messageDate.isSame(today.subtract(1, 'day'), 'day')) {
         return '昨天'
+    } else if (messageDate.isSame(today.subtract(2, 'day'), 'day')) {
+        return '前天'
+    } else if (messageDate.isAfter(today.subtract(7, 'day'))) {
+        return messageDate.format('dddd')  // 显示星期几
     } else if (messageDate.isSame(today, 'year')) {
         return messageDate.format('MM月DD日')
     } else {
         return messageDate.format('YYYY年MM月DD日')
     }
+}
+
+// 辅助方法：判断两个时间是否为同一天
+const isSameDay = (time1: string | Date, time2: string | Date) => {
+    const date1 = dayjs(typeof time1 === 'string' ? time1 : time1.toISOString())
+    const date2 = dayjs(typeof time2 === 'string' ? time2 : time2.toISOString())
+    return date1.isSame(date2, 'day')
+}
+
+// 辅助方法：判断是否应该显示日期分隔线
+const shouldShowDateDivider = (message: ChatMessage, index: number) => {
+    if (index === 0) return true
+    const currentMessageDate = message.createdAt
+    const previousMessageDate = messages.value[index - 1].createdAt
+    return !isSameDay(currentMessageDate, previousMessageDate)
+}
+
+// 辅助方法：判断是否应该显示头像和发送者名称
+const shouldShowAvatar = (message: ChatMessage, index: number) => {
+    if (index === 0) return true
+    const previousMessage = messages.value[index - 1]
+    return (
+        message.senderId !== previousMessage.senderId ||
+        !isSameDay(message.createdAt, previousMessage.createdAt)
+    )
 }
 
 // 查看用户资料
@@ -412,7 +522,8 @@ const sendMessage = async () => {
     try {
         const data = {
             recipientId: currentChatUser.value.userId,
-            content: messageContent.value.trim()
+            content: messageContent.value.trim(),
+            messageType: 'TEXT' as const
         }
 
         const res = await sendPrivateMessage(data)
@@ -423,6 +534,7 @@ const sendMessage = async () => {
                 senderId: currentUserId.value || 0,
                 recipientId: currentChatUser.value.userId,
                 content: messageContent.value.trim(),
+                messageType: 'TEXT' as const,
                 createdAt: new Date().toISOString(),
                 isRead: true
             }
@@ -454,6 +566,83 @@ const sendMessage = async () => {
         ElMessage.error('发送消息失败')
     } finally {
         sending.value = false
+    }
+}
+
+// 插入表情到输入框
+const insertEmoji = (emoji: string) => {
+    messageContent.value += emoji
+}
+
+// 发送图片消息
+const sendImage = async (imageUrl: string) => {
+    if (!currentChatUser.value) return
+
+    sending.value = true
+    try {
+        const data = {
+            recipientId: currentChatUser.value.userId,
+            content: '图片',
+            messageType: 'IMAGE' as const,
+            imageUrl: imageUrl
+        }
+
+        const res = await sendPrivateMessage(data)
+        if (res.data.code === 200) {
+            // 添加到消息列表
+            const newMessage = {
+                messageId: res.data.data,
+                senderId: currentUserId.value || 0,
+                recipientId: currentChatUser.value.userId,
+                content: '图片',
+                messageType: 'IMAGE' as const,
+                imageUrl: imageUrl,
+                createdAt: new Date().toISOString(),
+                isRead: true
+            }
+            messages.value.push(newMessage)
+            
+            // 增加总消息数
+            totalMessages.value++
+
+            // 更新会话列表中的最后消息
+            const index = sessions.value.findIndex(s => currentChatUser.value && s.userId === currentChatUser.value.userId)
+            if (index !== -1) {
+                sessions.value[index].lastMessage = '[图片]'
+                sessions.value[index].lastMessageTime = new Date().toISOString()
+
+                // 将当前会话移动到顶部
+                const currentSession = sessions.value.splice(index, 1)[0]
+                sessions.value.unshift(currentSession)
+            }
+
+            // 滚动到底部
+            await nextTick()
+            scrollToBottom()
+        }
+    } catch (error) {
+        console.error('发送图片消息失败', error)
+        ElMessage.error('发送图片消息失败')
+    } finally {
+        sending.value = false
+    }
+}
+
+// 处理图片上传错误
+const handleImageError = (error: string) => {
+    console.error('图片上传错误:', error)
+}
+
+// 获取消息显示文本（用于会话列表预览）
+const getDisplayMessage = (content: string, messageType?: string): string => {
+    switch (messageType) {
+        case 'IMAGE':
+            return '[图片]'
+        case 'EMOJI':
+            return content
+        case 'TEXT':
+        default:
+            return content
     }
 }
 
@@ -572,6 +761,8 @@ const handleNewMessage = (data: any) => {
             senderId: senderId,
             recipientId: currentUserId.value || 0,
             content: data.content,
+            messageType: data.messageType || 'TEXT',
+            imageUrl: data.imageUrl,
             createdAt: new Date(data.timestamp),
             isRead: false
         })
@@ -593,7 +784,8 @@ const handleNewMessage = (data: any) => {
     const sessionIndex = sessions.value.findIndex(s => Number(s.userId) === senderId)
     if (sessionIndex !== -1) {
         // 更新现有会话
-        sessions.value[sessionIndex].lastMessage = data.content
+        const displayMessage = getDisplayMessage(data.content, data.messageType)
+        sessions.value[sessionIndex].lastMessage = displayMessage
         sessions.value[sessionIndex].lastMessageTime = new Date(data.timestamp)
 
         // 如果不是当前聊天对象，增加未读数
@@ -606,11 +798,12 @@ const handleNewMessage = (data: any) => {
         sessions.value.unshift(session)
     } else {
         // 创建新会话
+        const displayMessage = getDisplayMessage(data.content, data.messageType)
         sessions.value.unshift({
             userId: senderId,
             nickname: data.senderName || `用户 #${senderId}`,
             avatarUrl: data.senderAvatar,
-            lastMessage: data.content,
+            lastMessage: displayMessage,
             lastMessageTime: new Date(data.timestamp),
             unreadCount: 1
         })
@@ -927,10 +1120,107 @@ onBeforeUnmount(() => {
     line-height: 1.5;
 }
 
+.emoji-bubble {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.emoji-message {
+    font-size: 32px;
+    line-height: 1;
+    padding: 4px 8px;
+    display: inline-block;
+}
+
+.message-self .emoji-message {
+    background: transparent;
+}
+
+.message-other .emoji-message {
+    background: transparent;
+}
+
+.image-message {
+    padding: 0;
+    background: transparent;
+    max-width: 100%;
+}
+
+.message-image {
+    max-width: 280px;
+    max-height: 280px;
+    min-width: 120px;
+    min-height: 80px;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.message-image:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    transform: scale(1.02);
+}
+
+.image-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 100px;
+    background-color: var(--el-fill-color-lighter);
+    border-radius: 12px;
+    color: var(--text-secondary, #909399);
+    font-size: 13px;
+}
+
+.image-loading .el-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.image-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 150px;
+    height: 100px;
+    background-color: var(--el-fill-color-lighter);
+    border-radius: 12px;
+    color: var(--text-secondary, #909399);
+    font-size: 12px;
+}
+
+.image-error .el-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.image-caption {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-secondary, #909399);
+    padding: 0 8px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
 .message-self .message-bubble {
     background-color: var(--primary-color, #409eff);
     color: white;
     border-bottom-right-radius: 4px;
+}
+
+.message-self .image-message {
+    background: transparent;
+}
+
+.message-self .image-caption {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .message-other .message-bubble {
@@ -1098,6 +1388,19 @@ onBeforeUnmount(() => {
 [data-theme="dark"] .message-self .message-bubble {
     background-color: var(--primary-color-dark, #60a9ff);
     color: white;
+}
+
+[data-theme="dark"] .image-error {
+    background-color: var(--dark-fill-color, rgba(255, 255, 255, 0.04));
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .image-caption {
+    color: var(--dark-text-secondary, #a3a6ad);
+}
+
+[data-theme="dark"] .message-self .image-caption {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 [data-theme="dark"] .message-time {
