@@ -8,6 +8,10 @@ spring:
     port: ${REDIS_PORT:6379}
     database: 0
     timeout: 3000ms
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
   # 启用静态资源映射，允许访问测试页面
   web:
     resources:

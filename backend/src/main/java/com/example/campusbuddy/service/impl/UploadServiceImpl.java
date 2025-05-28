@@ -36,8 +36,8 @@ public class UploadServiceImpl implements UploadService {
             "image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp"
     );
 
-    // 最大文件大小 (5MB)
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+    // 最大文件大小 (20MB)
+    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024;
 
     @Autowired
     private QiniuConfig.QiniuProperties qiniuProperties;
@@ -229,7 +229,7 @@ public class UploadServiceImpl implements UploadService {
 
         // 检查文件大小
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("文件大小不能超过5MB");
+            throw new IllegalArgumentException("文件大小不能超过20MB");
         }
 
         // 检查文件类型
