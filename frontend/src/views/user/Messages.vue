@@ -1451,7 +1451,9 @@ onBeforeUnmount(() => {
         min-height: 0;
         border-radius: 0;
         box-shadow: none;
+        margin: 0;
     }
+    
     .session-list {
         width: 100%;
         height: 56px;
@@ -1465,10 +1467,12 @@ onBeforeUnmount(() => {
         background: var(--card-bg, #fff);
         padding: 0;
     }
+    
     .session-header,
     .session-search {
         display: none;
     }
+    
     .session-items {
         display: flex;
         flex-direction: row;
@@ -1478,6 +1482,7 @@ onBeforeUnmount(() => {
         overflow-x: auto;
         overflow-y: hidden;
     }
+    
     .session-item {
         flex-direction: column;
         align-items: center;
@@ -1491,24 +1496,30 @@ onBeforeUnmount(() => {
         box-shadow: none;
         transition: background 0.2s;
     }
+    
     .session-item:hover {
         background: var(--el-fill-color-light);
         transform: none;
     }
+    
     .session-active {
         background: var(--primary-color-light, rgba(64,158,255,0.08));
         border-left: none;
         border-bottom: 2px solid var(--primary-color, #409eff);
     }
+    
     .session-badge {
         margin: 0 auto 2px auto;
     }
+    
     .session-info {
         display: none;
     }
+    
     .session-meta {
         display: none;
     }
+    
     .chat-area {
         flex: 1;
         min-height: 0;
@@ -1516,30 +1527,196 @@ onBeforeUnmount(() => {
         flex-direction: column;
         background: var(--bg-color, #f5f7fa);
     }
+    
     .chat-header {
         padding: 10px 12px;
+        border-bottom: 1px solid var(--el-border-color-lighter);
+        background: var(--card-bg, #ffffff);
     }
+    
     .chat-messages {
-        padding: 10px 4px;
+        flex: 1;
+        padding: 8px;
+        overflow-y: auto;
+        background: var(--bg-color, #f5f7fa);
     }
+    
     .message-item {
-        max-width: 98%;
+        max-width: 95%;
+        margin-bottom: 12px;
+    }
+    
+    .message-bubble {
         font-size: 15px;
+        line-height: 1.4;
+        padding: 10px 14px;
+        border-radius: 16px;
+        max-width: 100%;
+        word-wrap: break-word;
+        word-break: break-word;
     }
+    
+    .message-image {
+        max-width: 240px;
+        max-height: 240px;
+        min-width: 100px;
+        min-height: 60px;
+    }
+    
+    .emoji-message {
+        font-size: 28px;
+    }
+    
     .chat-input {
-        padding: 10px 4px;
+        padding: 8px;
+        background: var(--card-bg, #ffffff);
+        border-top: 1px solid var(--el-border-color-lighter);
     }
+    
+    .chat-input .el-textarea__inner {
+        font-size: 16px; /* 防止iOS缩放 */
+        border-radius: 12px;
+        padding: 12px;
+        resize: none;
+        appearance: none;
+        -webkit-appearance: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
     .input-actions {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    
+    .input-tools {
+        display: flex;
+        align-items: center;
         gap: 8px;
     }
-    .input-tip {
-        margin-left: 0;
-        margin-top: 4px;
+    
+    .input-tools > * {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
+    
+    .el-button {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        min-height: 44px; /* iOS最小触摸目标 */
+        border-radius: 12px;
+    }
+    
+    .input-tip {
+        display: none; /* 在移动端隐藏提示 */
+    }
+    
     .empty-chat {
-        padding: 0;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .empty-icon-large {
+        font-size: 64px;
+    }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+    .message-container {
+        height: calc(100vh - 120px);
+    }
+    
+    .chat-messages {
+        padding: 6px;
+    }
+    
+    .message-bubble {
+        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: 14px;
+    }
+    
+    .message-image {
+        max-width: 200px;
+        max-height: 200px;
+    }
+    
+    .emoji-message {
+        font-size: 24px;
+    }
+    
+    .chat-input {
+        padding: 6px;
+    }
+    
+    .input-actions {
+        margin-top: 6px;
+    }
+}
+
+/* 移动端暗色模式适配 */
+@media (max-width: 768px) {
+    [data-theme="dark"] .session-list {
+        background: var(--dark-card-bg, #252529);
+        border-bottom-color: var(--dark-border-color, #4c4d4f);
+    }
+    
+    [data-theme="dark"] .session-item {
+        color: var(--dark-text-secondary, #a3a6ad);
+    }
+    
+    [data-theme="dark"] .session-item:hover {
+        background: var(--dark-bg-hover, rgba(255, 255, 255, 0.05));
+    }
+    
+    [data-theme="dark"] .session-active {
+        background: rgba(64, 158, 255, 0.15);
+        border-bottom-color: var(--primary-color-dark, #60a9ff);
+        color: var(--primary-color-dark, #60a9ff);
+    }
+    
+    [data-theme="dark"] .chat-area {
+        background: var(--dark-bg, #1e1e20);
+    }
+    
+    [data-theme="dark"] .chat-header {
+        background: var(--dark-card-bg, #252529);
+        border-bottom-color: var(--dark-border-color, #4c4d4f);
+        color: var(--dark-text-primary, #e5eaf3);
+    }
+    
+    [data-theme="dark"] .chat-messages {
+        background: var(--dark-bg, #1e1e20);
+    }
+    
+    [data-theme="dark"] .chat-input {
+        background: var(--dark-card-bg, #252529);
+        border-top-color: var(--dark-border-color, #4c4d4f);
+    }
+    
+    [data-theme="dark"] .chat-input .el-textarea__inner {
+        background: var(--dark-input-bg, #2a2a2e);
+        color: var(--dark-text-primary, #e5eaf3);
+        border-color: var(--dark-border-color, #4c4d4f);
+    }
+    
+    [data-theme="dark"] .chat-input .el-textarea__inner::placeholder {
+        color: var(--dark-text-placeholder, #8d9095);
+    }
+    
+    [data-theme="dark"] .el-button {
+        background: var(--dark-card-bg, #252529);
+        border-color: var(--dark-border-color, #4c4d4f);
+        color: var(--dark-text-primary, #e5eaf3);
+    }
+    
+    [data-theme="dark"] .el-button--primary {
+        background: var(--primary-color-dark, #60a9ff);
+        border-color: var(--primary-color-dark, #60a9ff);
+        color: #ffffff;
     }
 }
 </style>

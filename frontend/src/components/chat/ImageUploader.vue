@@ -53,10 +53,10 @@ const beforeUpload = (file: File) => {
         return false
     }
 
-    // 检查文件大小（限制为5MB）
-    const isLt5M = file.size / 1024 / 1024 < 5
-    if (!isLt5M) {
-        ElMessage.error('图片大小不能超过 5MB!')
+    // 检查文件大小（限制为20MB）
+    const isLt20M = file.size / 1024 / 1024 < 20
+    if (!isLt20M) {
+        ElMessage.error('图片大小不能超过 20MB!')
         return false
     }
 

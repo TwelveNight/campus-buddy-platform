@@ -300,10 +300,15 @@ onUnmounted(() => {
 .nav-label {
   font-size: 11px;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.1;
   text-align: center;
   transition: all 0.3s ease;
   margin-top: 2px;
+  word-break: keep-all;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .nav-item.active .nav-label {
@@ -329,6 +334,7 @@ onUnmounted(() => {
 .safe-area-placeholder {
   height: env(safe-area-inset-bottom, 0px);
   background-color: var(--card-bg);
+  min-height: 8px; /* 确保即使没有安全区域也有一点间距 */
 }
 
 /* 徽章样式调整 */
@@ -348,25 +354,29 @@ onUnmounted(() => {
   }
   
   .nav-item {
-    padding: 6px 2px;
-    margin: 0 2px;
+    padding: 6px 1px;
+    margin: 0 1px;
     min-height: 58px;
     width: 20%;
     box-sizing: border-box;
   }
   
   .nav-icon .el-icon {
-    font-size: 22px;
+    font-size: 20px;
   }
   
   .nav-item.active .nav-icon .el-icon {
-    font-size: 24px;
+    font-size: 22px;
   }
   
   .nav-label {
-    font-size: 12px;
-    margin-top: 4px;
+    font-size: 10px;
+    margin-top: 3px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1;
   }
 }
 
@@ -374,6 +384,7 @@ onUnmounted(() => {
   .nav-item {
     margin: 0 6px;
     border-radius: 14px;
+    padding: 8px 4px;
   }
   
   .nav-icon .el-icon {
@@ -386,6 +397,8 @@ onUnmounted(() => {
   
   .nav-label {
     font-size: 12px;
+    line-height: 1.1;
+    margin-top: 4px;
   }
 }
 

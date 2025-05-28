@@ -40,7 +40,7 @@
             <div class="upload-area">
               <el-icon class="upload-icon"><Plus /></el-icon>
               <span class="upload-text">点击或拖拽图片到此处上传</span>
-              <span class="upload-hint">支持JPG、PNG、GIF、WebP格式，文件小于2MB</span>
+              <span class="upload-hint">支持JPG、PNG、GIF、WebP格式，文件小于20MB</span>
             </div>
           </el-upload>
         </div>
@@ -147,7 +147,7 @@ const props = defineProps({
   },
   maxSize: {
     type: Number,
-    default: 2 // 默认最大2MB
+    default: 20 // 默认最大20MB
   },
   tip: {
     type: String,

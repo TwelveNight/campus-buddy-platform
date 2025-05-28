@@ -350,6 +350,13 @@ const formatTime = (time: string | undefined) => {
 const renderMarkdown = (content: string) => {
   if (!content) return ''
   try {
+    // 配置marked选项
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      silent: true
+    })
+    
     let html = marked(content)
     
     // 为图片添加样式类
@@ -359,7 +366,26 @@ const renderMarkdown = (content: string) => {
     html = html.replace(/<table>/gi, '<table class="markdown-table">')
     
     // 为代码块添加样式类
-    html = html.replace(/<pre>/gi, '<pre class="markdown-code">')
+    html = html.replace(/<pre><code>/gi, '<pre class="markdown-code"><code>')
+    html = html.replace(/<pre><code class="language-(\w+)">/gi, '<pre class="markdown-code language-$1"><code>')
+    
+    // 增强代码语法高亮
+    html = html.replace(/<code>([\s\S]*?)<\/code>/g, (match, p1) => {
+      // 关键字高亮
+      let highlighted = p1.replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await)\b/g, 
+                     '<span class="token keyword">$1</span>');
+      
+      // 字符串高亮
+      highlighted = highlighted.replace(/(['"`])(.*?)\1/g, '<span class="token string">$1$2$1</span>');
+      
+      // 注释高亮 (简单情况)
+      highlighted = highlighted.replace(/\/\/(.*?)$/gm, '<span class="token comment">//$1</span>');
+      
+      // 数字高亮
+      highlighted = highlighted.replace(/\b(\d+)\b/g, '<span class="token number">$1</span>');
+      
+      return '<code>' + highlighted + '</code>';
+    });
     
     return html
   } catch (error) {
@@ -1166,36 +1192,37 @@ watch(() => showComments.value, (newValue) => {
 /* 暗色模式下的 Markdown 内容样式 */
 [data-theme="dark"] :deep(.markdown-content h1),
 [data-theme="dark"] :deep(.markdown-content h2) {
-  border-bottom-color: var(--el-border-color);
-  color: var(--el-text-color-primary);
+  border-bottom-color: var(--dark-border-color, #333);
+  color: var(--dark-text-primary, #e5eaf3);
 }
 
 [data-theme="dark"] :deep(.markdown-content h3),
 [data-theme="dark"] :deep(.markdown-content h4),
 [data-theme="dark"] :deep(.markdown-content h5),
 [data-theme="dark"] :deep(.markdown-content h6) {
-  color: var(--el-text-color-primary);
+  color: var(--dark-text-primary, #e5eaf3);
 }
 
 [data-theme="dark"] :deep(.markdown-content p) {
-  color: var(--el-text-color-regular);
+  color: var(--dark-text-primary, #e5eaf3);
 }
 
 [data-theme="dark"] :deep(.markdown-content blockquote) {
-  color: var(--el-text-color-secondary);
-  border-left-color: var(--el-color-primary);
-  background-color: var(--el-fill-color-lighter);
+  color: var(--dark-text-secondary, #a3a6ad);
+  border-left-color: var(--primary-color-dark, #60a9ff);
+  background-color: var(--dark-bg-secondary, #2a2a2e);
 }
 
 [data-theme="dark"] :deep(.markdown-content pre) {
-  background-color: var(--el-fill-color-lighter);
-  border-color: var(--el-border-color);
-  color: var(--el-text-color-primary);
+  background-color: var(--dark-code-bg, #1a1a1c);
+  border-color: var(--dark-border-color, #333);
+  color: var(--dark-code-text, #e6e6e6);
 }
 
 [data-theme="dark"] :deep(.markdown-content code:not(pre code)) {
-  background-color: var(--el-fill-color-light);
-  color: var(--el-text-color-primary);
+  background-color: var(--dark-code-bg, #1a1a1c);
+  color: var(--dark-code-text, #e6e6e6);
+  border: 1px solid var(--dark-border-color, #333);
 }
 
 [data-theme="dark"] :deep(.markdown-content table th),

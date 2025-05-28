@@ -229,17 +229,55 @@
   }
 }
 
-/* 暗色模式下移动端核心组件适配 */
-[data-theme="dark"] .el-card {
-  background: #232326 !important;
-  color: var(--dark-text-primary) !important;
-  border-color: #333 !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.18) !important;
-}
-
-[data-theme="dark"] .el-card__header {
-  color: var(--dark-text-primary) !important;
-  border-bottom: 1px solid #333 !important;
+/* 移动端下Markdown代码块优化 */
+@media (max-width: 768px) {
+  .markdown-content pre,
+  :deep(.markdown-content pre) {
+    padding: 12px !important;
+    margin: 1em 0 !important;
+    font-size: 0.9em !important;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    word-wrap: normal !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  .markdown-content pre code,
+  :deep(.markdown-content pre code) {
+    white-space: pre !important;
+  }
+  
+  .markdown-content code:not(pre code),
+  :deep(.markdown-content code:not(pre code)) {
+    padding: 2px 4px !important;
+    font-size: 0.85em !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+  
+  .markdown-content table,
+  :deep(.markdown-content table) {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* 暗色模式特别优化 */
+  [data-theme="dark"] .markdown-content pre,
+  [data-theme="dark"] :deep(.markdown-content pre) {
+    background-color: #1a1a1c !important;
+    border: 1px solid #333 !important;
+  }
+  
+  [data-theme="dark"] .markdown-content code:not(pre code),
+  [data-theme="dark"] :deep(.markdown-content code:not(pre code)) {
+    background-color: #1a1a1c !important;
+    border: 1px solid #333 !important;
+  }
+  
+  [data-theme="dark"] .comment-content.markdown-content {
+    background: #232326 !important;
+  }
 }
 
 [data-theme="dark"] .el-card__body {

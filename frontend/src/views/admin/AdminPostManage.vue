@@ -321,14 +321,15 @@ function renderMarkdown(content: string) {
     // 渲染markdown
     let html = marked(content)
     
-    // 后处理：为图片添加样式类
+    // 为图片添加样式类
     html = html.replace(/<img\s+([^>]*?)>/gi, '<img class="markdown-image" $1>')
     
     // 为表格添加样式类
     html = html.replace(/<table>/gi, '<table class="markdown-table">')
     
     // 为代码块添加样式类
-    html = html.replace(/<pre>/gi, '<pre class="markdown-code">')
+    html = html.replace(/<pre><code>/gi, '<pre class="markdown-code"><code>')
+    html = html.replace(/<pre><code class="language-(\w+)">/gi, '<pre class="markdown-code language-$1"><code>')
     
     return html
   } catch (error) {
@@ -693,12 +694,83 @@ function getStatusType(status: string) {
   border-color: #4c4e50;
 }
 
+[data-theme="dark"] .markdown-content pre,
 [data-theme="dark"] .markdown-code {
   background-color: #2c2e30;
+  border-color: #4c4e50;
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .markdown-content code:not(pre code) {
+  background-color: #2c2e30;
+  border-color: #4c4e50;
+  color: #e5eaf3;
+}
+
+[data-theme="dark"] .markdown-table th {
+  background-color: #3a3c3f;
+}
+
+[data-theme="dark"] .markdown-table th,
+[data-theme="dark"] .markdown-table td {
   border-color: #4c4e50;
 }
 
 [data-theme="dark"] .text-content {
   color: #a6a9ad;
+}
+
+/* 代码语法高亮 - 暗色模式 */
+[data-theme="dark"] .markdown-content .token.keyword {
+  color: #c586c0;
+}
+
+[data-theme="dark"] .markdown-content .token.function {
+  color: #dcdcaa;
+}
+
+[data-theme="dark"] .markdown-content .token.string {
+  color: #ce9178;
+}
+
+[data-theme="dark"] .markdown-content .token.number {
+  color: #b5cea8;
+}
+
+[data-theme="dark"] .markdown-content .token.comment {
+  color: #6a9955;
+}
+
+[data-theme="dark"] .markdown-content .token.boolean {
+  color: #569cd6;
+}
+
+[data-theme="dark"] .markdown-content .token.operator {
+  color: #d4d4d4;
+}
+
+[data-theme="dark"] .markdown-content .token.punctuation {
+  color: #d4d4d4;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .post-detail-dialog {
+    padding: 5px;
+  }
+  
+  .post-title {
+    font-size: 1.2rem;
+  }
+  
+  .post-meta {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .post-content {
+    padding: 10px;
+    max-height: 300px;
+  }
 }
 </style>

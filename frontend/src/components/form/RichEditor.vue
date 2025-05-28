@@ -71,7 +71,15 @@ onMounted(() => {
     })
   })
   
-  observer.observe(document.documentElement, { attributes: true })
+  observer.observe(document.documentElement, { 
+    attributes: true, 
+    attributeFilter: ['data-theme'] 
+  })
+  
+  // 组件卸载时清理观察器
+  return () => {
+    observer.disconnect()
+  }
 })
 
 // 主题设置 - 根据当前主题动态变化
@@ -198,9 +206,73 @@ defineExpose({
   fill: var(--primary-color-dark);
 }
 
+[data-theme="dark"] :deep(.md-editor-toolbar-item:hover) {
+  background-color: var(--dark-bg-hover);
+}
+
+[data-theme="dark"] :deep(.md-editor-toolbar-item:hover svg) {
+  color: var(--primary-color-dark);
+  fill: var(--primary-color-dark);
+}
+
 [data-theme="dark"] :deep(.md-editor-input) {
   background-color: var(--dark-bg);
   color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.md-editor-input::placeholder) {
+  color: var(--dark-text-placeholder);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview) {
+  background-color: var(--dark-bg);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview h1),
+[data-theme="dark"] :deep(.md-editor-preview h2),
+[data-theme="dark"] :deep(.md-editor-preview h3),
+[data-theme="dark"] :deep(.md-editor-preview h4),
+[data-theme="dark"] :deep(.md-editor-preview h5),
+[data-theme="dark"] :deep(.md-editor-preview h6) {
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview pre),
+[data-theme="dark"] :deep(.md-editor-preview code) {
+  background-color: var(--dark-code-bg);
+  color: var(--dark-code-text);
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview blockquote) {
+  background-color: var(--dark-bg-secondary);
+  border-left-color: var(--primary-color-dark);
+  color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview table) {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border-color);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview th),
+[data-theme="dark"] :deep(.md-editor-preview td) {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border-color);
+  color: var(--dark-text-primary);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview th) {
+  background-color: var(--dark-bg-secondary);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview a) {
+  color: var(--primary-color-dark);
+}
+
+[data-theme="dark"] :deep(.md-editor-preview a:hover) {
+  color: var(--primary-color-dark-hover);
 }
 
 [data-theme="dark"] :deep(.md-editor-content .show-html-type) {

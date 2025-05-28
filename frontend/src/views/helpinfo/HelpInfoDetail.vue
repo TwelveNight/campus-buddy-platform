@@ -630,7 +630,26 @@ function renderMarkdown(text: string): string {
   if (!text) return ''
   
   try {
-    return `<div class="markdown-content">${marked(text)}</div>`
+    // 配置marked选项
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      silent: true
+    })
+    
+    let html = marked(text)
+    
+    // 为图片添加样式类
+    html = html.replace(/<img\s+([^>]*?)>/gi, '<img class="markdown-image" $1>')
+    
+    // 为表格添加样式类
+    html = html.replace(/<table>/gi, '<table class="markdown-table">')
+    
+    // 为代码块添加样式类
+    html = html.replace(/<pre><code>/gi, '<pre class="markdown-code"><code>')
+    html = html.replace(/<pre><code class="language-(\w+)">/gi, '<pre class="markdown-code language-$1"><code>')
+    
+    return `<div class="markdown-content">${html}</div>`
   } catch (e) {
     console.error('Markdown解析错误:', e)
     return text.replace(/\n/g, '<br>')

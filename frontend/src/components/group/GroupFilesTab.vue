@@ -100,7 +100,7 @@
                         <div class="el-upload__text">拖拽文件到此处，或<em>点击上传</em></div>
                         <template #tip>
                             <div class="el-upload__tip">
-                                单个文件大小不超过50MB
+                                单个文件大小不超过20MB
                             </div>
                         </template>
                     </el-upload>

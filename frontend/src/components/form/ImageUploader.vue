@@ -38,7 +38,7 @@ const props = defineProps({
     },
     maxSize: {
         type: Number,
-        default: 5 // 默认最大5MB
+        default: 20 // 默认最大20MB
     },
     maxCount: {
         type: Number,

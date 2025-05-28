@@ -546,7 +546,26 @@ const renderContent = (post: Post) => {
 const renderCommentContent = (comment: any) => {
     if (!comment.content) return '';
     try {
-        return `<div class='markdown-content'>${marked(comment.content)}</div>`;
+        // 配置marked选项
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            silent: true
+        });
+
+        let html = marked(comment.content);
+        
+        // 为图片添加样式类
+        html = html.replace(/<img\s+([^>]*?)>/gi, '<img class="markdown-image" $1>');
+        
+        // 为表格添加样式类
+        html = html.replace(/<table>/gi, '<table class="markdown-table">');
+        
+        // 为代码块添加样式类
+        html = html.replace(/<pre><code>/gi, '<pre class="markdown-code"><code>');
+        html = html.replace(/<pre><code class="language-(\w+)">/gi, '<pre class="markdown-code language-$1"><code>');
+        
+        return `<div class='markdown-content'>${html}</div>`;
     } catch (e) {
         return comment.content.replace(/\n/g, '<br>');
     }

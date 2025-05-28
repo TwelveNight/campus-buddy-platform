@@ -1,0 +1,257 @@
+/* Markdown内容的暗色模式通用样式 */
+
+/* 基本文本样式 */
+[data-theme="dark"] .markdown-content,
+[data-theme="dark"] :deep(.markdown-content) {
+  color: var(--dark-text-primary, #e5eaf3) !important;
+  background-color: transparent !important;
+}
+
+/* 标题样式 */
+[data-theme="dark"] .markdown-content h1,
+[data-theme="dark"] .markdown-content h2,
+[data-theme="dark"] .markdown-content h3,
+[data-theme="dark"] .markdown-content h4,
+[data-theme="dark"] .markdown-content h5,
+[data-theme="dark"] .markdown-content h6,
+[data-theme="dark"] :deep(.markdown-content h1),
+[data-theme="dark"] :deep(.markdown-content h2),
+[data-theme="dark"] :deep(.markdown-content h3),
+[data-theme="dark"] :deep(.markdown-content h4),
+[data-theme="dark"] :deep(.markdown-content h5),
+[data-theme="dark"] :deep(.markdown-content h6) {
+  color: var(--dark-text-primary, #e5eaf3) !important;
+}
+
+/* 边框样式 */
+[data-theme="dark"] .markdown-content h1,
+[data-theme="dark"] .markdown-content h2,
+[data-theme="dark"] :deep(.markdown-content h1),
+[data-theme="dark"] :deep(.markdown-content h2) {
+  border-bottom-color: var(--dark-border-color, #333) !important;
+}
+
+/* 段落样式 */
+[data-theme="dark"] .markdown-content p,
+[data-theme="dark"] :deep(.markdown-content p) {
+  color: var(--dark-text-primary, #e5eaf3) !important;
+}
+
+/* 引用块样式 */
+[data-theme="dark"] .markdown-content blockquote,
+[data-theme="dark"] :deep(.markdown-content blockquote) {
+  background-color: var(--dark-bg-secondary, #2a2a2e) !important;
+  border-left-color: var(--primary-color-dark, #60a9ff) !important;
+  color: var(--dark-text-secondary, #a3a6ad) !important;
+}
+
+/* 代码块样式 */
+[data-theme="dark"] .markdown-content pre,
+[data-theme="dark"] :deep(.markdown-content pre) {
+  background-color: var(--dark-code-bg, #1a1a1c) !important;
+  border: 1px solid var(--dark-border-color, #333) !important;
+  color: var(--dark-code-text, #e6e6e6) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+  margin: 1.2em 0 !important;
+  padding: 12px 16px !important;
+  overflow-x: auto !important;
+}
+
+/* 行内代码样式 */
+[data-theme="dark"] .markdown-content code:not(pre code),
+[data-theme="dark"] :deep(.markdown-content code:not(pre code)) {
+  background-color: var(--dark-code-bg, #1a1a1c) !important;
+  color: var(--dark-code-text, #e6e6e6) !important;
+  border: 1px solid var(--dark-border-color, #333) !important;
+  border-radius: 3px !important;
+  padding: 0.2em 0.4em !important;
+  font-family: 'Courier New', Consolas, monospace !important;
+  font-size: 0.9em !important;
+  white-space: nowrap !important;
+}
+
+/* 代码块中的代码样式 */
+[data-theme="dark"] .markdown-content pre code,
+[data-theme="dark"] :deep(.markdown-content pre code) {
+  background-color: transparent !important;
+  border: none !important;
+  color: var(--dark-code-text, #e6e6e6) !important;
+  padding: 0 !important;
+  white-space: pre !important;
+  font-family: 'Courier New', Consolas, monospace !important;
+  line-height: 1.5 !important;
+  display: block !important;
+}
+
+/* 表格样式 */
+[data-theme="dark"] .markdown-content table,
+[data-theme="dark"] :deep(.markdown-content table) {
+  border-color: var(--dark-border-color, #333) !important;
+}
+
+[data-theme="dark"] .markdown-content th,
+[data-theme="dark"] :deep(.markdown-content th) {
+  background-color: var(--dark-bg-secondary, #2a2a2e) !important;
+  border-color: var(--dark-border-color, #333) !important;
+  color: var(--dark-text-primary, #e5eaf3) !important;
+}
+
+[data-theme="dark"] .markdown-content td,
+[data-theme="dark"] :deep(.markdown-content td) {
+  background-color: var(--dark-card-bg, #252529) !important;
+  border-color: var(--dark-border-color, #333) !important;
+  color: var(--dark-text-primary, #e5eaf3) !important;
+}
+
+[data-theme="dark"] .markdown-content tr:nth-child(2n),
+[data-theme="dark"] :deep(.markdown-content tr:nth-child(2n)) {
+  background-color: var(--dark-bg-secondary, #2a2a2e) !important;
+}
+
+/* 列表样式 */
+[data-theme="dark"] .markdown-content ul,
+[data-theme="dark"] .markdown-content ol,
+[data-theme="dark"] .markdown-content li,
+[data-theme="dark"] :deep(.markdown-content ul),
+[data-theme="dark"] :deep(.markdown-content ol),
+[data-theme="dark"] :deep(.markdown-content li) {
+  color: var(--dark-text-primary, #e5eaf3) !important;
+}
+
+/* 水平线样式 */
+[data-theme="dark"] .markdown-content hr,
+[data-theme="dark"] :deep(.markdown-content hr) {
+  background-color: var(--dark-border-color, #333) !important;
+  border-color: var(--dark-border-color, #333) !important;
+}
+
+/* 链接样式 */
+[data-theme="dark"] .markdown-content a,
+[data-theme="dark"] :deep(.markdown-content a) {
+  color: var(--primary-color-dark, #60a9ff) !important;
+}
+
+[data-theme="dark"] .markdown-content a:hover,
+[data-theme="dark"] :deep(.markdown-content a:hover) {
+  color: var(--primary-color-dark-hover, #79b8ff) !important;
+}
+
+/* 图片样式 */
+[data-theme="dark"] .markdown-content img,
+[data-theme="dark"] :deep(.markdown-content img) {
+  filter: brightness(0.9) !important;
+}
+
+/* 特定样式类 */
+[data-theme="dark"] .markdown-image,
+[data-theme="dark"] :deep(.markdown-image) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="dark"] .markdown-table,
+[data-theme="dark"] :deep(.markdown-table) {
+  border-color: var(--dark-border-color, #333) !important;
+}
+
+[data-theme="dark"] .markdown-code,
+[data-theme="dark"] :deep(.markdown-code) {
+  background-color: var(--dark-code-bg, #1a1a1c) !important;
+  border-color: var(--dark-border-color, #333) !important;
+  color: var(--dark-code-text, #e6e6e6) !important;
+}
+
+/* 评论区的特殊样式 */
+[data-theme="dark"] .comment-content.markdown-content {
+  background: var(--dark-card-bg, #252529) !important;
+  color: var(--dark-text-primary, #e5eaf3) !important;
+}
+
+/* 代码语法高亮 - 基于通用语言元素 */
+[data-theme="dark"] .markdown-content pre .token.keyword,
+[data-theme="dark"] :deep(.markdown-content pre .token.keyword) {
+  color: #c586c0 !important; /* 紫色 - 关键字 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.function,
+[data-theme="dark"] :deep(.markdown-content pre .token.function) {
+  color: #dcdcaa !important; /* 黄色 - 函数 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.string,
+[data-theme="dark"] :deep(.markdown-content pre .token.string) {
+  color: #ce9178 !important; /* 橙红色 - 字符串 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.number,
+[data-theme="dark"] :deep(.markdown-content pre .token.number) {
+  color: #b5cea8 !important; /* 浅绿色 - 数字 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.comment,
+[data-theme="dark"] :deep(.markdown-content pre .token.comment) {
+  color: #6a9955 !important; /* 绿色 - 注释 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.boolean,
+[data-theme="dark"] :deep(.markdown-content pre .token.boolean) {
+  color: #569cd6 !important; /* 蓝色 - 布尔值 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.operator,
+[data-theme="dark"] :deep(.markdown-content pre .token.operator) {
+  color: #d4d4d4 !important; /* 灰白色 - 运算符 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.punctuation,
+[data-theme="dark"] :deep(.markdown-content pre .token.punctuation) {
+  color: #d4d4d4 !important; /* 灰白色 - 标点符号 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.property,
+[data-theme="dark"] :deep(.markdown-content pre .token.property) {
+  color: #9cdcfe !important; /* 浅蓝色 - 属性 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.tag,
+[data-theme="dark"] :deep(.markdown-content pre .token.tag) {
+  color: #569cd6 !important; /* 蓝色 - 标签 */
+}
+
+[data-theme="dark"] .markdown-content pre .token.class-name,
+[data-theme="dark"] :deep(.markdown-content pre .token.class-name) {
+  color: #4ec9b0 !important; /* 青色 - 类名 */
+}
+
+/* 代码块滚动条样式 */
+[data-theme="dark"] .markdown-content pre::-webkit-scrollbar,
+[data-theme="dark"] :deep(.markdown-content pre::-webkit-scrollbar) {
+  height: 8px !important;
+  background-color: var(--dark-code-bg, #1a1a1c) !important;
+}
+
+[data-theme="dark"] .markdown-content pre::-webkit-scrollbar-thumb,
+[data-theme="dark"] :deep(.markdown-content pre::-webkit-scrollbar-thumb) {
+  background-color: #444 !important;
+  border-radius: 4px !important;
+}
+
+[data-theme="dark"] .markdown-content pre::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] :deep(.markdown-content pre::-webkit-scrollbar-thumb:hover) {
+  background-color: #555 !important;
+}
+
+/* 移动端特定优化 */
+@media (max-width: 768px) {
+  [data-theme="dark"] .markdown-content pre,
+  [data-theme="dark"] :deep(.markdown-content pre) {
+    padding: 10px !important;
+    font-size: 0.85em !important;
+  }
+  
+  [data-theme="dark"] .markdown-content code:not(pre code),
+  [data-theme="dark"] :deep(.markdown-content code:not(pre code)) {
+    font-size: 0.85em !important;
+    padding: 0.1em 0.3em !important;
+  }
+}
