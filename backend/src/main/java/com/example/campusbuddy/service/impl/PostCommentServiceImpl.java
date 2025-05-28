@@ -8,6 +8,7 @@ import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.entity.PostComment;
 import com.example.campusbuddy.mapper.GroupPostMapper;
 import com.example.campusbuddy.mapper.PostCommentMapper;
+import com.example.campusbuddy.service.GroupPostCacheService;
 import com.example.campusbuddy.service.PostCommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,9 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
 
     @Autowired
     private GroupPostMapper groupPostMapper;
+    
+    @Autowired
+    private GroupPostCacheService postCacheService;
 
     @Override
     @Transactional
@@ -38,6 +42,11 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
             post.setCommentCount(post.getCommentCount() == null ? 1 : post.getCommentCount() + 1);
             post.setUpdatedAt(new Date());
             groupPostMapper.updateById(post);
+            
+            // 清除相关缓存，因为评论数发生了变化
+            postCacheService.evictPostDetailCache(comment.getPostId());
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+            postCacheService.evictHotPostsCache();
         }
         
         return comment.getCommentId();
@@ -71,6 +80,11 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
                 post.setCommentCount(post.getCommentCount() - 1);
                 post.setUpdatedAt(new Date());
                 groupPostMapper.updateById(post);
+                
+                // 清除相关缓存，因为评论数发生了变化
+                postCacheService.evictPostDetailCache(comment.getPostId());
+                postCacheService.evictGroupPostsCache(post.getGroupId());
+                postCacheService.evictHotPostsCache();
             }
         }
         

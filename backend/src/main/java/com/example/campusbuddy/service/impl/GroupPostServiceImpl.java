@@ -160,6 +160,11 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             post.setLikeCount(post.getLikeCount() + 1);
             post.setUpdatedAt(new Date());
             updateById(post);
+            
+            // 清除相关缓存，因为点赞数发生了变化
+            postCacheService.evictPostDetailCache(postId);
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+            postCacheService.evictHotPostsCache();
         }
         return success;
     }
@@ -184,6 +189,11 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             post.setLikeCount(post.getLikeCount() - 1);
             post.setUpdatedAt(new Date());
             updateById(post);
+            
+            // 清除相关缓存，因为点赞数发生了变化
+            postCacheService.evictPostDetailCache(postId);
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+            postCacheService.evictHotPostsCache();
         }
         return success;
     }
@@ -197,6 +207,11 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             post.setCommentCount(count + 1);
             post.setUpdatedAt(new Date());
             updateById(post);
+            
+            // 清除相关缓存，因为评论数发生了变化
+            postCacheService.evictPostDetailCache(postId);
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+            postCacheService.evictHotPostsCache();
         }
     }
 
@@ -208,6 +223,11 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             post.setCommentCount(commentCount - 1);
             post.setUpdatedAt(new Date());
             updateById(post);
+            
+            // 清除相关缓存，因为评论数发生了变化
+            postCacheService.evictPostDetailCache(postId);
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+            postCacheService.evictHotPostsCache();
         }
     }
     
