@@ -171,11 +171,15 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             throw new ResourceNotFoundException("互助任务", infoId);
         }
 
-        // 使用缓存服务增加浏览量，延迟批量更新
-        helpInfoCacheService.incrementViewCount(infoId);
+        // 直接更新数据库中的浏览量
+        int currentViewCount = helpInfo.getViewCount() != null ? helpInfo.getViewCount() : 0;
+        helpInfo.setViewCount(currentViewCount + 1);
+        this.updateById(helpInfo);
         
-        // 为了保持API兼容性，直接返回当前互助信息对象
-        // 注意：此时返回的浏览量可能不是最新的，因为实际更新会在批处理中进行
+        // 清除相关缓存，确保数据一致性
+        helpInfoCacheService.clearHelpInfoCache(infoId);
+        
+        log.debug("互助信息 {} 浏览量已更新: {} -> {}", infoId, currentViewCount, currentViewCount + 1);
         return helpInfo;
     }
 

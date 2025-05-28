@@ -5,6 +5,7 @@ import com.example.campusbuddy.entity.HelpApplication;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.HelpApplicationService;
+import com.example.campusbuddy.service.HelpInfoCacheService;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
@@ -31,6 +32,9 @@ public class HelpApplicationController {
     
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private HelpInfoCacheService helpInfoCacheService;
 
     @Operation(summary = "提交互助申请")
     @PostMapping
@@ -154,6 +158,9 @@ public class HelpApplicationController {
                     helpInfo.setAcceptedApplicationId(null);
                     helpInfo.setStatus("OPEN");
                     helpInfoService.updateById(helpInfo);
+                    
+                    // 清除互助信息缓存，确保状态实时更新
+                    helpInfoCacheService.clearHelpInfoCache(helpInfo.getInfoId());
                 }
                 return R.ok("申请已取消", application);
             } else {
@@ -202,6 +209,9 @@ public class HelpApplicationController {
                 helpInfo.setStatus("IN_PROGRESS");
                 helpInfo.setAcceptedApplicationId(applicationId);
                 helpInfoService.updateById(helpInfo);
+                
+                // 清除互助信息缓存，确保状态实时更新
+                helpInfoCacheService.clearHelpInfoCache(helpInfo.getInfoId());
 
                 // 发送申请被接受的通知
                 notificationService.createApplicationResultNotification(
@@ -254,6 +264,9 @@ public class HelpApplicationController {
                     helpInfo.setAcceptedApplicationId(null);
                     helpInfo.setStatus("OPEN"); // 确保互助任务重新开放
                     helpInfoService.updateById(helpInfo);
+                    
+                    // 清除互助信息缓存，确保状态实时更新
+                    helpInfoCacheService.clearHelpInfoCache(helpInfo.getInfoId());
                 }
             }
         }

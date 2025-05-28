@@ -3,6 +3,7 @@ package com.example.campusbuddy.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.entity.HelpInfo;
 import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.mapper.HelpInfoMapper;
 import com.example.campusbuddy.service.HelpInfoCacheService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import com.example.campusbuddy.vo.HelpInfoVO;
@@ -31,16 +32,15 @@ public class HelpInfoCacheServiceImpl implements HelpInfoCacheService {
     @Autowired
     private ObjectMapper objectMapper;
     
+    @Autowired
+    private HelpInfoMapper helpInfoMapper;
+    
     // 缓存键前缀
     private static final String HELP_INFO_LIST_KEY_PREFIX = "campus:helpinfo:list:";
     private static final String HELP_INFO_DETAIL_KEY_PREFIX = "campus:helpinfo:detail:";
     private static final String HELP_INFO_USER_KEY_PREFIX = "campus:helpinfo:user:";
     private static final String HELP_INFO_ADMIN_KEY_PREFIX = "campus:helpinfo:admin:";
     private static final String HELP_INFO_SEARCH_KEY_PREFIX = "campus:helpinfo:search:";
-    private static final String HELP_INFO_VIEW_COUNT_KEY = "campus:helpinfo:viewcount";
-    
-    // 内存中的浏览量计数器（用于批量更新）
-    private final Map<Long, Integer> viewCountBuffer = new ConcurrentHashMap<>();
     
     @Override
     public void cacheHelpInfoList(String cacheKey, Page<HelpInfo> helpInfoPage, long expireSeconds) {
@@ -216,49 +216,7 @@ public class HelpInfoCacheServiceImpl implements HelpInfoCacheService {
         return null;
     }
     
-    @Override
-    public void incrementViewCount(Long helpInfoId) {
-        try {
-            // 在内存中累加浏览量
-            viewCountBuffer.merge(helpInfoId, 1, Integer::sum);
-            
-            // 同时在Redis中记录（用于集群环境）
-            redisTemplate.opsForHash().increment(HELP_INFO_VIEW_COUNT_KEY, helpInfoId.toString(), 1);
-            
-            log.debug("增加浏览量计数, helpInfoId: {}", helpInfoId);
-        } catch (Exception e) {
-            log.error("增加浏览量计数失败: {}", e.getMessage(), e);
-        }
-    }
-    
-    @Override
-    public void flushViewCounts() {
-        try {
-            if (!viewCountBuffer.isEmpty()) {
-                // 获取Redis中的浏览量增量
-                Map<Object, Object> redisViewCounts = redisTemplate.opsForHash().entries(HELP_INFO_VIEW_COUNT_KEY);
-                
-                // 合并内存和Redis中的计数
-                Map<Long, Integer> finalCounts = new HashMap<>(viewCountBuffer);
-                for (Map.Entry<Object, Object> entry : redisViewCounts.entrySet()) {
-                    Long helpInfoId = Long.valueOf(entry.getKey().toString());
-                    Integer count = ((Number) entry.getValue()).intValue();
-                    finalCounts.merge(helpInfoId, count, Integer::sum);
-                }
-                
-                log.info("准备刷新浏览量到数据库, 数量: {}", finalCounts.size());
-                
-                // 这里需要在使用的地方注入具体的service来更新数据库
-                // 由于避免循环依赖，这个方法将在定时任务或特定触发点调用
-                
-                // 清空缓存
-                viewCountBuffer.clear();
-                redisTemplate.delete(HELP_INFO_VIEW_COUNT_KEY);
-            }
-        } catch (Exception e) {
-            log.error("刷新浏览量失败: {}", e.getMessage(), e);
-        }
-    }
+
     
     @Override
     public void clearHelpInfoCache(Long helpInfoId) {
@@ -332,15 +290,9 @@ public class HelpInfoCacheServiceImpl implements HelpInfoCacheService {
             Set<String> searchKeys = redisTemplate.keys(HELP_INFO_SEARCH_KEY_PREFIX + "*");
             if (searchKeys != null) allKeys.addAll(searchKeys);
             
-            // 清除浏览量计数缓存
-            redisTemplate.delete(HELP_INFO_VIEW_COUNT_KEY);
-            
             if (!allKeys.isEmpty()) {
                 redisTemplate.delete(allKeys);
             }
-            
-            // 清除内存缓存
-            viewCountBuffer.clear();
             
             log.info("清除所有互助信息缓存成功, 清除键数量: {}", allKeys.size());
         } catch (Exception e) {
@@ -409,5 +361,34 @@ public class HelpInfoCacheServiceImpl implements HelpInfoCacheService {
         }
         
         return keyBuilder.toString();
+    }
+    
+    @Override
+    public void clearAllExpiredCaches() {
+        try {
+            // 查找所有以指定前缀开头的缓存键
+            Set<String> helpInfoDetailKeys = redisTemplate.keys(HELP_INFO_DETAIL_KEY_PREFIX + "*");
+            Set<String> helpInfoListKeys = redisTemplate.keys(HELP_INFO_LIST_KEY_PREFIX + "*");
+            Set<String> helpInfoUserKeys = redisTemplate.keys(HELP_INFO_USER_KEY_PREFIX + "*");
+            Set<String> helpInfoSearchKeys = redisTemplate.keys(HELP_INFO_SEARCH_KEY_PREFIX + "*");
+            
+            // 合并所有键集合
+            Set<String> allKeys = new HashSet<>();
+            if (helpInfoDetailKeys != null) allKeys.addAll(helpInfoDetailKeys);
+            if (helpInfoListKeys != null) allKeys.addAll(helpInfoListKeys);
+            if (helpInfoUserKeys != null) allKeys.addAll(helpInfoUserKeys);
+            if (helpInfoSearchKeys != null) allKeys.addAll(helpInfoSearchKeys);
+            
+            // 批量删除所有找到的键
+            if (!allKeys.isEmpty()) {
+                redisTemplate.delete(allKeys);
+                log.info("清理过期缓存完成，共清理 {} 个缓存项", allKeys.size());
+            } else {
+                log.info("没有找到需要清理的过期缓存");
+            }
+            
+        } catch (Exception e) {
+            log.error("清理过期缓存失败: {}", e.getMessage(), e);
+        }
     }
 }

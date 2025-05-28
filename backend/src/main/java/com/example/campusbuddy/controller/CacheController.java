@@ -343,21 +343,6 @@ public class CacheController {
             return R.fail("清空互助信息列表缓存失败");
         }
     }
-    
-    /**
-     * 强制刷新浏览量计数到数据库
-     */
-    @PostMapping("/flush/helpinfo-viewcount")
-    public R<String> flushHelpInfoViewCounts() {
-        try {
-            helpInfoCacheService.flushViewCounts();
-            log.info("已强制刷新互助信息浏览量计数到数据库");
-            return R.ok("浏览量计数刷新成功");
-        } catch (Exception e) {
-            log.error("刷新浏览量计数失败: {}", e.getMessage());
-            return R.fail("刷新浏览量计数失败");
-        }
-    }
 
     /**
      * 测试Redis连接

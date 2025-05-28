@@ -74,15 +74,7 @@ public interface HelpInfoCacheService {
      */
     Page<HelpInfo> getCachedSearchResults(String searchKey);
     
-    /**
-     * 批量更新浏览量计数（延迟写入）
-     */
-    void incrementViewCount(Long helpInfoId);
-    
-    /**
-     * 刷新待更新的浏览量到数据库
-     */
-    void flushViewCounts();
+
     
     /**
      * 清除互助信息相关缓存
@@ -103,6 +95,11 @@ public interface HelpInfoCacheService {
      * 清除所有互助信息缓存
      */
     void clearAllHelpInfoCache();
+    
+    /**
+     * 清除所有过期的缓存
+     */
+    void clearAllExpiredCaches();
     
     /**
      * 生成列表缓存键
