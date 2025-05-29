@@ -6,6 +6,71 @@
 
 本文档基于"学伴"校园互助与资源共享平台的实际实现状态，重新定义平台的功能需求、非功能需求、接口需求及其他相关需求。本文档反映了项目的真实技术架构和已实现功能，包括好友系统、私信功能、WebSocket实时通信、管理员后台等核心模块。
 
+
+```mermaid
+graph TB
+    classDef frontend fill:#FF9966,stroke:#333,stroke-width:1px
+    classDef backend fill:#6699CC,stroke:#333,stroke-width:1px
+    classDef storage fill:#99CC99,stroke:#333,stroke-width:1px
+    classDef services fill:#CC99CC,stroke:#333,stroke-width:1px
+    classDef external fill:#FFCC66,stroke:#333,stroke-width:1px
+    
+    User((用户))
+    
+    subgraph "前端层"
+        FE[("Vue.js + Vite<br><i class='fa fa-code'></i>")]:::frontend
+        UI["UI 组件库<br><i class='fa fa-palette'></i>"]:::frontend
+        Router["Vue Router<br><i class='fa fa-route'></i>"]:::frontend
+        Store["Pinia<br><i class='fa fa-database'></i>"]:::frontend
+        API["API 客户端<br><i class='fa fa-exchange-alt'></i>"]:::frontend
+        WSClient["WebSocket 客户端<br><i class='fa fa-wifi'></i>"]:::frontend
+    end
+    
+    subgraph "后端层"
+        SpringBoot[("Spring Boot<br><i class='fa fa-server'></i>")]:::backend
+        
+        subgraph "功能模块"
+            AuthModule["认证授权<br><i class='fa fa-shield-alt'></i>"]:::services
+            UserModule["用户管理<br><i class='fa fa-users'></i>"]:::services
+            HelpModule["互助服务<br><i class='fa fa-hands-helping'></i>"]:::services
+            GroupModule["学习小组<br><i class='fa fa-users-cog'></i>"]:::services
+            ChatModule["即时消息<br><i class='fa fa-comments'></i>"]:::services
+            FileModule["文件管理<br><i class='fa fa-file-alt'></i>"]:::services
+            NotificationModule["通知系统<br><i class='fa fa-bell'></i>"]:::services
+        end
+        
+        WSServer["WebSocket 服务<br><i class='fa fa-broadcast-tower'></i>"]:::backend
+        Security["安全服务<br><i class='fa fa-lock'></i>"]:::backend
+    end
+    
+    subgraph "数据存储层"
+        MySQL[("MySQL<br><i class='fa fa-database'></i>")]:::storage
+        Redis[("Redis<br><i class='fa fa-bolt'></i>")]:::storage
+        QiniuOSS[("七牛云对象存储<br><i class='fa fa-cloud'></i>")]:::external
+    end
+    
+    %% 用户交互
+    User --> FE
+    
+    %% 前端内部连接
+    FE --> UI & Router & Store
+    FE --> API & WSClient
+    
+    %% 前后端连接
+    API --> SpringBoot
+    WSClient --> WSServer
+    
+    %% 后端内部连接
+    SpringBoot --> AuthModule & UserModule & HelpModule & GroupModule & ChatModule & FileModule & NotificationModule
+    SpringBoot --> WSServer & Security
+    ChatModule --> WSServer
+    NotificationModule --> WSServer
+    
+    %% 后端与存储连接
+    SpringBoot --> MySQL & Redis
+    FileModule --> QiniuOSS
+```
+
 ### 1.2 项目范围
 
 本平台是一个基于现代Web技术栈的校园互助与资源共享应用程序，主要功能包括：
