@@ -5,12 +5,10 @@
         v-for="(item, index) in navItems"
         :key="index"
         class="nav-item"
-        :class="{ 
-          active: isActive(item.path),
-          disabled: item.disabled 
-        }"
+        :class="{ active: isActive(item.path), disabled: item.disabled }"
         @click="handleNavClick(item)"
       >
+        <!-- 图标和徽章 -->
         <div class="nav-icon">
           <el-badge v-if="item.badge" :value="item.badge" :max="99" type="danger">
             <el-icon>
@@ -21,478 +19,234 @@
             <component :is="item.icon" />
           </el-icon>
         </div>
-        <div class="nav-label">{{ item.label }}</div>
         
-        <!-- 激活指示器 -->
-        <div class="active-indicator" v-if="isActive(item.path)"></div>
+        <!-- 文字标签 - 简化显示 -->
+        <span class="nav-label">{{ item.label }}</span>
       </div>
     </div>
-    
-    <!-- 安全区域占位 -->
     <div class="safe-area-placeholder"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '@/store/auth'
-import { getUnreadMessageCount } from '@/api/message'
-import {
-  House,
-  InfoFilled,
-  User,
-  Setting,
-  UserFilled,
-  ChatDotRound
-} from '@element-plus/icons-vue'
-
-interface NavItem {
-  path: string
-  label: string
-  icon: any
-  badge?: number
-  disabled?: boolean
-  requireAuth?: boolean
-  adminOnly?: boolean
-}
-
-const router = useRouter()
-const route = useRoute()
-const authStore = useAuthStore()
-
-const isMobile = ref(false)
-
-// 检查是否为移动端
-const checkMobile = () => {
-  isMobile.value = typeof window !== 'undefined' && window.innerWidth <= 768
-}
-
-const unreadMessageCount = ref(0)
-
-// 导航项配置
-const baseNavItems: NavItem[] = [
-  {
-    path: '/',
-    label: '首页',
-    icon: House
-  },
-  {
-    path: '/helpinfo',
-    label: '互助',
-    icon: InfoFilled
-  },
-  {
-    path: '/groups',
-    label: '学习小组',
-    icon: UserFilled,
-    requireAuth: true
-  },
-  {
-    path: '/messages',
-    label: '消息',
-    icon: ChatDotRound,
-    requireAuth: true
-  },
-  {
-    path: '/profile',
-    label: '个人',
-    icon: User,
-    requireAuth: true
-  }
-]
-
-// 计算显示的导航项
-const navItems = computed(() => {
-  let items = baseNavItems.map(item => ({ ...item }))
-
-  // 动态设置消息 badge
-  const msgIdx = items.findIndex(i => i.path === '/messages')
-  if (msgIdx !== -1 && authStore.isAuthenticated) {
-    items[msgIdx].badge = unreadMessageCount.value > 0 ? unreadMessageCount.value : undefined
-  }
-
-  // 如果用户已登录，显示完整菜单
-  if (authStore.isAuthenticated) {
-    // 如果是管理员，添加管理后台
-    if (authStore.isAdmin) {
-      items.push({
-        path: '/admin',
-        label: '管理',
-        icon: Setting,
-        adminOnly: true
-      })
-    }
-  } else {
-    // 未登录时，移除需要认证的项目
-    items = items.filter(item => !item.requireAuth)
-    
-    // 添加登录项
-    items.push({
-      path: '/login',
-      label: '登录',
-      icon: User
-    })
-  }
-  
-  return items
-})
-
-// 判断是否应该显示底部导航
-const shouldShowBottomNav = computed(() => {
-  // 在某些页面隐藏底部导航
-  const hiddenPaths = ['/login', '/register']
-  return isMobile.value && !hiddenPaths.includes(route.path)
-})
-
-// 判断导航项是否激活
-const isActive = (path: string) => {
-  if (path === '/') {
-    return route.path === '/'
-  }
-  return route.path.startsWith(path)
-}
-
-// 处理导航点击
-const handleNavClick = (item: NavItem) => {
-  if (item.disabled) return
-  
-  // 如果需要登录但用户未登录，跳转到登录页
-  if (item.requireAuth && !authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
-  
-  // 如果需要管理员权限但用户不是管理员
-  if (item.adminOnly && !authStore.isAdmin) {
-    return
-  }
-  
-  router.push(item.path)
-}
-
-// 监听窗口大小变化
-const handleResize = () => {
-  checkMobile()
-}
-
-// 获取未读消息数量
-const fetchUnreadMessageCount = async () => {
-  try {
-    const { data } = await getUnreadMessageCount()
-    if (data.code === 200) {
-      unreadMessageCount.value = data.data.count || 0
-    }
-  } catch (error) {
-    console.error('获取未读消息数量失败', error)
-  }
-}
-
-onMounted(() => {
-  checkMobile()
-  window.addEventListener('resize', handleResize)
-
-  // 如果用户已登录，获取未读消息数量
-  if (authStore.isAuthenticated) {
-    fetchUnreadMessageCount()
-  }
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
+import { useMobileNav } from './useMobileNav'
+const { navItems, isMobile, shouldShowBottomNav, isActive, handleNavClick } = useMobileNav()
 </script>
 
-<!-- 只在移动端显示 -->
 <style scoped>
-.mobile-bottom-nav {
-  display: none;
-}
-@media (max-width: 768px) {
-  .mobile-bottom-nav {
-    display: block;
-  }
-}
-
+/* 基础样式 */
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: var(--card-bg);
-  border-top: 1px solid var(--border-lighter);
+  background-color: var(--card-bg, #ffffff);
+  border-top: 1px solid var(--border-lighter, rgba(0,0,0,0.07));
   backdrop-filter: blur(10px);
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.05);
   width: 100%;
   box-sizing: border-box;
+  display: none;
 }
 
+@media (max-width: 768px) {
+  .mobile-bottom-nav {
+    display: block;
+  }
+}
+
+/* 容器布局 */
 .bottom-nav-container {
   display: flex;
-  padding: 8px 0 4px;
-  max-width: 100%;
-  margin: 0 auto;
+  padding: 4px 0;
   width: 100%;
   justify-content: space-around;
-  box-sizing: border-box;
+  align-items: center;
 }
 
+/* 导航项 */
 .nav-item {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 8px 4px;
+  padding: 6px 0;
   cursor: pointer;
   position: relative;
-  transition: all 0.3s ease;
+  margin: 0 2px;
+  min-height: 56px;
   border-radius: 8px;
-  margin: 0 4px;
-  min-height: 60px;
-}
-
-.nav-item:hover {
-  background-color: var(--hover-bg);
+  transition: background-color 0.2s ease;
 }
 
 .nav-item:active {
-  /* 减轻按下效果，更加微妙 */
-  transform: scale(0.98);
+  opacity: 0.7;
 }
 
-.nav-item.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.nav-item.disabled:hover {
-  background-color: transparent;
-}
-
-.nav-item.disabled:active {
-  transform: none;
-}
-
-.nav-item.active {
-  color: var(--primary-color);
-  background-color: var(--primary-light);
-}
-
+/* 图标样式 */
 .nav-icon {
-  position: relative;
   margin-bottom: 4px;
-  transition: all 0.3s ease;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-icon .el-icon {
   font-size: 22px;
-  transition: all 0.3s ease;
+  transition: transform 0.2s ease;
+}
+
+/* 活跃状态 */
+.nav-item.active {
+  color: var(--primary-color, #409EFF);
 }
 
 .nav-item.active .nav-icon .el-icon {
-  font-size: 24px;
-  /* 移除旋转效果，只保留轻微的上移动画 */
-  transform: translateY(-1px);
+  transform: scale(1.1);
 }
 
+/* 文字标签 - 重要修复 */
 .nav-label {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1;
   font-weight: 500;
-  line-height: 1.1;
   text-align: center;
-  transition: all 0.3s ease;
-  margin-top: 2px;
-  word-break: keep-all;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   max-width: 100%;
+  display: block;
+  white-space: nowrap;
+  overflow: visible;
+  padding: 0 2px;
+  margin-top: 2px;
 }
 
 .nav-item.active .nav-label {
   font-weight: 600;
-  transform: translateY(-1px);
 }
 
-.active-indicator {
-  position: absolute;
-  top: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 3px;
-  background-color: var(--primary-color);
-  border-radius: 3px;
-  /* 使用更简单的过渡动画替代弹跳动画 */
-  transition: all 0.3s ease;
+/* 禁用状态 */
+.nav-item.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
-/* 移除弹跳动画 */
-
-.safe-area-placeholder {
-  height: env(safe-area-inset-bottom, 0px);
-  background-color: var(--card-bg);
-  min-height: 8px; /* 确保即使没有安全区域也有一点间距 */
-}
-
-/* 徽章样式调整 */
+/* 徽章样式 */
 :deep(.el-badge__content) {
   font-size: 10px;
-  padding: 0 5px;
   height: 16px;
-  line-height: 16px;
-  border-radius: 8px;
   min-width: 16px;
+  line-height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  font-weight: bold;
+  transform: translate(50%, -50%) scale(0.9);
 }
 
-/* 不同屏幕尺寸适配 */
-@media (max-width: 480px) {
-  .bottom-nav-container {
-    padding: 6px 0 2px;
-  }
-  
-  .nav-item {
-    padding: 6px 1px;
-    margin: 0 1px;
-    min-height: 58px;
-    width: 20%;
-    box-sizing: border-box;
-  }
-  
-  .nav-icon .el-icon {
-    font-size: 20px;
-  }
-  
-  .nav-item.active .nav-icon .el-icon {
-    font-size: 22px;
-  }
-  
-  .nav-label {
-    font-size: 10px;
-    margin-top: 3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    line-height: 1;
-  }
+/* 安全区域 */
+.safe-area-placeholder {
+  height: env(safe-area-inset-bottom, 0px);
+  background-color: var(--card-bg, #ffffff);
+  min-height: 6px;
 }
 
-@media (min-width: 481px) and (max-width: 768px) {
-  .nav-item {
-    margin: 0 6px;
-    border-radius: 14px;
-    padding: 8px 4px;
-  }
-  
-  .nav-icon .el-icon {
-    font-size: 24px;
-  }
-  
-  .nav-item.active .nav-icon .el-icon {
-    font-size: 26px;
-  }
-  
-  .nav-label {
-    font-size: 12px;
-    line-height: 1.1;
-    margin-top: 4px;
-  }
-}
-
-/* 暗色主题适配 */
-[data-theme="dark"] .mobile-bottom-nav {
+/* 暗黑模式 */
+[data-theme="dark"] .mobile-bottom-nav,
+[data-theme="dark"] .safe-area-placeholder {
   background-color: var(--dark-card-bg, #1e1e1e);
   border-top-color: var(--dark-border-color, #333);
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.25);
 }
 
 [data-theme="dark"] .nav-item {
   color: var(--dark-text-secondary, #aaa);
 }
 
-[data-theme="dark"] .nav-item:hover {
-  background-color: var(--dark-bg-hover, rgba(255, 255, 255, 0.05));
-}
-
 [data-theme="dark"] .nav-item.active {
-  background-color: var(--dark-primary-light, rgba(64, 158, 255, 0.1));
   color: var(--primary-color-dark, #79bbff);
 }
 
-[data-theme="dark"] .active-indicator {
-  background-color: var(--primary-color-dark, #79bbff);
+/* 响应式调整 */
+@media (max-width: 320px) {
+  /* 特小屏幕 - iPhone 5/SE 等 */
+  .nav-label {
+    font-size: 9px;
+  }
+  
+  .nav-icon .el-icon {
+    font-size: 20px;
+  }
+  
+  .nav-item {
+    padding: 4px 0;
+    min-height: 52px;
+  }
 }
 
-/* 高分辨率屏幕 */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (min-width: 375px) and (max-width: 390px) {
+  /* iPhone X/11/12/13 */
+  .nav-label {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 391px) and (max-width: 480px) {
+  /* 稍大的手机 */
   .nav-icon .el-icon {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
+    font-size: 24px;
+  }
+  
+  .nav-label {
+    margin-top: 3px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  /* 平板/大屏手机 */
+  .nav-icon .el-icon {
+    font-size: 24px;
+  }
+  
+  .nav-label {
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  
+  .nav-item {
+    min-height: 60px;
   }
 }
 
 /* 横屏模式 */
 @media (orientation: landscape) and (max-height: 500px) {
-  .bottom-nav-container {
-    padding: 4px 0 2px;
-  }
-  
   .nav-item {
-    min-height: 48px;
-    padding: 4px 2px;
+    min-height: 46px;
+    flex-direction: row;
+    justify-content: center;
+    padding: 4px;
   }
   
   .nav-icon {
-    margin-bottom: 2px;
+    margin-bottom: 0;
+    margin-right: 6px;
   }
   
   .nav-icon .el-icon {
     font-size: 18px;
   }
   
-  .nav-item.active .nav-icon .el-icon {
-    font-size: 20px;
-  }
-  
   .nav-label {
-    font-size: 9px;
+    font-size: 10px;
   }
 }
 
-/* 触摸设备优化 */
-@media (hover: none) and (pointer: coarse) {
-  .nav-item {
-    min-height: 64px; /* 增加触摸目标大小 */
-  }
-  
-  .nav-item:hover {
-    background-color: transparent;
-  }
-}
-
-/* 减弱动画偏好 */
+/* 无动画模式 */
 @media (prefers-reduced-motion: reduce) {
-  .nav-item,
-  .nav-icon,
-  .nav-icon .el-icon,
-  .nav-label {
+  .nav-item, 
+  .nav-icon .el-icon {
     transition: none;
-  }
-  
-  .nav-item:active {
-    transform: none;
-  }
-  
-  .nav-item.active .nav-icon .el-icon,
-  .nav-item.active .nav-label {
-    transform: none;
-  }
-  
-  .active-indicator {
-    animation: none;
   }
 }
 
@@ -503,7 +257,11 @@ onUnmounted(() => {
   }
   
   .nav-item.active {
-    border: 2px solid var(--primary-color);
+    outline: 2px solid var(--primary-color, #409EFF);
+  }
+  
+  .nav-label {
+    font-weight: 700;
   }
 }
 </style>
