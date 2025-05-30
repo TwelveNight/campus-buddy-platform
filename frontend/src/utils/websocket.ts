@@ -4,7 +4,7 @@ import axios from 'axios';
 class WebSocketService {
   private socket: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 10; // 增加最大重连次数
   private reconnectTimeout: any = null;
   private pingInterval: any = null;
   private userId: number | null = null;
@@ -14,8 +14,15 @@ class WebSocketService {
   // 用于跟踪已处理的消息，防止重复处理
   private processedMessages: Set<string> = new Set();
   
+  // 使用Vue的响应式系统跟踪状态
   public isConnected = ref(false);
   public lastError = ref<string | null>(null);
+  public connectionStatus = ref<string>("未连接");
+
+  constructor() {
+    // 确保在初始化时响应式属性已设置
+    console.log('WebSocket服务初始化，isConnected值:', this.isConnected.value);
+  }
 
   // 初始化WebSocket连接
   public connect(userId: number): void {
@@ -24,23 +31,51 @@ class WebSocketService {
     }
 
     this.userId = userId;
+    
+    // 确定WebSocket协议（基于当前页面协议）
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = window.location.host;
-    // 使用与request.ts中相同的baseURL策略，确保与API路径一致
-    const baseUrl = axios?.defaults?.baseURL || `${window.location.protocol}//${window.location.host}`;
-    // 从baseUrl提取主机名，确保WebSocket连接到正确的后端
-    const urlObj = new URL(baseUrl);
-    const wsUrl = `${wsProtocol}//${urlObj.host}/ws/${userId}`;
-
+    
+    // 从axios baseURL获取后端服务器地址
+    let serverHost;
+    if (axios?.defaults?.baseURL) {
+      try {
+        // 尝试解析axios配置的baseURL
+        const urlObj = new URL(axios.defaults.baseURL);
+        serverHost = urlObj.host;
+      } catch (e) {
+        console.warn('解析baseURL失败，使用当前域名', e);
+        serverHost = window.location.host;
+      }
+    } else {
+      // 回退到当前域名
+      serverHost = window.location.host;
+    }
+    
+    // 构建WebSocket URL
+    // 注意：确保路径是 /ws/ 并避免使用字符串连接
+    const wsUrl = `${wsProtocol}//${serverHost}/ws/${userId}`;
+    
+    console.log('尝试连接WebSocket: ' + wsUrl);
+    this.connectionStatus.value = "正在连接";
+    
     try {
+      // 创建WebSocket连接
       this.socket = new WebSocket(wsUrl);
       
+      // 绑定事件处理器
       this.socket.onopen = this.handleOpen.bind(this);
       this.socket.onmessage = this.handleMessage.bind(this);
       this.socket.onclose = this.handleClose.bind(this);
       this.socket.onerror = this.handleError.bind(this);
       
-      console.log(`WebSocket connecting to ${wsUrl}`);
+      // 添加超时处理，解决某些浏览器可能不触发error事件的问题
+      setTimeout(() => {
+        if (this.socket && this.socket.readyState !== WebSocket.OPEN) {
+          console.warn('WebSocket连接超时');
+          this.lastError.value = '连接超时';
+          this.attemptReconnect();
+        }
+      }, 10000); // 10秒超时
     } catch (error) {
       console.error('WebSocket connection error:', error);
       this.lastError.value = '连接服务器失败';
@@ -68,6 +103,7 @@ class WebSocketService {
     this.isConnected.value = false;
     this.userId = null;
     this.reconnectAttempts = 0;
+    this.connectionStatus.value = "未连接";
   }
 
   // 尝试重新连接
@@ -75,6 +111,7 @@ class WebSocketService {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
       this.lastError.value = '达到最大重连次数，请刷新页面重试';
+      this.connectionStatus.value = "重连失败";
       return;
     }
 
@@ -84,7 +121,8 @@ class WebSocketService {
 
     // 使用指数退避策略，但最长不超过30秒
     const delay = Math.min(30000, 1000 * Math.pow(1.5, this.reconnectAttempts));
-    console.log(`Attempting to reconnect in ${delay}ms... (Attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
+    console.log('Attempting to reconnect in ' + delay + 'ms... (Attempt ' + (this.reconnectAttempts + 1) + '/' + this.maxReconnectAttempts + ')');
+    this.connectionStatus.value = '正在重连 (' + (this.reconnectAttempts + 1) + '/' + this.maxReconnectAttempts + ')';
     
     this.reconnectTimeout = setTimeout(() => {
       if (this.userId) {
@@ -92,11 +130,12 @@ class WebSocketService {
         
         // 在重连前检查网络状态
         if (navigator.onLine) {
-          console.log(`执行第 ${this.reconnectAttempts} 次重连尝试...`);
+          console.log('执行第 ' + this.reconnectAttempts + ' 次重连尝试...');
           this.connect(this.userId);
         } else {
           console.log('网络离线，等待网络恢复后重连...');
           this.lastError.value = '网络已断开，等待网络恢复...';
+          this.connectionStatus.value = "网络离线";
           
           // 添加网络恢复事件监听
           const onlineHandler = () => {
@@ -170,11 +209,12 @@ class WebSocketService {
   }
 
   // 连接打开处理
-  private handleOpen(event: Event): void {
+  private handleOpen(_event: Event): void {
     console.log('WebSocket connected');
     this.isConnected.value = true;
     this.lastError.value = null;
     this.reconnectAttempts = 0;
+    this.connectionStatus.value = "已连接";
     
     // 发送立即心跳以同步时间
     this.sendPing();
@@ -197,7 +237,7 @@ class WebSocketService {
       console.log('WebSocket message received:', data);
       
       // 生成消息标识符用于去重
-      const messageId = `${data.type}_${data.timestamp}_${data.messageId || ''}_${data.senderId || ''}`;
+      const messageId = data.type + '_' + data.timestamp + '_' + (data.messageId || '') + '_' + (data.senderId || '');
       
       // 检查消息是否已经处理过，如果处理过则跳过
       if (this.processedMessages.has(messageId)) {
@@ -256,6 +296,7 @@ class WebSocketService {
   private handleClose(event: CloseEvent): void {
     console.log('WebSocket closed:', event);
     this.isConnected.value = false;
+    this.connectionStatus.value = "已断开";
     
     // 通知连接状态监听器
     this.connectionListeners.forEach(listener => listener(false));
@@ -294,8 +335,10 @@ class WebSocketService {
 
   // 连接错误处理
   private handleError(event: Event): void {
-    console.error('WebSocket error:', event);
+    console.error('WebSocket错误:', event);
     this.lastError.value = '连接出错';
+    this.isConnected.value = false;
+    this.connectionStatus.value = "连接出错";
     
     // 记录详细错误信息以便调试
     if (event instanceof ErrorEvent && event.error) {
@@ -306,6 +349,9 @@ class WebSocketService {
     if (!this.reconnectTimeout && this.userId) {
       this.attemptReconnect();
     }
+    
+    // 通知连接状态监听器
+    this.connectionListeners.forEach(listener => listener(false));
   }
 }
 

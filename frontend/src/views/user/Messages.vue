@@ -59,7 +59,12 @@
                         <div class="chat-user-info">
                             <div class="chat-username">{{ currentChatUser.nickname }}</div>
                             <div class="user-status">
-                                <el-tag size="small" type="success" effect="plain">在线</el-tag>
+                                <WebSocketStatusIndicator 
+                                    :showText="true" 
+                                    :showRefreshButton="true" 
+                                    size="small"
+                                    @click="handleWebSocketStatusClick"
+                                />
                             </div>
                         </div>
                     </div>
@@ -232,7 +237,8 @@ import {
 } from '@/api/message'
 import { getUserById } from '@/api/user'
 import type { ChatSession, ChatMessage } from '@/types/message'
-import webSocketService from '@/utils/websocket'
+import messageWebSocketEnhancer from '@/utils/messageWebSocketEnhancer'
+import WebSocketStatusIndicator from '@/components/common/WebSocketStatusIndicator.vue'
 import EmojiPicker from '@/components/chat/EmojiPicker.vue'
 import ImageUploader from '@/components/chat/ImageUploader.vue'
 
@@ -492,10 +498,10 @@ const fetchChatHistory = async () => {
                 // 记录当前页码，便于后续加载更多旧消息
                 currentPage.value = latestPage
                 
-                // 检查是��还有更多历史消息可以加载
+                // 检查是否还有更多历史消息可以加载
                 hasMoreMessages.value = currentPage.value > 1
 
-                // 更新��话中的未读数
+                // 更新会话中的未读数
                 const index = sessions.value.findIndex(s => currentChatUser.value && s.userId === currentChatUser.value.userId)
                 if (index !== -1) {
                     sessions.value[index].unreadCount = 0
@@ -526,7 +532,7 @@ const sendMessage = async () => {
             messageType: 'TEXT' as const
         }
 
-        const res = await sendPrivateMessage(data)
+        const res = await sendMessageEnhanced(data)
         if (res.data.code === 200) {
             // 添加到消息列表
             const newMessage = {
@@ -587,7 +593,7 @@ const sendImage = async (imageUrl: string) => {
             imageUrl: imageUrl
         }
 
-        const res = await sendPrivateMessage(data)
+        const res = await sendMessageEnhanced(data)
         if (res.data.code === 200) {
             // 添加到消息列表
             const newMessage = {
@@ -667,6 +673,34 @@ const markAllChatAsRead = async () => {
     }
 }
 
+// 处理WebSocket状态指示器点击事件
+const handleWebSocketStatusClick = () => {
+    console.log('WebSocket状态指示器被点击');
+    // 可以在这里添加额外的处理逻辑，比如显示连接详情
+}
+
+// 发送消息 - 只使用HTTP API（后端会自动处理WebSocket推送）
+const sendMessageEnhanced = async (messageData: {
+    recipientId: number;
+    content: string;
+    messageType: 'TEXT' | 'IMAGE' | 'EMOJI';
+    imageUrl?: string;
+}) => {
+    try {
+        // 通过HTTP API发送消息（后端会自动处理WebSocket推送给接收者）
+        const res = await sendPrivateMessage(messageData);
+        
+        if (res.data.code === 200) {
+            return res;
+        } else {
+            throw new Error(res.data.message || '发送失败');
+        }
+    } catch (error) {
+        console.error('发送消息失败:', error);
+        throw error;
+    }
+}
+
 // 加载更多历史消息
 const loadMoreMessages = async () => {
     if (!currentChatUser.value || loadingMoreMessages.value || currentPage.value <= 1) return
@@ -683,7 +717,7 @@ const loadMoreMessages = async () => {
         if (res.data.code === 200) {
             const oldMessages = res.data.data.records || []
             if (oldMessages.length > 0) {
-                // 保存当��滚动位置
+                // 保存当前滚动位置
                 const messagesEl = messagesContainer.value
                 const scrollHeight = messagesEl ? messagesEl.scrollHeight : 0
                 const scrollTop = messagesEl ? messagesEl.scrollTop : 0
@@ -829,12 +863,12 @@ watch(
 onMounted(() => {
     fetchSessions()
 
-    // 监听WebSocket私信
-    webSocketService.addMessageListener(handleNewMessage)
+    // 使用增强版WebSocket服务监听私信
+    messageWebSocketEnhancer.addMessageHandler(handleNewMessage)
 
-    // 如果已认证但WebSocket未连接，重新连接
-    if (authStore.isAuthenticated && authStore.user?.userId && !webSocketService.isConnected.value) {
-        webSocketService.connect(authStore.user.userId);
+    // 如果已认证但WebSocket未连接，使用增强版服务连接
+    if (authStore.isAuthenticated && authStore.user?.userId && !messageWebSocketEnhancer.isConnected.value) {
+        messageWebSocketEnhancer.connect();
     }
 
     // 进入消息页面时，刷新未读消息数量

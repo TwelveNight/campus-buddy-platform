@@ -1,4 +1,6 @@
 import { createApp } from 'vue'
+// 导入全局对象修复SockJS依赖问题
+import './utils/global.js'
 import './style.css'
 import './styles/dialog-fix.css' // 引入对话框修复样式
 import './styles/theme.css' // 引入主题样式

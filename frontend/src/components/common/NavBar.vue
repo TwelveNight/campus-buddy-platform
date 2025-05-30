@@ -581,14 +581,8 @@ const handleWebSocketMessage = (data: any) => {
             fetchUnreadMessageCount();
         }, 1000);
 
-        // 显示私信提示
-        if (data.senderName && data.content) {
-            ElMessage({
-                message: `${data.senderName || '用户'}: ${data.content}`,
-                type: 'success',
-                duration: 5000
-            });
-        }
+        // 不在这里显示通知，避免重复通知
+        // 通知已由 messageWebSocketEnhancer.ts 中的 ElNotification 处理
     } catch (error) {
         console.error('处理WebSocket私信时出错:', error);
     }

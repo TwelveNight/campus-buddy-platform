@@ -1,8 +1,21 @@
 import axios from 'axios'
 
+// 判断当前环境
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+// 根据环境配置baseURL
+let baseURL;
+if (isDevelopment) {
+  // 开发环境使用固定地址
+  baseURL = 'http://localhost:8080';
+} else {
+  // 生产环境使用相对路径，自动适应当前域名
+  baseURL = '';
+}
+
 // 配置axios默认值
-axios.defaults.baseURL = 'http://localhost:8080' // 根据后端地址调整
-axios.defaults.timeout = 10000
+axios.defaults.baseURL = baseURL;
+axios.defaults.timeout = 15000; // 增加超时时间到15秒
 
 // 请求拦截器 - 添加token到header
 axios.interceptors.request.use(

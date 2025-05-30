@@ -5,12 +5,16 @@ import PageTransition from './components/common/PageTransition.vue'
 import MobileNav from './components/mobile/MobileNav.vue'
 import MobileBottomNav from './components/mobile/MobileBottomNav.vue'
 import './styles/theme-transition.css'
+import { useAuthStore } from './store/auth'
+import webSocketService from './utils/websocket'
 
 // 主题切换动画元素
 const themeTransitionActive = ref(false)
+const authStore = useAuthStore()
 
-// 初始化主题
+// 初始化主题和WebSocket
 onMounted(() => {
+  // 初始化主题
   const savedTheme = localStorage.getItem('theme') || 'light'
   document.documentElement.setAttribute('data-theme', savedTheme)
   

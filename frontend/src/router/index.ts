@@ -13,6 +13,8 @@ import Profile from '../views/user/Profile.vue'
 import Reviews from '../views/user/Reviews.vue'
 import AdminHelpInfo from '../views/admin/AdminHelpInfo.vue'
 import Debug from '../views/Debug.vue' // 添加调试页面
+import WebSocketDebug from '../views/WebSocketDebug.vue' // 添加WebSocket调试页面
+import WebSocketSimpleDebug from '../views/WebSocketSimpleDebug.vue' // 添加简易WebSocket调试页面
 // 动态导入组件
 const GroupList = () => import('../views/group/GroupList.vue')
 const GroupDetail = () => import('../views/group/GroupDetail.vue')
@@ -148,6 +150,18 @@ const routes: RouteRecordRaw[] = [
         path: 'debug',
         component: Debug,
         name: 'Debug',
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'ws-debug',
+        component: WebSocketDebug,
+        name: 'WebSocketDebug',
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'ws-simple',
+        component: WebSocketSimpleDebug,
+        name: 'WebSocketSimpleDebug',
         meta: { requiresAuth: true }
       },
       {
