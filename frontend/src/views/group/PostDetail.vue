@@ -89,8 +89,39 @@
                     {{ comment.nickname || comment.authorName || comment.username || '匿名' }}
                   </el-link>
                   <span class="comment-time time-badge">{{ formatTime(comment.createdAt) }}</span>
+                  
+                  <!-- 评论操作按钮 -->
+                  <div class="comment-actions" v-if="authStore.user?.userId === (comment.userId || comment.authorId)">
+                    <el-button 
+                      type="text" 
+                      size="small"
+                      @click="editCommentItem(comment)"
+                      class="action-btn edit-btn">
+                      <el-icon><Edit /></el-icon>
+                    </el-button>
+                    <el-button 
+                      type="text" 
+                      size="small"
+                      @click="deleteCommentItem(comment)"
+                      class="action-btn delete-btn">
+                      <el-icon><Delete /></el-icon>
+                    </el-button>
+                  </div>
                 </div>
-                <div class="comment-content markdown-content animated-content" v-html="renderCommentContent(comment.content)"></div>
+                
+                <!-- 编辑状态的评论表单 -->
+                <div v-if="comment.isEditing" class="comment-edit-form">
+                  <div class="editor-wrapper">
+                    <RichEditor v-model="comment.editContent" placeholder="请输入评论内容" style="width:100%;margin-bottom:8px;" />
+                  </div>
+                  <div class="comment-edit-actions">
+                    <el-button size="small" @click="cancelEditComment(comment)">取消</el-button>
+                    <el-button type="primary" size="small" @click="updateCommentItem(comment)" :disabled="!comment.editContent || !comment.editContent.trim()">保存</el-button>
+                  </div>
+                </div>
+                
+                <!-- 正常显示的评论内容 -->
+                <div v-else class="comment-content markdown-content animated-content" v-html="renderCommentContent(comment.content)"></div>
               </div>
               <el-empty v-if="comments.length === 0 && !commentsLoading" description="暂无评论" class="empty-state" />
             </div>
@@ -121,10 +152,10 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft, Pointer, ChatDotRound } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft, Pointer, ChatDotRound, Edit, Delete } from '@element-plus/icons-vue'
 import { getPostDetail, likePost, unlikePost, getLikeStatus } from '../../api/groupPost'
-import { getPostComments, addComment } from '../../api/postComment'
+import { getPostComments, addComment, deleteComment, updateComment } from '../../api/postComment'
 import { useAuthStore } from '../../store/auth'
 import RichEditor from '../../components/form/RichEditor.vue'
 import DisabledGroupWarning from '../../components/group/DisabledGroupWarning.vue'
@@ -306,6 +337,108 @@ const submitComment = async () => {
   }
 }
 
+// 编辑评论
+const editCommentItem = (comment: any) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  
+  // 检查小组状态
+  if (groupStatus.value !== 'ACTIVE') {
+    ElMessage.warning('该小组已被禁用，无法编辑评论')
+    return
+  }
+  
+  // 设置编辑状态和内容
+  comment.isEditing = true
+  comment.editContent = comment.content
+}
+
+// 取消编辑评论
+const cancelEditComment = (comment: any) => {
+  comment.isEditing = false
+  comment.editContent = comment.content
+}
+
+// 更新评论
+const updateCommentItem = async (comment: any) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  
+  // 检查小组状态
+  if (groupStatus.value !== 'ACTIVE') {
+    ElMessage.warning('该小组已被禁用，无法更新评论')
+    return
+  }
+  
+  if (!comment.editContent || !comment.editContent.trim()) {
+    ElMessage.warning('评论内容不能为空')
+    return
+  }
+  
+  try {
+    const response = await updateComment(postId.value, comment.commentId, comment.editContent.trim())
+    
+    if (response.data && response.data.code === 200) {
+      ElMessage.success('评论更新成功')
+      
+      // 更新本地评论内容
+      comment.content = comment.editContent
+      comment.isEditing = false
+      
+      // 重新加载评论列表以确保数据一致性
+      await loadComments()
+    } else {
+      ElMessage.error(response.data?.message || '更新评论失败')
+    }
+  } catch (error) {
+    console.error('更新评论失败:', error)
+    ElMessage.error('更新评论失败，请稍后重试')
+  }
+}
+
+// 删除评论
+const deleteCommentItem = async (comment: any) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录')
+    return
+  }
+  
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除该评论吗？此操作不可恢复。',
+      '删除评论',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    const response = await deleteComment(postId.value, comment.commentId)
+    
+    if (response.data && response.data.code === 200) {
+      ElMessage.success('评论已成功删除')
+      
+      // 重新加载评论列表
+      await loadComments()
+      
+      // 重新加载帖子详情以获取最新的评论数
+      await loadPostDetail()
+    } else {
+      ElMessage.error(response.data?.message || '删除评论失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除评论失败:', error)
+      ElMessage.error('删除评论失败，请稍后重试')
+    }
+  }
+}
+
 // 分页处理
 const handleCommentSizeChange = (val: number) => {
   commentPageSize.value = val
@@ -371,7 +504,7 @@ const renderMarkdown = (content: string) => {
     html = html.replace(/<pre><code class="language-(\w+)">/gi, '<pre class="markdown-code language-$1"><code>')
     
     // 增强代码语法高亮
-    html = html.replace(/<code>([\s\S]*?)<\/code>/g, (match, p1) => {
+    html = html.replace(/<code>([\s\S]*?)<\/code>/g, (_, p1) => {
       // 关键字高亮
       let highlighted = p1.replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await)\b/g, 
                      '<span class="token keyword">$1</span>');
@@ -1000,6 +1133,7 @@ watch(() => showComments.value, (newValue) => {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  position: relative;
 }
 
 .comment-author-name {
@@ -1010,6 +1144,65 @@ watch(() => showComments.value, (newValue) => {
 .comment-time {
   font-size: 12px;
   color: var(--el-text-color-regular);
+}
+
+/* 评论操作按钮样式 */
+.comment-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.comment-item:hover .comment-actions {
+  opacity: 1;
+}
+
+.comment-actions .action-btn {
+  padding: 4px 6px;
+  border: none;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.comment-actions .edit-btn {
+  color: #409eff;
+}
+
+.comment-actions .edit-btn:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.comment-actions .delete-btn {
+  color: #f56c6c;
+}
+
+.comment-actions .delete-btn:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+  transform: scale(1.1);
+}
+
+/* 评论编辑表单样式 */
+.comment-edit-form {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme="dark"] .comment-edit-form {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+.comment-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .comment-content {

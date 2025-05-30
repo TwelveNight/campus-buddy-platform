@@ -880,6 +880,96 @@ const confirmDisbandGroup = () => {
     text-decoration: line-through;
 }
 
+/* 快捷评论按钮区域 */
+.quick-actions-container {
+    margin: 20px 0;
+    animation: slideInFromTop 1.5s cubic-bezier(0.25, 0.8, 0.25, 1) 0.6s both;
+}
+
+.quick-action-card {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.05) 0%, rgba(103, 194, 58, 0.05) 100%);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    border: 1px solid rgba(64, 158, 255, 0.2);
+}
+
+.quick-action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(64, 158, 255, 0.15);
+    border-color: rgba(64, 158, 255, 0.4);
+}
+
+.quick-action-content {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+}
+
+.quick-action-icon {
+    margin-right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.quick-action-icon:hover {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 0 20px rgba(64, 158, 255, 0.4);
+}
+
+.quick-action-text {
+    flex: 1;
+}
+
+.quick-action-text h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+    font-weight: 600;
+    background: linear-gradient(90deg, #409eff, #67c23a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.quick-action-text p {
+    margin: 0;
+    color: #606266;
+    font-size: 14px;
+}
+
+.quick-comment-btn {
+    margin-left: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 120px;
+}
+
+.quick-comment-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+}
+
+/* 暗色模式适配 */
+[data-theme="dark"] .quick-action-card {
+    background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(103, 194, 58, 0.1) 100%);
+    border: 1px solid rgba(64, 158, 255, 0.3);
+}
+
+[data-theme="dark"] .quick-action-text p {
+    color: var(--dark-text-secondary);
+}
+
+[data-theme="dark"] .quick-action-icon {
+    background: linear-gradient(135deg, var(--primary-color-dark) 0%, #67c23a 100%);
+}
+
 /* 暗色模式动效适配 */
 [data-theme="dark"] .gradient-text {
     background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
