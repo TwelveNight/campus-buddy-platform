@@ -5,9 +5,11 @@
 <template>
   <div class="disabled-group-warning animated-warning" v-if="isDisabled">
     <el-alert
-      title="小组已被管理员禁用"
+      :title="isGroupDisbanded ? '小组已解散' : '小组已被管理员禁用'"
       type="warning"
-      description="该小组已被管理员禁用，您可以浏览内容和下载文件，但不能发帖、评论或上传文件。"
+      :description="isGroupDisbanded 
+        ? '该小组已解散，您只能浏览现有内容，无法进行任何操作。' 
+        : '该小组已被管理员禁用，您可以浏览内容和下载文件，但不能发帖、评论或上传文件。'"
       show-icon
       :closable="false"
     />
@@ -15,12 +17,21 @@
 </template>
 
 <script setup lang="ts">
-defineProps({
+import { computed } from 'vue';
+
+const props = defineProps({
   isDisabled: {
     type: Boolean,
     default: false
+  },
+  groupStatus: {
+    type: String,
+    default: 'INACTIVE'
   }
 });
+
+// 判断小组是否已解散
+const isGroupDisbanded = computed(() => props.groupStatus === 'DISBANDED');
 </script>
 
 <style scoped>

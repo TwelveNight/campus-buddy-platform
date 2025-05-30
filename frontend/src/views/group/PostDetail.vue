@@ -31,7 +31,10 @@
         </div>
 
         <!-- 小组禁用警告 -->
-        <DisabledGroupWarning :is-disabled="groupStatus === 'INACTIVE'" />
+        <DisabledGroupWarning 
+          :is-disabled="groupStatus !== 'ACTIVE'" 
+          :group-status="groupStatus" 
+        />
 
         <!-- 帖子内容 -->
         <div class="post-body content-section">
@@ -56,13 +59,10 @@
           <div v-if="showComments" class="comments-section animated-comments">
             <div class="comment-input input-section">
               <h3 class="section-title">发表评论</h3>
-              <RichEditor v-model="newComment" placeholder="请输入评论内容" class="editor-container" />
+              <RichEditor v-model="newComment" placeholder="请输入评论内容" class="editor-container editor-wrapper" />
               <el-button type="primary" @click="submitComment" :disabled="isCommentDisabled" class="submit-btn magical-btn">
                 {{ groupStatus === 'INACTIVE' ? '小组已禁用，无法评论' : '发表评论' }}
               </el-button>
-              <div v-if="groupStatus === 'INACTIVE'" class="disabled-tip">
-                <el-tag type="warning" effect="dark">该小组已被禁用，无法发表评论</el-tag>
-              </div>
             </div>
 
             <div class="comments-list comments-container" v-loading="commentsLoading">
@@ -129,6 +129,7 @@ import { useAuthStore } from '../../store/auth'
 import RichEditor from '../../components/form/RichEditor.vue'
 import DisabledGroupWarning from '../../components/group/DisabledGroupWarning.vue'
 import { marked } from 'marked'
+import '../../styles/comment-editor.css'
 
 const route = useRoute()
 const router = useRouter()
@@ -754,6 +755,8 @@ watch(() => showComments.value, (newValue) => {
 
 .editor-container {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+    text-align: left !important;
 }
 
 .editor-container:hover {

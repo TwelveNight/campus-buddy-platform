@@ -60,3 +60,12 @@ export function getCommentDetail(postId: number | string, commentId: number | st
     method: 'get'
   });
 }
+
+// 编辑评论 - 后端暂无接口，使用PUT方法实现
+export function updateComment(postId: number | string, commentId: number | string, content: string): Promise<ApiResponse> {
+  return request({
+    url: `/api/group-posts/${postId}/comments/${commentId}`,
+    method: 'put',
+    data: { content }
+  });
+}

@@ -107,4 +107,37 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
     public PostComment getCommentDetail(Long commentId) {
         return getById(commentId);
     }
+    
+    @Override
+    @Transactional
+    public boolean updateComment(Long commentId, Long userId, String content) {
+        // 获取评论信息
+        PostComment comment = getById(commentId);
+        if (comment == null) {
+            return false;
+        }
+        
+        // 检查是否是评论作者
+        boolean isAuthor = comment.getUserId().equals(userId);
+        if (!isAuthor) {
+            // 如果不是作者，则无权修改
+            return false;
+        }
+        
+        // 更新评论内容
+        comment.setContent(content);
+        comment.setUpdatedAt(new Date());
+        boolean result = updateById(comment);
+        
+        // 如果更新成功，清除相关缓存
+        if (result) {
+            GroupPost post = groupPostMapper.selectById(comment.getPostId());
+            if (post != null) {
+                postCacheService.evictPostDetailCache(comment.getPostId());
+                postCacheService.evictGroupPostsCache(post.getGroupId());
+            }
+        }
+        
+        return result;
+    }
 }

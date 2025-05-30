@@ -84,15 +84,31 @@
                                                 <div class="comment-time">{{ formatTime(comment.createdAt) }}</div>
                                             </div>
                                         </div>
-                                        <el-button 
-                                            v-if="authStore.user?.userId === comment.userId" 
-                                            type="text" 
-                                            size="small"
-                                            @click="deleteCommentItem(post, comment)">
-                                            <el-icon><Delete /></el-icon>
-                                        </el-button>
+                                        <div class="comment-actions" v-if="authStore.user?.userId === comment.userId">
+                                            <el-button 
+                                                type="text" 
+                                                size="small"
+                                                @click="editCommentItem(post, comment)">
+                                                <el-icon><Edit /></el-icon>
+                                            </el-button>
+                                            <el-button 
+                                                type="text" 
+                                                size="small"
+                                                @click="deleteCommentItem(post, comment)">
+                                                <el-icon><Delete /></el-icon>
+                                            </el-button>
+                                        </div>
                                     </div>
-                                    <div class="comment-content" v-html="renderCommentContent(comment)"></div>
+                                    <div v-if="comment.isEditing" class="comment-edit-form">
+                                        <div class="editor-wrapper">
+                                            <RichEditor v-model="comment.editContent" placeholder="请输入评论内容（支持Markdown和图片）" style="width:100%;margin-bottom:8px;" />
+                                        </div>
+                                        <div class="comment-edit-actions">
+                                            <el-button size="small" @click="cancelEditComment(comment)">取消</el-button>
+                                            <el-button type="primary" size="small" @click="updateComment(post, comment)" :disabled="!comment.editContent || !comment.editContent.trim()">保存</el-button>
+                                        </div>
+                                    </div>
+                                    <div v-else class="comment-content" v-html="renderCommentContent(comment)"></div>
                                 </div>
                             </div>
                             <el-empty v-else-if="!post.loadingComments" description="暂无评论" />
@@ -111,11 +127,15 @@
                             </div>
                             
                             <!-- 评论输入框 -->
-                            <div class="comment-input">
-                                <RichEditor v-model="post.newComment" placeholder="请输入评论内容（支持Markdown和图片）" style="width:100%;margin-bottom:8px;" />
-                                <el-button type="primary" size="small" @click="submitComment(post)" :disabled="!authStore.isAuthenticated || !post.newComment || !post.newComment.trim()">发表评论</el-button>
-                                <div v-if="!authStore.isAuthenticated" class="login-tip">请先登录后再评论</div>
+                            <div class="comment-input" v-if="!props.disabled && authStore.isAuthenticated">
+                                <div class="editor-wrapper">
+                                    <RichEditor v-model="post.newComment" placeholder="请输入评论内容（支持Markdown和图片）" style="width:100%;margin-bottom:8px;" />
+                                </div>
+                                <div class="comment-submit">
+                                    <el-button type="primary" size="small" @click="submitComment(post)" :disabled="!post.newComment || !post.newComment.trim()">发表评论</el-button>
+                                </div>
                             </div>
+                            <div v-else-if="!authStore.isAuthenticated" class="login-tip">请先登录后再评论</div>
                         </div>
                     </div>
                 </el-collapse-transition>
@@ -172,9 +192,10 @@ import { useRouter } from 'vue-router';
 // import moment from 'moment';
 
 import { getGroupPosts, createPost, updatePost, deletePost, likePost, unlikePost, getLikeStatus } from '../../api/groupPost';
-import { getPostComments, addComment, deleteComment } from '../../api/postComment';
+import { getPostComments, addComment, deleteComment, updateComment as apiUpdateComment } from '../../api/postComment';
 import { useAuthStore } from '../../store/auth';
 import RichEditor from '../form/RichEditor.vue';
+import '../../styles/comment-editor.css';
 
 // 类型定义
 interface Post {
@@ -626,6 +647,12 @@ const submitComment = async (post: Post) => {
         return;
     }
     
+    // 检查小组状态
+    if (props.disabled) {
+        ElMessage.warning('该小组已被禁用，无法发表评论');
+        return;
+    }
+    
     if (!post.newComment || !post.newComment.trim()) {
         ElMessage.warning('评论内容不能为空');
         return;
@@ -693,6 +720,69 @@ const deleteCommentItem = async (post: Post, comment: any) => {
     }).catch(() => {
         // 取消操作
     });
+};
+
+// 编辑评论
+const editCommentItem = (post: Post, comment: any) => {
+    if (!authStore.isAuthenticated) {
+        ElMessage.warning('请先登录');
+        return;
+    }
+    
+    // 检查小组状态
+    if (props.disabled) {
+        ElMessage.warning('该小组已被禁用，无法编辑评论');
+        return;
+    }
+    
+    // 设置编辑状态和内容
+    comment.isEditing = true;
+    comment.editContent = comment.content;
+};
+
+// 取消编辑评论
+const cancelEditComment = (comment: any) => {
+    comment.isEditing = false;
+    comment.editContent = comment.content;
+};
+
+// 更新评论
+const updateComment = async (post: Post, comment: any) => {
+    if (!authStore.isAuthenticated) {
+        ElMessage.warning('请先登录');
+        return;
+    }
+    
+    // 检查小组状态
+    if (props.disabled) {
+        ElMessage.warning('该小组已被禁用，无法更新评论');
+        return;
+    }
+    
+    if (!comment.editContent || !comment.editContent.trim()) {
+        ElMessage.warning('评论内容不能为空');
+        return;
+    }
+    
+    try {
+        const response = await apiUpdateComment(post.postId!, comment.commentId, comment.editContent);
+        
+        if (response.data && response.data.code === 200) {
+            ElMessage.success('评论更新成功');
+            
+            // 更新本地评论内容
+            comment.content = comment.editContent;
+            comment.isEditing = false;
+            
+            // 重新加载评论列表
+            await loadComments(post);
+        } else {
+            ElMessage.error(response.data?.message || '更新评论失败');
+        }
+    } catch (error) {
+        console.error('更新评论失败:', error);
+        ElMessage.error('更新评论失败，请稍后重试');
+    }
 };
 
 // 处理评论分页大小变化

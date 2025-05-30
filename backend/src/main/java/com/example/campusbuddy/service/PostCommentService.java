@@ -16,4 +16,7 @@ public interface PostCommentService extends IService<PostComment> {
     
     // 获取评论详情
     PostComment getCommentDetail(Long commentId);
+    
+    // 编辑评论
+    boolean updateComment(Long commentId, Long userId, String content);
 }

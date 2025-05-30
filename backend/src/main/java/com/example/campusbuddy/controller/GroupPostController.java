@@ -458,4 +458,38 @@ public class GroupPostController {
         
         return R.ok(comment);
     }
+    
+    /**
+     * 编辑评论
+     */
+    @Operation(summary = "编辑评论", description = "编辑自己的评论")
+    @PutMapping("/{postId}/comments/{commentId}")
+    public R<Void> updateComment(
+            @Parameter(description = "帖子ID") @PathVariable Long postId,
+            @Parameter(description = "评论ID") @PathVariable Long commentId,
+            @RequestBody Map<String, String> commentData) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return R.fail("用户未登录");
+        }
+        
+        String content = commentData.get("content");
+        if (content == null || content.trim().isEmpty()) {
+            return R.fail("评论内容不能为空");
+        }
+        
+        // 验证评论是否属于该帖子
+        PostComment comment = commentService.getCommentDetail(commentId);
+        if (comment == null) {
+            return R.fail("评论不存在");
+        }
+        
+        if (!comment.getPostId().equals(postId)) {
+            return R.fail("评论不属于该帖子");
+        }
+        
+        boolean success = commentService.updateComment(commentId, currentUser.getUserId(), content.trim());
+        
+        return success ? R.ok("评论更新成功", null) : R.fail("更新失败，可能没有权限或评论不存在");
+    }
 }

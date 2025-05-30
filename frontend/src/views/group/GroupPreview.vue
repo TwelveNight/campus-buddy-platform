@@ -33,7 +33,14 @@
                     <p class="group-description">{{ group.description }}</p>
                 </div>
                 <div class="group-actions">
-                    <el-button v-if="joinStatus === 'not_joined'" type="primary" @click="handleJoinGroup">加入小组</el-button>
+                    <el-button 
+                        v-if="joinStatus === 'not_joined' && group.status === 'ACTIVE'" 
+                        type="primary" 
+                        @click="handleJoinGroup">加入小组</el-button>
+                    <el-button 
+                        v-else-if="joinStatus === 'not_joined' && (group.status === 'INACTIVE' || group.status === 'DISBANDED')" 
+                        type="info" 
+                        disabled>小组已{{ group.status === 'INACTIVE' ? '禁用' : '解散' }}</el-button>
                     <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
                     <el-button v-else-if="joinStatus === 'joined'" type="success" disabled>已加入</el-button>
                     <el-button @click="goBack">返回列表</el-button>
@@ -42,7 +49,19 @@
 
             <!-- 小组介绍信息 -->
             <div class="group-intro">
+                <!-- 禁用小组警告 -->
                 <el-alert
+                    v-if="group.status === 'INACTIVE' || group.status === 'DISBANDED'"
+                    :title="`该小组已${group.status === 'INACTIVE' ? '被禁用' : '解散'}`"
+                    type="warning"
+                    :description="`该小组当前${group.status === 'INACTIVE' ? '被管理员禁用' : '已解散'}，仅可查看基本信息。`"
+                    show-icon
+                    :closable="false"
+                    style="margin-bottom: 20px"
+                />
+                
+                <el-alert
+                    v-if="joinStatus !== 'joined'"
                     title="您尚未加入该小组"
                     type="info"
                     description="加入小组后，您可以查看小组内的讨论、文件资源以及成员信息。"
@@ -159,8 +178,12 @@ const checkGroupMembership = async () => {
             if (userMember) {
                 if (userMember.status === 'ACTIVE') {
                     joinStatus.value = 'joined';
-                    // 如果用户已是小组成员且是通过预览页访问的，重定向到详情页
-                    router.push(`/groups/${groupId.value}/detail`);
+                    
+                    // 检查小组状态，只有当小组处于活跃状态时才重定向到详情页
+                    if (group.value && group.value.status === 'ACTIVE') {
+                        // 如果用户已是小组成员且是通过预览页访问的，重定向到详情页
+                        router.push(`/groups/${groupId.value}/detail`);
+                    }
                 } else if (userMember.status === 'PENDING' || userMember.status === 'PENDING_APPROVAL') {
                     joinStatus.value = 'pending';
                 }
@@ -192,6 +215,12 @@ const handleJoinGroup = async () => {
         router.push('/login');
         return;
     }
+    
+    // 检查小组状态
+    if (group.value && (group.value.status === 'INACTIVE' || group.value.status === 'DISBANDED')) {
+        ElMessage.warning(`该小组已${group.value.status === 'INACTIVE' ? '被禁用' : '解散'}，无法加入`);
+        return;
+    }
 
     try {
         const response = await joinGroup(groupId.value);
@@ -203,7 +232,11 @@ const handleJoinGroup = async () => {
             } else {
                 ElMessage.success('已成功加入小组');
                 joinStatus.value = 'joined';
-                router.push(`/groups/${groupId.value}/detail`);
+                
+                // 检查小组状态，只有当小组处于活跃状态时才重定向到详情页
+                if (group.value && group.value.status === 'ACTIVE') {
+                    router.push(`/groups/${groupId.value}/detail`);
+                }
             }
         } else {
             ElMessage.error(response.data?.message || '加入小组失败');

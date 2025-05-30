@@ -80,16 +80,6 @@
                 </div>
             </div>
 
-            <!-- 小组状态警告信息 -->
-            <div v-if="group.status === 'INACTIVE'" class="group-status-warning">
-                <el-alert
-                    title="该小组已被管理员禁用"
-                    type="warning"
-                    description="小组已被管理员禁用，部分功能可能受限。如有疑问，请联系管理员。"
-                    show-icon
-                    :closable="false"
-                />
-            </div>
             
             <div v-if="group.status === 'DISBANDED'" class="group-status-warning">
                 <el-alert
@@ -100,6 +90,12 @@
                     :closable="false"
                 />
             </div>
+
+            <!-- 小组禁用警告 -->
+            <DisabledGroupWarning 
+              :is-disabled="isGroupDisabled" 
+              :group-status="group.status" 
+            />
 
             <!-- 小组功能区 -->
             <el-tabs v-model="activeTab" class="group-tabs animated-tabs" :disabled="group.status === 'DISBANDED'">
@@ -191,6 +187,7 @@ import GroupFilesTab from '@/components/group/GroupFilesTab.vue';
 import GroupMembersTab from '@/components/group/GroupMembersTab.vue';
 import ImageUploader from '@/components/form/ImageUploader.vue';
 import AvatarUploader from '@/components/form/AvatarUploader.vue';
+import DisabledGroupWarning from '@/components/group/DisabledGroupWarning.vue';
 import { uploadApi } from '../../api/upload';
 
 const route = useRoute();
@@ -199,6 +196,11 @@ const authStore = useAuthStore();
 
 // 路由参数
 const groupId = computed(() => route.params.id);
+
+// 计算属性 - 小组是否被禁用
+const isGroupDisabled = computed(() => {
+    return group.value && (group.value.status === 'INACTIVE' || group.value.status === 'DISBANDED');
+});
 
 // 数据状态
 const loading = ref(false);
@@ -306,6 +308,12 @@ const loadGroupDetail = async () => {
             group.value = response.data.data.group || response.data.data;
             creator.value = response.data.data.creator || null;
             group.value.tags = normalizeTags(group.value.tags);
+
+            // 检查小组状态，显示禁用提示，但不跳转
+            if (group.value.status === 'INACTIVE' || group.value.status === 'DISBANDED') {
+                ElMessage.warning(`该小组已${group.value.status === 'INACTIVE' ? '被禁用' : '解散'}，仅可查看基本信息`);
+                // 不再跳转，而是保持在当前页面
+            }
 
             // 加载小组成员
             await loadGroupMembers();
