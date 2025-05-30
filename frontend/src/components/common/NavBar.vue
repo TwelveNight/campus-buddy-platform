@@ -567,8 +567,15 @@ const handleWebSocketNotification = (data: any) => {
 const handleWebSocketMessage = (data: any) => {
     console.log('收到WebSocket私信:', data);
 
-    if (!data || data.type !== 'PRIVATE_MESSAGE') {
-        console.warn('收到无效私信数据:', data);
+    // 过滤掉PONG消息和其他非私信消息
+    if (!data || (data.type !== 'PRIVATE_MESSAGE' && typeof data !== 'string')) {
+        console.warn('收到无效私信数据或非私信消息:', data);
+        return;
+    }
+    
+    // 跳过PONG响应和其他纯文本消息
+    if (typeof data === 'string' && (data === 'PONG' || data.startsWith('echo:'))) {
+        console.log('跳过PONG响应或echo消息:', data);
         return;
     }
 

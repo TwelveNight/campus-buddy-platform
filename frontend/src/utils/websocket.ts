@@ -14,6 +14,13 @@ class WebSocketService {
   // 用于跟踪已处理的消息，防止重复处理
   private processedMessages: Set<string> = new Set();
   
+  // 心跳追踪
+  private lastPingTime: number = 0;
+  private lastPongTime: number = 0;
+  private missedHeartbeats: number = 0;
+  private maxMissedHeartbeats: number = 3;
+  private lastReconnectTime: number = 0;
+  
   // 使用Vue的响应式系统跟踪状态
   public isConnected = ref(false);
   public lastError = ref<string | null>(null);
@@ -269,42 +276,46 @@ class WebSocketService {
   // 发送心跳检测
   private sendPing(): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      // 尝试发送一个简单的文本消息作为心跳，而不是JSON对象
-      // 这可能更容易被某些WebSocket服务器处理
       try {
-        // 尝试两种格式的心跳，以提高兼容性
-        // 先发送简单的文本心跳 - 有些服务器更容易接受纯文本消息
-        this.socket.send("PING");
-        
-        // 然后再发送JSON格式的心跳
+        // 只发送JSON格式的心跳，避免服务器收到双重心跳
         const pingMessage = { type: 'PING', timestamp: Date.now() };
         this.socket.send(JSON.stringify(pingMessage));
         
         console.log('已发送心跳检测');
+        this.lastPingTime = Date.now();
+        this.missedHeartbeats = 0; // 重置失败计数
         
-        // 设置心跳超时检测，但延长超时时间，减少误判
+        // 设置心跳超时检测，延长超时时间到30秒，减少误判
         setTimeout(() => {
-          // 如果心跳在12秒内没有响应，认为连接可能已断开，尝试重连
-          if (this.isConnected.value && !this.reconnectTimeout) {
-            console.warn('心跳检测无响应，可能连接已断开，尝试重新连接...');
-            this.lastError.value = '连接可能已断开，正在尝试重新连接...';
-            // 强制关闭当前连接并重新连接
-            const currentUserId = this.userId;
-            this.disconnect();
-            if (currentUserId) {
-              setTimeout(() => {
-                if (currentUserId) {
-                  this.connect(currentUserId);
-                }
-              }, 3000); // 3秒后重连
+          const now = Date.now();
+          // 检查是否在30秒内收到过PONG响应
+          if (this.isConnected.value && (now - this.lastPongTime) > 30000 && !this.reconnectTimeout) {
+            this.missedHeartbeats++;
+            console.warn(`心跳检测无响应 (${this.missedHeartbeats}/${this.maxMissedHeartbeats})`);
+            
+            // 只有连续多次失败才重连，避免网络抖动导致的误判
+            if (this.missedHeartbeats >= this.maxMissedHeartbeats) {
+              console.warn('连续多次心跳无响应，连接可能已断开，尝试重新连接...');
+              this.lastError.value = '连接可能已断开，正在尝试重新连接...';
+              
+              const currentUserId = this.userId;
+              this.disconnect();
+              if (currentUserId) {
+                setTimeout(() => {
+                  if (currentUserId) {
+                    this.connect(currentUserId);
+                  }
+                }, 3000);
+              }
             }
           }
-        }, 12000); // 12秒超时
+        }, 30000); // 30秒超时
       } catch (error) {
         console.error('发送心跳时出错:', error);
+        this.missedHeartbeats++;
         // 不要立即重连，减少频繁重连
-        if (!this.reconnectTimeout) {
-          setTimeout(() => this.attemptReconnect(), 3000);
+        if (!this.reconnectTimeout && this.missedHeartbeats >= this.maxMissedHeartbeats) {
+          setTimeout(() => this.attemptReconnect(), 5000);
         }
       }
     } else {
@@ -324,10 +335,16 @@ class WebSocketService {
     this.reconnectAttempts = 0;
     this.connectionStatus.value = "已连接";
     
+    // 初始化心跳相关时间戳
+    const now = Date.now();
+    this.lastPingTime = now;
+    this.lastPongTime = now;
+    this.missedHeartbeats = 0;
+    
     // 发送立即心跳以同步时间
     this.sendPing();
     
-    // 设置心跳检测，30秒一次，比服务器心跳检测更频繁
+    // 设置心跳检测，30秒一次，与心跳超时时间保持一致
     if (this.pingInterval) {
       clearInterval(this.pingInterval);
     }
@@ -361,6 +378,8 @@ class WebSocketService {
         if (event.data === 'PONG') {
           // 更新连接状态
           this.lastError.value = null;
+          this.lastPongTime = Date.now(); // 更新PONG响应时间
+          this.missedHeartbeats = 0; // 重置失败计数
           
           // 通知所有连接状态监听器
           this.connectionListeners.forEach(listener => {
@@ -435,6 +454,8 @@ class WebSocketService {
         case 'PONG':
           // 心跳响应
           console.log('收到PONG响应，服务器时间:', data.timestamp);
+          this.lastPongTime = Date.now(); // 更新PONG响应时间
+          this.missedHeartbeats = 0; // 重置失败计数
           
           // 通知所有监听器连接状态，并附带服务器时间
           this.connectionListeners.forEach(listener => {
@@ -481,33 +502,42 @@ class WebSocketService {
     
     // 检查关闭原因
     if (event.code === 1006) {
-      console.warn('WebSocket异常关闭（代码1006），可能是网络波动或服务器重启，尝试重新连接...');
+      console.warn('WebSocket异常关闭（代码1006），可能是网络波动或服务器重启');
       this.lastError.value = '连接意外断开，正在尝试重新连接...';
-      // 对于1006错误，立即尝试重连，不增加重连尝试次数
-      if (this.userId) {
-        // 使用较短的延迟立即尝试重连
-        setTimeout(() => {
-          if (this.userId) {
-            this.connect(this.userId);
-          }
-        }, 3000); // 增加延迟到3秒，减少频繁重连
-        return;
-      }
-    } else if (event.code === 1000) {
-      // 这是正常关闭，如果不是由disconnect方法触发的，可能是服务器主动关闭
-      // 在这种情况下，可以尝试延迟较长时间后重连
-      console.log('WebSocket正常关闭（代码1000），等待一段时间后尝试重新连接...');
+      // 对于1006错误，适当延迟后尝试重连
       if (this.userId && !this.reconnectTimeout) {
         setTimeout(() => {
           if (this.userId) {
             this.connect(this.userId);
           }
-        }, 10000); // 10秒后尝试重连
+        }, 5000); // 增加延迟到5秒，减少频繁重连
+        return;
+      }
+    } else if (event.code === 1000) {
+      // 正常关闭，检查关闭原因
+      console.log('WebSocket正常关闭（代码1000），关闭原因:', event.reason);
+      
+      // 如果是因为"用户在其他地方连接"而关闭，不要重连
+      if (event.reason && event.reason.includes('用户在其他地方连接')) {
+        console.log('由于用户在其他地方登录，连接已被服务器关闭，不进行重连');
+        this.lastError.value = '您的账号在其他地方登录，连接已断开';
+        this.connectionStatus.value = "已被替换";
+        return;
+      }
+      
+      // 其他正常关闭情况，较长延迟后重连
+      if (this.userId && !this.reconnectTimeout) {
+        console.log('服务器主动关闭连接，等待后重连...');
+        setTimeout(() => {
+          if (this.userId) {
+            this.connect(this.userId);
+          }
+        }, 15000); // 15秒后尝试重连，避免与服务器重启冲突
         return;
       }
     }
     
-    // 尝试重新连接
+    // 其他关闭代码，使用正常重连逻辑
     this.attemptReconnect();
   }
 
