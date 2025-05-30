@@ -70,17 +70,32 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
         Long userId = getUserId(session);
         
         try {
-            // 检查是否是PING消息
+            // 处理纯文本PING消息
+            if (payload.equals("PING")) {
+                // 返回纯文本PONG响应
+                session.sendMessage(new TextMessage("PONG"));
+                logger.debug("向用户 {} 发送纯文本PONG响应", userId);
+                return;
+            }
+            
+            // 检查是否是JSON格式的PING消息
             if (payload.contains("\"type\":\"PING\"")) {
-                // 返回PONG响应
+                // 返回JSON格式的PONG响应
                 session.sendMessage(new TextMessage("{\"type\":\"PONG\",\"timestamp\":" + System.currentTimeMillis() + "}"));
-                logger.debug("向用户 {} 发送PONG响应", userId);
+                logger.debug("向用户 {} 发送JSON PONG响应", userId);
                 return;
             }
             
             // 处理其他类型的消息
-            session.sendMessage(new TextMessage("echo: " + payload));
-            logger.debug("回显消息给用户 {}: {}", userId, payload);
+            if (payload.startsWith("{")) {
+                // 看起来是JSON格式，直接回显
+                session.sendMessage(new TextMessage(payload));
+                logger.debug("回显JSON消息给用户 {}", userId);
+            } else {
+                // 非JSON消息，添加前缀
+                session.sendMessage(new TextMessage("echo: " + payload));
+                logger.debug("回显纯文本消息给用户 {}: {}", userId, payload);
+            }
         } catch (Exception e) {
             logger.error("处理用户 {} 的消息时出错: {}", userId, e.getMessage());
             // 如果解析出错，返回原消息

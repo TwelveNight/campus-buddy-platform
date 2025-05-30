@@ -15,6 +15,7 @@ import AdminHelpInfo from '../views/admin/AdminHelpInfo.vue'
 import Debug from '../views/Debug.vue' // 添加调试页面
 import WebSocketDebug from '../views/WebSocketDebug.vue' // 添加WebSocket调试页面
 import WebSocketSimpleDebug from '../views/WebSocketSimpleDebug.vue' // 添加简易WebSocket调试页面
+import WebSocketConnectionTest from '../views/WebSocketConnectionTest.vue' // 添加WebSocket连接测试页面
 // 动态导入组件
 const GroupList = () => import('../views/group/GroupList.vue')
 const GroupDetail = () => import('../views/group/GroupDetail.vue')
@@ -163,6 +164,12 @@ const routes: RouteRecordRaw[] = [
         component: WebSocketSimpleDebug,
         name: 'WebSocketSimpleDebug',
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'ws-test',
+        component: WebSocketConnectionTest,
+        name: 'WebSocketConnectionTest',
+        meta: { requiresAuth: false } // 不需要认证，便于测试
       },
       {
         path: 'messages',

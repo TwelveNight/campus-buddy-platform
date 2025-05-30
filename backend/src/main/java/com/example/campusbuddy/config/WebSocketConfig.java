@@ -17,13 +17,11 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         // Echo 测试端点
         registry.addHandler(new EchoHandler(), "/ws/echo")
-                .setAllowedOrigins("*") // 在生产环境中应限制来源
-                .withSockJS(); // 添加SockJS支持，增强浏览器兼容性
+                .setAllowedOrigins("*"); // 在生产环境中应限制来源
 
         // 用户定向推送端点
         registry.addHandler(new UserWebSocketHandler(), "/ws/{userId}")
-                .setAllowedOrigins("*") // 在生产环境中应限制来源
-                .withSockJS(); // 添加SockJS支持，增强浏览器兼容性
+                .setAllowedOrigins("*"); // 在生产环境中应限制来源
     }
 
     /**
