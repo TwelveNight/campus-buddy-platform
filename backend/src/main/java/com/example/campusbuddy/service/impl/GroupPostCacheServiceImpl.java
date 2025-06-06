@@ -27,18 +27,25 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class GroupPostCacheServiceImpl implements GroupPostCacheService {
-    
+
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
-    
+
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
+
+    // ================== Redis key 前缀说明 ==================
+    // campus:group:posts:{groupId}:{pageNum}:{pageSize} —— 缓存某小组的帖子分页列表
+    // campus:post:detail:{postId} —— 缓存单个帖子详情
+    // campus:post:user:{userId} —— 缓存用户信息（与帖子相关）
+    // campus:post:hot —— 缓存热门帖子列表
+    // =======================================================
+
     // Redis key 前缀
     private static final String GROUP_POSTS_KEY_PREFIX = "campus:group:posts:";
     private static final String POST_DETAIL_KEY_PREFIX = "campus:post:detail:";
     private static final String POST_USER_KEY_PREFIX = "campus:post:user:";
     private static final String HOT_POSTS_KEY = "campus:post:hot";
-    
+
     // 缓存过期时间（秒）
     private static final long POSTS_CACHE_EXPIRE = 1800; // 30分钟
     private static final long POST_DETAIL_CACHE_EXPIRE = 3600; // 1小时
@@ -46,7 +53,8 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
     private static final long HOT_POSTS_CACHE_EXPIRE = 1800; // 30分钟
 
     @Override
-    public void cacheGroupPosts(Long groupId, Integer pageNum, Integer pageSize, IPage<GroupPostVO> page, long expireSeconds) {
+    public void cacheGroupPosts(Long groupId, Integer pageNum, Integer pageSize, IPage<GroupPostVO> page,
+            long expireSeconds) {
         if (groupId == null || page == null) {
             return;
         }
@@ -54,11 +62,11 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
             String key = GROUP_POSTS_KEY_PREFIX + groupId + ":" + pageNum + ":" + pageSize;
             String pageJson = objectMapper.writeValueAsString(page);
             redisTemplate.opsForValue().set(key, pageJson, expireSeconds, TimeUnit.SECONDS);
-            log.debug("缓存小组帖子列表: groupId={}, pageNum={}, pageSize={}, total={}", 
-                     groupId, pageNum, pageSize, page.getTotal());
+            log.debug("缓存小组帖子列表: groupId={}, pageNum={}, pageSize={}, total={}",
+                    groupId, pageNum, pageSize, page.getTotal());
         } catch (JsonProcessingException e) {
-            log.error("缓存小组帖子列表失败: groupId={}, pageNum={}, pageSize={}", 
-                     groupId, pageNum, pageSize, e);
+            log.error("缓存小组帖子列表失败: groupId={}, pageNum={}, pageSize={}",
+                    groupId, pageNum, pageSize, e);
         }
     }
 
@@ -71,15 +79,16 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
             String key = GROUP_POSTS_KEY_PREFIX + groupId + ":" + pageNum + ":" + pageSize;
             String pageJson = redisTemplate.opsForValue().get(key);
             if (pageJson != null) {
-                IPage<GroupPostVO> page = objectMapper.readValue(pageJson, 
-                        new TypeReference<Page<GroupPostVO>>() {});
-                log.debug("从缓存获取小组帖子列表: groupId={}, pageNum={}, pageSize={}, total={}", 
-                         groupId, pageNum, pageSize, page.getTotal());
+                IPage<GroupPostVO> page = objectMapper.readValue(pageJson,
+                        new TypeReference<Page<GroupPostVO>>() {
+                        });
+                log.debug("从缓存获取小组帖子列表: groupId={}, pageNum={}, pageSize={}, total={}",
+                        groupId, pageNum, pageSize, page.getTotal());
                 return page;
             }
         } catch (Exception e) {
-            log.error("从缓存获取小组帖子列表失败: groupId={}, pageNum={}, pageSize={}", 
-                     groupId, pageNum, pageSize, e);
+            log.error("从缓存获取小组帖子列表失败: groupId={}, pageNum={}, pageSize={}",
+                    groupId, pageNum, pageSize, e);
         }
         return null;
     }
@@ -164,16 +173,16 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
         if (userIds == null || userIds.isEmpty()) {
             return result;
         }
-        
+
         for (Long userId : userIds) {
             User user = getCachedUser(userId);
             if (user != null) {
                 result.put(userId, user);
             }
         }
-        
-        log.debug("批量获取缓存用户信息: requestCount={}, foundCount={}", 
-                 userIds.size(), result.size());
+
+        log.debug("批量获取缓存用户信息: requestCount={}, foundCount={}",
+                userIds.size(), result.size());
         return result;
     }
 
@@ -196,8 +205,9 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
         try {
             String postsJson = redisTemplate.opsForValue().get(HOT_POSTS_KEY);
             if (postsJson != null) {
-                List<GroupPostVO> posts = objectMapper.readValue(postsJson, 
-                        new TypeReference<List<GroupPostVO>>() {});
+                List<GroupPostVO> posts = objectMapper.readValue(postsJson,
+                        new TypeReference<List<GroupPostVO>>() {
+                        });
                 log.debug("从缓存获取热门帖子列表: count={}", posts.size());
                 return posts;
             }
@@ -277,7 +287,7 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
             log.error("清除所有帖子相关缓存失败", e);
         }
     }
-    
+
     /**
      * 按模式清除缓存
      */
@@ -286,7 +296,7 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
             if (pattern == null || pattern.isEmpty()) {
                 return;
             }
-            
+
             // 获取符合模式的所有key
             var keys = redisTemplate.keys(pattern);
             if (keys != null && !keys.isEmpty()) {

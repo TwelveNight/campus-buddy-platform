@@ -3,11 +3,6 @@ spring:
     url: ${MYSQL_URL:jdbc:mysql://localhost:3306/campus_buddy?useUnicode=true&characterEncoding=utf8}
     username: ${MYSQL_USERNAME:root}
     password: ${MYSQL_PASSWORD:password}
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    database: 0
-    timeout: 3000ms
   servlet:
     multipart:
       max-file-size: 50MB
@@ -24,11 +19,15 @@ spring:
   mvc:
     problemdetails:
       enabled: false
-    favicon:
-      enabled: false  # 禁用 Spring 的 favicon 处理，使用自定义的
   websocket:
     config:
       allowedOrigins: '*'  # 允许的 WebSocket 来源，生产环境中应当限制
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: 0
+      timeout: 3000ms
 
 mybatis-plus:
   configuration:
