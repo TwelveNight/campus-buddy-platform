@@ -606,7 +606,8 @@ const handleCreateGroup = async () => {
         if (activeTab.value === 'created') {
           loadGroups();
         }
-        router.push(`/groups/${response.data.data}`);
+        // 修复：创建小组后直接进入详细页而不是预览页
+        router.push(`/groups/${response.data.data}/detail`);
       } else {
         ElMessage.error(response.data?.message || '创建小组失败');
       }
