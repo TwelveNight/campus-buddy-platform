@@ -421,11 +421,16 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         if (post == null) {
             return false;
         }
-        
         post.setStatus(status);
         post.setUpdatedAt(new Date());
-        
-        return updateById(post);
+        boolean result = updateById(post);
+        if (result) {
+            // 主动清理缓存，确保前端能拿到最新数据
+            postCacheService.evictPostDetailCache(postId);
+            postCacheService.evictGroupPostsCache(post.getGroupId());
+            postCacheService.evictHotPostsCache();
+        }
+        return result;
     }
     
     @Override

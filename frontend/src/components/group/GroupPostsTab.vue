@@ -212,6 +212,7 @@ interface Post {
     updatedAt?: string;
     likes?: number;
     hasLiked?: boolean;
+    status?: string;
     [key: string]: any;
 }
 
@@ -315,6 +316,9 @@ const loadPosts = async () => {
             }
 
             // 填充作者昵称和头像（已由后端VO返回，无需前端请求）
+
+            // 前端只展示已发布的帖子
+            postList = postList.filter((post: Post) => post.status === 'PUBLISHED');
 
             // 检查用户是否对每个帖子点赞
             if (authStore.isAuthenticated && postList.length > 0) {
