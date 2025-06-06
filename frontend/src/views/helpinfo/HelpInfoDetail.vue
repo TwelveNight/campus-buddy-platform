@@ -434,9 +434,6 @@ async function handleAcceptApplication(application: any) {
       await helpInfoStore.fetchDetail(id) // 刷新互助任务状态
       await fetchApplications() // 刷新申请列表
       
-      // 强制重新加载整个互助任务详情，确保状态完全更新
-      loadData()
-      
       // 如果接受成功，并且当前用户是发布者，则重新检查用户（自己）的申请状态，以更新视图
       if (isPublisher.value) {
         await checkUserApplication();
