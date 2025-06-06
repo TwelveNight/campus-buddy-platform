@@ -2,6 +2,8 @@ package com.example.campusbuddy.security;
 
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.service.UserRoleService;
+import com.example.campusbuddy.service.UserCacheService;
+import com.example.campusbuddy.entity.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -35,6 +37,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private UserRoleService userRoleService;
 
     @Autowired
+    private UserCacheService userCacheService;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Override
@@ -49,6 +54,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Claims claims = jwtUtil.parseToken(jwt);
                     Long userId = claims.get("userId", Long.class);
                     String username = claims.getSubject();
+
+                    // 检查token是否在Redis中
+                    String cachedToken = userCacheService.getCachedUserToken(userId);
+                    if (cachedToken == null || !cachedToken.equals(jwt)) {
+                        // token已失效或被强制登出
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write(objectMapper.writeValueAsString(R.fail(401, "登录状态已失效，请重新登录")));
+                        return;
+                    }
+
+                    // 检查用户状态
+                    User user = userCacheService.getCachedUser(userId);
+                    if (user == null || !"ACTIVE".equals(user.getStatus())) {
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write(objectMapper.writeValueAsString(R.fail(401, "账号被禁用或不可用")));
+                        return;
+                    }
 
                     // 获取用户角色列表
                     List<String> roles = userRoleService.getUserRoles(userId);

@@ -1,4 +1,6 @@
 import axios from 'axios'
+import { useAuthStore } from '@/store/auth'
+import { ElMessage } from 'element-plus'
 
 // 判断当前环境
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -51,7 +53,27 @@ axios.interceptors.response.use(
     if (error.response) {
       // 处理401未授权错误
       if (error.response.status === 401) {
+        // 检查后端返回的message
+        const msg = error.response.data && error.response.data.message ? error.response.data.message : ''
+        // 兼容pinia store
+        let authStore
+        try {
+          authStore = useAuthStore()
+        } catch (e) {
+          // 可能在setup外部调用，降级处理
+        }
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        if (authStore && typeof authStore.logout === 'function') {
+          authStore.logout()
+        }
+        if (msg.includes('账号被禁用')) {
+          ElMessage.error('账号已被禁用，请联系管理员')
+        } else if (msg.includes('登录状态已失效')) {
+          ElMessage.error('登录状态已失效，请重新登录')
+        } else {
+          ElMessage.error('登录已失效，请重新登录')
+        }
         window.location.href = '/login'
       }
       // 处理400请求体格式错误

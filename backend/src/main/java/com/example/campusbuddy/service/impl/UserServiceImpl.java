@@ -303,6 +303,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 清除缓存
         if (result) {
             userCacheService.evictUserCache(userId);
+            if ("BANNED".equals(status)) {
+                userCacheService.evictUserToken(userId);
+            }
+            // 启用账户时，刷新用户缓存到Redis
+            if ("ACTIVE".equals(status)) {
+                userCacheService.cacheUser(user);
+            }
         }
         
         return result;
