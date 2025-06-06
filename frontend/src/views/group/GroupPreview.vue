@@ -12,7 +12,8 @@
                     <h1 class="group-name">{{ group.name }}</h1>
                     <div class="group-meta">
                         <el-tag>{{ group.category }}</el-tag>
-                        <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag }}</el-tag>
+                        <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag">{{ tag
+                        }}</el-tag>
                         <span class="member-count">
                             <el-icon>
                                 <User />
@@ -25,7 +26,8 @@
                     <!-- 创建者信息展示 -->
                     <div class="group-creator" v-if="group.creator">
                         <span style="color:#888;font-size:13px;">创建者：</span>
-                        <router-link :to="`/user/${group.creator.userId}`" class="creator-link" style="display:inline-flex;align-items:center;gap:6px;">
+                        <router-link :to="`/user/${group.creator.userId}`" class="creator-link"
+                            style="display:inline-flex;align-items:center;gap:6px;">
                             <el-avatar :size="22" :src="group.creator.avatarUrl || defaultAvatar" />
                             <span>{{ group.creator.nickname }}</span>
                         </router-link>
@@ -33,14 +35,11 @@
                     <p class="group-description">{{ group.description }}</p>
                 </div>
                 <div class="group-actions">
-                    <el-button 
-                        v-if="joinStatus === 'not_joined' && group.status === 'ACTIVE'" 
-                        type="primary" 
+                    <el-button v-if="joinStatus === 'not_joined' && group.status === 'ACTIVE'" type="primary"
                         @click="handleJoinGroup">加入小组</el-button>
-                    <el-button 
-                        v-else-if="joinStatus === 'not_joined' && (group.status === 'INACTIVE' || group.status === 'DISBANDED')" 
-                        type="info" 
-                        disabled>小组已{{ group.status === 'INACTIVE' ? '禁用' : '解散' }}</el-button>
+                    <el-button
+                        v-else-if="joinStatus === 'not_joined' && (group.status === 'INACTIVE' || group.status === 'DISBANDED')"
+                        type="info" disabled>小组已{{ group.status === 'INACTIVE' ? '禁用' : '解散' }}</el-button>
                     <el-button v-else-if="joinStatus === 'pending'" type="warning" disabled>等待审批</el-button>
                     <el-button v-else-if="joinStatus === 'joined'" type="success" disabled>已加入</el-button>
                     <el-button @click="goBack">返回列表</el-button>
@@ -50,26 +49,15 @@
             <!-- 小组介绍信息 -->
             <div class="group-intro">
                 <!-- 禁用小组警告 -->
-                <el-alert
-                    v-if="group.status === 'INACTIVE' || group.status === 'DISBANDED'"
-                    :title="`该小组已${group.status === 'INACTIVE' ? '被禁用' : '解散'}`"
-                    type="warning"
-                    :description="`该小组当前${group.status === 'INACTIVE' ? '被管理员禁用' : '已解散'}，仅可查看基本信息。`"
-                    show-icon
-                    :closable="false"
-                    style="margin-bottom: 20px"
-                />
-                
-                <el-alert
-                    v-if="joinStatus !== 'joined'"
-                    title="您尚未加入该小组"
-                    type="info"
-                    description="加入小组后，您可以查看小组内的讨论、文件资源以及成员信息。"
-                    show-icon
-                    :closable="false"
-                    style="margin-bottom: 20px"
-                />
-                
+                <el-alert v-if="group.status === 'INACTIVE' || group.status === 'DISBANDED'"
+                    :title="`该小组已${group.status === 'INACTIVE' ? '被禁用' : '解散'}`" type="warning"
+                    :description="`该小组当前${group.status === 'INACTIVE' ? '被管理员禁用' : '已解散'}，仅可查看基本信息。`" show-icon
+                    :closable="false" style="margin-bottom: 20px" />
+
+                <el-alert v-if="joinStatus !== 'joined'" title="您尚未加入该小组" type="info"
+                    description="加入小组后，您可以查看小组内的讨论、文件资源以及成员信息。" show-icon :closable="false"
+                    style="margin-bottom: 20px" />
+
                 <el-card class="feature-card">
                     <template #header>
                         <div class="card-header">
@@ -78,21 +66,27 @@
                     </template>
                     <div class="feature-list">
                         <div class="feature-item">
-                            <el-icon><ChatDotRound /></el-icon>
+                            <el-icon>
+                                <ChatDotRound />
+                            </el-icon>
                             <div class="feature-info">
                                 <h4>讨论区</h4>
                                 <p>在这里与小组成员进行讨论交流，分享学习心得和资源</p>
                             </div>
                         </div>
                         <div class="feature-item">
-                            <el-icon><Document /></el-icon>
+                            <el-icon>
+                                <Document />
+                            </el-icon>
                             <div class="feature-info">
                                 <h4>文件资源</h4>
                                 <p>上传和下载学习资料、笔记、课件等文件资源</p>
                             </div>
                         </div>
                         <div class="feature-item">
-                            <el-icon><UserFilled /></el-icon>
+                            <el-icon>
+                                <UserFilled />
+                            </el-icon>
                             <div class="feature-info">
                                 <h4>成员管理</h4>
                                 <p>查看小组成员信息，认识志同道合的学习伙伴</p>
@@ -110,11 +104,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { User, ChatDotRound, Document, UserFilled } from '@element-plus/icons-vue';
-import { getGroupDetail, joinGroup, getGroupMembers } from '@/api/group';
+import { getGroupDetail, joinGroup, getGroupMembers, getJoinedGroups } from '@/api/group';
 import { useAuthStore } from '@/store/auth';
 
 const route = useRoute();
@@ -130,27 +124,95 @@ const group = ref(null);
 const isGroupMember = ref(false);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 const joinStatus = ref('not_joined'); // 'not_joined' | 'pending' | 'joined'
+const userJoinedGroups = ref([]);
+
+// 优先加载用户已加入/待审批小组列表
+const loadUserJoinedGroups = async () => {
+    if (!authStore.isAuthenticated) return;
+    try {
+        const response = await getJoinedGroups();
+        if (response.data && response.data.code === 200) {
+            userJoinedGroups.value = response.data.data || [];
+        } else {
+            userJoinedGroups.value = [];
+        }
+    } catch (e) {
+        userJoinedGroups.value = [];
+    }
+};
+
+// 计算 membership 状态
+const computeMembershipStatus = () => {
+    if (!authStore.isAuthenticated) return 'not_joined';
+    const groupIdNum = Number(groupId.value);
+    const found = userJoinedGroups.value.find(g => g.groupId === groupIdNum);
+    if (found) {
+        if (found.memberStatus === 'ACTIVE') return 'joined';
+        if (found.memberStatus === 'PENDING' || found.memberStatus === 'PENDING_APPROVAL') return 'pending';
+    }
+    return 'not_joined';
+};
+
+// 优化后的 membership 检查逻辑
+const checkMembershipStatus = async () => {
+    if (!authStore.isAuthenticated) {
+        joinStatus.value = 'not_joined';
+        return;
+    }
+    // 优先用 userJoinedGroups
+    let status = computeMembershipStatus();
+    if (status !== 'not_joined') {
+        joinStatus.value = status;
+        return;
+    }
+    // fallback 到 getGroupMembers
+    try {
+        const response = await getGroupMembers(groupId.value);
+        if (response.data && response.data.code === 200) {
+            const members = response.data.data || [];
+            const currentUserId = authStore.user?.userId;
+            const userMember = members.find(m => m.userId === currentUserId);
+            if (userMember) {
+                if (userMember.status === 'ACTIVE') joinStatus.value = 'joined';
+                else if (userMember.status === 'PENDING' || userMember.status === 'PENDING_APPROVAL') joinStatus.value = 'pending';
+                else joinStatus.value = 'not_joined';
+            } else {
+                joinStatus.value = 'not_joined';
+            }
+        }
+    } catch (error) {
+        joinStatus.value = 'not_joined';
+    }
+};
 
 // 生命周期钩子
-onMounted(() => {
-    loadGroupDetail();
+onMounted(async () => {
+    await loadUserJoinedGroups();
+    await loadGroupDetail();
+});
+
+// 监听 joinStatus，若变为 joined 自动跳转到详细页
+watch(joinStatus, (val) => {
+    if (val === 'joined' && group.value && group.value.status === 'ACTIVE') {
+        router.push(`/groups/${groupId.value}/detail`);
+    }
 });
 
 // 加载小组详情
 const loadGroupDetail = async () => {
     if (!groupId.value) return;
-
     loading.value = true;
     try {
         const response = await getGroupDetail(groupId.value);
         if (response.data && response.data.code === 200) {
-            group.value = response.data.data;
-
-            // 兼容后端返回的tags为字符串的情况
+            const raw = response.data.data;
+            // 扁平化结构，groupId/name/description/memberCount等直接挂在 group.value 上
+            group.value = {
+                ...raw.group,
+                ...raw,
+            };
             group.value.tags = normalizeTags(group.value.tags);
-            
-            // 检查用户是否已是小组成员
-            await checkGroupMembership();
+            await checkMembershipStatus();
         } else {
             ElMessage.error(response.data?.message || '加载小组详情失败');
         }
@@ -159,40 +221,6 @@ const loadGroupDetail = async () => {
         ElMessage.error('加载小组详情失败，请稍后重试');
     } finally {
         loading.value = false;
-    }
-};
-
-// 检查用户是否是小组成员，并判断状态
-const checkGroupMembership = async () => {
-    if (!authStore.isAuthenticated) return;
-    
-    try {
-        const response = await getGroupMembers(groupId.value);
-        if (response.data && response.data.code === 200) {
-            const members = response.data.data || [];
-            
-            // 确定当前用户在小组中的角色
-            const currentUserId = authStore.user?.userId;
-            const userMember = members.find(m => m.userId === currentUserId);
-            
-            if (userMember) {
-                if (userMember.status === 'ACTIVE') {
-                    joinStatus.value = 'joined';
-                    
-                    // 检查小组状态，只有当小组处于活跃状态时才重定向到详情页
-                    if (group.value && group.value.status === 'ACTIVE') {
-                        // 如果用户已是小组成员且是通过预览页访问的，重定向到详情页
-                        router.push(`/groups/${groupId.value}/detail`);
-                    }
-                } else if (userMember.status === 'PENDING' || userMember.status === 'PENDING_APPROVAL') {
-                    joinStatus.value = 'pending';
-                }
-            } else {
-                joinStatus.value = 'not_joined';
-            }
-        }
-    } catch (error) {
-        console.error('检查小组成员身份失败:', error);
     }
 };
 
@@ -215,7 +243,7 @@ const handleJoinGroup = async () => {
         router.push('/login');
         return;
     }
-    
+
     // 检查小组状态
     if (group.value && (group.value.status === 'INACTIVE' || group.value.status === 'DISBANDED')) {
         ElMessage.warning(`该小组已${group.value.status === 'INACTIVE' ? '被禁用' : '解散'}，无法加入`);
@@ -232,7 +260,7 @@ const handleJoinGroup = async () => {
             } else {
                 ElMessage.success('已成功加入小组');
                 joinStatus.value = 'joined';
-                
+
                 // 检查小组状态，只有当小组处于活跃状态时才重定向到详情页
                 if (group.value && group.value.status === 'ACTIVE') {
                     router.push(`/groups/${groupId.value}/detail`);
@@ -255,6 +283,7 @@ const handleJoinGroup = async () => {
         opacity: 0;
         transform: translateY(-30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -266,13 +295,16 @@ const handleJoinGroup = async () => {
         opacity: 0;
         transform: scale(0.3);
     }
+
     50% {
         opacity: 1;
         transform: scale(1.05);
     }
+
     70% {
         transform: scale(0.9);
     }
+
     100% {
         opacity: 1;
         transform: scale(1);
@@ -280,18 +312,24 @@ const handleJoinGroup = async () => {
 }
 
 @keyframes pulseGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 5px rgba(64, 158, 255, 0.3);
     }
+
     50% {
         box-shadow: 0 0 20px rgba(64, 158, 255, 0.6), 0 0 30px rgba(64, 158, 255, 0.4);
     }
 }
 
 @keyframes floatY {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-8px);
     }
@@ -301,9 +339,11 @@ const handleJoinGroup = async () => {
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
@@ -313,6 +353,7 @@ const handleJoinGroup = async () => {
     0% {
         background-position: -200% 0;
     }
+
     100% {
         background-position: 200% 0;
     }
@@ -327,6 +368,7 @@ const handleJoinGroup = async () => {
 /* 小组头部动画 */
 .group-header {
     display: flex;
+    justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 30px;
     padding: 20px;
@@ -335,12 +377,15 @@ const handleJoinGroup = async () => {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.2s both;
+    flex-wrap: wrap;
 }
 
 .group-header:hover {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-    transform: translateY(-3px); /* 减小位移 */
-    /* animation: floatY 3s ease-in-out infinite; */ /* 移除无限动画 */
+    transform: translateY(-3px);
+    /* 减小位移 */
+    /* animation: floatY 3s ease-in-out infinite; */
+    /* 移除无限动画 */
 }
 
 /* 头像动画 */
@@ -381,12 +426,14 @@ const handleJoinGroup = async () => {
 }
 
 .group-avatar:hover:before {
-    opacity: 0.6; /* 降低不透明度，使效果更加柔和 */
+    opacity: 0.6;
+    /* 降低不透明度，使效果更加柔和 */
 }
 
 /* 头部信息动画 */
 .group-header-info {
     flex: 1;
+    min-width: 0;
     animation: slideInFromTop 1.2s cubic-bezier(0.25, 0.8, 0.25, 1) 0.4s both;
 }
 
@@ -418,9 +465,17 @@ const handleJoinGroup = async () => {
     animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.group-meta .el-tag:nth-child(1) { animation-delay: 0.1s; }
-.group-meta .el-tag:nth-child(2) { animation-delay: 0.2s; }
-.group-meta .el-tag:nth-child(3) { animation-delay: 0.3s; }
+.group-meta .el-tag:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.group-meta .el-tag:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.group-meta .el-tag:nth-child(3) {
+    animation-delay: 0.3s;
+}
 
 .group-meta .el-tag:hover {
     transform: translateY(-2px);
@@ -494,7 +549,9 @@ const handleJoinGroup = async () => {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-left: 20px;
+    margin-left: 40px;
+    min-width: 140px;
+    align-items: flex-end;
     animation: slideInFromTop 2s cubic-bezier(0.25, 0.8, 0.25, 1) 1.2s both;
 }
 
@@ -641,6 +698,20 @@ const handleJoinGroup = async () => {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
+@media (max-width: 768px) {
+    .group-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .group-actions {
+        margin-left: 0;
+        margin-top: 20px;
+        align-items: stretch;
+        min-width: 0;
+    }
+}
+
 .group-meta {
     display: flex;
     align-items: center;
@@ -676,7 +747,9 @@ const handleJoinGroup = async () => {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-left: 20px;
+    margin-left: 40px;
+    min-width: 140px;
+    align-items: flex-end;
 }
 
 .group-intro {
