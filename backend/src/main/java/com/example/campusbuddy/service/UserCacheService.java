@@ -59,6 +59,12 @@ public interface UserCacheService {
     void evictUserCache(Long userId);
     
     /**
+     * 根据用户名删除用户缓存
+     * @param username 用户名
+     */
+    void evictUserCacheByUsername(String username);
+    
+    /**
      * 缓存用户登录token
      * @param userId 用户ID
      * @param token JWT token
@@ -163,4 +169,10 @@ public interface UserCacheService {
      * @return 用户ID到信用积分的映射
      */
     Map<Long, Integer> getBatchCachedCreditScores(List<Long> userIds);
+    
+    /**
+     * 强制清空所有缓存
+     * 用于头像更新等操作后彻底清理缓存，避免登录状态失效问题
+     */
+    void flushAllCache();
 }
