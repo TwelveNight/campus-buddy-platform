@@ -22,3 +22,7 @@ yarn-error.log
 # Claude Code
 CLAUDE.md
 
+# Docker secrets
+.env
+mysql-init/
+
