@@ -509,37 +509,34 @@ const handleAvatarUploadSuccess = async (url: string) => {
         // 更新时间戳，强制刷新头像
         avatarRefreshTimestamp.value = Date.now();
 
-        // 调用API更新用户头像
-        try {
-            const res = await updateUserProfile({
-                avatarUrl: cleanUrl
-            });
-
-            if (res.data && res.data.code === 200) {
-                ElMessage.success('头像更新成功');
-            }
-        } catch (error) {
-            console.warn('头像更新API返回错误，但头像可能已经上传成功:', error);
-            // 即使API返回错误，我们也假设头像已经更新成功
-            // 这里不显示错误消息，因为实际上头像已经更新了
-        }
-
-        console.log('更新头像URL:', cleanUrl);
+        console.log('头像上传成功，URL:', cleanUrl);
         console.log('更新时间戳:', avatarRefreshTimestamp.value);
         console.log('计算后的带时间戳URL:', avatarUrlWithTimestamp.value);
 
-        // 无论API调用成功与否，都更新本地状态
+        // 更新本地认证状态
         if (authStore.user) {
             authStore.user = {
                 ...authStore.user,
                 avatarUrl: cleanUrl
             };
 
+            // 更新头像更新时间，触发认证状态同步
+            authStore.avatarUpdateTime = Date.now();
+
             // 保存到本地存储
             localStorage.setItem('user', JSON.stringify(authStore.user));
 
-            // 强制通知其他组件刷新头像
-            authStore.$patch({ avatarUpdateTime: Date.now() });
+            // 重新获取完整的用户信息，确保认证状态同步
+            try {
+                await authStore.fetchCurrentUser();
+                console.log('头像更新后，用户信息已重新同步');
+                ElMessage.success('头像更新成功');
+            } catch (fetchError) {
+                console.warn('重新获取用户信息失败，但头像更新已完成:', fetchError);
+                ElMessage.success('头像更新成功');
+            }
+        } else {
+            ElMessage.success('头像更新成功');
         }
     } catch (error: any) {
         console.error('更新头像失败:', error);
@@ -995,6 +992,14 @@ async function handleSubmit() {
 
                         // 保存到本地存储
                         localStorage.setItem('user', JSON.stringify(authStore.user));
+
+                        // 重新从后端获取最新用户信息，验证缓存是否正确更新
+                        try {
+                            await authStore.fetchCurrentUser();
+                            console.log('用户资料更新后，已重新同步用户信息');
+                        } catch (fetchError) {
+                            console.warn('重新获取用户信息失败:', fetchError);
+                        }
                     }
                 } else {
                     ElMessage.error(res.data.message || '更新失败')
