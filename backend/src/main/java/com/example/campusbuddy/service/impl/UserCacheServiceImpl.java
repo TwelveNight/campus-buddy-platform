@@ -233,20 +233,6 @@ public class UserCacheServiceImpl implements UserCacheService {
     }
 
     @Override
-    public List<UserVO> getCachedSearchResult(String keyword, Integer page, Integer size) {
-        try {
-            String key = USER_SEARCH_PREFIX + keyword + ":" + page + ":" + size;
-            String resultJson = (String) redisTemplate.opsForValue().get(key);
-            if (resultJson != null) {
-                return objectMapper.readValue(resultJson, new TypeReference<List<UserVO>>() {});
-            }
-        } catch (Exception e) {
-            log.error("读取缓存搜索结果失败: keyword={}, page={}, size={}", keyword, page, size, e);
-        }
-        return null;
-    }
-
-    @Override
     public void evictSearchCache() {
         try {
             Set<String> keys = redisTemplate.keys(USER_SEARCH_PREFIX + "*");
@@ -406,21 +392,6 @@ public class UserCacheServiceImpl implements UserCacheService {
     @Override
     public UserVO getUserVOFromCache(Long userId) {
         return getCachedUserVO(userId);
-    }
-
-    @Override
-    public void cacheSearchResult(String keyword, Integer page, Integer size, List<UserVO> userList, long expireSeconds) {
-        if (keyword == null || page == null || size == null || userList == null) {
-            return;
-        }
-        
-        try {
-            String key = USER_SEARCH_PREFIX + keyword + ":" + page + ":" + size + ":list";
-            String userListJson = objectMapper.writeValueAsString(userList);
-            redisTemplate.opsForValue().set(key, userListJson, expireSeconds, TimeUnit.SECONDS);
-        } catch (JsonProcessingException e) {
-            log.error("缓存搜索结果列表失败: keyword={}, page={}, size={}", keyword, page, size, e);
-        }
     }
 
     @Override

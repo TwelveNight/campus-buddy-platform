@@ -13,6 +13,7 @@ import com.example.campusbuddy.mapper.HelpApplicationMapper;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.service.HelpInfoCacheService;
 import com.example.campusbuddy.service.ReviewService;
+import com.example.campusbuddy.service.UserCacheService;
 import com.example.campusbuddy.vo.HelpInfoDetailVO;
 import com.example.campusbuddy.vo.HelpInfoVO;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,9 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
     @Autowired
     private HelpInfoCacheService helpInfoCacheService;
 
+    @Autowired
+    private com.example.campusbuddy.service.UserCacheService userCacheService;
+
     @Override
     public HelpInfoDetailVO getHelpInfoDetail(Long infoId) {
         // 先尝试从缓存获取
@@ -57,15 +61,8 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         // 转换为VO
         HelpInfoDetailVO vo = HelpInfoDetailVO.fromEntity(helpInfo);
 
-        // 获取发布者信息 - 先从缓存查找
-        User publisher = helpInfoCacheService.getCachedUser(helpInfo.getPublisherId());
-        if (publisher == null) {
-            publisher = userMapper.selectById(helpInfo.getPublisherId());
-            if (publisher != null) {
-                // 缓存用户信息
-                helpInfoCacheService.cacheUser(helpInfo.getPublisherId(), publisher, 3600); // 1小时
-            }
-        }
+        // 获取发布者信息（UserCacheService 内置 DB 回源）
+        User publisher = userCacheService.getCachedUser(helpInfo.getPublisherId());
         
         if (publisher != null) {
             vo.setPublisherName(publisher.getNickname());

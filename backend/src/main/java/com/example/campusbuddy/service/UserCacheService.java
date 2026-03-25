@@ -93,16 +93,6 @@ public interface UserCacheService {
     void evictUserToken(Long userId);
     
     /**
-     * 缓存用户搜索结果
-     * @param keyword 搜索关键词
-     * @param page 页码
-     * @param size 每页大小
-     * @param userList 搜索结果
-     * @param expireSeconds 过期时间（秒）
-     */
-    void cacheSearchResult(String keyword, Integer page, Integer size, List<UserVO> userList, long expireSeconds);
-    
-    /**
      * 缓存分页搜索结果
      * @param keyword 搜索关键词
      * @param page 页码
@@ -111,15 +101,6 @@ public interface UserCacheService {
      * @param expireSeconds 过期时间（秒）
      */
     void cacheSearchResult(String keyword, Integer page, Integer size, Page<UserVO> result, long expireSeconds);
-    
-    /**
-     * 获取缓存的搜索结果
-     * @param keyword 搜索关键词
-     * @param page 页码
-     * @param size 每页大小
-     * @return 搜索结果
-     */
-    List<UserVO> getCachedSearchResult(String keyword, Integer page, Integer size);
     
     /**
      * 获取缓存的分页搜索结果

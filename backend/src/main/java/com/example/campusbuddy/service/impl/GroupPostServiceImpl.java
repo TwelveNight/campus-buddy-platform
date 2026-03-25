@@ -14,6 +14,7 @@ import com.example.campusbuddy.mapper.GroupPostMapper;
 import com.example.campusbuddy.service.GroupPostCacheService;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.PostLikeService;
+import com.example.campusbuddy.service.UserCacheService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.GroupPostVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +38,14 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     
     @Autowired
     private PostLikeService postLikeService;
-    
+
     @Autowired
     private GroupPostCacheService postCacheService;
-    
+
+    @Autowired
+    private UserCacheService userCacheService;
+
     // 缓存过期时间（秒）
-    private static final long USER_CACHE_EXPIRE = 3600; // 1小时
     private static final long HOT_POSTS_CACHE_EXPIRE = 1800; // 30分钟
 
     @Override
@@ -277,24 +280,13 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
                 .distinct()
                 .collect(Collectors.toList());
         
-        // 从缓存获取用户信息
-        Map<Long, User> userMap = postCacheService.getBatchCachedUsers(authorIds);
-        
-        // 对于缓存未命中的用户，从数据库查询
-        List<Long> missingUserIds = authorIds.stream()
-                .filter(id -> !userMap.containsKey(id))
-                .collect(Collectors.toList());
-        
-        if (!missingUserIds.isEmpty()) {
-            List<User> users = userService.listByIds(missingUserIds);
-            for (User user : users) {
-                userMap.put(user.getUserId(), user);
-            }
-            
-            // 将新查询的用户信息加入缓存
-            postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+        // 从 UserCacheService 获取用户信息（内置 DB 回源）
+        Map<Long, User> userMap = new HashMap<>();
+        for (Long authorId : authorIds) {
+            User u = userCacheService.getCachedUser(authorId);
+            if (u != null) userMap.put(authorId, u);
         }
-        
+
         // 提取所有小组ID
         List<Long> groupIds = postPage.getRecords().stream()
                 .map(GroupPost::getGroupId)
@@ -367,24 +359,13 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
                 .distinct()
                 .collect(Collectors.toList());
         
-        // 从缓存获取用户信息
-        Map<Long, User> userMap = postCacheService.getBatchCachedUsers(authorIds);
-        
-        // 对于缓存未命中的用户，从数据库查询
-        List<Long> missingUserIds = authorIds.stream()
-                .filter(id -> !userMap.containsKey(id))
-                .collect(Collectors.toList());
-        
-        if (!missingUserIds.isEmpty()) {
-            List<User> users = userService.listByIds(missingUserIds);
-            for (User user : users) {
-                userMap.put(user.getUserId(), user);
-            }
-            
-            // 将新查询的用户信息加入缓存
-            postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+        // 从 UserCacheService 获取用户信息（内置 DB 回源）
+        Map<Long, User> userMap = new HashMap<>();
+        for (Long authorId : authorIds) {
+            User u = userCacheService.getCachedUser(authorId);
+            if (u != null) userMap.put(authorId, u);
         }
-        
+
         // 构建VO
         List<GroupPostVO> hotPosts = posts.stream().map(post -> {
             GroupPostVO vo = new GroupPostVO();

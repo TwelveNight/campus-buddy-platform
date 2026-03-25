@@ -49,13 +49,11 @@ public class CacheController {
             // 获取帖子相关缓存数量
             Set<String> groupPostsKeys = redisTemplate.keys("campus:group:posts:*");
             Set<String> postDetailKeys = redisTemplate.keys("campus:post:detail:*");
-            Set<String> postUserKeys = redisTemplate.keys("campus:post:user:*");
             Set<String> hotPostsKeys = redisTemplate.keys("campus:post:hot");
-            
+
             // 获取互助信息相关缓存数量
             Set<String> helpInfoListKeys = redisTemplate.keys("campus:helpinfo:list:*");
             Set<String> helpInfoDetailKeys = redisTemplate.keys("campus:helpinfo:detail:*");
-            Set<String> helpInfoUserKeys = redisTemplate.keys("campus:helpinfo:user:*");
             Set<String> helpInfoAdminKeys = redisTemplate.keys("campus:helpinfo:admin:*");
             Set<String> helpInfoSearchKeys = redisTemplate.keys("campus:helpinfo:search:*");
             
@@ -69,13 +67,11 @@ public class CacheController {
             // 添加帖子缓存统计
             stats.put("groupPostsCacheCount", groupPostsKeys != null ? groupPostsKeys.size() : 0);
             stats.put("postDetailCacheCount", postDetailKeys != null ? postDetailKeys.size() : 0);
-            stats.put("postUserCacheCount", postUserKeys != null ? postUserKeys.size() : 0);
             stats.put("hotPostsCacheCount", hotPostsKeys != null ? hotPostsKeys.size() : 0);
-            
+
             // 添加互助信息缓存统计
             stats.put("helpInfoListCacheCount", helpInfoListKeys != null ? helpInfoListKeys.size() : 0);
             stats.put("helpInfoDetailCacheCount", helpInfoDetailKeys != null ? helpInfoDetailKeys.size() : 0);
-            stats.put("helpInfoUserCacheCount", helpInfoUserKeys != null ? helpInfoUserKeys.size() : 0);
             stats.put("helpInfoAdminCacheCount", helpInfoAdminKeys != null ? helpInfoAdminKeys.size() : 0);
             stats.put("helpInfoSearchCacheCount", helpInfoSearchKeys != null ? helpInfoSearchKeys.size() : 0);
             
@@ -233,12 +229,10 @@ public class CacheController {
             // 收集所有帖子相关的缓存key
             Set<String> groupPostsKeys = redisTemplate.keys("campus:group:posts:*");
             Set<String> postDetailKeys = redisTemplate.keys("campus:post:detail:*");
-            Set<String> postUserKeys = redisTemplate.keys("campus:post:user:*");
             Set<String> hotPostsKeys = redisTemplate.keys("campus:post:hot");
-            
+
             if (groupPostsKeys != null) keys.addAll(groupPostsKeys);
             if (postDetailKeys != null) keys.addAll(postDetailKeys);
-            if (postUserKeys != null) keys.addAll(postUserKeys);
             if (hotPostsKeys != null) keys.addAll(hotPostsKeys);
             
             if (!keys.isEmpty()) {

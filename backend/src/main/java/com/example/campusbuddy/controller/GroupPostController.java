@@ -9,6 +9,7 @@ import com.example.campusbuddy.service.GroupPostCacheService;
 import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.PostCommentService;
 import com.example.campusbuddy.service.PostLikeService;
+import com.example.campusbuddy.service.UserCacheService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.GroupPostVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,12 +46,14 @@ public class GroupPostController {
     @Autowired
     private GroupPostCacheService postCacheService;
 
+    @Autowired
+    private UserCacheService userCacheService;
+
     private static final Logger log = LoggerFactory.getLogger(GroupPostController.class);
-    
+
     // 缓存过期时间（秒）
     private static final long POSTS_CACHE_EXPIRE = 1800; // 30分钟
     private static final long POST_DETAIL_CACHE_EXPIRE = 3600; // 1小时
-    private static final long USER_CACHE_EXPIRE = 3600; // 1小时
     private static final long HOT_POSTS_CACHE_EXPIRE = 1800; // 30分钟
 
     /**
@@ -88,24 +91,13 @@ public class GroupPostController {
                 .distinct()
                 .collect(Collectors.toList());
         
-        // 先从缓存获取用户信息
-        Map<Long, User> userMap = postCacheService.getBatchCachedUsers(authorIds);
-        
-        // 对于缓存未命中的用户，从数据库查询
-        List<Long> missingUserIds = authorIds.stream()
-                .filter(id -> !userMap.containsKey(id))
-                .collect(Collectors.toList());
-        
-        if (!missingUserIds.isEmpty()) {
-            List<User> users = userService.listByIds(missingUserIds);
-            for (User user : users) {
-                userMap.put(user.getUserId(), user);
-            }
-            
-            // 将新查询的用户信息加入缓存
-            postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
+        // 获取用户信息（UserCacheService 内置 DB 回源）
+        Map<Long, User> userMap = new HashMap<>();
+        for (Long authorId : authorIds) {
+            User u = userCacheService.getCachedUser(authorId);
+            if (u != null) userMap.put(authorId, u);
         }
-        
+
         // 构建VO对象
         List<GroupPostVO> voList = posts.getRecords().stream().map(post -> {
             GroupPostVO vo = new GroupPostVO();
@@ -171,19 +163,8 @@ public class GroupPostController {
         vo.createdAt = post.getCreatedAt();
         vo.updatedAt = post.getUpdatedAt();
         
-        // 先从缓存获取用户信息
-        User user = postCacheService.getCachedUser(post.getAuthorId());
-        
-        // 缓存未命中，从数据库获取
-        if (user == null) {
-            user = userService.getById(post.getAuthorId());
-            // 将用户信息存入缓存
-            if (user != null) {
-                Map<Long, User> userMap = new HashMap<>();
-                userMap.put(user.getUserId(), user);
-                postCacheService.batchCacheUsers(userMap, USER_CACHE_EXPIRE);
-            }
-        }
+        // 从 UserCacheService 获取用户信息（内置 DB 回源）
+        User user = userCacheService.getCachedUser(post.getAuthorId());
         
         vo.authorName = user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户";
         vo.authorAvatar = user != null ? user.getAvatarUrl() : null;
