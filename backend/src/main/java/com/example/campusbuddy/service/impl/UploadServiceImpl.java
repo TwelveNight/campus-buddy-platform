@@ -4,6 +4,7 @@ import com.example.campusbuddy.config.QiniuConfig;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.UploadService;
 import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.service.UserCacheService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qiniu.http.Response;
 import com.qiniu.storage.Configuration;
@@ -44,6 +45,9 @@ public class UploadServiceImpl implements UploadService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserCacheService userCacheService;
 
     /**
      * 获取七牛云上传管理器
@@ -101,6 +105,23 @@ public class UploadServiceImpl implements UploadService {
             if (user != null) {
                 user.setAvatarUrl(fileUrl);
                 userService.updateById(user);
+                
+                // 更新缓存中的用户信息 - 保持缓存与数据库同步
+                try {
+                    log.info("头像上传成功，开始更新缓存中的用户信息: userId={}", userId);
+                    
+                    // 先清除相关缓存，避免脏数据
+                    userCacheService.evictUserCache(userId);
+                    userCacheService.evictUserCacheByUsername(user.getUsername());
+                    userCacheService.evictSearchCache();
+                    
+                    // 重新缓存更新后的用户信息
+                    userCacheService.cacheUser(user);
+                    
+                    log.info("头像上传后缓存更新完成: userId={}", userId);
+                } catch (Exception e) {
+                    log.error("更新用户缓存失败，但头像上传成功: userId={}", userId, e);
+                }
             }
 
             return fileUrl;

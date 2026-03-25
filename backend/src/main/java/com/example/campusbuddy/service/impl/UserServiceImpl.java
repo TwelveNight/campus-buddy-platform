@@ -37,7 +37,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Autowired
     private UserRoleService userRoleService;
-    
+
     @Autowired
     private UserCacheService userCacheService;
 
@@ -62,13 +62,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userRoleService.addRoleToUser(user.getUserId(), "ROLE_USER");
 
         UserVO userVO = getUserVOById(user.getUserId());
-        
+
         // 缓存新用户信息
         userCacheService.cacheUser(user);
         userCacheService.cacheUserVO(userVO);
-        
+
         log.info("用户注册成功: userId={}, username={}", user.getUserId(), user.getUsername());
-        
+
         return userVO;
     }
 
@@ -83,11 +83,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 userCacheService.cacheUser(user);
             }
         }
-        
+
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("用户名或密码错误");
         }
-        
+
         // 检查用户状态
         if ("BANNED".equals(user.getStatus())) {
             throw new IllegalArgumentException("该账号已被禁用，请联系管理员");
@@ -95,12 +95,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if ("INACTIVE".equals(user.getStatus())) {
             throw new IllegalArgumentException("该账号未激活，请联系管理员");
         }
-        
+
         String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
-        
+
         // 缓存登录 token (设置较短的过期时间，如 2 小时)
         userCacheService.cacheUserToken(user.getUserId(), token, 7200);
-        
+
         return token;
     }
 
@@ -111,20 +111,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (cachedUserVO != null) {
             return cachedUserVO;
         }
-        
+
         User user = userMapper.selectById(userId);
         if (user == null)
             return null;
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
-        
+
         // 获取用户角色信息并设置到VO对象中
         List<String> roles = userRoleService.getUserRoles(userId);
         vo.setRoles(roles);
-        
+
         // 缓存用户信息
         userCacheService.cacheUserVO(vo);
-        
+
         return vo;
     }
 
@@ -143,24 +143,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (dto.getAvatarUrl() != null) {
             user.setAvatarUrl(dto.getAvatarUrl());
         }
-        
+
         // 更新新增字段
         if (dto.getGender() != null) {
             user.setGender(dto.getGender());
         }
-        
+
         if (dto.getMajor() != null) {
             user.setMajor(dto.getMajor());
         }
-        
+
         if (dto.getGrade() != null) {
             user.setGrade(dto.getGrade());
         }
-        
+
         if (dto.getContactInfo() != null) {
             user.setContactInfo(dto.getContactInfo());
         }
-        
+
         if (dto.getSkillTags() != null) {
             user.setSkillTags(dto.getSkillTags());
         }
@@ -168,8 +168,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 保存更新
         this.updateById(user);
 
-        // 清除缓存
-        userCacheService.evictUserCache(userId);
+        // 更新缓存中的用户信息，但不清除token缓存
+        try {
+            // 先清除旧的用户信息缓存（但保留token缓存）
+            userCacheService.evictUserCache(userId);
+            
+            // 如果有用户名，也清除用户名缓存
+            if (user.getUsername() != null) {
+                userCacheService.evictUserCacheByUsername(user.getUsername());
+            }
+            
+            // 清除搜索缓存（因为用户信息可能影响搜索结果）
+            userCacheService.evictSearchCache();
+            
+            // 重新缓存更新后的用户信息
+            userCacheService.cacheUser(user);
+            
+            log.info("用户资料更新后缓存清理和更新完成: userId={}", userId);
+        } catch (Exception e) {
+            log.error("更新用户缓存失败，但资料更新成功: userId={}", userId, e);
+        }
 
         // 返回更新后的用户信息
         return getUserVOById(userId);
@@ -190,28 +208,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 更新密码
         user.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
         this.updateById(user);
-        
+
         // 清除缓存
         userCacheService.evictUserCache(userId);
     }
-    
+
     @Override
     public User getUserByUsername(String username) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", username);
         return userMapper.selectOne(queryWrapper);
     }
-    
+
     @Override
     public boolean isAdmin(Long userId) {
         return userRoleService.hasRole(userId, "ROLE_ADMIN");
     }
-    
+
     @Override
     public boolean exists(Long userId) {
         return getById(userId) != null;
     }
-    
+
     @Override
     public Page<UserVO> searchUsers(String keyword, Integer page, Integer size) {
         // 先尝试从缓存获取搜索结果
@@ -219,10 +237,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (cachedResult != null) {
             return cachedResult;
         }
-        
+
         // 创建分页对象
         Page<User> userPage = new Page<>(page, size);
-        
+
         // 构建查询条件
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         if (keyword != null && !keyword.trim().isEmpty()) {
@@ -232,13 +250,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                     .or()
                     .like("contact_info", keyword);
         }
-        
+
         // 只查询激活状态的用户
         queryWrapper.eq("status", "ACTIVE");
-        
+
         // 执行分页查询
         Page<User> result = this.page(userPage, queryWrapper);
-        
+
         // 转换为VO对象
         Page<UserVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         List<UserVO> voList = new ArrayList<>();
@@ -251,10 +269,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             voList.add(vo);
         }
         voPage.setRecords(voList);
-        
+
         // 缓存搜索结果 (设置较短的过期时间，如 10 分钟)
         userCacheService.cacheSearchResult(keyword, page, size, voPage, 600);
-        
+
         return voPage;
     }
 
@@ -296,10 +314,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional
     public boolean adminUpdateUserStatus(Long userId, String status) {
         User user = this.getById(userId);
-        if (user == null) return false;
+        if (user == null)
+            return false;
         user.setStatus(status);
         boolean result = this.updateById(user);
-        
+
         // 清除缓存
         if (result) {
             userCacheService.evictUserCache(userId);
@@ -311,7 +330,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 userCacheService.cacheUser(user);
             }
         }
-        
+
         return result;
     }
 
@@ -326,10 +345,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String newPassword = generateRandomPassword(8);
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         this.updateById(user);
-        
+
         // 清除缓存
         userCacheService.evictUserCache(userId);
-        
+
         return newPassword;
     }
 
