@@ -2,6 +2,7 @@ package com.example.campusbuddy.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.UserCacheService;
 import com.example.campusbuddy.vo.UserVO;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,6 +28,9 @@ public class UserCacheServiceImpl implements UserCacheService {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     // 缓存key前缀
     private static final String USER_CACHE_PREFIX = "campus:user:";
@@ -75,6 +79,16 @@ public class UserCacheServiceImpl implements UserCacheService {
             }
         } catch (Exception e) {
             log.error("读取缓存用户信息失败: userId={}", userId, e);
+        }
+        // 缓存未命中，从数据库回源并重新缓存
+        try {
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                cacheUser(user);
+            }
+            return user;
+        } catch (Exception e) {
+            log.error("从数据库回源用户信息失败: userId={}", userId, e);
         }
         return null;
     }
