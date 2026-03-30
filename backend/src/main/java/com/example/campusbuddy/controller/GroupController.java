@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag(name = "学习小组接口", description = "学习小组相关操作")
+@Slf4j
 @RestController
 @RequestMapping("/api/groups")
 public class GroupController {
@@ -586,14 +588,18 @@ public class GroupController {
         member.setRole("MEMBER");
         groupMemberService.updateById(member);
 
-        // 发送取消管理员通知
-        notificationService.createGroupAdminRemovedNotification(
-            groupId,
-            userId,
-            currentUser.getUserId(),
-            currentUser.getNickname(),
-            group.getName()
-        );
+        // 发送取消管理员通知（非关键路径，失败不影响主流程）
+        try {
+            notificationService.createGroupAdminRemovedNotification(
+                groupId,
+                userId,
+                currentUser.getUserId(),
+                currentUser.getNickname() != null ? currentUser.getNickname() : currentUser.getUsername(),
+                group.getName()
+            );
+        } catch (Exception e) {
+            log.warn("取消管理员通知发送失败: groupId={}, userId={}, error={}", groupId, userId, e.getMessage());
+        }
 
         return R.ok("已取消小组管理员", null);
     }
