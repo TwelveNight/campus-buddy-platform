@@ -85,16 +85,6 @@
                         </div>
                     </el-card>
                 </el-col>
-                <el-col :xs="24" :sm="12" :md="8">
-                    <el-card class="module-card disabled" shadow="hover">
-                        <el-icon class="module-icon accent"><Files /></el-icon>
-                        <h3>资源共享</h3>
-                        <p>资料、二手物品等校园资源自由分享与获取</p>
-                        <div class="card-tag">
-                            <el-tag size="small" effect="dark" type="warning">即将上线</el-tag>
-                        </div>
-                    </el-card>
-                </el-col>
             </el-row>
         </section>
 
