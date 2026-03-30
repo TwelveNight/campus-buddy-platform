@@ -14,7 +14,7 @@
                 <NotificationCenter :key="'help'" :title="'互助通知'" :type="'HELP_NEW_APPLICATION,HELP_APPLICATION_ACCEPTED,HELP_APPLICATION_REJECTED,HELP_COMPLETED,HELP_NEW_REVIEW'" />
             </el-tab-pane>
             <el-tab-pane label="小组通知" name="group">
-                <NotificationCenter :key="'group'" :title="'小组通知'" :type="'GROUP_JOIN_APPLICATION,GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED'" />
+                <NotificationCenter :key="'group'" :title="'小组通知'" :type="'GROUP_JOIN_APPLICATION,GROUP_JOIN_APPROVED,GROUP_JOIN_REJECTED,GROUP_INVITATION,GROUP_ANNOUNCEMENT,GROUP_ADMIN_ASSIGNED,GROUP_ADMIN_REMOVED'" />
             </el-tab-pane>
             <el-tab-pane label="好友通知" name="friend">
                 <NotificationCenter :key="'friend'" :title="'好友通知'" :type="'FRIEND_REQUEST,FRIEND_REQUEST_ACCEPTED,FRIEND_REQUEST_REJECTED,FRIEND_REMOVED'" />
