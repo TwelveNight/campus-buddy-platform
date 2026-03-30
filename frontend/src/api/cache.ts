@@ -2,21 +2,13 @@ import request from '../utils/request'
 
 export interface CacheStats {
   userCacheCount: number
-  userVOCacheCount: number
-  tokenCacheCount: number
-  usernameCacheCount: number
-  searchCacheCount: number
   creditScoreCacheCount: number
   // 帖子缓存相关计数
   groupPostsCacheCount: number
   postDetailCacheCount: number
-  postUserCacheCount: number
-  hotPostsCacheCount: number
   // 互助信息缓存相关计数
   helpInfoListCacheCount: number
   helpInfoDetailCacheCount: number
-  helpInfoUserCacheCount: number
-  helpInfoAdminCacheCount: number
   helpInfoSearchCacheCount: number
   totalCacheCount: number
   redisInfo: {
@@ -78,13 +70,6 @@ export interface CacheDetails {
     },
   
     /**
-     * 清空搜索缓存
-     */
-    clearSearch: () => {
-      return request.delete('/api/cache/clear/search').then(res => res.data.data)
-    },
-
-    /**
      * 清空所有信用分缓存
      */
     clearCreditScore: () => {
@@ -117,13 +102,6 @@ export interface CacheDetails {
      */
     clearPostDetail: (postId: number) => {
       return request.delete(`/api/cache/clear/post-detail/${postId}`).then(res => res.data.data)
-    },
-
-    /**
-     * 清空热门帖子缓存
-     */
-    clearHotPosts: () => {
-      return request.delete('/api/cache/clear/hot-posts').then(res => res.data.data)
     },
 
     /**

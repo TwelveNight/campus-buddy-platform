@@ -101,21 +101,12 @@
                 <h4>应用缓存统计</h4>
                 <el-descriptions border>
                   <el-descriptions-item label="用户缓存">{{ cacheStats.userCacheCount }}</el-descriptions-item>
-                  <el-descriptions-item label="用户VO缓存">{{ cacheStats.userVOCacheCount }}</el-descriptions-item>
-                  <el-descriptions-item label="Token缓存">{{ cacheStats.tokenCacheCount }}</el-descriptions-item>
-                  <el-descriptions-item label="用户名缓存">{{ cacheStats.usernameCacheCount }}</el-descriptions-item>
-                  <el-descriptions-item label="搜索缓存">{{ cacheStats.searchCacheCount }}</el-descriptions-item>
                   <el-descriptions-item label="信用分缓存">{{ cacheStats.creditScoreCacheCount }}</el-descriptions-item>
                   <el-descriptions-item label="小组帖子列表缓存">{{ cacheStats.groupPostsCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="帖子详情缓存">{{ cacheStats.postDetailCacheCount || 0 }}</el-descriptions-item>
-                  <el-descriptions-item label="帖子用户缓存">{{ cacheStats.postUserCacheCount || 0 }}</el-descriptions-item>
-                  <el-descriptions-item label="热门帖子缓存">{{ cacheStats.hotPostsCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="互助信息列表缓存">{{ cacheStats.helpInfoListCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="互助信息详情缓存">{{ cacheStats.helpInfoDetailCacheCount || 0 }}</el-descriptions-item>
-                  <el-descriptions-item label="互助信息用户缓存">{{ cacheStats.helpInfoUserCacheCount || 0 }}</el-descriptions-item>
-                  <el-descriptions-item label="互助信息管理缓存">{{ cacheStats.helpInfoAdminCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="互助信息搜索缓存">{{ cacheStats.helpInfoSearchCacheCount || 0 }}</el-descriptions-item>
-                  <el-descriptions-item label="热门帖子缓存">{{ cacheStats.hotPostsCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="总缓存数">
                     <el-tag type="primary">{{ cacheStats.totalCacheCount }}</el-tag>
                   </el-descriptions-item>
@@ -213,24 +204,14 @@
                 </template>
                 
                 <div class="action-grid">
-                  <el-button 
+                  <el-button
                     type="danger"
-                    :loading="clearingCache" 
+                    :loading="clearingCache"
                     @click="clearAllCache"
                     icon="Delete"
                     class="action-btn"
                   >
                     清空所有缓存
-                  </el-button>
-                  
-                  <el-button 
-                    type="warning" 
-                    :loading="clearingSearchCache" 
-                    @click="clearSearchCache"
-                    icon="Search"
-                    class="action-btn"
-                  >
-                    清空搜索缓存
                   </el-button>
                 </div>
               </el-card>
@@ -289,24 +270,14 @@
                 </template>
                 
                 <div class="action-grid">
-                  <el-button 
-                    type="danger" 
-                    :loading="clearingAllPostsCache" 
+                  <el-button
+                    type="danger"
+                    :loading="clearingAllPostsCache"
                     @click="clearAllPostsCache"
                     icon="Document"
                     class="action-btn"
                   >
                     清空所有帖子缓存
-                  </el-button>
-                  
-                  <el-button 
-                    type="warning" 
-                    :loading="clearingHotPostsCache" 
-                    @click="clearHotPostsCache"
-                    icon="Star"
-                    class="action-btn"
-                  >
-                    清空热门帖子缓存
                   </el-button>
                 </div>
 
@@ -449,14 +420,12 @@ const loadingStats = ref(false)
 const loadingDetails = ref(false)
 const clearingCache = ref(false)
 const clearingUserCache = ref(false)
-const clearingSearchCache = ref(false)
 const clearingCreditScoreCache = ref(false)
 const clearingUserCreditScoreCache = ref(false)
 // 帖子缓存相关状态
 const clearingAllPostsCache = ref(false)
 const clearingGroupPostsCache = ref(false)
 const clearingPostDetailCache = ref(false)
-const clearingHotPostsCache = ref(false)
 const groupIdInput = ref<number | null>(null)
 const postIdInput = ref<number | null>(null)
 // 互助信息缓存相关状态
@@ -607,34 +576,6 @@ async function clearCurrentUserCache() {
   }
 }
 
-// 清空搜索缓存
-async function clearSearchCache() {
-  try {
-    await ElMessageBox.confirm(
-      '确定要清空所有搜索缓存吗？',
-      '确认清空搜索缓存',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    clearingSearchCache.value = true
-    await cacheApi.clearSearch()
-    ElMessage.success('搜索缓存已清空')
-    // 刷新统计信息
-    await loadCacheStats()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空搜索缓存失败')
-      console.error('清空搜索缓存失败:', error)
-    }
-  } finally {
-    clearingSearchCache.value = false
-  }
-}
-
 // 清空信用分缓存
 async function clearCreditScoreCache() {
   try {
@@ -743,34 +684,6 @@ async function clearAllPostsCache() {
     }
   } finally {
     clearingAllPostsCache.value = false
-  }
-}
-
-// 清空热门帖子缓存
-async function clearHotPostsCache() {
-  try {
-    await ElMessageBox.confirm(
-      '确定要清空热门帖子缓存吗？',
-      '确认清空热门帖子缓存',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    clearingHotPostsCache.value = true
-    await cacheApi.clearHotPosts()
-    ElMessage.success('热门帖子缓存已清空')
-    // 刷新统计信息
-    await loadCacheStats()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空热门帖子缓存失败')
-      console.error('清空热门帖子缓存失败:', error)
-    }
-  } finally {
-    clearingHotPostsCache.value = false
   }
 }
 
