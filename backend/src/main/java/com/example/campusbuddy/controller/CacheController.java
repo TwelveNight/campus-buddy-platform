@@ -38,11 +38,9 @@ public class CacheController {
         try {
             Map<String, Object> stats = new HashMap<>();
 
-            // 用户实体缓存（campus:user:{id}，排除credit子前缀）
+            // 用户实体缓存（campus:user:{id}，不含 credit 子前缀，已移除）
             Set<String> userKeys = redisTemplate.keys("campus:user:*");
-            Set<String> creditScoreKeys = redisTemplate.keys("campus:user:credit:*");
-            int userCacheCount = (userKeys != null ? userKeys.size() : 0)
-                               - (creditScoreKeys != null ? creditScoreKeys.size() : 0);
+            int userCacheCount = userKeys != null ? userKeys.size() : 0;
 
             // 获取帖子相关缓存数量
             Set<String> groupPostsKeys = redisTemplate.keys("campus:group:posts:*");
@@ -53,7 +51,7 @@ public class CacheController {
             Set<String> helpInfoSearchKeys = redisTemplate.keys("campus:helpinfo:search:*");
 
             stats.put("userCacheCount", Math.max(userCacheCount, 0));
-            stats.put("creditScoreCacheCount", creditScoreKeys != null ? creditScoreKeys.size() : 0);
+            stats.put("creditScoreCacheCount", 0); // credit 独立缓存已移除，始终为 0
 
             // 添加帖子缓存统计
             stats.put("groupPostsCacheCount", groupPostsKeys != null ? groupPostsKeys.size() : 0);
@@ -142,47 +140,6 @@ public class CacheController {
         } catch (Exception e) {
             log.error("清空用户缓存失败: userId={}, {}", userId, e.getMessage());
             return R.fail("清空用户缓存失败");
-        }
-    }
-
-    /**
-     * 清空信用分缓存
-     */
-    @DeleteMapping("/clear/credit")
-    public R<String> clearCreditScoreCache() {
-        try {
-            Set<String> keys = redisTemplate.keys("campus:user:credit:*");
-            if (keys != null && !keys.isEmpty()) {
-                redisTemplate.delete(keys);
-                log.info("已清空信用分缓存，共清理 {} 个key", keys.size());
-                return R.ok("信用分缓存清理成功，共清理 " + keys.size() + " 个缓存项");
-            } else {
-                return R.ok("没有信用分缓存需要清理");
-            }
-        } catch (Exception e) {
-            log.error("清空信用分缓存失败: {}", e.getMessage());
-            return R.fail("清空信用分缓存失败");
-        }
-    }
-    
-    /**
-     * 清空指定用户的信用分缓存
-     */
-    @DeleteMapping("/clear/credit/{userId}")
-    public R<String> clearUserCreditScoreCache(@PathVariable Long userId) {
-        try {
-            String key = "campus:user:credit:" + userId;
-            Boolean hasKey = redisTemplate.hasKey(key);
-            if (hasKey != null && hasKey) {
-                redisTemplate.delete(key);
-                log.info("已清空用户{}的信用分缓存", userId);
-                return R.ok("用户信用分缓存清理成功");
-            } else {
-                return R.ok("该用户没有信用分缓存数据");
-            }
-        } catch (Exception e) {
-            log.error("清空用户信用分缓存失败: userId={}, {}", userId, e.getMessage());
-            return R.fail("清空用户信用分缓存失败");
         }
     }
 

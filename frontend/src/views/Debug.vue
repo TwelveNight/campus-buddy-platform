@@ -101,7 +101,6 @@
                 <h4>应用缓存统计</h4>
                 <el-descriptions border>
                   <el-descriptions-item label="用户缓存">{{ cacheStats.userCacheCount }}</el-descriptions-item>
-                  <el-descriptions-item label="信用分缓存">{{ cacheStats.creditScoreCacheCount }}</el-descriptions-item>
                   <el-descriptions-item label="小组帖子列表缓存">{{ cacheStats.groupPostsCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="帖子详情缓存">{{ cacheStats.postDetailCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="互助信息列表缓存">{{ cacheStats.helpInfoListCacheCount || 0 }}</el-descriptions-item>
@@ -236,26 +235,6 @@
                     清空当前用户缓存
                   </el-button>
                   
-                  <el-button 
-                    type="warning" 
-                    :loading="clearingCreditScoreCache" 
-                    @click="clearCreditScoreCache"
-                    icon="StarFilled"
-                    class="action-btn"
-                  >
-                    清空信用分缓存
-                  </el-button>
-                  
-                  <el-button 
-                    type="warning" 
-                    :loading="clearingUserCreditScoreCache" 
-                    @click="clearCurrentUserCreditScoreCache"
-                    icon="Medal"
-                    :disabled="!authStore.user?.userId"
-                    class="action-btn"
-                  >
-                    清空当前用户信用分
-                  </el-button>
                 </div>
               </el-card>
 
@@ -395,8 +374,6 @@ const loadingStats = ref(false)
 const loadingDetails = ref(false)
 const clearingCache = ref(false)
 const clearingUserCache = ref(false)
-const clearingCreditScoreCache = ref(false)
-const clearingUserCreditScoreCache = ref(false)
 // 帖子缓存相关状态
 const clearingAllPostsCache = ref(false)
 const clearingGroupPostsCache = ref(false)
@@ -546,67 +523,6 @@ async function clearCurrentUserCache() {
     }
   } finally {
     clearingUserCache.value = false
-  }
-}
-
-// 清空信用分缓存
-async function clearCreditScoreCache() {
-  try {
-    await ElMessageBox.confirm(
-      '确定要清空所有信用分缓存吗？',
-      '确认清空信用分缓存',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    clearingCreditScoreCache.value = true
-    await cacheApi.clearCreditScore()
-    ElMessage.success('信用分缓存已清空')
-    // 刷新统计信息
-    await loadCacheStats()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空信用分缓存失败')
-      console.error('清空信用分缓存失败:', error)
-    }
-  } finally {
-    clearingCreditScoreCache.value = false
-  }
-}
-
-// 清空当前用户信用分缓存
-async function clearCurrentUserCreditScoreCache() {
-  if (!authStore.user?.userId) {
-    ElMessage.warning('当前用户ID不存在')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(
-      `确定要清空用户ID ${authStore.user.userId} 的信用分缓存吗？`,
-      '确认清空用户信用分缓存',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    clearingUserCreditScoreCache.value = true
-    await cacheApi.clearUserCreditScore(authStore.user.userId)
-    ElMessage.success('当前用户信用分缓存已清空')
-    // 刷新统计信息
-    await loadCacheStats()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空用户信用分缓存失败')
-      console.error('清空用户信用分缓存失败:', error)
-    }
-  } finally {
-    clearingUserCreditScoreCache.value = false
   }
 }
 

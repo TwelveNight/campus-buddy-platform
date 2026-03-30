@@ -2,6 +2,7 @@ package com.example.campusbuddy.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.entity.Review;
+import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.ReviewMapper;
 import com.example.campusbuddy.service.CreditScoreCalculationService;
 import com.example.campusbuddy.service.UserCacheService;
@@ -33,10 +34,9 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
     private UserCacheService userCacheService;
 
     // 基础配置
-    private static final int BASE_CREDIT_SCORE = 70; // 无评价时的基础分（对应 3.5星先验）
+    private static final int BASE_CREDIT_SCORE = 70;
     private static final int MAX_CREDIT_SCORE = 100;
     private static final int MIN_CREDIT_SCORE = 0;
-    private static final long CACHE_EXPIRE_SECONDS = 3600; // 信用积分缓存1小时
 
     // 贝叶斯先验参数
     private static final double PRIOR_STAR = 3.5;  // 先验星级（3.5星 = 70分）
@@ -50,11 +50,11 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
     public Integer calculateCreditScore(Long userId) {
         log.info("开始计算用户信用积分: userId={}", userId);
 
-        // 先从缓存获取
-        Integer cachedScore = userCacheService.getCachedCreditScore(userId);
-        if (cachedScore != null) {
-            log.debug("从缓存获取信用积分: userId={}, score={}", userId, cachedScore);
-            return cachedScore;
+        // 从用户缓存读取 creditScore（避免独立维护一套 credit 缓存）
+        User cachedUser = userCacheService.getCachedUser(userId);
+        if (cachedUser != null && cachedUser.getCreditScore() != null) {
+            log.debug("从用户缓存获取信用积分: userId={}, score={}", userId, cachedUser.getCreditScore());
+            return cachedUser.getCreditScore();
         }
 
         // 获取用户所有评价
@@ -64,7 +64,6 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
 
         if (userReviews.isEmpty()) {
             log.info("用户暂无评价记录，返回基础信用分: userId={}, baseScore={}", userId, BASE_CREDIT_SCORE);
-            userCacheService.cacheCreditScore(userId, BASE_CREDIT_SCORE, CACHE_EXPIRE_SECONDS);
             return BASE_CREDIT_SCORE;
         }
 
@@ -91,56 +90,31 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
         log.info("信用积分计算完成: userId={}, finalScore={}, reviewCount={}, weightedAvgStar={}, bayesianStar={}",
                  userId, finalScore, userReviews.size(), weightedAvgStar, bayesianStar);
 
-        userCacheService.cacheCreditScore(userId, finalScore, CACHE_EXPIRE_SECONDS);
         return finalScore;
     }
     
     @Override
     public boolean existsInCache(Long userId) {
-        if (userId == null) {
-            return false;
-        }
-        return userCacheService.getCachedCreditScore(userId) != null;
+        if (userId == null) return false;
+        User cached = userCacheService.getCachedUser(userId);
+        return cached != null && cached.getCreditScore() != null;
     }
-    
+
     @Override
     public Integer incrementalUpdateCreditScore(Long userId, Review newReview) {
         log.info("增量更新用户信用积分: userId={}, newReviewId={}", userId, newReview.getReviewId());
-        
-        // 清除缓存，强制重新计算
-        userCacheService.evictCreditScoreCache(userId);
-        
-        // 重新计算信用积分
+        // 清除用户缓存，下次读取时从 DB 重建（含新的 creditScore）
+        userCacheService.evictUserCache(userId);
         return calculateCreditScore(userId);
     }
-    
+
     @Override
     public Map<Long, Integer> batchCalculateCreditScore(List<Long> userIds) {
         log.info("批量计算信用积分: userCount={}", userIds.size());
-        
         Map<Long, Integer> result = new HashMap<>();
-        
-        // 先从缓存批量获取
-        Map<Long, Integer> cachedScores = userCacheService.getBatchCachedCreditScores(userIds);
-        result.putAll(cachedScores);
-        
-        // 计算缓存中没有的用户
-        List<Long> uncachedUserIds = userIds.stream()
-            .filter(userId -> !cachedScores.containsKey(userId))
-            .collect(Collectors.toList());
-        
-        if (!uncachedUserIds.isEmpty()) {
-            Map<Long, Integer> newScores = new HashMap<>();
-            for (Long userId : uncachedUserIds) {
-                Integer score = calculateCreditScore(userId);
-                newScores.put(userId, score);
-                result.put(userId, score);
-            }
-            
-            // 批量缓存新计算的分数
-            userCacheService.batchCacheCreditScores(newScores, CACHE_EXPIRE_SECONDS);
+        for (Long userId : userIds) {
+            result.put(userId, calculateCreditScore(userId));
         }
-        
         return result;
     }
     

@@ -2,7 +2,6 @@ import request from '../utils/request'
 
 export interface CacheStats {
   userCacheCount: number
-  creditScoreCacheCount: number
   // 帖子缓存相关计数
   groupPostsCacheCount: number
   postDetailCacheCount: number
@@ -68,20 +67,6 @@ export interface CacheDetails {
       return request.delete(`/api/cache/clear/user/${userId}`).then(res => res.data.data)
     },
   
-    /**
-     * 清空所有信用分缓存
-     */
-    clearCreditScore: () => {
-      return request.delete('/api/cache/clear/credit').then(res => res.data.data)
-    },
-
-    /**
-     * 清空指定用户的信用分缓存
-     */
-    clearUserCreditScore: (userId: number) => {
-      return request.delete(`/api/cache/clear/credit/${userId}`).then(res => res.data.data)
-    },
-
     /**
      * 清空所有帖子相关缓存
      */
