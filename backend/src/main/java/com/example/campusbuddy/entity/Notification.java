@@ -88,6 +88,7 @@ public class Notification implements Serializable {
         GROUP_JOIN_REJECTED,      // 加入小组申请被拒绝
         GROUP_INVITATION,         // 被邀请加入小组
         GROUP_ANNOUNCEMENT,       // 小组公告
-        GROUP_ADMIN_ASSIGNED      // 被设为管理员
+        GROUP_ADMIN_ASSIGNED,     // 被设为管理员
+        GROUP_ADMIN_REMOVED       // 被取消管理员
     }
 }

@@ -179,4 +179,9 @@ public interface NotificationService extends IService<Notification> {
      * @return 通知ID
      */
     Long createGroupAdminAssignedNotification(Long groupId, Long userId, Long operatorId, String operatorName, String groupName);
+
+    /**
+     * 发送取消管理员通知
+     */
+    Long createGroupAdminRemovedNotification(Long groupId, Long userId, Long operatorId, String operatorName, String groupName);
 }

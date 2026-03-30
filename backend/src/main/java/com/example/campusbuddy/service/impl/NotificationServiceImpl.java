@@ -314,7 +314,21 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         dto.setTitle("您已被设为小组管理员");
         dto.setContent(operatorName + " 将您设为了小组 \"" + groupName + "\" 的管理员");
         dto.setRelatedId(groupId);
-        
+
+        return createUserNotification(dto);
+    }
+
+    @Override
+    @Transactional
+    public Long createGroupAdminRemovedNotification(Long groupId, Long userId, Long operatorId, String operatorName, String groupName) {
+        NotificationCreateDTO dto = new NotificationCreateDTO();
+        dto.setRecipientId(userId);
+        dto.setSenderId(operatorId);
+        dto.setType(Notification.NotificationType.GROUP_ADMIN_REMOVED.name());
+        dto.setTitle("您的小组管理员身份已被取消");
+        dto.setContent(operatorName + " 取消了您在小组 \"" + groupName + "\" 中的管理员身份");
+        dto.setRelatedId(groupId);
+
         return createUserNotification(dto);
     }
 
@@ -340,7 +354,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                     "/reviews?type=received";
             case "GROUP_JOIN_APPLICATION" -> "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
             case "GROUP_JOIN_APPROVED", "GROUP_JOIN_REJECTED", "GROUP_INVITATION", "GROUP_ANNOUNCEMENT",
-                 "GROUP_ADMIN_ASSIGNED" -> "/groups/" + relatedId + "/detail";
+                 "GROUP_ADMIN_ASSIGNED", "GROUP_ADMIN_REMOVED" -> "/groups/" + relatedId + "/detail";
             case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
             case "FRIEND_REQUEST" -> "/friends?tab=requests";
             default -> null;
@@ -367,7 +381,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             case "HELP_NEW_REVIEW" -> "/reviews?type=received";
             case "GROUP_JOIN_APPLICATION" -> "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
             case "GROUP_JOIN_APPROVED", "GROUP_JOIN_REJECTED", "GROUP_INVITATION", "GROUP_ANNOUNCEMENT",
-                 "GROUP_ADMIN_ASSIGNED" -> "/groups/" + relatedId + "/detail";
+                 "GROUP_ADMIN_ASSIGNED", "GROUP_ADMIN_REMOVED" -> "/groups/" + relatedId + "/detail";
             case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
             case "FRIEND_REQUEST" -> "/friends?tab=requests";
             default -> null;

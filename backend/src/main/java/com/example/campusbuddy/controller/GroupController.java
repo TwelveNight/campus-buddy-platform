@@ -586,6 +586,15 @@ public class GroupController {
         member.setRole("MEMBER");
         groupMemberService.updateById(member);
 
+        // 发送取消管理员通知
+        notificationService.createGroupAdminRemovedNotification(
+            groupId,
+            userId,
+            currentUser.getUserId(),
+            currentUser.getNickname(),
+            group.getName()
+        );
+
         return R.ok("已取消小组管理员", null);
     }
 
