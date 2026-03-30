@@ -399,7 +399,7 @@ const handleUpdateFileInfo = async () => {
             description: fileForm.value.description
         };
 
-        const response = await updateFileInfo(editingFile.value.id || 0, data);
+        const response = await updateFileInfo(editingFile.value.id || editingFile.value.fileId || 0, data);
         if (response.data && response.data.code === 200) {
             ElMessage.success('文件信息更新成功');
             editFileDialogVisible.value = false;
