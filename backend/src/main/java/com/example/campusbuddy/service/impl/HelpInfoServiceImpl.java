@@ -8,7 +8,6 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.entity.HelpApplication;
 import com.example.campusbuddy.exception.ResourceNotFoundException;
 import com.example.campusbuddy.mapper.HelpInfoMapper;
-import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.mapper.HelpApplicationMapper;
 import com.example.campusbuddy.service.HelpInfoService;
 import com.example.campusbuddy.service.HelpInfoCacheService;
@@ -29,9 +28,6 @@ import java.util.stream.Collectors;
 public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> implements HelpInfoService {
 
     @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
     private HelpApplicationMapper helpApplicationMapper;
 
     @Autowired
@@ -41,7 +37,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
     private HelpInfoCacheService helpInfoCacheService;
 
     @Autowired
-    private com.example.campusbuddy.service.UserCacheService userCacheService;
+    private UserCacheService userCacheService;
 
     @Override
     public HelpInfoDetailVO getHelpInfoDetail(Long infoId) {
@@ -105,7 +101,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
                 vo.setHelperId(application.getApplicantId());
 
                 // 获取帮助者姓名
-                User helper = userMapper.selectById(application.getApplicantId());
+                User helper = userCacheService.getCachedUser(application.getApplicantId());
                 if (helper != null) {
                     vo.setHelperName(helper.getNickname());
                 }
@@ -173,26 +169,13 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         helpInfo.setViewCount(currentViewCount + 1);
         this.updateById(helpInfo);
         
-        // 清除相关缓存，确保数据一致性
-        helpInfoCacheService.clearHelpInfoCache(infoId);
-        
         log.debug("互助信息 {} 浏览量已更新: {} -> {}", infoId, currentViewCount, currentViewCount + 1);
         return helpInfo;
     }
 
     @Override
     public Page<HelpInfoVO> adminPageHelpInfo(Integer page, Integer size, String keyword, String type, String status) {
-        // 生成缓存键
-        String cacheKey = helpInfoCacheService.generateAdminCacheKey(page, size, keyword, type, status);
-        
-        // 先尝试从缓存获取
-        Page<HelpInfoVO> cachedResult = helpInfoCacheService.getCachedAdminHelpInfoList(cacheKey);
-        if (cachedResult != null) {
-            log.debug("从缓存获取管理员查询结果成功, key: {}", cacheKey);
-            return cachedResult;
-        }
-        
-        // 缓存未命中，从数据库查询
+        // 从数据库查询
         Page<HelpInfo> helpInfoPage = new Page<>(page, size);
         QueryWrapper<HelpInfo> queryWrapper = new QueryWrapper<>();
         
@@ -237,7 +220,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             vo.setViewCount(helpInfo.getViewCount());
             
             // 获取发布者信息
-            User publisher = userMapper.selectById(helpInfo.getPublisherId());
+            User publisher = userCacheService.getCachedUser(helpInfo.getPublisherId());
             if (publisher != null) {
                 vo.setPublisherName(publisher.getNickname());
                 vo.setPublisherAvatar(publisher.getAvatarUrl());
@@ -254,9 +237,6 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         
         voPage.setRecords(voList);
         
-        // 将结果存入缓存
-        helpInfoCacheService.cacheAdminHelpInfoList(cacheKey, voPage, 1800); // 30分钟
-        
         return voPage;
     }
     
@@ -268,7 +248,13 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         }
         
         helpInfo.setStatus(status);
-        return this.updateById(helpInfo);
+        boolean result = this.updateById(helpInfo);
+        if (result) {
+            // 状态变更后清除详情缓存和所有列表缓存
+            helpInfoCacheService.clearHelpInfoCache(id);
+            helpInfoCacheService.clearHelpInfoListCache();
+        }
+        return result;
     }
 
     @Override
