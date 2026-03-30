@@ -40,7 +40,7 @@
             <div class="upload-area">
               <el-icon class="upload-icon"><Plus /></el-icon>
               <span class="upload-text">点击或拖拽图片到此处上传</span>
-              <span class="upload-hint">支持JPG、PNG、GIF、WebP格式，文件小于20MB</span>
+              <span class="upload-hint">支持JPG、PNG、GIF、WebP格式，文件小于5MB（将自动压缩）</span>
             </div>
           </el-upload>
         </div>
@@ -147,7 +147,7 @@ const props = defineProps({
   },
   maxSize: {
     type: Number,
-    default: 20 // 默认最大20MB
+    default: 5 // 默认最大5MB（选图阶段校验，上传前会压缩）
   },
   tip: {
     type: String,
@@ -322,9 +322,31 @@ const reselect = () => {
   previewUrl.value = '';
 };
 
+// 压缩图片：限制最大边长和质量，返回压缩后的 Blob
+function compressImage(blob: Blob, maxPx: number, quality: number): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxPx || height > maxPx) {
+        if (width > height) { height = Math.round(height * maxPx / width); width = maxPx; }
+        else { width = Math.round(width * maxPx / height); height = maxPx; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(result => result ? resolve(result) : reject(new Error('压缩失败')), 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 // 确认裁剪并上传
-const confirmCrop = () => {
-  if (!cropperRef.value) return;
+const confirmCrop = () => {  if (!cropperRef.value) return;
   
   uploading.value = true;
 
@@ -355,7 +377,10 @@ const confirmCrop = () => {
       }
 
       const blob = new Blob([ab], { type: mimeString });
-      const file = new File([blob], `avatar.${cropperOptions.value.outputType}`, { type: mimeString });
+
+      // 压缩头像到最大 500KB，尺寸不超过 800px
+      compressImage(blob, 800, 0.85).then(compressedBlob => {
+        const file = new File([compressedBlob], `avatar.${cropperOptions.value.outputType}`, { type: compressedBlob.type });
 
       // 上传头像前关闭对话框，优化用户体验
       dialogVisible.value = false;
@@ -418,6 +443,11 @@ const confirmCrop = () => {
       }).finally(() => {
         uploading.value = false;
         cropperImage.value = '';
+      });
+      }).catch((compressError: any) => {
+        console.error('图片压缩失败:', compressError);
+        ElMessage.error('图片处理失败，请重试');
+        uploading.value = false;
       });
     } catch (error: any) {
       console.error('头像处理失败:', error);

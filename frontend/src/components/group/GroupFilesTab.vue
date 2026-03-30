@@ -100,7 +100,7 @@
                         <div class="el-upload__text">拖拽文件到此处，或<em>点击上传</em></div>
                         <template #tip>
                             <div class="el-upload__tip">
-                                单个文件大小不超过20MB
+                                单个文件大小不超过50MB
                             </div>
                         </template>
                     </el-upload>
@@ -371,6 +371,10 @@ const showUploadDialog = () => {
 
 // 文件上传相关处理
 const handleFileChange = (file: { raw: File }) => {
+    if (file.raw.size > 50 * 1024 * 1024) {
+        ElMessage.error('文件大小不能超过50MB');
+        return;
+    }
     fileForm.value.file = file.raw;
 };
 

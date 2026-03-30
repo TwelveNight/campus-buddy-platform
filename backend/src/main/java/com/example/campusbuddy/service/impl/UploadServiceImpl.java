@@ -37,8 +37,11 @@ public class UploadServiceImpl implements UploadService {
             "image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp"
     );
 
-    // 最大文件大小 (20MB)
-    private static final long MAX_FILE_SIZE = 20 * 1024 * 1024;
+    // 最大文件大小 (20MB，用于图片)
+    private static final long MAX_IMAGE_SIZE = 20 * 1024 * 1024;
+
+    // 小组文件最大大小 (50MB)
+    private static final long MAX_GROUP_FILE_SIZE = 50 * 1024 * 1024;
 
     @Autowired
     private QiniuConfig.QiniuProperties qiniuProperties;
@@ -190,9 +193,11 @@ public class UploadServiceImpl implements UploadService {
     @Override
     public String uploadGroupFile(Long groupId, Long userId, MultipartFile file, String folderPrefix) {
         try {
-            // 检查文件大小
-            if (file.getSize() <= 0) {
+            if (file == null || file.getSize() <= 0) {
                 throw new IllegalArgumentException("文件不能为空");
+            }
+            if (file.getSize() > MAX_GROUP_FILE_SIZE) {
+                throw new IllegalArgumentException("文件大小不能超过50MB");
             }
 
             String originalFilename = file.getOriginalFilename();
@@ -247,7 +252,7 @@ public class UploadServiceImpl implements UploadService {
         }
 
         // 检查文件大小
-        if (file.getSize() > MAX_FILE_SIZE) {
+        if (file.getSize() > MAX_IMAGE_SIZE) {
             throw new IllegalArgumentException("文件大小不能超过20MB");
         }
 
