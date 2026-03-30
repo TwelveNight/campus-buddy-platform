@@ -21,5 +21,5 @@ public interface HelpInfoCacheService {
     void clearAllHelpInfoCache();
 
     String generateListCacheKey(long page, long size, String type, String status,
-                               String publisherId, String keyword);
+                               String publisherId, String keyword, String sortBy);
 }

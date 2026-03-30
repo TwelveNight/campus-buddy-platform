@@ -106,12 +106,13 @@ public class HelpInfoCacheServiceImpl implements HelpInfoCacheService {
 
     @Override
     public String generateListCacheKey(long page, long size, String type, String status,
-            String publisherId, String keyword) {
+            String publisherId, String keyword, String sortBy) {
         StringBuilder sb = new StringBuilder("page:").append(page).append(":size:").append(size);
         if (type != null && !type.trim().isEmpty()) sb.append(":type:").append(type);
         if (status != null && !status.trim().isEmpty()) sb.append(":status:").append(status);
         if (publisherId != null && !publisherId.trim().isEmpty()) sb.append(":publisher:").append(publisherId);
         if (keyword != null && !keyword.trim().isEmpty()) sb.append(":keyword:").append(keyword.hashCode());
+        if (sortBy != null && !sortBy.trim().isEmpty()) sb.append(":sort:").append(sortBy);
         return sb.toString();
     }
 

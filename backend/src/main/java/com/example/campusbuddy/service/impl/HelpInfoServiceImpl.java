@@ -247,15 +247,23 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
     }
 
     @Override
-    public Page<HelpInfo> pageWithCache(Page<HelpInfo> page, QueryWrapper<HelpInfo> queryWrapper, String type, String status, String publisherId, String keyword) {
+    public Page<HelpInfo> pageWithCache(Page<HelpInfo> page, QueryWrapper<HelpInfo> queryWrapper, String type, String status, String publisherId, String keyword, String sortBy) {
+        // 应用排序：默认按发布时间倒序，支持 view_count 倒序
+        if ("view_count".equals(sortBy)) {
+            queryWrapper.orderByDesc("view_count").orderByDesc("created_at");
+        } else {
+            queryWrapper.orderByDesc("created_at");
+        }
+
         // 生成缓存键
         String cacheKey = helpInfoCacheService.generateListCacheKey(
-                page.getCurrent(), 
+                page.getCurrent(),
                 page.getSize(),
                 type,
                 status,
                 publisherId,
-                keyword
+                keyword,
+                sortBy
         );
         
         // 先尝试从缓存获取

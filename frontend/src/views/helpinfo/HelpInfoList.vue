@@ -3,7 +3,7 @@
         <div class="page-header animate-enter">
             <h2 class="page-title"><span class="title-icon">📋</span>校园互助</h2>
             <el-button type="primary" @click="$router.push('/helpinfo/publish')" class="publish-btn">
-                <i class="el-icon-plus"></i> 发布互助任务
+                <el-icon><Plus /></el-icon> 发布互助任务
             </el-button>
         </div>
 
@@ -12,21 +12,19 @@
                 <div class="filter-section">
                     <div class="search-container">
                         <el-input v-model="searchKeyword" placeholder="搜索关键词" clearable class="search-input"
-                            @keyup.enter="fetchData">
+                            @keyup.enter="onSearch">
                             <template #prefix>
-                                <el-icon>
-                                    <search />
-                                </el-icon>
+                                <el-icon><Search /></el-icon>
                             </template>
                             <template #append>
-                                <el-button @click="fetchData">搜索</el-button>
+                                <el-button @click="onSearch">搜索</el-button>
                             </template>
                         </el-input>
                     </div>
 
                     <el-select v-model="filterType" placeholder="类型" clearable class="filter-select"
-                        @change="fetchData">
-                        <el-option label="全部" value=""></el-option>
+                        @change="onFilterChange">
+                        <el-option label="全部类型" value=""></el-option>
                         <el-option label="课程辅导" value="COURSE_TUTORING"></el-option>
                         <el-option label="技能学习" value="SKILL_LEARNING"></el-option>
                         <el-option label="物品借用" value="ITEM_LEND"></el-option>
@@ -35,17 +33,36 @@
                     </el-select>
 
                     <el-select v-model="filterStatus" placeholder="状态" clearable class="filter-select"
-                        @change="fetchData">
-                        <el-option label="全部" value=""></el-option>
+                        @change="onFilterChange">
+                        <el-option label="全部状态" value=""></el-option>
                         <el-option label="进行中" value="OPEN"></el-option>
                         <el-option label="处理中" value="IN_PROGRESS"></el-option>
                         <el-option label="已解决" value="RESOLVED"></el-option>
                         <el-option label="已关闭" value="CLOSED"></el-option>
                     </el-select>
+
+                    <div class="sort-group">
+                        <span class="sort-label">排序：</span>
+                        <el-radio-group v-model="sortBy" @change="onFilterChange" size="small">
+                            <el-radio-button value="created_at">
+                                <el-icon><Calendar /></el-icon> 最新
+                            </el-radio-button>
+                            <el-radio-button value="view_count">
+                                <el-icon><View /></el-icon> 最热
+                            </el-radio-button>
+                        </el-radio-group>
+                    </div>
                 </div>
             </template>
 
-            <el-table v-loading="loading" :data="list" style="width: 100%" row-key="infoId" class="info-table">
+            <el-table
+                v-loading="loading"
+                :data="list"
+                style="width: 100%"
+                row-key="infoId"
+                class="info-table"
+                @sort-change="onTableSortChange"
+            >
                 <el-table-column prop="title" label="标题" min-width="180">
                     <template #default="scope">
                         <router-link :to="`/helpinfo/${scope.row.infoId}`" class="title-link">
@@ -53,45 +70,56 @@
                         </router-link>
                     </template>
                 </el-table-column>
-                <el-table-column prop="type" label="类型" width="100">
+                <el-table-column prop="type" label="类型" width="110">
                     <template #default="scope">
-                        <el-tag>{{ getTypeLabel(scope.row.type) }}</el-tag>
+                        <el-tag :type="getTypeTagType(scope.row.type)" size="small">
+                            {{ getTypeLabel(scope.row.type) }}
+                        </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="status" label="状态" width="100">
+                <el-table-column prop="status" label="状态" width="90">
                     <template #default="scope">
-                        <el-tag :type="getStatusType(scope.row.status)">{{ getStatusLabel(scope.row.status) }}</el-tag>
+                        <el-tag :type="getStatusType(scope.row.status)" size="small">
+                            {{ getStatusLabel(scope.row.status) }}
+                        </el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column prop="expectedTime" label="时间" width="120"
+                <el-table-column prop="expectedTime" label="期望时间" width="120"
                     :show-overflow-tooltip="true"></el-table-column>
-                <el-table-column prop="expectedLocation" label="地点" width="120"
+                <el-table-column prop="expectedLocation" label="地点" width="110"
                     :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="publisherId" label="发布者" width="100">
                     <template #default="scope">
                         <router-link
-                            v-if="scope.row.params && scope.row.params.publisherName"
                             :to="`/user/${scope.row.publisherId}`"
                             class="publisher-link"
                         >
-                            {{ scope.row.params.publisherName }}
-                        </router-link>
-                        <router-link
-                            v-else
-                            :to="`/user/${scope.row.publisherId}`"
-                            class="publisher-link"
-                        >
-                            用户{{ scope.row.publisherId }}
+                            {{ scope.row.params?.publisherName || `用户${scope.row.publisherId}` }}
                         </router-link>
                     </template>
                 </el-table-column>
-                <el-table-column prop="createdAt" label="发布时间" width="180">
+                <el-table-column
+                    prop="createdAt"
+                    label="发布时间"
+                    width="155"
+                    sortable="custom"
+                    :sort-orders="['descending', 'ascending']"
+                    :class-name="sortBy === 'created_at' ? 'active-sort-col' : ''"
+                >
                     <template #default="scope">
                         {{ formatDate(scope.row.createdAt) }}
                     </template>
                 </el-table-column>
-                <el-table-column prop="viewCount" label="浏览数" width="80" align="center"></el-table-column>
-                <el-table-column label="操作" width="100" fixed="right">
+                <el-table-column
+                    prop="viewCount"
+                    label="浏览数"
+                    width="90"
+                    align="center"
+                    sortable="custom"
+                    :sort-orders="['descending', 'ascending']"
+                    :class-name="sortBy === 'view_count' ? 'active-sort-col' : ''"
+                ></el-table-column>
+                <el-table-column label="操作" width="90" fixed="right">
                     <template #default="scope">
                         <el-button type="primary" size="small" link
                             @click="$router.push(`/helpinfo/${scope.row.infoId}`)">
@@ -114,7 +142,7 @@
 import { ref, onMounted } from 'vue'
 import { fetchHelpInfoList } from '../../api/helpinfo'
 import { ElMessage } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Plus, Calendar, View } from '@element-plus/icons-vue'
 
 const list = ref<any[]>([])
 const loading = ref(true)
@@ -124,6 +152,7 @@ const total = ref(0)
 const searchKeyword = ref('')
 const filterType = ref('')
 const filterStatus = ref('')
+const sortBy = ref('created_at')
 
 onMounted(() => {
     fetchData()
@@ -137,7 +166,8 @@ async function fetchData() {
             size: pageSize.value,
             keyword: searchKeyword.value || undefined,
             type: filterType.value || undefined,
-            status: filterStatus.value || undefined
+            status: filterStatus.value || undefined,
+            sortBy: sortBy.value
         })
         if (res.data.code === 200) {
             list.value = res.data.data.records || res.data.data || []
@@ -150,6 +180,27 @@ async function fetchData() {
     } finally {
         loading.value = false
     }
+}
+
+// 搜索时重置页码
+function onSearch() {
+    currentPage.value = 1
+    fetchData()
+}
+
+// 筛选/排序变更时重置页码
+function onFilterChange() {
+    currentPage.value = 1
+    fetchData()
+}
+
+// 点击表头排序列
+function onTableSortChange({ prop, order }: { prop: string; order: string | null }) {
+    if (!order) return
+    if (prop === 'createdAt') sortBy.value = 'created_at'
+    else if (prop === 'viewCount') sortBy.value = 'view_count'
+    currentPage.value = 1
+    fetchData()
 }
 
 function handleSizeChange(val: number) {
@@ -196,11 +247,20 @@ function getTypeLabel(type: string) {
     return typeMap[type] || type
 }
 
-// 格式化日期
+function getTypeTagType(type: string): string {
+    const typeTagMap: Record<string, string> = {
+        'COURSE_TUTORING': 'primary',
+        'SKILL_LEARNING': 'success',
+        'ITEM_LEND': 'warning',
+        'ITEM_EXCHANGE': 'danger',
+        'TEAM_UP': 'info'
+    }
+    return typeTagMap[type] || ''
+}
+
 function formatDate(dateString: string | Date | number) {
     if (!dateString) return ''
     try {
-        // 处理数字类型的时间戳（毫秒）
         const date = typeof dateString === 'number' ? new Date(dateString) :
             (typeof dateString === 'string' ? new Date(dateString) : dateString)
         return date.toLocaleString('zh-CN', {
@@ -208,11 +268,9 @@ function formatDate(dateString: string | Date | number) {
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+            minute: '2-digit'
         })
     } catch (error) {
-        console.error('日期格式化错误:', error, dateString)
         return String(dateString)
     }
 }
@@ -286,8 +344,8 @@ function formatDate(dateString: string | Date | number) {
 .filter-section {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  padding: 16px 8px;
+  gap: 12px;
+  padding: 12px 8px;
   align-items: center;
   background: linear-gradient(to right, rgba(var(--el-color-primary-rgb), 0.05), transparent);
   border-radius: 8px;
@@ -299,7 +357,7 @@ function formatDate(dateString: string | Date | number) {
 
 .search-container {
   flex: 1;
-  min-width: 280px;
+  min-width: 240px;
 }
 
 .search-input {
@@ -315,8 +373,21 @@ function formatDate(dateString: string | Date | number) {
   min-width: 120px;
 }
 
+.sort-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 4px;
+}
+
+.sort-label {
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+  white-space: nowrap;
+}
+
 .info-table {
-  margin-top: 16px;
+  margin-top: 8px;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -327,6 +398,12 @@ function formatDate(dateString: string | Date | number) {
   --el-table-header-bg-color: rgba(40, 40, 40, 0.8) !important;
   --el-table-header-text-color: #ffffff !important;
   --el-table-row-hover-bg-color: rgba(var(--el-color-primary-rgb), 0.15) !important;
+}
+
+/* 当前排序列高亮表头 */
+:deep(.active-sort-col .cell) {
+  color: var(--el-color-primary);
+  font-weight: 600;
 }
 
 .title-link {
@@ -370,6 +447,12 @@ function formatDate(dateString: string | Date | number) {
   text-decoration: underline;
 }
 
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 0 4px;
+}
+
 .animate-enter {
   animation: slideUp 0.6s ease-out;
 }
@@ -386,21 +469,13 @@ function formatDate(dateString: string | Date | number) {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 /* 移动端适配 */
@@ -408,24 +483,29 @@ function formatDate(dateString: string | Date | number) {
   .helpinfo-list-page {
     padding: 16px 12px;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .filter-section {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-container {
     width: 100%;
   }
-  
+
   .filter-select {
     width: 100%;
+  }
+
+  .sort-group {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 </style>

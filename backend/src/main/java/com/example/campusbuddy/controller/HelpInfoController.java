@@ -82,6 +82,7 @@ public class HelpInfoController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String publisherId,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sortBy,
             HttpServletRequest request) {
         QueryWrapper<HelpInfo> wrapper = new QueryWrapper<>();
         if (type != null)
@@ -119,7 +120,7 @@ public class HelpInfoController {
         }
         
         // 使用带缓存的分页查询方法
-        IPage<HelpInfo> result = helpInfoService.pageWithCache(new Page<>(page, size), wrapper, type, status, publisherId, keyword);
+        IPage<HelpInfo> result = helpInfoService.pageWithCache(new Page<>(page, size), wrapper, type, status, publisherId, keyword, sortBy);
 
         // 处理结果，添加发布者名称信息
         for (HelpInfo info : result.getRecords()) {

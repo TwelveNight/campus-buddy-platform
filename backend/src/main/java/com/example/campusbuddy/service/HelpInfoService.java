@@ -65,5 +65,5 @@ public interface HelpInfoService extends IService<HelpInfo> {
      * @param keyword 关键词
      * @return 分页查询结果
      */
-    Page<HelpInfo> pageWithCache(Page<HelpInfo> page, QueryWrapper<HelpInfo> queryWrapper, String type, String status, String publisherId, String keyword);
+    Page<HelpInfo> pageWithCache(Page<HelpInfo> page, QueryWrapper<HelpInfo> queryWrapper, String type, String status, String publisherId, String keyword, String sortBy);
 }
