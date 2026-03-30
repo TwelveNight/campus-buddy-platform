@@ -2,9 +2,7 @@ package com.example.campusbuddy.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.entity.Review;
-import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.ReviewMapper;
-import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.CreditScoreCalculationService;
 import com.example.campusbuddy.service.UserCacheService;
 import lombok.extern.slf4j.Slf4j;
@@ -18,80 +16,82 @@ import java.util.stream.Collectors;
 
 /**
  * 信用积分计算服务实现
+ * <p>
+ * 采用贝叶斯平均算法：每位用户初始拥有 PRIOR_COUNT 条 PRIOR_STAR 星的虚拟评价作为先验，
+ * 随着真实评价增加，虚拟评价被逐渐"稀释"，最终分数趋近于真实平均水平。
+ * 公式：bayesianStar = (n × avgStar + m × priorStar) / (n + m)
+ *       finalScore  = round(bayesianStar / 5.0 × 100)
  */
 @Service
 @Slf4j
 public class CreditScoreCalculationServiceImpl implements CreditScoreCalculationService {
-    
+
     @Autowired
     private ReviewMapper reviewMapper;
-    
-    @Autowired
-    private UserMapper userMapper;
-    
+
     @Autowired
     private UserCacheService userCacheService;
-    
-    // 配置参数
-    private static final int BASE_CREDIT_SCORE = 60; // 基础信用分
-    private static final int MAX_CREDIT_SCORE = 100; // 最高信用分
-    private static final int MIN_CREDIT_SCORE = 0; // 最低信用分
+
+    // 基础配置
+    private static final int BASE_CREDIT_SCORE = 70; // 无评价时的基础分（对应 3.5星先验）
+    private static final int MAX_CREDIT_SCORE = 100;
+    private static final int MIN_CREDIT_SCORE = 0;
     private static final long CACHE_EXPIRE_SECONDS = 3600; // 信用积分缓存1小时
-    
-    // 权重配置
-    private static final double TIME_DECAY_FACTOR = 0.1; // 时间衰减因子
-    private static final double REVIEW_COUNT_WEIGHT = 0.2; // 评价数量权重
-    private static final double REVIEWER_CREDIT_WEIGHT = 0.1; // 评价者信用权重
-    
-    // 模块权重配置
-    private static final Map<String, Double> MODULE_WEIGHTS = Map.of(
-        "HELP", 1.0,
-        "COURSE_TUTORING", 1.2,
-        "SKILL_LEARNING", 1.1,
-        "ITEM_LEND", 0.9,
-        "GROUP", 1.0,
-        "RESOURCE", 0.8
-    );
+
+    // 贝叶斯先验参数
+    private static final double PRIOR_STAR = 3.5;  // 先验星级（3.5星 = 70分）
+    private static final int    PRIOR_COUNT = 10;  // 先验强度（相当于10条虚拟评价）
+
+    // 评价类型权重：发布者对帮助者的评价更能反映服务质量，权重略高
+    private static final double WEIGHT_PUBLISHER_TO_HELPER = 1.2;
+    private static final double WEIGHT_HELPER_TO_PUBLISHER = 1.0;
     
     @Override
     public Integer calculateCreditScore(Long userId) {
         log.info("开始计算用户信用积分: userId={}", userId);
-        
+
         // 先从缓存获取
         Integer cachedScore = userCacheService.getCachedCreditScore(userId);
         if (cachedScore != null) {
             log.debug("从缓存获取信用积分: userId={}, score={}", userId, cachedScore);
             return cachedScore;
         }
-        
+
         // 获取用户所有评价
         List<Review> userReviews = reviewMapper.selectList(
-            new QueryWrapper<Review>().eq("reviewed_user_id", userId).orderByDesc("created_at")
+            new QueryWrapper<Review>().eq("reviewed_user_id", userId)
         );
-        
+
         if (userReviews.isEmpty()) {
             log.info("用户暂无评价记录，返回基础信用分: userId={}, baseScore={}", userId, BASE_CREDIT_SCORE);
-            // 缓存基础信用分
             userCacheService.cacheCreditScore(userId, BASE_CREDIT_SCORE, CACHE_EXPIRE_SECONDS);
             return BASE_CREDIT_SCORE;
         }
-        
-        // 计算加权信用分
-        double weightedScore = calculateWeightedScore(userReviews);
-        
-        // 应用评价数量加分
-        double reviewCountBonus = calculateReviewCountBonus(userReviews.size());
-        
-        // 计算最终信用分
-        int finalScore = (int) Math.round(BASE_CREDIT_SCORE + weightedScore + reviewCountBonus);
+
+        // 贝叶斯加权平均：不同评价类型赋予不同权重
+        // PUBLISHER_TO_HELPER（别人评价你的帮助质量）权重 1.2，更能反映服务能力
+        // HELPER_TO_PUBLISHER（别人评价你作为求助方的态度）权重 1.0
+        double weightedStarSum = 0.0;
+        double totalWeight = 0.0;
+        for (Review r : userReviews) {
+            double w = "PUBLISHER_TO_HELPER".equals(r.getReviewType())
+                    ? WEIGHT_PUBLISHER_TO_HELPER : WEIGHT_HELPER_TO_PUBLISHER;
+            weightedStarSum += r.getScore() * w;
+            totalWeight += w;
+        }
+        double weightedAvgStar = totalWeight > 0 ? weightedStarSum / totalWeight : PRIOR_STAR;
+
+        // 贝叶斯平均：用等效评价数量（totalWeight）代替评价条数
+        double bayesianStar = (weightedStarSum + PRIOR_COUNT * PRIOR_STAR) / (totalWeight + PRIOR_COUNT);
+
+        // 映射到 0-100 分制
+        int finalScore = (int) Math.round(bayesianStar / 5.0 * 100);
         finalScore = Math.max(MIN_CREDIT_SCORE, Math.min(MAX_CREDIT_SCORE, finalScore));
-        
-        log.info("信用积分计算完成: userId={}, finalScore={}, reviewCount={}, weightedScore={}, countBonus={}", 
-                 userId, finalScore, userReviews.size(), weightedScore, reviewCountBonus);
-        
-        // 缓存计算结果
+
+        log.info("信用积分计算完成: userId={}, finalScore={}, reviewCount={}, weightedAvgStar={}, bayesianStar={}",
+                 userId, finalScore, userReviews.size(), weightedAvgStar, bayesianStar);
+
         userCacheService.cacheCreditScore(userId, finalScore, CACHE_EXPIRE_SECONDS);
-        
         return finalScore;
     }
     
@@ -147,7 +147,7 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
     @Override
     public String getCreditLevel(Integer creditScore) {
         if (creditScore == null) return "未评级";
-        
+
         if (creditScore >= 90) return "优秀";
         else if (creditScore >= 80) return "良好";
         else if (creditScore >= 70) return "中等";
@@ -195,106 +195,6 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
         
         return new CreditScoreStats(creditScore, creditLevel, totalReviews, averageScore, 
                                    recentReviewCount, recentAverageScore, trend);
-    }
-    
-    /**
-     * 计算加权评分
-     * 综合考虑评价的时间衰减、模块权重、评价者信用等因素，计算加权评分
-     */
-    private double calculateWeightedScore(List<Review> reviews) {
-        if (reviews.isEmpty()) return 0.0;
-        
-        double totalWeight = 0.0;
-        double weightedSum = 0.0;
-        LocalDateTime now = LocalDateTime.now();
-        
-        // 按时间排序，优先考虑最近的评价
-        List<Review> sortedReviews = new ArrayList<>(reviews);
-        sortedReviews.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
-        
-        for (Review review : sortedReviews) {
-            try {
-                // 基础分数（转换为-20到+20的范围）
-                // 1分=-20分，3分=0分，5分=+20分
-                double baseScore = ((review.getScore() - 3.0) / 2.0) * 20;
-                
-                // 时间权重计算（越近的评价权重越高）
-                LocalDateTime createdTime = review.getCreatedAt().toInstant()
-                    .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
-                long daysAgo = ChronoUnit.DAYS.between(createdTime, now);
-                
-                // 时间衰减函数：一年后权重降低到约37%，两年后约14%
-                double timeWeight = Math.exp(-daysAgo * TIME_DECAY_FACTOR / 365);
-                
-                // 模块权重 - 根据不同模块的重要性设定不同权重
-                double moduleWeight = MODULE_WEIGHTS.getOrDefault(review.getModuleType(), 1.0);
-                
-                // 评价者信用权重 - 信用分高的用户评价更可信
-                double reviewerWeight = getReviewerCreditWeight(review.getReviewerUserId());
-                
-                // 评价内容长度权重 - 有内容的评价比无内容的评价更有参考价值
-                double contentWeight = 1.0;
-                if (review.getContent() != null && !review.getContent().trim().isEmpty()) {
-                    // 有详细评价内容的权重略高
-                    contentWeight = 1.2;
-                }
-                
-                // 综合权重计算
-                double finalWeight = timeWeight * moduleWeight * reviewerWeight * contentWeight;
-                
-                // 记录日志，便于调试
-                if (log.isDebugEnabled()) {
-                    log.debug("评价加权计算: reviewId={}, score={}, baseScore={}, timeWeight={}, moduleWeight={}, " +
-                             "reviewerWeight={}, contentWeight={}, finalWeight={}",
-                             review.getReviewId(), review.getScore(), baseScore, timeWeight, 
-                             moduleWeight, reviewerWeight, contentWeight, finalWeight);
-                }
-                
-                // 累加加权分数
-                weightedSum += baseScore * finalWeight;
-                totalWeight += finalWeight;
-            } catch (Exception e) {
-                // 单个评价计算出错不应影响整体计算
-                log.warn("计算单个评价权重出错: reviewId={}", review.getReviewId(), e);
-            }
-        }
-        
-        // 返回加权平均分
-        double result = totalWeight > 0 ? weightedSum / totalWeight : 0.0;
-        log.debug("加权分数计算结果: weightedSum={}, totalWeight={}, result={}", weightedSum, totalWeight, result);
-        return result;
-    }
-    
-    /**
-     * 计算评价数量加分
-     */
-    private double calculateReviewCountBonus(int reviewCount) {
-        // 使用对数函数，让加分随评价数量增长但增长率递减
-        if (reviewCount <= 0) return 0;
-        
-        // 最多加20分，评价数量达到100时接近满分
-        return Math.min(20, Math.log(reviewCount + 1) * 5);
-    }
-    
-    /**
-     * 获取评价者信用权重
-     */
-    private double getReviewerCreditWeight(Long reviewerUserId) {
-        try {
-            // 从缓存获取评价者信用分
-            Integer reviewerCredit = userCacheService.getCachedCreditScore(reviewerUserId);
-            if (reviewerCredit == null) {
-                // 如果缓存中没有，从数据库获取
-                User reviewer = userMapper.selectById(reviewerUserId);
-                reviewerCredit = reviewer != null ? reviewer.getCreditScore() : BASE_CREDIT_SCORE;
-            }
-            
-            // 将信用分转换为权重（60分=1.0，100分=1.4，0分=0.6）
-            return 0.6 + (reviewerCredit / 100.0) * 0.8;
-        } catch (Exception e) {
-            log.warn("获取评价者信用权重失败: reviewerUserId={}", reviewerUserId, e);
-            return 1.0; // 默认权重
-        }
     }
     
     /**
