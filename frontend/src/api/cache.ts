@@ -8,7 +8,6 @@ export interface CacheStats {
   postDetailCacheCount: number
   // 互助信息缓存相关计数
   helpInfoListCacheCount: number
-  helpInfoDetailCacheCount: number
   helpInfoSearchCacheCount: number
   totalCacheCount: number
   redisInfo: {
@@ -109,13 +108,6 @@ export interface CacheDetails {
      */
     clearAllHelpInfo: () => {
       return request.delete('/api/cache/clear/helpinfo').then(res => res.data.data)
-    },
-
-    /**
-     * 清空指定互助信息的详情缓存
-     */
-    clearHelpInfoDetail: (infoId: number) => {
-      return request.delete(`/api/cache/clear/helpinfo-detail/${infoId}`).then(res => res.data.data)
     },
 
     /**

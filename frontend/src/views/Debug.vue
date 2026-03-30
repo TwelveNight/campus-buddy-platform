@@ -105,7 +105,6 @@
                   <el-descriptions-item label="小组帖子列表缓存">{{ cacheStats.groupPostsCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="帖子详情缓存">{{ cacheStats.postDetailCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="互助信息列表缓存">{{ cacheStats.helpInfoListCacheCount || 0 }}</el-descriptions-item>
-                  <el-descriptions-item label="互助信息详情缓存">{{ cacheStats.helpInfoDetailCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="互助信息搜索缓存">{{ cacheStats.helpInfoSearchCacheCount || 0 }}</el-descriptions-item>
                   <el-descriptions-item label="总缓存数">
                     <el-tag type="primary">{{ cacheStats.totalCacheCount }}</el-tag>
@@ -363,30 +362,6 @@
                   </el-button>
                 </div>
 
-                <!-- 互助信息详情缓存操作 -->
-                <el-divider content-position="left">互助信息详情缓存</el-divider>
-                <div class="input-action-group">
-                  <div class="input-with-label">
-                    <label class="input-label">互助ID:</label>
-                    <el-input-number 
-                      v-model="helpInfoIdInput" 
-                      :min="1" 
-                      placeholder="请输入互助信息ID"
-                      class="input-field"
-                      controls-position="right"
-                    />
-                  </div>
-                  <el-button 
-                    type="warning" 
-                    :loading="clearingHelpInfoDetailCache" 
-                    @click="clearHelpInfoDetailCache"
-                    icon="DocumentCopy"
-                    :disabled="!helpInfoIdInput"
-                    class="action-btn"
-                  >
-                    清空互助信息详情缓存
-                  </el-button>
-                </div>
               </el-card>
             </div>
           </div>
@@ -431,8 +406,6 @@ const postIdInput = ref<number | null>(null)
 // 互助信息缓存相关状态
 const clearingAllHelpInfoCache = ref(false)
 const clearingHelpInfoListCache = ref(false)
-const clearingHelpInfoDetailCache = ref(false)
-const helpInfoIdInput = ref<number | null>(null)
 const cacheStats = ref<CacheStats | null>(null)
 const cacheDetails = ref<CacheDetails | null>(null)
 
@@ -809,38 +782,7 @@ async function clearHelpInfoListCache() {
   }
 }
 
-// 清空互助信息详情缓存
-async function clearHelpInfoDetailCache() {
-  if (!helpInfoIdInput.value) {
-    ElMessage.warning('请输入互助信息ID')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(
-      `确定要清空互助信息ID ${helpInfoIdInput.value} 的详情缓存吗？`,
-      '确认清空互助信息详情缓存',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning',
-      }
-    )
-
-    clearingHelpInfoDetailCache.value = true
-    await cacheApi.clearHelpInfoDetail(helpInfoIdInput.value)
-    ElMessage.success(`互助信息ID ${helpInfoIdInput.value} 的详情缓存已清空`)
-    // 刷新统计信息
-    await loadCacheStats()
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('清空互助信息详情缓存失败')
-      console.error('清空互助信息详情缓存失败:', error)
-    }
-  } finally {
-    clearingHelpInfoDetailCache.value = false
-  }
-}
+// 清空互助信息列表缓存结束
 
 
 </script>

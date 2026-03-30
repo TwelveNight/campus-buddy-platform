@@ -37,32 +37,30 @@ public class CacheController {
     public R<Map<String, Object>> getCacheStats() {
         try {
             Map<String, Object> stats = new HashMap<>();
-            
-            // 获取不同类型缓存的key数量
+
+            // 用户实体缓存（campus:user:{id}，排除credit子前缀）
             Set<String> userKeys = redisTemplate.keys("campus:user:*");
-            Set<String> userVOKeys = redisTemplate.keys("campus:user:vo:*");
             Set<String> creditScoreKeys = redisTemplate.keys("campus:user:credit:*");
-            
+            int userCacheCount = (userKeys != null ? userKeys.size() : 0)
+                               - (creditScoreKeys != null ? creditScoreKeys.size() : 0);
+
             // 获取帖子相关缓存数量
             Set<String> groupPostsKeys = redisTemplate.keys("campus:group:posts:*");
             Set<String> postDetailKeys = redisTemplate.keys("campus:post:detail:*");
 
             // 获取互助信息相关缓存数量
             Set<String> helpInfoListKeys = redisTemplate.keys("campus:helpinfo:list:*");
-            Set<String> helpInfoDetailKeys = redisTemplate.keys("campus:helpinfo:detail:*");
             Set<String> helpInfoSearchKeys = redisTemplate.keys("campus:helpinfo:search:*");
-            
-            stats.put("userCacheCount", userKeys != null ? userKeys.size() : 0);
-            stats.put("userVOCacheCount", userVOKeys != null ? userVOKeys.size() : 0);
+
+            stats.put("userCacheCount", Math.max(userCacheCount, 0));
             stats.put("creditScoreCacheCount", creditScoreKeys != null ? creditScoreKeys.size() : 0);
-            
+
             // 添加帖子缓存统计
             stats.put("groupPostsCacheCount", groupPostsKeys != null ? groupPostsKeys.size() : 0);
             stats.put("postDetailCacheCount", postDetailKeys != null ? postDetailKeys.size() : 0);
 
             // 添加互助信息缓存统计
             stats.put("helpInfoListCacheCount", helpInfoListKeys != null ? helpInfoListKeys.size() : 0);
-            stats.put("helpInfoDetailCacheCount", helpInfoDetailKeys != null ? helpInfoDetailKeys.size() : 0);
             stats.put("helpInfoSearchCacheCount", helpInfoSearchKeys != null ? helpInfoSearchKeys.size() : 0);
             
             // 总缓存数量
