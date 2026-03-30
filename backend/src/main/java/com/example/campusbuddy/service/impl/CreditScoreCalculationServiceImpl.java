@@ -1,6 +1,5 @@
 package com.example.campusbuddy.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.entity.Review;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.ReviewMapper;
@@ -58,9 +57,7 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
         }
 
         // 获取用户所有评价
-        List<Review> userReviews = reviewMapper.selectList(
-            new QueryWrapper<Review>().eq("reviewed_user_id", userId)
-        );
+        List<Review> userReviews = reviewMapper.selectByReviewedUserId(userId);
 
         if (userReviews.isEmpty()) {
             log.info("用户暂无评价记录，返回基础信用分: userId={}, baseScore={}", userId, BASE_CREDIT_SCORE);
@@ -134,9 +131,7 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
         log.info("获取用户信用积分统计: userId={}", userId);
         
         // 获取所有评价
-        List<Review> allReviews = reviewMapper.selectList(
-            new QueryWrapper<Review>().eq("reviewed_user_id", userId).orderByDesc("created_at")
-        );
+        List<Review> allReviews = reviewMapper.selectByReviewedUserIdOrderByCreatedAtDesc(userId);
         
         if (allReviews.isEmpty()) {
             return new CreditScoreStats(BASE_CREDIT_SCORE, getCreditLevel(BASE_CREDIT_SCORE), 

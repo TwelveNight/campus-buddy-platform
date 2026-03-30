@@ -216,9 +216,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
             }
             
             // 获取申请数量
-            QueryWrapper<HelpApplication> appQueryWrapper = new QueryWrapper<>();
-            appQueryWrapper.eq("info_id", helpInfo.getInfoId());
-            long applicationCount = helpApplicationMapper.selectCount(appQueryWrapper);
+            long applicationCount = helpApplicationMapper.countByInfoId(helpInfo.getInfoId());
             vo.setApplicationCount((int) applicationCount);
             
             return vo;

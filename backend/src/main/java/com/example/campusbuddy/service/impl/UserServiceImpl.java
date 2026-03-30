@@ -47,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional
     public UserVO register(RegisterDTO dto) {
         // 检查用户名是否已存在
-        if (userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername())) != null) {
+        if (userMapper.findByUsername(dto.getUsername()) != null) {
             throw new IllegalArgumentException("用户名已存在");
         }
         User user = new User();
@@ -74,7 +74,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public String login(LoginDTO dto) {
         // 登录必须从DB取用户（含密码哈希），缓存中不存密码
-        User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername()));
+        User user = userMapper.findByUsername(dto.getUsername());
 
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("用户名或密码错误");
@@ -188,9 +188,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User getUserByUsername(String username) {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("username", username);
-        return userMapper.selectOne(queryWrapper);
+        return userMapper.findByUsername(username);
+    }
+
+    @Override
+    public List<User> listActiveUsers() {
+        return userMapper.findAllActive();
     }
 
     @Override

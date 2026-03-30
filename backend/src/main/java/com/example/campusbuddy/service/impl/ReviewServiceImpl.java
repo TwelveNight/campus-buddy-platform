@@ -1,6 +1,5 @@
 package com.example.campusbuddy.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.entity.Review;
 import com.example.campusbuddy.entity.User;
@@ -165,10 +164,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
 
             // 检查是否已评价
-            Long count = reviewMapper.selectCount(new QueryWrapper<Review>()
-                    .eq("reviewer_user_id", userId)
-                    .eq("related_info_id", helpInfoId)
-                    .eq("review_type", "PUBLISHER_TO_HELPER"));
+            Long count = reviewMapper.countByReviewerAndInfoAndType(userId, helpInfoId, "PUBLISHER_TO_HELPER");
             return count == 0;
         }
         // 帮助者评价发布者
@@ -180,10 +176,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
 
             // 检查是否已评价
-            Long count = reviewMapper.selectCount(new QueryWrapper<Review>()
-                    .eq("reviewer_user_id", userId)
-                    .eq("related_info_id", helpInfoId)
-                    .eq("review_type", "HELPER_TO_PUBLISHER"));
+            Long count = reviewMapper.countByReviewerAndInfoAndType(userId, helpInfoId, "HELPER_TO_PUBLISHER");
             return count == 0;
         }
 
@@ -218,17 +211,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
 
         // 检查发布者是否已评价
-        Long publisherReviewCount = reviewMapper.selectCount(new QueryWrapper<Review>()
-                .eq("reviewer_user_id", helpInfo.getPublisherId())
-                .eq("related_info_id", helpInfoId)
-                .eq("review_type", "PUBLISHER_TO_HELPER"));
+        Long publisherReviewCount = reviewMapper.countByReviewerAndInfoAndType(
+                helpInfo.getPublisherId(), helpInfoId, "PUBLISHER_TO_HELPER");
         result.put("publisherHasReviewed", publisherReviewCount > 0);
 
         // 检查帮助者是否已评价
-        Long helperReviewCount = reviewMapper.selectCount(new QueryWrapper<Review>()
-                .eq("reviewer_user_id", application.getApplicantId())
-                .eq("related_info_id", helpInfoId)
-                .eq("review_type", "HELPER_TO_PUBLISHER"));
+        Long helperReviewCount = reviewMapper.countByReviewerAndInfoAndType(
+                application.getApplicantId(), helpInfoId, "HELPER_TO_PUBLISHER");
         result.put("helperHasReviewed", helperReviewCount > 0);
 
         return result;
@@ -247,8 +236,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 userId, type, score, moduleType, page, size);
 
         // 先检查数据库中是否有自评价数据（reviewer_user_id = reviewed_user_id）
-        Long selfReviewCount = reviewMapper.selectCount(
-                new QueryWrapper<Review>().eq("reviewer_user_id", userId).eq("reviewed_user_id", userId));
+        long selfReviewCount = reviewMapper.countSelfReviews(userId);
 
         if (selfReviewCount > 0) {
             log.warn("警告: 数据库中存在自评价记录，用户ID=" + userId + ", 数量=" + selfReviewCount);
@@ -349,17 +337,13 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         boolean isHelper = userId.equals(application.getApplicantId());
 
         // 检查发布者是否已评价
-        Long publisherReviewCount = reviewMapper.selectCount(new QueryWrapper<Review>()
-                .eq("reviewer_user_id", helpInfo.getPublisherId())
-                .eq("related_info_id", helpInfoId)
-                .eq("review_type", "PUBLISHER_TO_HELPER"));
+        Long publisherReviewCount = reviewMapper.countByReviewerAndInfoAndType(
+                helpInfo.getPublisherId(), helpInfoId, "PUBLISHER_TO_HELPER");
         boolean publisherHasReviewed = publisherReviewCount > 0;
 
         // 检查帮助者是否已评价
-        Long helperReviewCount = reviewMapper.selectCount(new QueryWrapper<Review>()
-                .eq("reviewer_user_id", application.getApplicantId())
-                .eq("related_info_id", helpInfoId)
-                .eq("review_type", "HELPER_TO_PUBLISHER"));
+        Long helperReviewCount = reviewMapper.countByReviewerAndInfoAndType(
+                application.getApplicantId(), helpInfoId, "HELPER_TO_PUBLISHER");
         boolean helperHasReviewed = helperReviewCount > 0;
 
         // 设置结果

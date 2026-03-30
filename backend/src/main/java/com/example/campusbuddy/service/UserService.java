@@ -2,17 +2,13 @@ package com.example.campusbuddy.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.campusbuddy.dto.LoginDTO;
 import com.example.campusbuddy.dto.PasswordUpdateDTO;
 import com.example.campusbuddy.dto.ProfileUpdateDTO;
 import com.example.campusbuddy.dto.RegisterDTO;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.vo.UserVO;
-import org.springframework.beans.BeanUtils;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public interface UserService extends IService<User> {
@@ -25,28 +21,31 @@ public interface UserService extends IService<User> {
     UserVO updateProfile(Long userId, ProfileUpdateDTO dto);
 
     void updatePassword(Long userId, PasswordUpdateDTO dto);
-    
+
     User getUserByUsername(String username);
-    
+
+    /** 查询所有活跃用户 */
+    List<User> listActiveUsers();
+
     /**
      * 检查用户是否为管理员
-     * 
+     *
      * @param userId 用户ID
      * @return 是否为管理员
      */
     boolean isAdmin(Long userId);
-    
+
     /**
      * 检查用户是否存在
-     * 
+     *
      * @param userId 用户ID
      * @return 是否存在
      */
     boolean exists(Long userId);
-    
+
     /**
      * 根据关键词搜索用户
-     * 
+     *
      * @param keyword 关键词(用户名、昵称或联系方式)
      * @param page 页码
      * @param size 每页大小

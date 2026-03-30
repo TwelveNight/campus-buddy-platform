@@ -36,10 +36,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
     @Transactional
     public Long createSystemNotification(NotificationCreateDTO dto) {
         // 首先获取所有活跃用户
-        List<User> activeUsers = userService.list(
-            new LambdaQueryWrapper<User>()
-                .eq(User::getStatus, "ACTIVE")
-        );
+        List<User> activeUsers = userService.listActiveUsers();
         
         Long firstNotificationId = null;
         
