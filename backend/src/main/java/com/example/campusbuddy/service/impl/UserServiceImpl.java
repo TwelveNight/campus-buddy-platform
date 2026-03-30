@@ -98,9 +98,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
 
-        // 缓存登录 token (设置较短的过期时间，如 2 小时)
-        userCacheService.cacheUserToken(user.getUserId(), token, 7200);
-
         return token;
     }
 
@@ -172,15 +169,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         try {
             // 先清除旧的用户信息缓存（但保留token缓存）
             userCacheService.evictUserCache(userId);
-            
+
             // 如果有用户名，也清除用户名缓存
             if (user.getUsername() != null) {
                 userCacheService.evictUserCacheByUsername(user.getUsername());
             }
-            
-            // 清除搜索缓存（因为用户信息可能影响搜索结果）
-            userCacheService.evictSearchCache();
-            
+
             // 重新缓存更新后的用户信息
             userCacheService.cacheUser(user);
             
@@ -232,12 +226,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Page<UserVO> searchUsers(String keyword, Integer page, Integer size) {
-        // 先尝试从缓存获取搜索结果
-        Page<UserVO> cachedResult = userCacheService.getSearchResultFromCache(keyword, page, size);
-        if (cachedResult != null) {
-            return cachedResult;
-        }
-
         // 创建分页对象
         Page<User> userPage = new Page<>(page, size);
 
@@ -269,9 +257,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             voList.add(vo);
         }
         voPage.setRecords(voList);
-
-        // 缓存搜索结果 (设置较短的过期时间，如 10 分钟)
-        userCacheService.cacheSearchResult(keyword, page, size, voPage, 600);
 
         return voPage;
     }
@@ -322,9 +307,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 清除缓存
         if (result) {
             userCacheService.evictUserCache(userId);
-            if ("BANNED".equals(status)) {
-                userCacheService.evictUserToken(userId);
-            }
             // 启用账户时，刷新用户缓存到Redis
             if ("ACTIVE".equals(status)) {
                 userCacheService.cacheUser(user);
