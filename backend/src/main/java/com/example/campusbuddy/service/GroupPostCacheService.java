@@ -3,8 +3,6 @@ package com.example.campusbuddy.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.campusbuddy.vo.GroupPostVO;
 
-import java.util.List;
-
 /**
  * 帖子缓存服务接口
  */
@@ -18,15 +16,9 @@ public interface GroupPostCacheService {
 
     GroupPostVO getCachedPostDetail(Long postId);
 
-    void cacheHotPosts(List<GroupPostVO> posts, long expireSeconds);
-
-    List<GroupPostVO> getCachedHotPosts();
-
     void evictGroupPostsCache(Long groupId);
 
     void evictPostDetailCache(Long postId);
-
-    void evictHotPostsCache();
 
     void evictAllPostsCache();
 }

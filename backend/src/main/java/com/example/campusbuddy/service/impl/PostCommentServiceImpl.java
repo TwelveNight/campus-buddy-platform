@@ -46,7 +46,6 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
             // 清除相关缓存，因为评论数发生了变化
             postCacheService.evictPostDetailCache(comment.getPostId());
             postCacheService.evictGroupPostsCache(post.getGroupId());
-            postCacheService.evictHotPostsCache();
         }
         
         return comment.getCommentId();
@@ -84,7 +83,6 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
                 // 清除相关缓存，因为评论数发生了变化
                 postCacheService.evictPostDetailCache(comment.getPostId());
                 postCacheService.evictGroupPostsCache(post.getGroupId());
-                postCacheService.evictHotPostsCache();
             }
         }
         

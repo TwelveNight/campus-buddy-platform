@@ -275,8 +275,6 @@ public class GroupPostController {
             postCacheService.evictPostDetailCache(postId);
             // 清除小组帖子列表缓存
             postCacheService.evictGroupPostsCache(groupId);
-            // 清除热门帖子缓存
-            postCacheService.evictHotPostsCache();
         }
         
         return success ? R.ok("帖子删除成功", null) : R.fail("删除失败，请确认您有权限删除该帖子");

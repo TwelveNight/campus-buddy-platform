@@ -45,9 +45,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     @Autowired
     private UserCacheService userCacheService;
 
-    // 缓存过期时间（秒）
-    private static final long HOT_POSTS_CACHE_EXPIRE = 1800; // 30分钟
-
     @Override
     public IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize) {
         // 构建查询条件
@@ -167,7 +164,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             // 清除相关缓存，因为点赞数发生了变化
             postCacheService.evictPostDetailCache(postId);
             postCacheService.evictGroupPostsCache(post.getGroupId());
-            postCacheService.evictHotPostsCache();
         }
         return success;
     }
@@ -196,7 +192,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             // 清除相关缓存，因为点赞数发生了变化
             postCacheService.evictPostDetailCache(postId);
             postCacheService.evictGroupPostsCache(post.getGroupId());
-            postCacheService.evictHotPostsCache();
         }
         return success;
     }
@@ -214,7 +209,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             // 清除相关缓存，因为评论数发生了变化
             postCacheService.evictPostDetailCache(postId);
             postCacheService.evictGroupPostsCache(post.getGroupId());
-            postCacheService.evictHotPostsCache();
         }
     }
 
@@ -230,7 +224,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             // 清除相关缓存，因为评论数发生了变化
             postCacheService.evictPostDetailCache(postId);
             postCacheService.evictGroupPostsCache(post.getGroupId());
-            postCacheService.evictHotPostsCache();
         }
     }
     
@@ -333,68 +326,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         return voPage;
     }
     
-    /**
-     * 获取热门帖子
-     */
-    public List<GroupPostVO> getHotPosts(int limit) {
-        // 先从缓存获取
-        List<GroupPostVO> cachedHotPosts = postCacheService.getCachedHotPosts();
-        if (cachedHotPosts != null) {
-            return cachedHotPosts;
-        }
-        
-        // 缓存未命中，从数据库查询
-        LambdaQueryWrapper<GroupPost> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(GroupPost::getStatus, "PUBLISHED")
-                .orderByDesc(GroupPost::getLikeCount)
-                .orderByDesc(GroupPost::getCommentCount)
-                .orderByDesc(GroupPost::getCreatedAt)
-                .last("LIMIT " + limit);
-        
-        List<GroupPost> posts = baseMapper.selectList(queryWrapper);
-        
-        // 提取所有作者ID
-        List<Long> authorIds = posts.stream()
-                .map(GroupPost::getAuthorId)
-                .distinct()
-                .collect(Collectors.toList());
-        
-        // 从 UserCacheService 获取用户信息（内置 DB 回源）
-        Map<Long, User> userMap = new HashMap<>();
-        for (Long authorId : authorIds) {
-            User u = userCacheService.getCachedUser(authorId);
-            if (u != null) userMap.put(authorId, u);
-        }
-
-        // 构建VO
-        List<GroupPostVO> hotPosts = posts.stream().map(post -> {
-            GroupPostVO vo = new GroupPostVO();
-            vo.setPostId(post.getPostId());
-            vo.setGroupId(post.getGroupId());
-            vo.setAuthorId(post.getAuthorId());
-            vo.setTitle(post.getTitle());
-            vo.setContent(post.getContent());
-            vo.setContentType(post.getContentType());
-            vo.setLikeCount(post.getLikeCount());
-            vo.setCommentCount(post.getCommentCount());
-            vo.setStatus(post.getStatus());
-            vo.setCreatedAt(post.getCreatedAt());
-            vo.setUpdatedAt(post.getUpdatedAt());
-            
-            // 设置作者信息
-            User user = userMap.get(post.getAuthorId());
-            vo.setAuthorName(user != null ? (user.getNickname() != null ? user.getNickname() : user.getUsername()) : "未知用户");
-            vo.setAuthorAvatar(user != null ? user.getAvatarUrl() : null);
-            
-            return vo;
-        }).collect(Collectors.toList());
-        
-        // 将热门帖子缓存
-        postCacheService.cacheHotPosts(hotPosts, HOT_POSTS_CACHE_EXPIRE);
-        
-        return hotPosts;
-    }
-    
     @Override
     @Transactional
     public boolean adminUpdatePostStatus(Long postId, String status) {
@@ -409,7 +340,6 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
             // 主动清理缓存，确保前端能拿到最新数据
             postCacheService.evictPostDetailCache(postId);
             postCacheService.evictGroupPostsCache(post.getGroupId());
-            postCacheService.evictHotPostsCache();
         }
         return result;
     }

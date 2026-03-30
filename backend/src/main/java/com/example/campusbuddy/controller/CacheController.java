@@ -41,38 +41,28 @@ public class CacheController {
             // 获取不同类型缓存的key数量
             Set<String> userKeys = redisTemplate.keys("campus:user:*");
             Set<String> userVOKeys = redisTemplate.keys("campus:user:vo:*");
-            Set<String> tokenKeys = redisTemplate.keys("campus:user:token:*");
-            Set<String> usernameKeys = redisTemplate.keys("campus:username:*");
-            Set<String> searchKeys = redisTemplate.keys("campus:user:search:*");
             Set<String> creditScoreKeys = redisTemplate.keys("campus:user:credit:*");
             
             // 获取帖子相关缓存数量
             Set<String> groupPostsKeys = redisTemplate.keys("campus:group:posts:*");
             Set<String> postDetailKeys = redisTemplate.keys("campus:post:detail:*");
-            Set<String> hotPostsKeys = redisTemplate.keys("campus:post:hot");
 
             // 获取互助信息相关缓存数量
             Set<String> helpInfoListKeys = redisTemplate.keys("campus:helpinfo:list:*");
             Set<String> helpInfoDetailKeys = redisTemplate.keys("campus:helpinfo:detail:*");
-            Set<String> helpInfoAdminKeys = redisTemplate.keys("campus:helpinfo:admin:*");
             Set<String> helpInfoSearchKeys = redisTemplate.keys("campus:helpinfo:search:*");
             
             stats.put("userCacheCount", userKeys != null ? userKeys.size() : 0);
             stats.put("userVOCacheCount", userVOKeys != null ? userVOKeys.size() : 0);
-            stats.put("tokenCacheCount", tokenKeys != null ? tokenKeys.size() : 0);
-            stats.put("usernameCacheCount", usernameKeys != null ? usernameKeys.size() : 0);
-            stats.put("searchCacheCount", searchKeys != null ? searchKeys.size() : 0);
             stats.put("creditScoreCacheCount", creditScoreKeys != null ? creditScoreKeys.size() : 0);
             
             // 添加帖子缓存统计
             stats.put("groupPostsCacheCount", groupPostsKeys != null ? groupPostsKeys.size() : 0);
             stats.put("postDetailCacheCount", postDetailKeys != null ? postDetailKeys.size() : 0);
-            stats.put("hotPostsCacheCount", hotPostsKeys != null ? hotPostsKeys.size() : 0);
 
             // 添加互助信息缓存统计
             stats.put("helpInfoListCacheCount", helpInfoListKeys != null ? helpInfoListKeys.size() : 0);
             stats.put("helpInfoDetailCacheCount", helpInfoDetailKeys != null ? helpInfoDetailKeys.size() : 0);
-            stats.put("helpInfoAdminCacheCount", helpInfoAdminKeys != null ? helpInfoAdminKeys.size() : 0);
             stats.put("helpInfoSearchCacheCount", helpInfoSearchKeys != null ? helpInfoSearchKeys.size() : 0);
             
             // 总缓存数量
@@ -158,26 +148,6 @@ public class CacheController {
     }
 
     /**
-     * 清空搜索缓存
-     */
-    @DeleteMapping("/clear/search")
-    public R<String> clearSearchCache() {
-        try {
-            Set<String> keys = redisTemplate.keys("campus:user:search:*");
-            if (keys != null && !keys.isEmpty()) {
-                redisTemplate.delete(keys);
-                log.info("已清空搜索缓存，共清理 {} 个key", keys.size());
-                return R.ok("搜索缓存清理成功，共清理 " + keys.size() + " 个缓存项");
-            } else {
-                return R.ok("没有搜索缓存需要清理");
-            }
-        } catch (Exception e) {
-            log.error("清空搜索缓存失败: {}", e.getMessage());
-            return R.fail("清空搜索缓存失败");
-        }
-    }
-    
-    /**
      * 清空信用分缓存
      */
     @DeleteMapping("/clear/credit")
@@ -229,11 +199,9 @@ public class CacheController {
             // 收集所有帖子相关的缓存key
             Set<String> groupPostsKeys = redisTemplate.keys("campus:group:posts:*");
             Set<String> postDetailKeys = redisTemplate.keys("campus:post:detail:*");
-            Set<String> hotPostsKeys = redisTemplate.keys("campus:post:hot");
 
             if (groupPostsKeys != null) keys.addAll(groupPostsKeys);
             if (postDetailKeys != null) keys.addAll(postDetailKeys);
-            if (hotPostsKeys != null) keys.addAll(hotPostsKeys);
             
             if (!keys.isEmpty()) {
                 redisTemplate.delete(keys);
@@ -278,21 +246,6 @@ public class CacheController {
         }
     }
     
-    /**
-     * 清空热门帖子缓存
-     */
-    @DeleteMapping("/clear/hot-posts")
-    public R<String> clearHotPostsCache() {
-        try {
-            postCacheService.evictHotPostsCache();
-            log.info("已清空热门帖子缓存");
-            return R.ok("热门帖子缓存清理成功");
-        } catch (Exception e) {
-            log.error("清空热门帖子缓存失败: {}", e.getMessage());
-            return R.fail("清空热门帖子缓存失败");
-        }
-    }
-
     /**
      * 清空所有互助信息缓存
      */

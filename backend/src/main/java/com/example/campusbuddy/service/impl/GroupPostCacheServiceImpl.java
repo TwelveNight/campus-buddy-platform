@@ -12,9 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import java.util.concurrent.TimeUnit;
+// Set import removed — clearByPattern now uses SCAN cursor
 
 @Service
 @Slf4j
@@ -27,8 +30,6 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
 
     private static final String GROUP_POSTS_KEY_PREFIX = "campus:group:posts:";
     private static final String POST_DETAIL_KEY_PREFIX = "campus:post:detail:";
-    private static final String HOT_POSTS_KEY = "campus:post:hot";
-
     @Override
     public void cacheGroupPosts(Long groupId, Integer pageNum, Integer pageSize, IPage<GroupPostVO> page,
             long expireSeconds) {
@@ -93,32 +94,6 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
     }
 
     @Override
-    public void cacheHotPosts(List<GroupPostVO> posts, long expireSeconds) {
-        if (posts == null) {
-            return;
-        }
-        try {
-            String postsJson = objectMapper.writeValueAsString(posts);
-            redisTemplate.opsForValue().set(HOT_POSTS_KEY, postsJson, expireSeconds, TimeUnit.SECONDS);
-        } catch (JsonProcessingException e) {
-            log.error("缓存热门帖子列表失败", e);
-        }
-    }
-
-    @Override
-    public List<GroupPostVO> getCachedHotPosts() {
-        try {
-            String postsJson = redisTemplate.opsForValue().get(HOT_POSTS_KEY);
-            if (postsJson != null) {
-                return objectMapper.readValue(postsJson, new TypeReference<List<GroupPostVO>>() {});
-            }
-        } catch (Exception e) {
-            log.error("从缓存获取热门帖子列表失败", e);
-        }
-        return null;
-    }
-
-    @Override
     public void evictGroupPostsCache(Long groupId) {
         try {
             String pattern = groupId != null
@@ -143,29 +118,27 @@ public class GroupPostCacheServiceImpl implements GroupPostCacheService {
     }
 
     @Override
-    public void evictHotPostsCache() {
-        try {
-            redisTemplate.delete(HOT_POSTS_KEY);
-        } catch (Exception e) {
-            log.error("清除热门帖子缓存失败", e);
-        }
-    }
-
-    @Override
     public void evictAllPostsCache() {
         try {
             clearByPattern(GROUP_POSTS_KEY_PREFIX + "*");
             clearByPattern(POST_DETAIL_KEY_PREFIX + "*");
-            redisTemplate.delete(HOT_POSTS_KEY);
         } catch (Exception e) {
             log.error("清除所有帖子相关缓存失败", e);
         }
     }
 
     private void clearByPattern(String pattern) {
-        Set<String> keys = redisTemplate.keys(pattern);
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
+        try {
+            List<String> keys = new ArrayList<>();
+            ScanOptions options = ScanOptions.scanOptions().match(pattern).count(200).build();
+            try (Cursor<String> cursor = redisTemplate.scan(options)) {
+                cursor.forEachRemaining(keys::add);
+            }
+            if (!keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception e) {
+            log.error("按模式清除缓存失败: pattern={}", pattern, e);
         }
     }
 }
