@@ -251,7 +251,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 new QueryWrapper<Review>().eq("reviewer_user_id", userId).eq("reviewed_user_id", userId));
 
         if (selfReviewCount > 0) {
-            log.warn("警告: 数据库中存在自评价记录，用户ID={}, 数量={}", userId, selfReviewCount);
+            log.warn("警告: 数据库中存在自评价记录，用户ID=" + userId + ", 数量=" + selfReviewCount);
         }
 
         int offset = (page - 1) * size;
