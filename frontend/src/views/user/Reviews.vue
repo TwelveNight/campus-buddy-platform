@@ -22,22 +22,6 @@
                                     <el-progress :percentage="getCreditPercentage()" :stroke-width="8"
                                         :color="['#f56c6c', '#e6a23c', '#5cb87a', '#1989fa', '#6f7ad3']" />
                                 </div>
-                                <div class="trend-info">
-                                    <el-tag
-                                        :type="creditStats.trend.includes('上升') ? 'success' : creditStats.trend.includes('下降') ? 'danger' : 'info'"
-                                        size="small" effect="light">
-                                        <el-icon v-if="creditStats.trend.includes('上升')">
-                                            <CaretTop />
-                                        </el-icon>
-                                        <el-icon v-else-if="creditStats.trend.includes('下降')">
-                                            <CaretBottom />
-                                        </el-icon>
-                                        <el-icon v-else>
-                                            <Minus />
-                                        </el-icon>
-                                        {{ creditStats.trend }}
-                                    </el-tag>
-                                </div>
                             </div>
                         </div>
                     </el-card>
@@ -226,8 +210,7 @@ import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import {
     Star, ChatRound, Document,
-    Trophy, Medal, Collection, Filter, RefreshRight,
-    CaretTop, CaretBottom, Minus
+    Trophy, Medal, Collection, Filter, RefreshRight
 } from '@element-plus/icons-vue';
 import ReviewList from '../../components/common/ReviewList.vue';
 import { getUserReviews, getUserCreditStats } from '../../api/review';
@@ -255,19 +238,13 @@ interface CreditStats {
   creditLevel: string;
   totalReviews: number;
   averageScore: number;
-  recentReviews: number;
-  recentAverageScore: number;
-  trend: string;
 }
 
 const creditStats = ref<CreditStats>({
   creditScore: 60,
   creditLevel: '及格',
   totalReviews: 0,
-  averageScore: 0,
-  recentReviews: 0,
-  recentAverageScore: 0,
-  trend: '稳定'
+  averageScore: 0
 });
 
 // 统计数据 - 现在使用从服务端获取的统计信息
@@ -346,10 +323,7 @@ const fetchCreditScore = async () => {
                 creditScore: result.data.creditScore || 60,
                 creditLevel: result.data.creditLevel || '及格',
                 totalReviews: result.data.totalReviews || 0,
-                averageScore: result.data.averageScore || 0,
-                recentReviews: result.data.recentReviews || 0,
-                recentAverageScore: result.data.recentAverageScore || 0,
-                trend: result.data.trend || '稳定'
+                averageScore: result.data.averageScore || 0
             };
             console.log('获取到的信用分统计信息:', creditStats.value);
         }
@@ -556,16 +530,6 @@ onMounted(() => {
     font-size: 12px;
     color: #6f7ad3;
     font-weight: 600;
-}
-
-.trend-info {
-    margin-top: 8px;
-}
-
-.trend-info :deep(.el-tag) {
-    display: flex;
-    align-items: center;
-    gap: 4px;
 }
 
 .stat-detail {

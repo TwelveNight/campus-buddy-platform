@@ -9,17 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 信用积分计算服务实现
  * <p>
  * 采用贝叶斯平均算法：每位用户初始拥有 PRIOR_COUNT 条 PRIOR_STAR 星的虚拟评价作为先验，
  * 随着真实评价增加，虚拟评价被逐渐"稀释"，最终分数趋近于真实平均水平。
- * 公式：bayesianStar = (n × avgStar + m × priorStar) / (n + m)
+ * 公式：bayesianStar = (Σ(star×w) + m×priorStar) / (Σw + m)
  *       finalScore  = round(bayesianStar / 5.0 × 100)
  */
 @Service
@@ -44,7 +43,7 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
     // 评价类型权重：发布者对帮助者的评价更能反映服务质量，权重略高
     private static final double WEIGHT_PUBLISHER_TO_HELPER = 1.2;
     private static final double WEIGHT_HELPER_TO_PUBLISHER = 1.0;
-    
+
     @Override
     public Integer calculateCreditScore(Long userId) {
         log.info("开始计算用户信用积分: userId={}", userId);
@@ -89,7 +88,7 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
 
         return finalScore;
     }
-    
+
     @Override
     public boolean existsInCache(Long userId) {
         if (userId == null) return false;
@@ -114,7 +113,7 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
         }
         return result;
     }
-    
+
     @Override
     public String getCreditLevel(Integer creditScore) {
         if (creditScore == null) return "未评级";
@@ -125,113 +124,22 @@ public class CreditScoreCalculationServiceImpl implements CreditScoreCalculation
         else if (creditScore >= 60) return "及格";
         else return "待提升";
     }
-    
+
     @Override
     public CreditScoreStats getCreditScoreStats(Long userId) {
         log.info("获取用户信用积分统计: userId={}", userId);
-        
-        // 获取所有评价
-        List<Review> allReviews = reviewMapper.selectByReviewedUserIdOrderByCreatedAtDesc(userId);
-        
+
+        List<Review> allReviews = reviewMapper.selectByReviewedUserId(userId);
+
         if (allReviews.isEmpty()) {
-            return new CreditScoreStats(BASE_CREDIT_SCORE, getCreditLevel(BASE_CREDIT_SCORE), 
-                                       0, 0.0, 0, 0.0, "稳定");
+            return new CreditScoreStats(BASE_CREDIT_SCORE, getCreditLevel(BASE_CREDIT_SCORE), 0, 0.0);
         }
-        
-        // 计算当前信用分
+
         Integer creditScore = calculateCreditScore(userId);
         String creditLevel = getCreditLevel(creditScore);
-        
-        // 计算总体统计
         int totalReviews = allReviews.size();
-        double averageScore = allReviews.stream().mapToInt(review -> review.getScore()).average().orElse(0.0);
-        
-        // 计算最近30天统计
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minus(30, ChronoUnit.DAYS);
-        List<Review> recentReviews = allReviews.stream()
-            .filter(review -> {
-                LocalDateTime createdTime = review.getCreatedAt().toInstant()
-                    .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
-                return createdTime.isAfter(thirtyDaysAgo);
-            })
-            .collect(Collectors.toList());
-        
-        int recentReviewCount = recentReviews.size();
-        double recentAverageScore = recentReviews.stream().mapToInt(review -> review.getScore()).average().orElse(0.0);
-        
-        // 计算趋势
-        String trend = calculateTrend(allReviews);
-        
-        return new CreditScoreStats(creditScore, creditLevel, totalReviews, averageScore, 
-                                   recentReviewCount, recentAverageScore, trend);
-    }
-    
-    /**
-     * 计算信用分趋势
-     * 通过比较最近一段时间和之前一段时间的评价，分析用户信用分的变化趋势
-     */
-    private String calculateTrend(List<Review> reviews) {
-        if (reviews.size() < 5) return "稳定"; // 评价太少无法确定趋势
-        
-        // 确保评价按时间降序排序（最新的在前面）
-        List<Review> sortedReviews = new ArrayList<>(reviews);
-        sortedReviews.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
-        
-        // 获取最近30天的评价
-        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minus(30, ChronoUnit.DAYS);
-        List<Review> recentReviews = new ArrayList<>();
-        List<Review> olderReviews = new ArrayList<>();
-        
-        for (Review review : sortedReviews) {
-            LocalDateTime createdTime = review.getCreatedAt().toInstant()
-                .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime();
-                
-            if (createdTime.isAfter(thirtyDaysAgo)) {
-                recentReviews.add(review);
-            } else {
-                olderReviews.add(review);
-            }
-        }
-        
-        // 如果最近没有评价，返回稳定
-        if (recentReviews.isEmpty()) return "稳定";
-        
-        // 如果只有最近的评价，没有历史评价，返回稳定
-        if (olderReviews.isEmpty()) return "稳定";
-        
-        // 计算最近评价的加权平均分
-        double recentAvg = recentReviews.stream()
-            .mapToDouble(Review::getScore)
-            .average()
-            .orElse(0.0);
-        
-        // 计算较早评价的加权平均分
-        double olderAvg = olderReviews.stream()
-            .mapToDouble(Review::getScore)
-            .average()
-            .orElse(0.0);
-        
-        // 计算最近评分与历史评分的差值
-        double diff = recentAvg - olderAvg;
-        
-        // 评价波动显著性阈值
-        double significantChangeThreshold = 0.3;
-        double highChangeThreshold = 0.8;
-        
-        log.debug("信用分趋势分析: recentReviewCount={}, olderReviewCount={}, recentAvg={}, olderAvg={}, diff={}",
-                 recentReviews.size(), olderReviews.size(), recentAvg, olderAvg, diff);
-        
-        // 根据差值确定趋势
-        if (diff > highChangeThreshold) {
-            return "显著上升";
-        } else if (diff > significantChangeThreshold) {
-            return "上升";
-        } else if (diff < -highChangeThreshold) {
-            return "显著下降";
-        } else if (diff < -significantChangeThreshold) {
-            return "下降";
-        } else {
-            return "稳定";
-        }
+        double averageScore = allReviews.stream().mapToInt(Review::getScore).average().orElse(0.0);
+
+        return new CreditScoreStats(creditScore, creditLevel, totalReviews, averageScore);
     }
 }

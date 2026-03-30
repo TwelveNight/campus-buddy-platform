@@ -1,7 +1,6 @@
 package com.example.campusbuddy.service;
 
 import com.example.campusbuddy.entity.Review;
-import com.example.campusbuddy.entity.User;
 
 import java.util.List;
 
@@ -61,44 +60,28 @@ public interface CreditScoreCalculationService {
         private String creditLevel;
         private Integer totalReviews;
         private Double averageScore;
-        private Integer recentReviews; // 最近30天的评价数
-        private Double recentAverageScore; // 最近30天的平均分
-        private String trend; // 趋势：上升、下降、稳定
-        
+
         // 构造函数
         public CreditScoreStats() {}
-        
-        public CreditScoreStats(Integer creditScore, String creditLevel, Integer totalReviews, 
-                               Double averageScore, Integer recentReviews, Double recentAverageScore, String trend) {
+
+        public CreditScoreStats(Integer creditScore, String creditLevel, Integer totalReviews, Double averageScore) {
             this.creditScore = creditScore;
             this.creditLevel = creditLevel;
             this.totalReviews = totalReviews;
             this.averageScore = averageScore;
-            this.recentReviews = recentReviews;
-            this.recentAverageScore = recentAverageScore;
-            this.trend = trend;
         }
-        
+
         // Getters and Setters
         public Integer getCreditScore() { return creditScore; }
         public void setCreditScore(Integer creditScore) { this.creditScore = creditScore; }
-        
+
         public String getCreditLevel() { return creditLevel; }
         public void setCreditLevel(String creditLevel) { this.creditLevel = creditLevel; }
-        
+
         public Integer getTotalReviews() { return totalReviews; }
         public void setTotalReviews(Integer totalReviews) { this.totalReviews = totalReviews; }
-        
+
         public Double getAverageScore() { return averageScore; }
         public void setAverageScore(Double averageScore) { this.averageScore = averageScore; }
-        
-        public Integer getRecentReviews() { return recentReviews; }
-        public void setRecentReviews(Integer recentReviews) { this.recentReviews = recentReviews; }
-        
-        public Double getRecentAverageScore() { return recentAverageScore; }
-        public void setRecentAverageScore(Double recentAverageScore) { this.recentAverageScore = recentAverageScore; }
-        
-        public String getTrend() { return trend; }
-        public void setTrend(String trend) { this.trend = trend; }
     }
 }

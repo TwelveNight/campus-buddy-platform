@@ -30,11 +30,6 @@
                             </el-progress>
                             <div class="credit-level">
                                 {{ creditStats.creditLevel }}
-                                <el-tag v-if="creditStats.trend !== '稳定'" :type="getTrendType(creditStats.trend)" effect="light" size="small">
-                                    {{ creditStats.trend }}
-                                    <el-icon v-if="creditStats.trend.includes('上升')"><CaretTop /></el-icon>
-                                    <el-icon v-else-if="creditStats.trend.includes('下降')"><CaretBottom /></el-icon>
-                                </el-tag>
                             </div>
                         </div>
                         <div class="user-stats">
@@ -423,8 +418,7 @@ import { getUserProfile, updateUserProfile, changePassword } from "../../api/use
 import { getUserReviews, getUserCreditStats } from '../../api/review';
 import {
     User, UserFilled, Avatar, Key, Lock, Check,
-    RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View, MessageBox, ChatRound, Document, Collection, Promotion,
-    CaretTop, CaretBottom
+    RefreshRight, Back, Medal, Calendar, Star, Clock, Link, View, MessageBox, ChatRound, Document, Collection, Promotion
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -587,10 +581,7 @@ const creditStats = ref({
   creditScore: 0,
   creditLevel: '未评级',
   totalReviews: 0,
-  averageScore: 0,
-  recentReviews: 0,
-  recentAverageScore: 0,
-  trend: '稳定'
+  averageScore: 0
 });
 
 // 修改密码表单数据
@@ -816,13 +807,6 @@ function getRoleTooltip(reviewType: string | undefined, reviewerUserId: number):
         return reviewerUserId === currentUserId ? '您是帮助方' : '对方是求助方';
     }
     return '用户角色';
-}
-
-// 获取趋势标签类型
-function getTrendType(trend: string) {
-    if (trend.includes('上升')) return 'success';
-    if (trend.includes('下降')) return 'danger';
-    return 'info';
 }
 
 // 组件挂载时执行

@@ -40,11 +40,6 @@
           </el-progress>
           <div class="credit-level">
             {{ creditStats.creditLevel }}
-            <el-tag v-if="creditStats.trend !== '稳定'" :type="getTrendType(creditStats.trend)" effect="light" size="small">
-              {{ creditStats.trend }}
-              <el-icon v-if="creditStats.trend.includes('上升')"><CaretTop /></el-icon>
-              <el-icon v-else-if="creditStats.trend.includes('下降')"><CaretBottom /></el-icon>
-            </el-tag>
           </div>
         </div>
       </div>
@@ -121,7 +116,7 @@ import ReviewList from '../../components/common/ReviewList.vue';
 import { getUserReviews, getUserCreditStats } from '../../api/review';
 import { getUserById } from '../../api/user';
 import { applyFriend, getFriendList, checkFriendStatus } from '../../api/friend';
-import { Star, User, List, ChatDotRound, Plus, Check, CaretTop, CaretBottom } from '@element-plus/icons-vue';
+import { Star, User, List, ChatDotRound, Plus, Check } from '@element-plus/icons-vue';
 import { useAuthStore } from '../../store/auth';
 
 const route = useRoute();
@@ -145,10 +140,7 @@ const creditStats = ref({
   creditScore: 0,
   creditLevel: '未评级',
   totalReviews: 0,
-  averageScore: 0,
-  recentReviews: 0,
-  recentAverageScore: 0,
-  trend: '稳定'
+  averageScore: 0
 });
 
 // 当前登录用户ID
@@ -296,13 +288,6 @@ const getStatusType = (status: string) => {
     case 'BANNED': return 'danger';
     default: return 'info';
   }
-};
-
-// 获取趋势标签类型
-const getTrendType = (trend: string) => {
-  if (trend.includes('上升')) return 'success';
-  if (trend.includes('下降')) return 'danger';
-  return 'info';
 };
 
 async function fetchUserInfo() {
