@@ -171,12 +171,11 @@
                     <!-- 通知图标 -->
                     <div class="notification-icon">
                         <el-dropdown trigger="click" @visible-change="handleNotificationDropdownToggle">
-                            <div style="cursor:pointer;display:inline-block">
-                                <el-badge :value="unreadCount" :max="99" :hidden="unreadCount === 0" type="danger">
-                                    <el-icon class="bell-icon">
-                                        <Bell />
-                                    </el-icon>
-                                </el-badge>
+                            <div style="cursor:pointer;display:inline-block;position:relative">
+                                <el-icon class="bell-icon">
+                                    <Bell />
+                                </el-icon>
+                                <span v-if="unreadCount > 0" class="manual-badge">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
                             </div>
                             <template #dropdown>
                                 <el-dropdown-menu class="notification-dropdown">
@@ -907,6 +906,22 @@ const showCreateGroupDialog = () => {
     font-size: 20px;
     color: var(--text-secondary);
     position: relative;
+}
+
+.manual-badge {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    background: #f56c6c;
+    color: #fff;
+    border-radius: 10px;
+    font-size: 11px;
+    padding: 1px 5px;
+    min-width: 16px;
+    text-align: center;
+    line-height: 16px;
+    pointer-events: none;
+    font-weight: 600;
 }
 
 .notification-icon:hover .bell-icon,
