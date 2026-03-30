@@ -41,14 +41,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
 
     @Override
     public HelpInfoDetailVO getHelpInfoDetail(Long infoId) {
-        // 先尝试从缓存获取
-        HelpInfoDetailVO cachedVo = helpInfoCacheService.getCachedHelpInfoDetail(infoId);
-        if (cachedVo != null) {
-            log.info("从缓存获取互助信息详情成功, id: " + infoId);
-            return cachedVo;
-        }
-
-        // 获取互助任务
+        // 详情含浏览量等高频变动字段，直接查DB保证数据准确
         HelpInfo helpInfo = this.getById(infoId);
         if (helpInfo == null) {
             throw new ResourceNotFoundException("互助任务", infoId);
@@ -59,21 +52,17 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
 
         // 获取发布者信息（UserCacheService 内置 DB 回源）
         User publisher = userCacheService.getCachedUser(helpInfo.getPublisherId());
-        
         if (publisher != null) {
             vo.setPublisherName(publisher.getNickname());
             vo.setPublisherAvatar(publisher.getAvatarUrl());
         }
 
-        // 新增：如果有已接受的申请，查出帮助者昵称
+        // 如果有已接受的申请，查出帮助者昵称
         Long acceptedAppId = helpInfo.getAcceptedApplicationId();
         if (acceptedAppId != null) {
             String nickname = helpApplicationMapper.getApplicantNicknameByApplicationId(acceptedAppId);
             vo.setAcceptedApplicantNickname(nickname);
         }
-
-        // 缓存详情信息
-        helpInfoCacheService.cacheHelpInfoDetail(infoId, vo, 1800); // 30分钟
 
         return vo;
     }
@@ -168,7 +157,7 @@ public class HelpInfoServiceImpl extends ServiceImpl<HelpInfoMapper, HelpInfo> i
         int currentViewCount = helpInfo.getViewCount() != null ? helpInfo.getViewCount() : 0;
         helpInfo.setViewCount(currentViewCount + 1);
         this.updateById(helpInfo);
-        
+
         log.debug("互助信息 {} 浏览量已更新: {} -> {}", infoId, currentViewCount, currentViewCount + 1);
         return helpInfo;
     }
