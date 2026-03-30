@@ -1,7 +1,6 @@
 package com.example.campusbuddy.service;
 
 import com.example.campusbuddy.entity.User;
-import com.example.campusbuddy.vo.UserVO;
 
 import java.util.List;
 import java.util.Map;
@@ -15,17 +14,7 @@ public interface UserCacheService {
 
     User getCachedUser(Long userId);
 
-    User getUserByUsernameFromCache(String username);
-
-    void cacheUserVO(UserVO userVO);
-
-    UserVO getCachedUserVO(Long userId);
-
-    UserVO getUserVOFromCache(Long userId);
-
     void evictUserCache(Long userId);
-
-    void evictUserCacheByUsername(String username);
 
     void cacheCreditScore(Long userId, Integer creditScore, long expireSeconds);
 

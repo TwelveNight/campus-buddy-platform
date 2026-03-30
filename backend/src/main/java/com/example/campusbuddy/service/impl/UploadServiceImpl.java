@@ -112,7 +112,6 @@ public class UploadServiceImpl implements UploadService {
                     
                     // 先清除相关缓存，避免脏数据
                     userCacheService.evictUserCache(userId);
-                    userCacheService.evictUserCacheByUsername(user.getUsername());
                     
                     // 重新缓存更新后的用户信息
                     userCacheService.cacheUser(user);

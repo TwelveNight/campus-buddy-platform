@@ -65,7 +65,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 缓存新用户信息
         userCacheService.cacheUser(user);
-        userCacheService.cacheUserVO(userVO);
 
         log.info("用户注册成功: userId={}, username={}", user.getUserId(), user.getUsername());
 
@@ -74,15 +73,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String login(LoginDTO dto) {
-        // 先尝试从缓存获取用户信息
-        User user = userCacheService.getUserByUsernameFromCache(dto.getUsername());
-        if (user == null) {
-            user = userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername()));
-            if (user != null) {
-                // 缓存用户信息
-                userCacheService.cacheUser(user);
-            }
-        }
+        // 登录必须从DB取用户（含密码哈希），缓存中不存密码
+        User user = userMapper.selectOne(new QueryWrapper<User>().eq("username", dto.getUsername()));
 
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("用户名或密码错误");
@@ -98,30 +90,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
 
+        // 登录后缓存用户（不含密码）
+        userCacheService.cacheUser(user);
+
         return token;
     }
 
     @Override
     public UserVO getUserVOById(Long userId) {
-        // 先尝试从缓存获取
-        UserVO cachedUserVO = userCacheService.getUserVOFromCache(userId);
-        if (cachedUserVO != null) {
-            return cachedUserVO;
-        }
-
-        User user = userMapper.selectById(userId);
-        if (user == null)
+        User user = userCacheService.getCachedUser(userId);
+        if (user == null) {
             return null;
+        }
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
-
-        // 获取用户角色信息并设置到VO对象中
         List<String> roles = userRoleService.getUserRoles(userId);
         vo.setRoles(roles);
-
-        // 缓存用户信息
-        userCacheService.cacheUserVO(vo);
-
         return vo;
     }
 
@@ -169,11 +153,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         try {
             // 先清除旧的用户信息缓存（但保留token缓存）
             userCacheService.evictUserCache(userId);
-
-            // 如果有用户名，也清除用户名缓存
-            if (user.getUsername() != null) {
-                userCacheService.evictUserCacheByUsername(user.getUsername());
-            }
 
             // 重新缓存更新后的用户信息
             userCacheService.cacheUser(user);
