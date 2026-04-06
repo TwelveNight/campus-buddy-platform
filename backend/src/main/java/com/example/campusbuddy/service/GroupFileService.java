@@ -3,6 +3,7 @@ package com.example.campusbuddy.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.example.campusbuddy.entity.GroupFile;
+import com.example.campusbuddy.vo.GroupFileVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
@@ -12,14 +13,14 @@ import java.nio.file.Path;
  */
 public interface GroupFileService extends IService<GroupFile> {
     /**
-     * 分页查询小组文件
+     * 分页查询小组文件（含上传者信息）
      * @param groupId 小组ID
      * @param pageNum 页码
      * @param pageSize 每页大小
      * @param fileType 文件类型（可选）
-     * @return 文件分页列表
+     * @return 文件分页列表（含上传者名称）
      */
-    IPage<GroupFile> queryGroupFiles(Long groupId, Integer pageNum, Integer pageSize, String fileType);
+    IPage<GroupFileVO> queryGroupFiles(Long groupId, Integer pageNum, Integer pageSize, String fileType);
     
     /**
      * 上传文件

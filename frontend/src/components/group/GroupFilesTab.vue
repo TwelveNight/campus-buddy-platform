@@ -173,10 +173,11 @@ interface FileData {
     id?: number;
     fileId?: number;
     fileName: string;
-    size?: number;
+    fileSize?: number;
     uploaderId?: number;
     uploaderName?: string;
-    uploadTime?: string;
+    uploaderAvatar?: string;
+    createdAt?: string;
     description?: string;
 }
 

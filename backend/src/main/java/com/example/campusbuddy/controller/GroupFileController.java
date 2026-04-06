@@ -7,6 +7,7 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupFileService;
 import com.example.campusbuddy.service.UploadService;
 import com.example.campusbuddy.service.UserService;
+import com.example.campusbuddy.vo.GroupFileVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -55,13 +56,13 @@ public class GroupFileController {
      */
     @Operation(summary = "获取小组文件列表", description = "支持分页和文件类型过滤")
     @GetMapping
-    public R<IPage<GroupFile>> getGroupFiles(
+    public R<IPage<GroupFileVO>> getGroupFiles(
             @Parameter(description = "学习小组ID") @RequestParam Long groupId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize,
             @Parameter(description = "文件类型") @RequestParam(required = false) String fileType) {
-        
-        IPage<GroupFile> files = groupFileService.queryGroupFiles(groupId, pageNum, pageSize, fileType);
+
+        IPage<GroupFileVO> files = groupFileService.queryGroupFiles(groupId, pageNum, pageSize, fileType);
         return R.ok(files);
     }
 
@@ -156,8 +157,8 @@ public class GroupFileController {
             @Parameter(description = "文件名") @PathVariable String fileName) {
         // 查找文件信息
         String keyPrefix = "group-" + groupId + "/";
-        GroupFile fileInfo = null;
-        for (GroupFile f : groupFileService.queryGroupFiles(groupId, 1, 100, null).getRecords()) {
+        GroupFileVO fileInfo = null;
+        for (GroupFileVO f : groupFileService.queryGroupFiles(groupId, 1, 100, null).getRecords()) {
             if (f.getFileUrl() != null && f.getFileUrl().contains(fileName)) {
                 fileInfo = f;
                 break;

@@ -6,10 +6,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.entity.GroupFile;
 import com.example.campusbuddy.entity.GroupMember;
+import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.GroupFileMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
+import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.GroupFileService;
 import com.example.campusbuddy.service.UploadService;
+import com.example.campusbuddy.vo.GroupFileVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 学习小组文件服务实现类
@@ -31,21 +38,65 @@ public class GroupFileServiceImpl extends ServiceImpl<GroupFileMapper, GroupFile
     @Autowired
     private UploadService uploadService;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @Override
-    public IPage<GroupFile> queryGroupFiles(Long groupId, Integer pageNum, Integer pageSize, String fileType) {
+    public IPage<GroupFileVO> queryGroupFiles(Long groupId, Integer pageNum, Integer pageSize, String fileType) {
         LambdaQueryWrapper<GroupFile> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupFile::getGroupId, groupId)
                 .eq(GroupFile::getStatus, "AVAILABLE");
 
-        // 添加文件类型过滤
         if (StringUtils.hasText(fileType)) {
             queryWrapper.eq(GroupFile::getFileType, fileType);
         }
 
-        // 按上传时间倒序排序
         queryWrapper.orderByDesc(GroupFile::getUploadedAt);
 
-        return page(new Page<>(pageNum, pageSize), queryWrapper);
+        IPage<GroupFile> filePage = page(new Page<>(pageNum, pageSize), queryWrapper);
+
+        // 批量查询上传者信息
+        List<GroupFile> records = filePage.getRecords();
+        Set<Long> uploaderIds = records.stream()
+                .map(GroupFile::getUploaderId)
+                .filter(id -> id != null)
+                .collect(Collectors.toSet());
+
+        Map<Long, User> userMap = java.util.Collections.emptyMap();
+        if (!uploaderIds.isEmpty()) {
+            LambdaQueryWrapper<User> userQuery = new LambdaQueryWrapper<>();
+            userQuery.in(User::getUserId, uploaderIds);
+            userMap = userMapper.selectList(userQuery).stream()
+                    .collect(Collectors.toMap(User::getUserId, u -> u));
+        }
+
+        // 转换为 VO
+        Map<Long, User> finalUserMap = userMap;
+        List<GroupFileVO> voList = records.stream().map(f -> {
+            GroupFileVO vo = new GroupFileVO();
+            vo.setFileId(f.getFileId());
+            vo.setGroupId(f.getGroupId());
+            vo.setUploaderId(f.getUploaderId());
+            vo.setFileName(f.getFileName());
+            vo.setFileType(f.getFileType());
+            vo.setFileSize(f.getFileSize());
+            vo.setFileUrl(f.getFileUrl());
+            vo.setDescription(f.getDescription());
+            vo.setDownloadCount(f.getDownloadCount());
+            vo.setStatus(f.getStatus());
+            vo.setCreatedAt(f.getUploadedAt());
+            vo.setUpdatedAt(f.getUpdatedAt());
+            User uploader = f.getUploaderId() != null ? finalUserMap.get(f.getUploaderId()) : null;
+            if (uploader != null) {
+                vo.setUploaderName(uploader.getNickname() != null ? uploader.getNickname() : uploader.getUsername());
+                vo.setUploaderAvatar(uploader.getAvatarUrl());
+            }
+            return vo;
+        }).collect(Collectors.toList());
+
+        Page<GroupFileVO> voPage = new Page<>(filePage.getCurrent(), filePage.getSize(), filePage.getTotal());
+        voPage.setRecords(voList);
+        return voPage;
     }
 
     @Override
