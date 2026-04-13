@@ -32,7 +32,13 @@ export const useAuthStore = defineStore('auth', {
     }
   },
   actions: {
-    async loginAction(payload: { username: string; password: string }) {
+    async loginAction(payload: {
+      username?: string;
+      password?: string;
+      loginType?: 'PASSWORD' | 'CODE';
+      email?: string;
+      code?: string;
+    }) {
       const res = await login(payload)
       console.log('Login API Response:', res.data); 
       // Check if the response is successful and contains the token directly in res.data.data
@@ -83,7 +89,13 @@ export const useAuthStore = defineStore('auth', {
         throw new Error(errorMessage);
       }
     },
-    async registerAction(payload: { username: string; password: string; nickname: string }) {
+    async registerAction(payload: {
+      username: string;
+      password: string;
+      nickname: string;
+      email?: string;
+      emailCode?: string;
+    }) {
       const res = await register(payload)
       if (res.data.code !== 200) {
         throw new Error(res.data.message)

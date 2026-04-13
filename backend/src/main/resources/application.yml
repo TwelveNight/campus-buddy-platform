@@ -53,3 +53,19 @@ qiniu:
   secret-key: ${QINIU_SECRET_KEY:your_secret_key_here}
   bucket: ${QINIU_BUCKET:campus-buddy-platform}
   domain: ${QINIU_DOMAIN:http://example.domain.com} # 从环境变量获取七牛云空间外链域名
+
+  # 邮件发送配置（使用环境变量，以 QQ 邮箱 SMTP 为示例）
+spring:
+  mail:
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your_email@qq.com}
+    password: ${MAIL_PASSWORD:your_smtp_auth_code}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+email:
+  from: ${MAIL_USERNAME:your_email@qq.com}
+  code-expire-seconds: 300  # 验证码有效期（秒）

@@ -32,34 +32,74 @@
                     <p>快速登录开始使用学伴平台</p>
                 </div>
 
-                <el-form :model="form" :rules="rules" ref="loginForm" @submit.prevent="onSubmit">
-                    <el-form-item prop="username">
-                        <el-input v-model="form.username" placeholder="请输入用户名" prefix-icon="User" size="large">
-                        </el-input>
-                    </el-form-item>
+                <!-- 登录方式切换 Tab -->
+                <el-tabs v-model="loginType" class="login-tabs">
+                    <!-- ===== 密码登录 Tab ===== -->
+                    <el-tab-pane label="密码登录" name="PASSWORD">
+                        <el-form :model="pwdForm" :rules="pwdRules" ref="pwdFormRef"
+                            @submit.prevent="onSubmitPassword">
+                            <el-form-item prop="username">
+                                <el-input v-model="pwdForm.username" placeholder="请输入用户名或邮箱"
+                                    prefix-icon="User" size="large">
+                                </el-input>
+                            </el-form-item>
 
-                    <el-form-item prop="password">
-                        <el-input v-model="form.password" type="password" placeholder="请输入密码" prefix-icon="Lock"
-                            size="large" show-password>
-                        </el-input>
-                    </el-form-item>
+                            <el-form-item prop="password">
+                                <el-input v-model="pwdForm.password" type="password" placeholder="请输入密码"
+                                    prefix-icon="Lock" size="large" show-password>
+                                </el-input>
+                            </el-form-item>
 
-                    <div class="remember-me">
-                        <el-checkbox v-model="rememberMe">记住我</el-checkbox>
-                        <a href="#" class="forgot-password">忘记密码?</a>
-                    </div>
+                            <div class="remember-me">
+                                <el-checkbox v-model="rememberMe">记住我</el-checkbox>
+                                <a href="#" class="forgot-password">忘记密码?</a>
+                            </div>
 
-                    <el-form-item>
-                        <el-button type="primary" native-type="submit" :loading="loading" class="submit-btn" round>
-                            登录账号
-                        </el-button>
-                    </el-form-item>
+                            <el-form-item>
+                                <el-button type="primary" native-type="submit" :loading="loading"
+                                    class="submit-btn" round>
+                                    登录账号
+                                </el-button>
+                            </el-form-item>
+                        </el-form>
+                    </el-tab-pane>
 
-                    <div class="auth-footer">
-                        <span>还没有账号？</span>
-                        <router-link to="/register" class="register-link">立即注册</router-link>
-                    </div>
-                </el-form>
+                    <!-- ===== 验证码登录 Tab ===== -->
+                    <el-tab-pane label="邮箱验证码登录" name="CODE">
+                        <el-form :model="codeForm" :rules="codeRules" ref="codeFormRef"
+                            @submit.prevent="onSubmitCode">
+                            <el-form-item prop="email">
+                                <el-input v-model="codeForm.email" placeholder="请输入绑定的邮箱"
+                                    prefix-icon="Message" size="large">
+                                </el-input>
+                            </el-form-item>
+
+                            <el-form-item prop="code">
+                                <div class="code-row">
+                                    <el-input v-model="codeForm.code" placeholder="请输入6位验证码"
+                                        prefix-icon="Key" size="large" maxlength="6" style="flex:1">
+                                    </el-input>
+                                    <el-button class="send-code-btn" size="large" :disabled="codeCooldown > 0"
+                                        @click="sendLoginCode" :loading="sendingCode">
+                                        {{ codeCooldown > 0 ? `${codeCooldown}s 后重发` : '发送验证码' }}
+                                    </el-button>
+                                </div>
+                            </el-form-item>
+
+                            <el-form-item>
+                                <el-button type="primary" native-type="submit" :loading="loading"
+                                    class="submit-btn" round>
+                                    登录账号
+                                </el-button>
+                            </el-form-item>
+                        </el-form>
+                    </el-tab-pane>
+                </el-tabs>
+
+                <div class="auth-footer">
+                    <span>还没有账号？</span>
+                    <router-link to="/register" class="register-link">立即注册</router-link>
+                </div>
             </el-card>
         </div>
     </div>
@@ -71,23 +111,21 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
+import { sendEmailCode } from '../../api/user'
 import { ChatLineRound, Share, Trophy } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const auth = useAuthStore()
-const loginForm = ref<FormInstance>()
 const loading = ref(false)
 const rememberMe = ref(false)
+const loginType = ref<'PASSWORD' | 'CODE'>('PASSWORD')
 
-const form = reactive({
-    username: '',
-    password: ''
-})
-
-const rules: FormRules = {
+// ---- 密码登录表单 ----
+const pwdFormRef = ref<FormInstance>()
+const pwdForm = reactive({ username: '', password: '' })
+const pwdRules: FormRules = {
     username: [
-        { required: true, message: '请输入用户名', trigger: 'blur' },
-        { min: 3, max: 20, message: '长度应为3至20个字符', trigger: 'blur' }
+        { required: true, message: '请输入用户名或邮箱', trigger: 'blur' }
     ],
     password: [
         { required: true, message: '请输入密码', trigger: 'blur' },
@@ -95,96 +133,124 @@ const rules: FormRules = {
     ]
 }
 
-// 检查是否有保存的用户名密码
-function checkSavedCredentials() {
-    const savedUsername = localStorage.getItem('savedUsername')
-    const savedPassword = localStorage.getItem('savedPassword')
+// ---- 验证码登录表单 ----
+const codeFormRef = ref<FormInstance>()
+const codeForm = reactive({ email: '', code: '' })
+const codeRules: FormRules = {
+    email: [
+        { required: true, message: '请输入邮箱', trigger: 'blur' },
+        { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    ],
+    code: [
+        { required: true, message: '请输入验证码', trigger: 'blur' },
+        { len: 6, message: '验证码为6位数字', trigger: 'blur' }
+    ]
+}
 
-    if (savedUsername && savedPassword) {
-        form.username = savedUsername
-        form.password = atob(savedPassword) // 使用Base64解码密码
-        rememberMe.value = true
+// ---- 发送验证码冷却 ----
+const codeCooldown = ref(0)
+const sendingCode = ref(false)
+let cooldownTimer: ReturnType<typeof setInterval> | null = null
+
+async function sendLoginCode() {
+    if (!codeForm.email) {
+        ElMessage.warning('请先填写邮箱')
+        return
+    }
+    sendingCode.value = true
+    try {
+        const res = await sendEmailCode({ email: codeForm.email, codeType: 'LOGIN' })
+        if (res.data?.code === 200) {
+            ElMessage.success('验证码已发送，请查收邮件')
+            startCooldown()
+        } else {
+            ElMessage.error(res.data?.message || '发送失败，请稍后重试')
+        }
+    } catch (e: any) {
+        ElMessage.error(e?.response?.data?.message || '发送失败，请检查邮箱地址')
+    } finally {
+        sendingCode.value = false
     }
 }
 
-// 初始化时检查保存的凭据
+function startCooldown(seconds = 60) {
+    codeCooldown.value = seconds
+    if (cooldownTimer) clearInterval(cooldownTimer)
+    cooldownTimer = setInterval(() => {
+        codeCooldown.value--
+        if (codeCooldown.value <= 0 && cooldownTimer) {
+            clearInterval(cooldownTimer)
+            cooldownTimer = null
+        }
+    }, 1000)
+}
+
+// ---- 初始化「记住我」 ----
+function checkSavedCredentials() {
+    const savedUsername = localStorage.getItem('savedUsername')
+    const savedPassword = localStorage.getItem('savedPassword')
+    if (savedUsername && savedPassword) {
+        pwdForm.username = savedUsername
+        pwdForm.password = atob(savedPassword)
+        rememberMe.value = true
+    }
+}
 checkSavedCredentials()
 
-async function onSubmit() {
-    if (!loginForm.value) return
-
+// ---- 通用登录完成处理 ----
+async function afterLogin() {
     try {
-        // 表单验证前显示轻微的加载效果
-        const valid = await new Promise<boolean>((resolve) => {
-            loginForm.value!.validate((isValid: boolean) => {
-                if (!isValid) {
-                    // 自动聚焦到第一个错误字段
-                    const firstErrorInput = document.querySelector('.el-form-item.is-error input')
-                    if (firstErrorInput) {
-                        (firstErrorInput as HTMLElement).focus()
-                    }
-                }
-                resolve(isValid)
-            })
-        })
+        await auth.fetchCurrentUser()
+    } catch (_) { /* 非致命，忽略 */ }
+    ElMessage({ message: '登录成功，欢迎回来！', type: 'success', duration: 1500 })
+    setTimeout(() => router.push('/'), 800)
+}
 
-        if (valid) {
-            loading.value = true
-            try {
-                // 保存用户名密码（如果勾选了记住我）
-                if (rememberMe.value) {
-                    localStorage.setItem('savedUsername', form.username)
-                    localStorage.setItem('savedPassword', btoa(form.password)) // 使用Base64编码密码
-                } else {
-                    // 如果不记住，则清除保存的凭据
-                    localStorage.removeItem('savedUsername')
-                    localStorage.removeItem('savedPassword')
-                }
-
-                await auth.loginAction({
-                    username: form.username,
-                    password: form.password
-                })
-
-                // 登录成功后立即获取完整用户信息
-                try {
-                    await auth.fetchCurrentUser()
-                } catch (fetchError) {
-                    console.error('获取用户信息失败，但不影响登录流程', fetchError)
-                }
-
-                ElMessage({
-                    message: '登录成功，欢迎回来！',
-                    type: 'success',
-                    duration: 2000,
-                    showClose: true,
-                    onClose: () => {
-                        router.push('/')
-                    }
-                })
-
-                // 添加短暂延迟以显示成功消息
-                setTimeout(() => {
-                    router.push('/')
-                }, 1000)
-            } catch (e: any) {
-                ElMessage({
-                    message: e.message || '登录失败，请检查用户名和密码',
-                    type: 'error',
-                    duration: 3000,
-                    showClose: true
-                })
-                // 登录失败时自动聚焦用户名输入框
-                const usernameInput = document.querySelector('.login-card input[type="text"]')
-                if (usernameInput) {
-                    (usernameInput as HTMLElement).focus()
-                }
-            } finally {
-                loading.value = false
-            }
+// ---- 密码登录提交 ----
+async function onSubmitPassword() {
+    const valid = await pwdFormRef.value?.validate().catch(() => false)
+    if (!valid) return
+    loading.value = true
+    try {
+        if (rememberMe.value) {
+            localStorage.setItem('savedUsername', pwdForm.username)
+            localStorage.setItem('savedPassword', btoa(pwdForm.password))
+        } else {
+            localStorage.removeItem('savedUsername')
+            localStorage.removeItem('savedPassword')
         }
-    } catch (error) {
-        console.error('登录过程出错:', error)
+        // 判断输入是否为邮箱格式
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pwdForm.username)
+        await auth.loginAction({
+            loginType: 'PASSWORD',
+            ...(isEmail
+                ? { email: pwdForm.username }
+                : { username: pwdForm.username }),
+            password: pwdForm.password
+        } as any)
+        await afterLogin()
+    } catch (e: any) {
+        ElMessage.error(e.message || '登录失败，请检查账号和密码')
+    } finally {
+        loading.value = false
+    }
+}
+
+// ---- 验证码登录提交 ----
+async function onSubmitCode() {
+    const valid = await codeFormRef.value?.validate().catch(() => false)
+    if (!valid) return
+    loading.value = true
+    try {
+        await auth.loginAction({
+            loginType: 'CODE',
+            email: codeForm.email,
+            code: codeForm.code
+        } as any)
+        await afterLogin()
+    } catch (e: any) {
+        ElMessage.error(e.message || '验证码登录失败，请重试')
+    } finally {
         loading.value = false
     }
 }
@@ -273,7 +339,7 @@ async function onSubmit() {
 
 .auth-header {
     text-align: center;
-    margin-bottom: 35px;
+    margin-bottom: 20px;
 }
 
 .auth-header h2 {
@@ -285,6 +351,21 @@ async function onSubmit() {
 .auth-header p {
     color: #888;
     font-size: 1rem;
+}
+
+.login-tabs {
+    margin-bottom: 10px;
+}
+
+.code-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.send-code-btn {
+    white-space: nowrap;
+    min-width: 120px;
 }
 
 .remember-me {
@@ -351,22 +432,11 @@ async function onSubmit() {
     .auth-features {
         margin-top: 20px;
         margin-bottom: 20px;
-    }
-
-    .auth-header h2 {
-        font-size: 1.5rem;
-    }
-
-    .auth-features {
         gap: 5px;
     }
 
     .feature {
         font-size: 0.9rem;
-    }
-
-    .feature .el-icon {
-        padding: 5px;
     }
 
     .auth-header h2 {
@@ -377,13 +447,13 @@ async function onSubmit() {
         font-size: 0.9rem;
     }
 
-    :deep(.el-input__inner) {
-        height: 45px;
-    }
-
     .submit-btn {
         height: 45px;
         font-size: 1rem;
+    }
+
+    .send-code-btn {
+        min-width: 100px;
     }
 }
 

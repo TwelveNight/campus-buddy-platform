@@ -3,6 +3,8 @@ package com.example.campusbuddy.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.campusbuddy.dto.EmailCodeDTO;
+import com.example.campusbuddy.service.EmailService;
 import com.example.campusbuddy.dto.LoginDTO;
 import com.example.campusbuddy.dto.PasswordUpdateDTO;
 import com.example.campusbuddy.dto.ProfileUpdateDTO;
@@ -41,6 +43,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private UserCacheService userCacheService;
 
+    @Autowired
+    private EmailService emailService;
+
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
@@ -50,10 +55,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userMapper.findByUsername(dto.getUsername()) != null) {
             throw new IllegalArgumentException("用户名已存在");
         }
+
+        // 若填写了邮箱，校验验证码并检查邮箱唯一性
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            if (dto.getEmailCode() == null || dto.getEmailCode().isBlank()) {
+                throw new IllegalArgumentException("请填写邮箱验证码");
+            }
+            if (!emailService.verifyCode(dto.getEmail(), "REGISTER", dto.getEmailCode())) {
+                throw new IllegalArgumentException("邮箱验证码错误或已过期");
+            }
+            if (userMapper.findByEmail(dto.getEmail()) != null) {
+                throw new IllegalArgumentException("该邮箱已被注册");
+            }
+        }
+
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         user.setNickname(dto.getNickname());
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            user.setEmail(dto.getEmail());
+        }
         user.setCreditScore(100);
         user.setStatus("ACTIVE");
         this.save(user);
@@ -73,26 +95,60 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public String login(LoginDTO dto) {
-        // 登录必须从DB取用户（含密码哈希），缓存中不存密码
-        User user = userMapper.findByUsername(dto.getUsername());
+        String loginType = dto.getLoginType();
 
+        // ① 邮箱 + 验证码登录
+        if ("CODE".equalsIgnoreCase(loginType)) {
+            if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+                throw new IllegalArgumentException("请填写邮箱");
+            }
+            if (dto.getCode() == null || dto.getCode().isBlank()) {
+                throw new IllegalArgumentException("请填写验证码");
+            }
+            if (!emailService.verifyCode(dto.getEmail(), "LOGIN", dto.getCode())) {
+                throw new IllegalArgumentException("验证码错误或已过期");
+            }
+            User user = userMapper.findByEmail(dto.getEmail());
+            if (user == null) {
+                throw new IllegalArgumentException("该邮箱未绑定任何账号，请先注册");
+            }
+            return generateTokenAndCache(user);
+        }
+
+        // ② 邮箱 + 密码登录
+        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            User user = userMapper.findByEmail(dto.getEmail());
+            if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
+                throw new IllegalArgumentException("邮箱或密码错误");
+            }
+            checkUserStatus(user);
+            return generateTokenAndCache(user);
+        }
+
+        // ③ 用户名 + 密码登录（原有逻辑，兼容历史用户）
+        User user = userMapper.findByUsername(dto.getUsername());
         if (user == null || !passwordEncoder.matches(dto.getPassword(), user.getPasswordHash())) {
             throw new IllegalArgumentException("用户名或密码错误");
         }
+        checkUserStatus(user);
+        return generateTokenAndCache(user);
+    }
 
-        // 检查用户状态
+    /** 检查用户账号状态 */
+    private void checkUserStatus(User user) {
         if ("BANNED".equals(user.getStatus())) {
             throw new IllegalArgumentException("该账号已被禁用，请联系管理员");
         }
         if ("INACTIVE".equals(user.getStatus())) {
             throw new IllegalArgumentException("该账号未激活，请联系管理员");
         }
+    }
 
+    /** 生成 JWT 并缓存用户 */
+    private String generateTokenAndCache(User user) {
+        checkUserStatus(user);
         String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
-
-        // 登录后缓存用户（不含密码）
         userCacheService.cacheUser(user);
-
         return token;
     }
 
@@ -189,6 +245,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User getUserByUsername(String username) {
         return userMapper.findByUsername(username);
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userMapper.findByEmail(email);
     }
 
     @Override

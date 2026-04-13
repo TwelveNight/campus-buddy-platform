@@ -2,11 +2,13 @@ package com.example.campusbuddy.controller;
 
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.common.ResultCode;
+import com.example.campusbuddy.dto.EmailCodeDTO;
 import com.example.campusbuddy.dto.LoginDTO;
 import com.example.campusbuddy.dto.PasswordUpdateDTO;
 import com.example.campusbuddy.dto.ProfileUpdateDTO;
 import com.example.campusbuddy.dto.RegisterDTO;
 import com.example.campusbuddy.entity.User;
+import com.example.campusbuddy.service.EmailService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,22 @@ import java.util.List;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Operation(summary = "发送邮箱验证码", description = "codeType 取值：LOGIN（登录）| REGISTER（注册）")
+    @PostMapping("/send-email-code")
+    public R<Void> sendEmailCode(@RequestBody EmailCodeDTO dto) {
+        try {
+            emailService.sendVerifyCode(dto.getEmail(), dto.getCodeType());
+            return R.ok("验证码已发送，请查收邮件", null);
+        } catch (IllegalArgumentException e) {
+            return R.fail(e.getMessage());
+        } catch (RuntimeException e) {
+            return R.fail(e.getMessage());
+        }
+    }
 
     @Operation(summary = "用户注册")
     @PostMapping("/register")

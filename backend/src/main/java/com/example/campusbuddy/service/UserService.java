@@ -24,6 +24,9 @@ public interface UserService extends IService<User> {
 
     User getUserByUsername(String username);
 
+    /** 根据邮箱查询用户 */
+    User getUserByEmail(String email);
+
     /** 查询所有活跃用户 */
     List<User> listActiveUsers();
 

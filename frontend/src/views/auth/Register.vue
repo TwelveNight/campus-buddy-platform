@@ -34,29 +34,52 @@
 
                 <el-form :model="form" :rules="rules" ref="registerForm" @submit.prevent="onSubmit">
                     <el-form-item prop="username">
-                        <el-input v-model="form.username" placeholder="请输入用户名" prefix-icon="User" size="large">
+                        <el-input v-model="form.username" placeholder="请输入用户名" prefix-icon="User"
+                            size="large">
                         </el-input>
                     </el-form-item>
 
                     <el-form-item prop="nickname">
-                        <el-input v-model="form.nickname" placeholder="请输入昵称" prefix-icon="EditPen" size="large">
+                        <el-input v-model="form.nickname" placeholder="请输入昵称" prefix-icon="EditPen"
+                            size="large">
                         </el-input>
                     </el-form-item>
 
                     <el-form-item prop="password">
-                        <el-input v-model="form.password" type="password" placeholder="请输入密码" prefix-icon="Lock"
-                            size="large" show-password>
+                        <el-input v-model="form.password" type="password" placeholder="请输入密码"
+                            prefix-icon="Lock" size="large" show-password>
                         </el-input>
                     </el-form-item>
 
                     <el-form-item prop="confirmPassword">
-                        <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" prefix-icon="Key"
-                            size="large" show-password>
+                        <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码"
+                            prefix-icon="Key" size="large" show-password>
                         </el-input>
                     </el-form-item>
 
+                    <!-- 邮箱字段（选填，填写后可启用邮箱登录） -->
+                    <el-form-item prop="email">
+                        <el-input v-model="form.email" placeholder="邮箱（选填，可用于邮箱验证码登录）"
+                            prefix-icon="Message" size="large">
+                        </el-input>
+                    </el-form-item>
+
+                    <!-- 邮箱验证码（仅当填写了邮箱时显示） -->
+                    <el-form-item prop="emailCode" v-if="form.email">
+                        <div class="code-row">
+                            <el-input v-model="form.emailCode" placeholder="请输入邮箱验证码" prefix-icon="Key"
+                                size="large" maxlength="6" style="flex:1">
+                            </el-input>
+                            <el-button class="send-code-btn" size="large" :disabled="codeCooldown > 0"
+                                @click="sendRegisterCode" :loading="sendingCode">
+                                {{ codeCooldown > 0 ? `${codeCooldown}s 后重发` : '发送验证码' }}
+                            </el-button>
+                        </div>
+                    </el-form-item>
+
                     <div class="terms">
-                        <el-checkbox v-model="agreeTerms">我已阅读并同意<a href="#">服务条款</a>和<a href="#">隐私政策</a></el-checkbox>
+                        <el-checkbox v-model="agreeTerms">我已阅读并同意<a href="#">服务条款</a>和<a
+                                href="#">隐私政策</a></el-checkbox>
                     </div>
 
                     <el-form-item>
@@ -82,6 +105,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useAuthStore } from '../../store/auth'
+import { sendEmailCode } from '../../api/user'
 import {
     Connection,
     UserFilled,
@@ -94,11 +118,18 @@ const registerForm = ref<FormInstance>()
 const loading = ref(false)
 const agreeTerms = ref(false)
 
+// 发送验证码冷却
+const codeCooldown = ref(0)
+const sendingCode = ref(false)
+let cooldownTimer: ReturnType<typeof setInterval> | null = null
+
 const form = reactive({
     username: '',
     nickname: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    email: '',
+    emailCode: ''
 })
 
 const validatePass = (_rule: any, value: string, callback: any) => {
@@ -106,6 +137,14 @@ const validatePass = (_rule: any, value: string, callback: any) => {
         callback(new Error('请再次输入密码'))
     } else if (value !== form.password) {
         callback(new Error('两次输入密码不一致'))
+    } else {
+        callback()
+    }
+}
+
+const validateEmailCode = (_rule: any, value: string, callback: any) => {
+    if (form.email && !value) {
+        callback(new Error('填写了邮箱，请输入验证码'))
     } else {
         callback()
     }
@@ -127,7 +166,46 @@ const rules: FormRules = {
     confirmPassword: [
         { required: true, message: '请再次输入密码', trigger: 'blur' },
         { validator: validatePass, trigger: 'blur' }
+    ],
+    email: [
+        { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    ],
+    emailCode: [
+        { validator: validateEmailCode, trigger: 'blur' }
     ]
+}
+
+async function sendRegisterCode() {
+    if (!form.email) {
+        ElMessage.warning('请先填写邮箱')
+        return
+    }
+    sendingCode.value = true
+    try {
+        const res = await sendEmailCode({ email: form.email, codeType: 'REGISTER' })
+        if (res.data?.code === 200) {
+            ElMessage.success('验证码已发送，请查收邮件')
+            startCooldown()
+        } else {
+            ElMessage.error(res.data?.message || '发送失败，请稍后重试')
+        }
+    } catch (e: any) {
+        ElMessage.error(e?.response?.data?.message || '发送失败，请检查邮箱地址')
+    } finally {
+        sendingCode.value = false
+    }
+}
+
+function startCooldown(seconds = 60) {
+    codeCooldown.value = seconds
+    if (cooldownTimer) clearInterval(cooldownTimer)
+    cooldownTimer = setInterval(() => {
+        codeCooldown.value--
+        if (codeCooldown.value <= 0 && cooldownTimer) {
+            clearInterval(cooldownTimer)
+            cooldownTimer = null
+        }
+    }, 1000)
 }
 
 async function onSubmit() {
@@ -137,11 +215,16 @@ async function onSubmit() {
         if (valid) {
             loading.value = true
             try {
-                await auth.registerAction({
+                const payload: any = {
                     username: form.username,
                     password: form.password,
                     nickname: form.nickname
-                })
+                }
+                if (form.email) {
+                    payload.email = form.email
+                    payload.emailCode = form.emailCode
+                }
+                await auth.registerAction(payload)
                 ElMessage.success('注册成功，即将前往登录页')
                 setTimeout(() => router.push('/login'), 1500)
             } catch (e: any) {
@@ -253,6 +336,11 @@ async function onSubmit() {
     text-align: center;
 }
 
+.highlight {
+    font-weight: 600;
+    color: #ffffff;
+}
+
 .auth-card {
     background: #ffffff;
     box-shadow: none;
@@ -296,7 +384,7 @@ async function onSubmit() {
 /* 其它细节优化，保持简洁专业 */
 .auth-header {
     text-align: center;
-    margin-bottom: 35px;
+    margin-bottom: 25px;
 }
 
 .auth-header h2 {
@@ -336,6 +424,14 @@ async function onSubmit() {
     background: rgba(255, 255, 255, 0.25);
 }
 
+.auth-features {
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    gap: 20px;
+}
+
 .auth-footer {
     text-align: center;
     margin-top: 20px;
@@ -356,30 +452,45 @@ async function onSubmit() {
     text-decoration: underline;
 }
 
+.code-row {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.send-code-btn {
+    white-space: nowrap;
+    min-width: 120px;
+}
+
 @media (max-width: 768px) {
     .auth-container {
         flex-direction: column;
         width: 100%;
         max-width: 450px;
     }
-    
+
     .auth-welcome {
         padding: 40px 30px;
         border-radius: 8px 8px 0 0;
     }
-    
+
     .auth-welcome h1 {
         font-size: 1.8rem;
     }
-    
+
     .auth-card {
         border-radius: 0 0 8px 8px;
         padding: 30px;
     }
-    
+
     .submit-btn {
         height: 44px;
         font-size: 1rem;
+    }
+
+    .send-code-btn {
+        min-width: 100px;
     }
 }
 </style>

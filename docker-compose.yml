@@ -34,6 +34,10 @@ services:
       QINIU_SECRET_KEY: ${QINIU_SECRET_KEY}
       QINIU_BUCKET: ${QINIU_BUCKET}
       QINIU_DOMAIN: ${QINIU_DOMAIN}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
       TZ: Asia/Shanghai
       JAVA_OPTS: -Duser.timezone=Asia/Shanghai
     depends_on:

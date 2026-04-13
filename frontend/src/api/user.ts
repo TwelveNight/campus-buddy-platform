@@ -40,11 +40,11 @@ export function updateUserProfile(data: {
   // 对于仅包含头像URL的更新，使用特定格式
   if (Object.keys(data).length === 1 && data.avatarUrl) {
     // 尝试使用后端可能期望的格式
-    return axios.put('/api/user/profile', { 
-      "avatarUrl": data.avatarUrl 
+    return axios.put('/api/user/profile', {
+      "avatarUrl": data.avatarUrl
     });
   }
-  
+
   // 其他情况使用原始格式
   return axios.put('/api/user/profile', data);
 }
@@ -55,4 +55,12 @@ export function changePassword(data: {
   newPassword: string;
 }) {
   return axios.put('/api/user/password', data)
+}
+
+// 发送邮箱验证码
+export function sendEmailCode(data: {
+  email: string;
+  codeType: 'LOGIN' | 'REGISTER';
+}) {
+  return axios.post('/api/user/send-email-code', data)
 }

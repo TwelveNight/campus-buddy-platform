@@ -19,6 +19,7 @@ public class User {
     private String major;
     private String grade;
     private String contactInfo;
+    private String email; // 邮箱（唯一，可为空，兼容历史用户）
     private String skillTags; // JSON字符串
     private Integer creditScore;
     private String status; // ACTIVE, INACTIVE, BANNED
@@ -44,6 +45,8 @@ public class User {
     public void setGrade(String grade) { this.grade = grade; }
     public String getContactInfo() { return contactInfo; }
     public void setContactInfo(String contactInfo) { this.contactInfo = contactInfo; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
     public String getSkillTags() { return skillTags; }
     public void setSkillTags(String skillTags) { this.skillTags = skillTags; }
     public Integer getCreditScore() { return creditScore; }

@@ -116,6 +116,11 @@
 			<artifactId>qiniu-java-sdk</artifactId>
 			<version>7.13.0</version>
 		</dependency>
+		<!-- 邮件发送 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
