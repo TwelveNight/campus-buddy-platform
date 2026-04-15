@@ -177,20 +177,6 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
         sendToUser(userId, json);
     }
 
-    // 静态方法：向指定用户推送好友申请通知
-    public static void sendFriendRequestNotification(Long userId, Long requesterId, String requesterName, Long requestId) {
-        String json = String.format("{\"type\":\"FRIEND_REQUEST\",\"title\":\"好友申请\",\"content\":\"%s向您发送了好友申请\",\"requesterId\":%d,\"requesterName\":\"%s\",\"requestId\":%d,\"timestamp\":%d}",
-                escape(requesterName), requesterId, escape(requesterName), requestId, System.currentTimeMillis());
-        sendToUser(userId, json);
-    }
-
-    // 静态方法：向指定用户推送好友申请状态变更通知
-    public static void sendFriendRequestStatusNotification(Long userId, Long responderId, String responderName, String status) {
-        String json = String.format("{\"type\":\"FRIEND_REQUEST_STATUS\",\"title\":\"好友申请状态\",\"content\":\"%s%s了您的好友申请\",\"responderId\":%d,\"responderName\":\"%s\",\"status\":\"%s\",\"timestamp\":%d}",
-                escape(responderName), "ACCEPTED".equals(status) ? "接受" : "拒绝", responderId, escape(responderName), escape(status), System.currentTimeMillis());
-        sendToUser(userId, json);
-    }
-
     // 静态方法：向指定用户推送私信
     public static void sendPrivateMessage(Long userId, Long senderId, String senderName, String content, Long messageId) {
         String json = String.format("{\"type\":\"PRIVATE_MESSAGE\",\"title\":\"新的私信\",\"senderId\":%d,\"senderName\":\"%s\",\"content\":\"%s\",\"messageId\":%d,\"timestamp\":%d}",

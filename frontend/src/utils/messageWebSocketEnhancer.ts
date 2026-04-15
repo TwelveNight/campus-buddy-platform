@@ -240,13 +240,17 @@ class MessageWebSocketEnhancer {
     // 获取当前用户ID
     const authStore = useAuthStore();
     const currentUserId = authStore.user?.userId;
-    
+
     // 如果消息是当前用户自己发送的，不显示通知
     if (data.senderId && currentUserId && Number(data.senderId) === Number(currentUserId)) {
-      // 是自己发送的消息，不显示通知
       return;
     }
-    
+
+    // 如果当前已在私信界面，不显示弹窗（避免在聊天界面内重复提示）
+    if (window.location.hash.includes('/messages') || window.location.pathname.includes('/messages')) {
+      return;
+    }
+
     const title = data.senderName || '新消息';
     let content = data.content;
 

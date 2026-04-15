@@ -477,7 +477,8 @@ const markAllAsRead = async () => {
             recentNotifications.value.forEach(item => {
                 item.isRead = true
             })
-            unreadCount.value = 0
+            // 从服务端重新获取准确的未读数（不只是本地清零）
+            await fetchUnreadCount()
             ElMessage.success('已将全部通知标记为已读')
             // 刷新通知列表
             fetchRecentNotifications()
@@ -494,6 +495,17 @@ const handleNotificationDropdownToggle = (visible: boolean) => {
         fetchRecentNotifications()
     }
 }
+
+// 处理来自私信页面发出的未读消息数量更新事件
+const handleUnreadMessageCountUpdate = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    if (customEvent.detail && typeof customEvent.detail.count === 'number') {
+        unreadMessageCount.value = customEvent.detail.count;
+    } else {
+        // fallback：从 API 重新获取
+        fetchUnreadMessageCount();
+    }
+};
 
 // 设置定期轮询未读通知数量
 const setupNotificationPolling = () => {
@@ -538,13 +550,8 @@ const handleWebSocketNotification = (data: any) => {
     }
 
     try {
-        // 立即增加未读通知计数（无需等待API调用）
-        unreadCount.value += 1;
-
-        // 异步刷新未读通知计数（确保数据一致性）
-        setTimeout(() => {
-            fetchUnreadCount();
-        }, 1000);
+        // 从服务端刷新，确保计数准确（不做本地累加，避免重复）
+        fetchUnreadCount();
 
         // 如果通知下拉菜单是打开的，更新通知列表
         if (document.querySelector('.notification-dropdown')?.parentElement?.style.display !== 'none') {
@@ -571,7 +578,7 @@ const handleWebSocketMessage = (data: any) => {
         console.warn('收到无效私信数据或非私信消息:', data);
         return;
     }
-    
+
     // 跳过PONG响应和其他纯文本消息
     if (typeof data === 'string' && (data === 'PONG' || data.startsWith('echo:'))) {
         console.log('跳过PONG响应或echo消息:', data);
@@ -579,13 +586,8 @@ const handleWebSocketMessage = (data: any) => {
     }
 
     try {
-        // 立即增加未读消息计数（无需等待API调用）
-        unreadMessageCount.value += 1;
-
-        // 异步刷新未读消息计数（确保数据一致性）
-        setTimeout(() => {
-            fetchUnreadMessageCount();
-        }, 1000);
+        // 从服务端刷新，确保计数准确（不做本地累加，避免重复）
+        fetchUnreadMessageCount();
 
         // 不在这里显示通知，避免重复通知
         // 通知已由 messageWebSocketEnhancer.ts 中的 ElNotification 处理
@@ -600,10 +602,10 @@ const initWebSocket = () => {
         // 连接WebSocket
         webSocketService.connect(authStore.user.userId);
 
-        // 添加通知监听器
+        // 添加通知监听器（处理所有 type=NOTIFICATION 的业务消息，含好友/小组/互助等）
         webSocketService.addNotificationListener(handleWebSocketNotification);
 
-        // 添加消息监听器
+        // 添加消息监听器（仅处理私信）
         webSocketService.addMessageListener(handleWebSocketMessage);
 
         // 添加连接状态监听器
@@ -639,6 +641,9 @@ onMounted(async () => {
         // 设置通知轮询
         setupNotificationPolling();
     }
+
+    // 监听来自消息页面的未读消息数量更新事件
+    window.addEventListener('update-unread-message-count', handleUnreadMessageCountUpdate);
 })
 
 onBeforeUnmount(() => {
@@ -656,6 +661,9 @@ onBeforeUnmount(() => {
             clearInterval(timer);
         }
     });
+
+    // 移除消息已读事件监听
+    window.removeEventListener('update-unread-message-count', handleUnreadMessageCountUpdate);
 })
 
 // 退出登录

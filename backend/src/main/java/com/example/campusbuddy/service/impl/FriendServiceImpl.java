@@ -4,10 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.dto.FriendRequestDTO;
+import com.example.campusbuddy.dto.NotificationCreateDTO;
 import com.example.campusbuddy.entity.Friend;
 import com.example.campusbuddy.entity.FriendRequest;
-import com.example.campusbuddy.entity.Notification;
-import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.exception.BusinessException;
 import com.example.campusbuddy.mapper.FriendMapper;
 import com.example.campusbuddy.service.FriendRequestService;
@@ -17,7 +16,6 @@ import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.FriendRequestVO;
 import com.example.campusbuddy.vo.FriendVO;
 import com.example.campusbuddy.vo.UserVO;
-import com.example.campusbuddy.websocket.UserWebSocketHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +40,6 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
     
     @Autowired
     private NotificationService notificationService;
-    
-    // WebSocketServer改为使用UserWebSocketHandler静态方法
     
     @Override
     @Transactional
@@ -90,26 +86,18 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
         request.setUpdatedAt(LocalDateTime.now());
         
         friendRequestService.save(request);
-        
-        // 发送通知
+
+        // 发送通知（入库 + WebSocket 推送，统一走 NotificationService）
         UserVO requester = userService.getUserVOById(requesterId);
-        
-        Notification notification = new Notification();
-        notification.setRecipientId(recipientId);
-        notification.setSenderId(requesterId);
-        notification.setType("FRIEND_REQUEST");
-        notification.setTitle("新的好友申请");
-        notification.setContent(requester.getNickname() + "向你发送了好友申请");
-        notification.setIsRead(false);
-        notification.setRelatedId(request.getRequestId());
-        notification.setCreatedAt(LocalDateTime.now());
-        notification.setUpdatedAt(LocalDateTime.now());
-        
-        notificationService.save(notification);
-        
-        // 发送WebSocket消息
-        UserWebSocketHandler.sendFriendRequestNotification(recipientId, requesterId, requester.getNickname(), request.getRequestId());
-        
+        NotificationCreateDTO notifDto = new NotificationCreateDTO();
+        notifDto.setRecipientId(recipientId);
+        notifDto.setSenderId(requesterId);
+        notifDto.setType("FRIEND_REQUEST");
+        notifDto.setTitle("新的好友申请");
+        notifDto.setContent(requester.getNickname() + "向你发送了好友申请");
+        notifDto.setRelatedId(request.getRequestId());
+        notificationService.createUserNotification(notifDto);
+
         return request.getRequestId();
     }
     
@@ -151,28 +139,20 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
         this.save(friend1);
         this.save(friend2);
         
-        // 发送通知给申请者
+        // 发送通知给申请者（入库 + WebSocket 推送，统一走 NotificationService）
         UserVO recipient = userService.getUserVOById(userId);
-        
-        Notification notification = new Notification();
-        notification.setRecipientId(request.getRequesterId());
-        notification.setSenderId(userId);
-        notification.setType("FRIEND_REQUEST_ACCEPTED");
-        notification.setTitle("好友申请已接受");
-        notification.setContent(recipient.getNickname() + "接受了你的好友申请");
-        notification.setIsRead(false);
-        notification.setRelatedId(requestId);
-        notification.setCreatedAt(LocalDateTime.now());
-        notification.setUpdatedAt(LocalDateTime.now());
-        
-        notificationService.save(notification);
-        
-        // 发送WebSocket消息
-        UserWebSocketHandler.sendFriendRequestStatusNotification(request.getRequesterId(), userId, recipient.getNickname(), "ACCEPTED");
-        
+        NotificationCreateDTO notifDto = new NotificationCreateDTO();
+        notifDto.setRecipientId(request.getRequesterId());
+        notifDto.setSenderId(userId);
+        notifDto.setType("FRIEND_REQUEST_ACCEPTED");
+        notifDto.setTitle("好友申请已接受");
+        notifDto.setContent(recipient.getNickname() + "接受了你的好友申请");
+        notifDto.setRelatedId(requestId);
+        notificationService.createUserNotification(notifDto);
+
         return true;
     }
-    
+
     @Override
     @Transactional
     public boolean rejectFriendRequest(Long userId, Long requestId) {
@@ -197,25 +177,17 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
         request.setUpdatedAt(LocalDateTime.now());
         friendRequestService.updateById(request);
         
-        // 发送通知给申请者
+        // 发送通知给申请者（入库 + WebSocket 推送，统一走 NotificationService）
         UserVO recipient = userService.getUserVOById(userId);
-        
-        Notification notification = new Notification();
-        notification.setRecipientId(request.getRequesterId());
-        notification.setSenderId(userId);
-        notification.setType("FRIEND_REQUEST_REJECTED");
-        notification.setTitle("好友申请被拒绝");
-        notification.setContent(recipient.getNickname() + "拒绝了你的好友申请");
-        notification.setIsRead(false);
-        notification.setRelatedId(requestId);
-        notification.setCreatedAt(LocalDateTime.now());
-        notification.setUpdatedAt(LocalDateTime.now());
-        
-        notificationService.save(notification);
-        
-        // 发送WebSocket消息
-        UserWebSocketHandler.sendFriendRequestStatusNotification(request.getRequesterId(), userId, recipient.getNickname(), "REJECTED");
-        
+        NotificationCreateDTO notifDto = new NotificationCreateDTO();
+        notifDto.setRecipientId(request.getRequesterId());
+        notifDto.setSenderId(userId);
+        notifDto.setType("FRIEND_REQUEST_REJECTED");
+        notifDto.setTitle("好友申请被拒绝");
+        notifDto.setContent(recipient.getNickname() + "拒绝了你的好友申请");
+        notifDto.setRelatedId(requestId);
+        notificationService.createUserNotification(notifDto);
+
         return true;
     }
     
@@ -273,19 +245,17 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
         boolean result1 = this.remove(wrapper1);
         boolean result2 = this.remove(wrapper2);
 
-        // 发送通知给被删除的好友
+        // 发送通知给被删除的好友（入库 + WebSocket 推送，统一走 NotificationService）
         if (result1 && result2) {
             UserVO user = userService.getUserVOById(userId);
-            Notification notification = new Notification();
-            notification.setRecipientId(friendId);
-            notification.setSenderId(userId);
-            notification.setType("FRIEND_REMOVED"); // 你需要在前端加上该类型的展示
-            notification.setTitle("好友关系已解除");
-            notification.setContent((user != null ? user.getNickname() : "对方") + "已将你移除好友");
-            notification.setIsRead(false);
-            notification.setCreatedAt(LocalDateTime.now());
-            notification.setUpdatedAt(LocalDateTime.now());
-            notificationService.save(notification);
+            String nickname = user != null ? user.getNickname() : "对方";
+            NotificationCreateDTO notifDto = new NotificationCreateDTO();
+            notifDto.setRecipientId(friendId);
+            notifDto.setSenderId(userId);
+            notifDto.setType("FRIEND_REMOVED");
+            notifDto.setTitle("好友关系已解除");
+            notifDto.setContent(nickname + "已将你移除好友");
+            notificationService.createUserNotification(notifDto);
         }
         return result1 && result2;
     }

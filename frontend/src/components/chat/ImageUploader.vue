@@ -1,28 +1,23 @@
 <template>
     <div class="image-uploader">
-        <el-upload
-            ref="uploadRef"
-            :action="uploadAction"
-            :headers="uploadHeaders"
-            :show-file-list="false"
-            :before-upload="beforeUpload"
-            :on-success="handleSuccess"
-            :on-error="handleError"
+        <input
+            ref="fileInputRef"
+            type="file"
             accept="image/*"
-            :disabled="uploading"
-        >
-            <el-button type="text" class="upload-trigger" :loading="uploading">
-                <el-icon><Picture /></el-icon>
-            </el-button>
-        </el-upload>
+            style="display: none"
+            @change="handleFileChange"
+        />
+        <el-button type="text" class="upload-trigger" :loading="uploading" @click="triggerFileInput">
+            <el-icon><Picture /></el-icon>
+        </el-button>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/store/auth'
+import { uploadApi } from '@/api/upload'
 
 // 定义事件
 const emit = defineEmits<{
@@ -30,69 +25,63 @@ const emit = defineEmits<{
     error: [error: string]
 }>()
 
-const authStore = useAuthStore()
-const uploadRef = ref()
+const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 
-// 上传配置
-const uploadAction = computed(() => {
-    return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/api/upload/image`
-})
+// 触发文件选择
+const triggerFileInput = () => {
+    if (!uploading.value) {
+        fileInputRef.value?.click()
+    }
+}
 
-const uploadHeaders = computed(() => {
-    const token = authStore.token
-    return token ? { 'Authorization': `Bearer ${token}` } : {}
-})
+// 处理文件选择
+const handleFileChange = async (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+    if (!file) return
 
-// 上传前验证
-const beforeUpload = (file: File) => {
+    // 重置 input，允许再次选择同一文件
+    target.value = ''
+
     // 检查文件类型
-    const isImage = file.type.startsWith('image/')
-    if (!isImage) {
+    if (!file.type.startsWith('image/')) {
         ElMessage.error('只能上传图片文件!')
-        return false
+        return
     }
 
     // 检查文件大小（限制为20MB）
-    const isLt20M = file.size / 1024 / 1024 < 20
-    if (!isLt20M) {
+    if (file.size / 1024 / 1024 > 20) {
         ElMessage.error('图片大小不能超过 20MB!')
-        return false
+        return
     }
 
     uploading.value = true
-    return true
-}
-
-// 上传成功
-const handleSuccess = (response: any) => {
-    uploading.value = false
-    
-    if (response.code === 200) {
-        ElMessage.success('图片上传成功')
-        emit('success', response.data)
-    } else {
-        ElMessage.error(response.message || '图片上传失败')
-        emit('error', response.message || '图片上传失败')
+    try {
+        const res = await uploadApi.uploadImage(file)
+        if (res.data.code === 200) {
+            ElMessage.success('图片上传成功')
+            emit('success', res.data.data)
+        } else {
+            const msg = res.data.message || '图片上传失败'
+            ElMessage.error(msg)
+            emit('error', msg)
+        }
+    } catch (error: any) {
+        console.error('图片上传失败:', error)
+        let errorMessage = '图片上传失败'
+        if (error?.response?.status === 413) {
+            errorMessage = '图片文件过大'
+        } else if (error?.response?.status === 415) {
+            errorMessage = '不支持的图片格式'
+        } else if (error?.message) {
+            errorMessage = error.message
+        }
+        ElMessage.error(errorMessage)
+        emit('error', errorMessage)
+    } finally {
+        uploading.value = false
     }
-}
-
-// 上传失败
-const handleError = (error: any) => {
-    uploading.value = false
-    console.error('图片上传失败:', error)
-    
-    let errorMessage = '图片上传失败'
-    if (error.status === 413) {
-        errorMessage = '图片文件过大'
-    } else if (error.status === 415) {
-        errorMessage = '不支持的图片格式'
-    } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message
-    }
-    
-    ElMessage.error(errorMessage)
-    emit('error', errorMessage)
 }
 </script>
 

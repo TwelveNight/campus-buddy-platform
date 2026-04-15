@@ -337,11 +337,10 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
      */
     private String generateRelatedLink(String type, Long relatedId) {
         if (relatedId == null) {
-            // 处理无需relatedId的类型
             return switch (type) {
-                case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED" -> "/friends?tab=friends";
+                case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED", "FRIEND_REMOVED" -> "/friends?tab=friends";
                 case "FRIEND_REQUEST" -> "/friends?tab=requests";
-                default -> null; // 无法生成链接，可能需要其他处理
+                default -> null;
             };
         }
 
@@ -349,27 +348,20 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             case "SYSTEM_ANNOUNCEMENT", "SYSTEM_ACTIVITY" -> "/announcement/" + relatedId;
             case "HELP_NEW_APPLICATION", "HELP_APPLICATION_ACCEPTED", "HELP_APPLICATION_REJECTED", "HELP_COMPLETED" ->
                     "/helpinfo/" + relatedId;
-            case "HELP_NEW_REVIEW" ->
-                // 评价通知跳转到用户的评价页面，显示收到的评价
-                    "/reviews?type=received";
+            case "HELP_NEW_REVIEW" -> "/reviews?type=received";
             case "GROUP_JOIN_APPLICATION" -> "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
             case "GROUP_JOIN_APPROVED", "GROUP_JOIN_REJECTED", "GROUP_INVITATION", "GROUP_ANNOUNCEMENT",
                  "GROUP_ADMIN_ASSIGNED", "GROUP_ADMIN_REMOVED" -> "/groups/" + relatedId + "/detail";
-            case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
+            case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED", "FRIEND_REMOVED" -> "/friends?tab=friends";
             case "FRIEND_REQUEST" -> "/friends?tab=requests";
             default -> null;
         };
     }
 
-    /**
-     * 根据通知类型和相关ID生成前端路由链接，支持senderId
-     */
     private String generateRelatedLink(String type, Long relatedId, Long senderId) {
-
         if (relatedId == null) {
-            // 处理无需relatedId的类型
             return switch (type) {
-                case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED" -> "/friends?tab=friends";
+                case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED", "FRIEND_REMOVED" -> "/friends?tab=friends";
                 case "FRIEND_REQUEST" -> "/friends?tab=requests";
                 default -> null;
             };
@@ -382,7 +374,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             case "GROUP_JOIN_APPLICATION" -> "/groups/" + relatedId + "/detail?tab=members&subtab=requests";
             case "GROUP_JOIN_APPROVED", "GROUP_JOIN_REJECTED", "GROUP_INVITATION", "GROUP_ANNOUNCEMENT",
                  "GROUP_ADMIN_ASSIGNED", "GROUP_ADMIN_REMOVED" -> "/groups/" + relatedId + "/detail";
-            case "FRIEND_REQUEST_ACCEPTED" -> "/friends?tab=friends";
+            case "FRIEND_REQUEST_ACCEPTED", "FRIEND_REQUEST_REJECTED", "FRIEND_REMOVED" -> "/friends?tab=friends";
             case "FRIEND_REQUEST" -> "/friends?tab=requests";
             default -> null;
         };
