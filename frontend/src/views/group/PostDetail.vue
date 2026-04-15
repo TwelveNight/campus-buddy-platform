@@ -135,17 +135,14 @@
                 <!-- 正常显示的评论内容 -->
                 <div v-else class="comment-content markdown-content animated-content" v-html="renderCommentContent(comment.content)"></div>
 
-                <!-- 回复输入框（点击"回复"按钮后显示） -->
-                <div v-if="replyTo?.commentId === comment.commentId" class="reply-input-area">
-                  <el-input
-                    v-model="replyContent"
-                    type="textarea"
-                    :rows="2"
-                    :placeholder="`回复 ${comment.nickname || comment.username || '匿名'}...`"
-                    :maxlength="500"
-                    show-word-limit
-                    resize="none"
-                  />
+                <!-- 回复输入框（点击顶层评论"回复"按钮后显示） -->
+                <div v-if="replyTo?.commentId === comment.commentId && !replyTo?.replyToNickname" class="reply-input-area">
+                  <div class="editor-wrapper">
+                    <RichEditor
+                      v-model="replyContent"
+                      :placeholder="`回复 ${comment.nickname || comment.username || '匿名'}...（支持Markdown）`"
+                      style="width:100%;margin-bottom:8px;" />
+                  </div>
                   <div class="reply-input-actions">
                     <el-button size="small" @click="cancelReply">取消</el-button>
                     <el-button
@@ -182,8 +179,19 @@
                         {{ reply.nickname || reply.username || '匿名' }}
                       </el-link>
                       <span class="comment-time time-badge">{{ formatTime(reply.createdAt) }}</span>
-                      <div class="comment-actions" v-if="authStore.user?.userId === reply.userId">
+                      <div class="comment-actions">
+                        <!-- 对回复再次回复（扁平化，parentId 指向顶层，内容前加 @mention） -->
                         <el-button
+                          v-if="authStore.isAuthenticated && groupStatus === 'ACTIVE'"
+                          type="text"
+                          size="small"
+                          class="action-btn reply-btn"
+                          @click="toggleReplyToReply(comment, reply)">
+                          <el-icon><ChatDotRound /></el-icon>
+                          回复
+                        </el-button>
+                        <el-button
+                          v-if="authStore.user?.userId === reply.userId"
                           type="text"
                           size="small"
                           @click="deleteReplyItem(comment, reply)"
@@ -193,6 +201,27 @@
                       </div>
                     </div>
                     <div class="comment-content markdown-content" style="font-size:13px" v-html="renderCommentContent(reply.content)"></div>
+
+                    <!-- 对某条回复的再次回复输入框 -->
+                    <div v-if="replyTo?.commentId === comment.commentId && replyTo?.replyToNickname === (reply.nickname || reply.username)" class="reply-input-area" style="margin-left:0">
+                      <div class="editor-wrapper">
+                        <RichEditor
+                          v-model="replyContent"
+                          :placeholder="`回复 ${reply.nickname || reply.username || '匿名'}...（支持Markdown）`"
+                          style="width:100%;margin-bottom:8px;" />
+                      </div>
+                      <div class="reply-input-actions">
+                        <el-button size="small" @click="cancelReply">取消</el-button>
+                        <el-button
+                          type="primary"
+                          size="small"
+                          :loading="replyLoading"
+                          :disabled="!replyContent.trim()"
+                          @click="submitReply(comment)">
+                          发送回复
+                        </el-button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -264,7 +293,7 @@ const commentTotal = ref(0)
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 // 回复状态
-const replyTo = ref<{ commentId: number; nickname: string } | null>(null)
+const replyTo = ref<{ commentId: number; nickname: string; replyToNickname?: string } | null>(null)
 const replyContent = ref('')
 const replyLoading = ref(false)
 
@@ -517,13 +546,34 @@ const deleteCommentItem = async (comment: any) => {
   }
 }
 
-// 切换回复输入框
+// 切换回复输入框（对顶层评论回复）
 const toggleReply = (comment: any) => {
-  if (replyTo.value?.commentId === comment.commentId) {
+  if (replyTo.value?.commentId === comment.commentId && !replyTo.value?.replyToNickname) {
     cancelReply()
   } else {
-    replyTo.value = { commentId: comment.commentId, nickname: comment.nickname || comment.username || '匿名' }
+    replyTo.value = {
+      commentId: comment.commentId,
+      nickname: comment.nickname || comment.username || '匿名'
+    }
     replyContent.value = ''
+  }
+}
+
+// 切换对某条子回复的再次回复（扁平化，parentId 仍指向顶层，内容前加 @mention）
+const toggleReplyToReply = (parentComment: any, reply: any) => {
+  const replyNickname = reply.nickname || reply.username || '匿名'
+  if (
+    replyTo.value?.commentId === parentComment.commentId &&
+    replyTo.value?.replyToNickname === replyNickname
+  ) {
+    cancelReply()
+  } else {
+    replyTo.value = {
+      commentId: parentComment.commentId,
+      nickname: parentComment.nickname || parentComment.username || '匿名',
+      replyToNickname: replyNickname
+    }
+    replyContent.value = `@${replyNickname} `
   }
 }
 
