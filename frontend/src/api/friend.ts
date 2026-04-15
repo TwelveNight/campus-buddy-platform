@@ -2,8 +2,8 @@
 import axios from '../utils/request'
 
 // 申请添加好友
-export function applyFriend(userId: number) {
-  return axios.post('/api/friend/apply', { recipientId: userId })
+export function applyFriend(userId: number, requestMessage?: string) {
+  return axios.post('/api/friend/apply', { recipientId: userId, requestMessage })
 }
 
 // 接受好友申请

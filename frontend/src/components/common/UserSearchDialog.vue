@@ -104,6 +104,36 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 发送好友申请对话框 -->
+    <el-dialog
+      v-model="addFriendDialogVisible"
+      title="发送好友申请"
+      width="420px"
+      align-center
+      :close-on-click-modal="false"
+      @closed="addFriendMessage = ''"
+    >
+      <div class="add-friend-dialog-body" v-if="addFriendTarget">
+        <div class="add-friend-target-info">
+          <el-avatar :size="48" :src="addFriendTarget.avatarUrl || defaultAvatar" />
+          <span class="add-friend-name">{{ addFriendTarget.nickname || addFriendTarget.username }}</span>
+        </div>
+        <el-input
+          v-model="addFriendMessage"
+          type="textarea"
+          :rows="3"
+          placeholder="输入留言（选填，最多50字）"
+          :maxlength="50"
+          show-word-limit
+          style="margin-top: 16px;"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="addFriendDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="addFriendLoading" @click="submitAddFriend">发送申请</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -230,41 +260,54 @@ const handleAction = (type: 'message' | 'friend', user: any) => {
     router.push(`/messages/${user.userId}`);
     dialogVisible.value = false;
   } else if (type === 'friend') {
-    addFriend(user);
+    openAddFriendDialog(user);
   }
 };
 
-// 添加好友
-const addFriend = async (user: any) => {
+// 好友申请对话框状态
+const addFriendDialogVisible = ref(false);
+const addFriendMessage = ref('');
+const addFriendLoading = ref(false);
+const addFriendTarget = ref<any>(null);
+
+const openAddFriendDialog = (user: any) => {
+  // 先做本地快速校验，避免不必要弹窗
+  if (getRequestStatus(user.userId) === 'PENDING_OUTGOING') {
+    ElMessage.info(`已向${user.nickname || user.username}发送过好友申请，请等待对方处理`);
+    return;
+  }
+  if (isFriend(user.userId)) {
+    ElMessage.info('你们已经是好友，无需重复添加');
+    return;
+  }
+  addFriendTarget.value = user;
+  addFriendMessage.value = '';
+  addFriendDialogVisible.value = true;
+};
+
+// 提交好友申请
+const submitAddFriend = async () => {
+  const user = addFriendTarget.value;
+  if (!user) return;
+  addFriendLoading.value = true;
   try {
-    // 先检查是否已经是好友或已发送申请
-    const status = getRequestStatus(user.userId);
-    if (status === 'PENDING_OUTGOING') {
-      ElMessage.info(`已向${user.nickname || user.username}发送过好友申请，请等待对方处理`);
-      return;
-    }
-    
-    if (isFriend(user.userId)) {
-      ElMessage.info(`你们已经是好友，无需重复添加`);
-      return;
-    }
-    
-    const res = await applyFriend(user.userId);
+    const res = await applyFriend(user.userId, addFriendMessage.value.trim() || undefined);
     if (res.data.code === 200) {
       ElMessage.success(`已向${user.nickname || user.username}发送好友申请`);
-      // 更新申请状态
       requestStatusMap.value[user.userId] = 'PENDING_OUTGOING';
+      addFriendDialogVisible.value = false;
       emit('add-friend', user);
     } else {
-      // 根据后端返回状态处理不同情况
       if (res.data.data && res.data.data.status) {
-        const status = res.data.data.status;
-        if (status === 'ALREADY_FRIEND') {
+        const st = res.data.data.status;
+        if (st === 'ALREADY_FRIEND') {
           friendStatusMap.value[user.userId] = true;
-          ElMessage.info(`你们已经是好友，无需重复添加`);
-        } else if (status === 'ALREADY_APPLIED') {
+          ElMessage.info('你们已经是好友，无需重复添加');
+          addFriendDialogVisible.value = false;
+        } else if (st === 'ALREADY_APPLIED') {
           requestStatusMap.value[user.userId] = 'PENDING_OUTGOING';
           ElMessage.info(`已向${user.nickname || user.username}发送过好友申请，请等待对方处理`);
+          addFriendDialogVisible.value = false;
         } else {
           ElMessage.error(res.data.message || '发送好友申请失败');
         }
@@ -275,6 +318,8 @@ const addFriend = async (user: any) => {
   } catch (error) {
     console.error('添加好友出错:', error);
     ElMessage.error('发送好友申请失败，请稍后重试');
+  } finally {
+    addFriendLoading.value = false;
   }
 };
 
@@ -370,5 +415,21 @@ defineExpose({
 
 [data-theme="dark"] .user-meta {
   color: #aaa;
+}
+
+.add-friend-dialog-body {
+  padding: 8px 0;
+}
+
+.add-friend-target-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-friend-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
 }
 </style>

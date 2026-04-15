@@ -18,7 +18,7 @@
             <el-button type="primary" size="small" @click="startPrivateChat" v-if="isFriend">
               <el-icon><ChatDotRound /></el-icon> 发私信
             </el-button>
-            <el-button type="success" size="small" @click="addFriend" v-if="!isFriend && friendRequestStatus !== 'PENDING_OUTGOING'">
+            <el-button type="success" size="small" @click="openAddFriendDialog" v-if="!isFriend && friendRequestStatus !== 'PENDING_OUTGOING'">
               <el-icon><Plus /></el-icon> 加好友
             </el-button>
             <el-tag v-else-if="isFriend" type="success" size="small">
@@ -106,6 +106,36 @@
       <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId" :showReviewTarget="false" />
     </el-card>
   </div>
+
+  <!-- 发送好友申请对话框 -->
+  <el-dialog
+    v-model="addFriendDialogVisible"
+    title="发送好友申请"
+    width="420px"
+    align-center
+    :close-on-click-modal="false"
+    @closed="addFriendMessage = ''"
+  >
+    <div class="add-friend-dialog-body">
+      <div class="add-friend-target">
+        <el-avatar :size="48" :src="userInfo.avatarUrl || defaultAvatar" />
+        <span class="add-friend-name">{{ userInfo.nickname || userInfo.username }}</span>
+      </div>
+      <el-input
+        v-model="addFriendMessage"
+        type="textarea"
+        :rows="3"
+        placeholder="输入留言（选填，最多50字）"
+        :maxlength="50"
+        show-word-limit
+        style="margin-top: 16px;"
+      />
+    </div>
+    <template #footer>
+      <el-button @click="addFriendDialogVisible = false">取消</el-button>
+      <el-button type="primary" :loading="addFriendLoading" @click="addFriend">发送申请</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
@@ -178,32 +208,48 @@ const checkIsFriend = async () => {
   }
 };
 
+// 加好友对话框
+const addFriendDialogVisible = ref(false);
+const addFriendMessage = ref('');
+const addFriendLoading = ref(false);
+
+const openAddFriendDialog = () => {
+  addFriendMessage.value = '';
+  addFriendDialogVisible.value = true;
+};
+
 // 加好友
 const addFriend = async () => {
+  addFriendLoading.value = true;
   try {
-    const res = await applyFriend(userId.value);
+    const res = await applyFriend(userId.value, addFriendMessage.value.trim() || undefined);
     if (res.data.code === 200) {
       ElMessage.success('好友申请已发送');
+      addFriendDialogVisible.value = false;
       await checkIsFriend();
     } else {
-      // 针对已发送过申请的情况，后端会返回特定提示
       if (res.data.message && res.data.message.includes('已发送过好友申请')) {
         ElMessage.info('已发送过好友申请，请等待对方处理');
+        addFriendDialogVisible.value = false;
       } else if (res.data.message && res.data.message.includes('已经是好友')) {
         ElMessage.info('你们已经是好友，无需重复添加');
+        addFriendDialogVisible.value = false;
       } else {
         ElMessage.error(res.data.message || '发送好友申请失败');
       }
     }
   } catch (e: any) {
-    // 针对后端异常返回重复申请等
     if (e?.response?.data?.message && e.response.data.message.includes('已发送过好友申请')) {
       ElMessage.info('已发送过好友申请，请等待对方处理');
+      addFriendDialogVisible.value = false;
     } else if (e?.response?.data?.message && e.response.data.message.includes('已经是好友')) {
       ElMessage.info('你们已经是好友，无需重复添加');
+      addFriendDialogVisible.value = false;
     } else {
       ElMessage.error('发送好友申请失败');
     }
+  } finally {
+    addFriendLoading.value = false;
   }
 };
 // 发起私聊
@@ -589,5 +635,21 @@ async function fetchUserCreditStats() {
     width: 100%;
     margin-bottom: 16px;
   }
+}
+
+.add-friend-dialog-body {
+  padding: 8px 0;
+}
+
+.add-friend-target {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-friend-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
 }
 </style>
