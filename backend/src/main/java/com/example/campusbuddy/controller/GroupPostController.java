@@ -449,9 +449,9 @@ public class GroupPostController {
 
                 if (comment.getParentId() == null) {
                     // 评论帖子：通知帖子作者（排除自评论）
-                    if (!post.getUserId().equals(currentUser.getUserId())) {
+                    if (!post.getAuthorId().equals(currentUser.getUserId())) {
                         notificationService.createPostCommentedNotification(
-                            postId, post.getGroupId(), post.getUserId(),
+                            postId, post.getGroupId(), post.getAuthorId(),
                             currentUser.getUserId(), commenterName, postTitle
                         );
                     }
