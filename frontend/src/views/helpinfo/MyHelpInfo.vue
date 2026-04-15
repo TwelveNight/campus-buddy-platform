@@ -38,16 +38,28 @@
                             </template>
                         </el-table-column>
                         <el-table-column prop="viewCount" label="浏览数" width="80" align="center"></el-table-column>
-                        <el-table-column label="操作" width="180" fixed="right">
+                        <el-table-column label="操作" width="220" fixed="right">
                             <template #default="scope">
                                 <el-button-group>
                                     <el-button type="primary" size="small" link
                                         @click="$router.push(`/helpinfo/${scope.row.infoId}`)">
                                         查看
                                     </el-button>
+                                    <!-- OPEN 状态：可关闭、可删除 -->
+                                    <el-button type="warning" size="small" link
+                                        v-if="scope.row.status === 'OPEN'"
+                                        @click="handleChangeStatus(scope.row, 'CLOSED')">
+                                        关闭
+                                    </el-button>
                                     <el-button type="danger" size="small" link @click="confirmDelete(scope.row.infoId)"
                                         v-if="scope.row.status === 'OPEN'">
                                         删除
+                                    </el-button>
+                                    <!-- CLOSED 状态：可重新开放 -->
+                                    <el-button type="success" size="small" link
+                                        v-if="scope.row.status === 'CLOSED'"
+                                        @click="handleChangeStatus(scope.row, 'OPEN')">
+                                        重新开放
                                     </el-button>
                                     <el-button
                                         v-if="scope.row.status === 'RESOLVED' && scope.row.acceptedApplicationId && scope.row.canPublisherReview === true"
@@ -156,7 +168,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { fetchHelpInfoList, deleteHelpInfo } from "../../api/helpinfo";
+import { fetchHelpInfoList, deleteHelpInfo, updateHelpInfoStatus } from "../../api/helpinfo";
 import { useApplicationStore } from "../../store/application";
 import ReviewDialog from "../../components/form/ReviewDialog.vue";
 import { canReview, getHelpInfoReviewStatus, getUserReviewStatus } from '../../api/review';
@@ -330,6 +342,35 @@ function confirmDelete(id: number) {
             ElMessage.error(e.message || '删除失败')
         }
     }).catch(() => { })
+}
+
+// 修改互助任务状态（关闭 / 重新开放）
+async function handleChangeStatus(row: any, newStatus: string) {
+    const labelMap: Record<string, string> = {
+        'CLOSED': '关闭',
+        'OPEN': '重新开放'
+    }
+    const label = labelMap[newStatus] || newStatus
+    try {
+        await ElMessageBox.confirm(`确定要${label}该互助任务吗？`, '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+        })
+    } catch {
+        return
+    }
+    try {
+        const res = await updateHelpInfoStatus(row.infoId, newStatus)
+        if (res.data.code === 200) {
+            ElMessage.success(`已${label}`)
+            loadMyPublishedHelpInfo()
+        } else {
+            ElMessage.error(res.data.message || '操作失败')
+        }
+    } catch (e: any) {
+        ElMessage.error(e.message || '操作失败')
+    }
 }
 
 // 分页大小改变

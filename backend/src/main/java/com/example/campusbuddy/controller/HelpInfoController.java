@@ -263,6 +263,10 @@ public class HelpInfoController {
 
         helpInfoService.updateById(existingInfo);
 
+        // 清除 Redis 缓存，保证状态变更后立即生效
+        helpInfoCacheService.clearHelpInfoCache(id);
+        helpInfoCacheService.clearHelpInfoListCache();
+
         return R.ok("互助任务状态更新成功", existingInfo);
     }
 

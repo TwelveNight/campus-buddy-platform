@@ -72,21 +72,35 @@
                     <span>{{ scope.row.location }}</span>
                   </template>
                 </el-table-column>
-                <el-table-column fixed="right" label="操作" width="220">
+                        <el-table-column fixed="right" label="操作" width="280">
                     <template #default="scope">
                         <el-button-group>
                             <el-button type="info" size="small" link
                                 @click="$router.push(`/helpinfo/${scope.row.infoId}`)">
                                 查看
                             </el-button>
+                            <!-- OPEN → 标记处理中 -->
                             <el-button type="success" size="small" link v-if="scope.row.status === 'OPEN'"
                                 @click="handleUpdateStatus(scope.row.infoId, 'IN_PROGRESS')">
                                 标记处理中
                             </el-button>
+                            <!-- OPEN / IN_PROGRESS → 已解决 -->
                             <el-button type="warning" size="small" link
                                 v-if="['OPEN', 'IN_PROGRESS'].includes(scope.row.status)"
                                 @click="handleUpdateStatus(scope.row.infoId, 'RESOLVED')">
                                 标记已解决
+                            </el-button>
+                            <!-- 非 CLOSED 状态 → 关闭 -->
+                            <el-button type="danger" size="small" link
+                                v-if="scope.row.status !== 'CLOSED'"
+                                @click="handleUpdateStatus(scope.row.infoId, 'CLOSED')">
+                                关闭
+                            </el-button>
+                            <!-- CLOSED 状态 → 重新开放 -->
+                            <el-button type="primary" size="small" link
+                                v-if="scope.row.status === 'CLOSED'"
+                                @click="handleUpdateStatus(scope.row.infoId, 'OPEN')">
+                                重新开放
                             </el-button>
                             <el-button type="danger" size="small" link @click="confirmRemove(scope.row.infoId)">
                                 删除
