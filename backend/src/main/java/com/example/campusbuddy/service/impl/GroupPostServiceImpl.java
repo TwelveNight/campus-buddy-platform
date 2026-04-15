@@ -46,14 +46,25 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     private UserCacheService userCacheService;
 
     @Override
-    public IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize) {
-        // 构建查询条件
+    public IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize, String keyword, String sortBy) {
         LambdaQueryWrapper<GroupPost> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupPost::getGroupId, groupId)
-                .eq(GroupPost::getStatus, "PUBLISHED")
-                .orderByDesc(GroupPost::getCreatedAt);
-        
-        // 执行分页查询
+                .eq(GroupPost::getStatus, "PUBLISHED");
+
+        // 关键字搜索（标题或内容包含）
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            String kw = keyword.trim();
+            queryWrapper.and(w -> w.like(GroupPost::getTitle, kw).or().like(GroupPost::getContent, kw));
+        }
+
+        // 排序：likeCount 按点赞降序，其余默认按发布时间降序
+        if ("likeCount".equals(sortBy)) {
+            queryWrapper.orderByDesc(GroupPost::getLikeCount)
+                        .orderByDesc(GroupPost::getCreatedAt);
+        } else {
+            queryWrapper.orderByDesc(GroupPost::getCreatedAt);
+        }
+
         return page(new Page<>(pageNum, pageSize), queryWrapper);
     }
 

@@ -7,8 +7,8 @@ import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.vo.GroupPostVO;
 
 public interface GroupPostService extends IService<GroupPost> {
-    // 分页查询小组帖子
-    IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize);
+    // 分页查询小组帖子（支持关键字搜索和排序）
+    IPage<GroupPost> queryGroupPosts(Long groupId, Integer pageNum, Integer pageSize, String keyword, String sortBy);
     
     // 发表帖子
     Long createPost(GroupPost post);

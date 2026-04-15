@@ -1,6 +1,23 @@
 <template>
     <div class="group-posts-tab">
-        <div class="post-actions">
+        <div class="toolbar">
+            <div class="search-sort">
+                <el-input
+                    v-model="searchKeyword"
+                    placeholder="搜索帖子标题或内容..."
+                    clearable
+                    style="width: 240px"
+                    @keyup.enter="handleSearch"
+                    @clear="handleSearch">
+                    <template #prefix>
+                        <el-icon><Search /></el-icon>
+                    </template>
+                </el-input>
+                <el-select v-model="sortBy" style="width: 120px" @change="handleSearch">
+                    <el-option label="最新发布" value="createdAt" />
+                    <el-option label="最多点赞" value="likeCount" />
+                </el-select>
+            </div>
             <el-button type="primary" @click="showCreatePostDialog" :disabled="!canCreatePost">
                 <el-icon>
                     <Edit />
@@ -283,7 +300,7 @@
 <script setup lang="ts">
 import { ref, onMounted, defineProps, computed, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, MoreFilled, Pointer, ChatDotRound, Delete } from '@element-plus/icons-vue';
+import { Edit, MoreFilled, Pointer, ChatDotRound, Delete, Search } from '@element-plus/icons-vue';
 import { useRouter } from 'vue-router';
 
 // 注释掉有问题的导入
@@ -350,6 +367,10 @@ const isEditing = ref(false);
 const editingPostId = ref<number | null>(null);
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
 
+// 搜索与排序状态
+const searchKeyword = ref('');
+const sortBy = ref<'createdAt' | 'likeCount'>('createdAt');
+
 // 表单相关
 const postFormRef = ref<any>(null);
 const postForm = ref<Post>({
@@ -390,6 +411,12 @@ onMounted(() => {
     loadPosts();
 });
 
+// 处理搜索/排序变更（重置到第一页）
+const handleSearch = () => {
+    currentPage.value = 1;
+    loadPosts();
+};
+
 // 加载帖子列表
 const loadPosts = async () => {
     if (!props.groupId) return;
@@ -399,7 +426,9 @@ const loadPosts = async () => {
         const response = await getGroupPosts({
             groupId: props.groupId,
             pageNum: currentPage.value,
-            pageSize: pageSize.value
+            pageSize: pageSize.value,
+            keyword: searchKeyword.value.trim() || undefined,
+            sortBy: sortBy.value
         });
 
         if (response.data && response.data.code === 200) {
@@ -1131,7 +1160,25 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
     animation: fadeInUp 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* 发布按钮区域动画 */
+/* 顶部工具栏（搜索 + 排序 + 发布按钮） */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
+}
+
+.search-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 发布按钮区域动画（保留旧 class 兼容 post-item 内部的 .post-actions） */
 .post-actions {
     margin-bottom: 20px;
     animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;

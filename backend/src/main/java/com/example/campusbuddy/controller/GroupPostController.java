@@ -72,22 +72,28 @@ public class GroupPostController {
     /**
      * 获取小组帖子列表
      */
-    @Operation(summary = "获取小组帖子列表", description = "分页获取指定小组的帖子")
+    @Operation(summary = "获取小组帖子列表", description = "分页获取指定小组的帖子，支持关键字搜索和排序")
     @GetMapping
     public R<IPage<GroupPostVO>> getGroupPosts(
             @Parameter(description = "小组ID") @RequestParam Long groupId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize) {
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize,
+            @Parameter(description = "关键字（搜索标题/内容）") @RequestParam(required = false) String keyword,
+            @Parameter(description = "排序方式：createdAt（最新）/ likeCount（最热）") @RequestParam(defaultValue = "createdAt") String sortBy) {
 
-        // 先从缓存获取
-        IPage<GroupPostVO> cachedPosts = postCacheService.getCachedGroupPosts(groupId, pageNum, pageSize);
-        if (cachedPosts != null) {
-            log.info("从缓存获取小组帖子列表成功: groupId={}, pageNum={}, pageSize={}", groupId, pageNum, pageSize);
-            return R.ok(cachedPosts);
+        // 无过滤/排序条件时才走缓存
+        boolean useCache = (keyword == null || keyword.trim().isEmpty()) && "createdAt".equals(sortBy);
+
+        if (useCache) {
+            IPage<GroupPostVO> cachedPosts = postCacheService.getCachedGroupPosts(groupId, pageNum, pageSize);
+            if (cachedPosts != null) {
+                log.info("从缓存获取小组帖子列表成功: groupId={}, pageNum={}, pageSize={}", groupId, pageNum, pageSize);
+                return R.ok(cachedPosts);
+            }
         }
 
-        // 缓存未命中，从数据库获取
-        IPage<GroupPost> posts = groupPostService.queryGroupPosts(groupId, pageNum, pageSize);
+        // 缓存未命中或有过滤条件，从数据库获取
+        IPage<GroupPost> posts = groupPostService.queryGroupPosts(groupId, pageNum, pageSize, keyword, sortBy);
         
         // 提取所有作者ID，进行批量查询
         List<Long> authorIds = posts.getRecords().stream()
@@ -129,8 +135,10 @@ public class GroupPostController {
                 .findFirst()
                 .orElse(null));
         
-        // 将结果存入缓存
-        postCacheService.cacheGroupPosts(groupId, pageNum, pageSize, voPage, POSTS_CACHE_EXPIRE);
+        // 将结果存入缓存（仅默认排序且无关键字时缓存）
+        if (useCache) {
+            postCacheService.cacheGroupPosts(groupId, pageNum, pageSize, voPage, POSTS_CACHE_EXPIRE);
+        }
         
         return R.ok(voPage);
     }

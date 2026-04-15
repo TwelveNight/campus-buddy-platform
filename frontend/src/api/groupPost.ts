@@ -7,9 +7,10 @@ import request from '@/utils/request';
 // 定义接口类型
 export interface PostParams {
   groupId?: number | string;
-  page?: number;
-  size?: number;
+  pageNum?: number;
+  pageSize?: number;
   keyword?: string;
+  sortBy?: 'createdAt' | 'likeCount';
   [key: string]: any;
 }
 
