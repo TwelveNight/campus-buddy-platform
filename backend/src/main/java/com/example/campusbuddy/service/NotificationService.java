@@ -184,4 +184,9 @@ public interface NotificationService extends IService<Notification> {
      * 发送取消管理员通知
      */
     Long createGroupAdminRemovedNotification(Long groupId, Long userId, Long operatorId, String operatorName, String groupName);
+
+    /**
+     * 发送被移出小组通知
+     */
+    Long createGroupMemberRemovedNotification(Long groupId, Long userId, Long operatorId, String operatorName, String groupName);
 }

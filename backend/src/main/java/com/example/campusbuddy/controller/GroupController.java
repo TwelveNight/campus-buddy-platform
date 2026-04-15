@@ -655,6 +655,19 @@ public class GroupController {
                 group.setMemberCount(group.getMemberCount() - 1);
                 groupService.updateById(group);
             }
+
+            // 发送被移出小组通知（非关键路径，失败不影响主流程）
+            try {
+                notificationService.createGroupMemberRemovedNotification(
+                    groupId,
+                    userId,
+                    currentUser.getUserId(),
+                    currentUser.getNickname() != null ? currentUser.getNickname() : currentUser.getUsername(),
+                    group.getName()
+                );
+            } catch (Exception e) {
+                log.warn("移出成员通知发送失败: groupId={}, userId={}, error={}", groupId, userId, e.getMessage());
+            }
         }
 
         return success ? R.ok("已移除小组成员", null) : R.fail("移除成员失败");
