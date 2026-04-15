@@ -301,7 +301,7 @@ const commentTotal = ref(0)
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 // 回复状态
-const replyTo = ref<{ commentId: number; nickname: string; replyToNickname?: string; quotedContent?: string } | null>(null)
+const replyTo = ref<{ commentId: number; nickname: string; replyToNickname?: string; quotedContent?: string; replyToUserId?: number } | null>(null)
 const replyContent = ref('')
 const replyLoading = ref(false)
 
@@ -581,7 +581,8 @@ const toggleReplyToReply = (parentComment: any, reply: any) => {
       commentId: parentComment.commentId,
       nickname: parentComment.nickname || parentComment.username || '匿名',
       replyToNickname: replyNickname,
-      quotedContent: reply.content || ''
+      quotedContent: reply.content || '',
+      replyToUserId: reply.userId   // 子回复作者 ID，用于精确通知
     }
     replyContent.value = ''
   }
@@ -636,7 +637,8 @@ const submitReply = async (parentComment: any) => {
     const response = await addComment({
       postId: postId.value,
       content: finalContent,
-      parentId: parentComment.commentId
+      parentId: parentComment.commentId,
+      replyToUserId: replyTo.value?.replyToUserId   // 子回复时传递被回复者 ID
     })
 
     if (response.data && response.data.code === 200) {

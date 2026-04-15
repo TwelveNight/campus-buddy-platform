@@ -37,11 +37,15 @@ export function getPostComments(params: CommentParams): Promise<ApiResponse> {
 
 // 添加评论
 export function addComment(data: CommentData): Promise<ApiResponse> {
-  const { postId, content, parentId } = data;
+  const { postId, content, parentId, replyToUserId } = data;
   return request({
     url: `/api/group-posts/${postId}/comments`,
     method: 'post',
-    data: { content, ...(parentId != null ? { parentId } : {}) }
+    data: {
+      content,
+      ...(parentId != null ? { parentId } : {}),
+      ...(replyToUserId != null ? { replyToUserId } : {})
+    }
   });
 }
 

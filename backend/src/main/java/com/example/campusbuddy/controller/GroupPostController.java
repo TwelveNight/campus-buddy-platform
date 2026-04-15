@@ -438,6 +438,23 @@ public class GroupPostController {
             }
         }
 
+        // 解析 replyToUserId（子回复时前端传递被回复者ID，用于精确通知）
+        Long replyToUserId = null;
+        Object replyToUserIdObj = commentData.get("replyToUserId");
+        if (replyToUserIdObj != null) {
+            try {
+                if (replyToUserIdObj instanceof Integer) {
+                    replyToUserId = Long.valueOf((Integer) replyToUserIdObj);
+                } else if (replyToUserIdObj instanceof Long) {
+                    replyToUserId = (Long) replyToUserIdObj;
+                } else {
+                    replyToUserId = Long.parseLong(replyToUserIdObj.toString());
+                }
+            } catch (NumberFormatException e) {
+                log.warn("无法解析 replyToUserId: {}", replyToUserIdObj);
+            }
+        }
+
         Long commentId = commentService.addComment(comment);
 
         // 发送通知（非关键路径，失败不影响主流程）
@@ -456,11 +473,18 @@ public class GroupPostController {
                         );
                     }
                 } else {
-                    // 回复评论：通知被回复评论的作者（排除自回复）
-                    PostComment parentComment = commentService.getById(comment.getParentId());
-                    if (parentComment != null && !parentComment.getUserId().equals(currentUser.getUserId())) {
+                    // 回复评论/子回复：优先使用前端传来的 replyToUserId（精确指向被回复者），
+                    // 否则回退到取父评论作者（处理直接回复顶层评论的场景）
+                    Long recipientId = replyToUserId;
+                    if (recipientId == null) {
+                        PostComment parentComment = commentService.getById(comment.getParentId());
+                        if (parentComment != null) {
+                            recipientId = parentComment.getUserId();
+                        }
+                    }
+                    if (recipientId != null && !recipientId.equals(currentUser.getUserId())) {
                         notificationService.createCommentRepliedNotification(
-                            postId, post.getGroupId(), parentComment.getUserId(),
+                            postId, post.getGroupId(), recipientId,
                             currentUser.getUserId(), commenterName, postTitle
                         );
                     }

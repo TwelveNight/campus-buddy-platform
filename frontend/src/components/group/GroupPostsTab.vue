@@ -950,7 +950,8 @@ const toggleReply = (post: Post, comment: any, replyTo?: any) => {
     post.replyTarget = {
         commentId: comment.commentId,
         replyToNickname: replyTo ? targetNickname : undefined,
-        quotedContent: (replyTo ? replyTo.content : comment.content) || ''
+        quotedContent: (replyTo ? replyTo.content : comment.content) || '',
+        replyToUserId: replyTo ? replyTo.userId : undefined  // 子回复作者 ID，用于精确通知
     };
     post.replyContent = '';
     post.replyLoading = false;
@@ -984,7 +985,8 @@ const submitReply = async (post: Post, comment: any, replyTo?: any) => {
         const response = await addComment({
             postId: post.postId!,
             content: finalContent,
-            parentId: comment.commentId
+            parentId: comment.commentId,
+            replyToUserId: post.replyTarget?.replyToUserId  // 子回复时传递被回复者 ID
         });
 
         if (response.data && response.data.code === 200) {
