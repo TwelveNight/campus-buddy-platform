@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostComment> implements PostCommentService {
@@ -91,14 +93,27 @@ public class PostCommentServiceImpl extends ServiceImpl<PostCommentMapper, PostC
 
     @Override
     public IPage<PostComment> getPostComments(Long postId, Integer pageNum, Integer pageSize) {
-        // 构建查询条件
+        // 构建查询条件 —— 只查顶层评论（parentId IS NULL）
         LambdaQueryWrapper<PostComment> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(PostComment::getPostId, postId)
                 .eq(PostComment::getStatus, "PUBLISHED")
+                .isNull(PostComment::getParentId)
                 .orderByAsc(PostComment::getCreatedAt);
-        
+
         // 执行分页查询
         return page(new Page<>(pageNum, pageSize), queryWrapper);
+    }
+
+    @Override
+    public List<PostComment> getRepliesByParentIds(List<Long> parentIds) {
+        if (parentIds == null || parentIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        LambdaQueryWrapper<PostComment> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.in(PostComment::getParentId, parentIds)
+                .eq(PostComment::getStatus, "PUBLISHED")
+                .orderByAsc(PostComment::getCreatedAt);
+        return list(queryWrapper);
     }
 
     @Override

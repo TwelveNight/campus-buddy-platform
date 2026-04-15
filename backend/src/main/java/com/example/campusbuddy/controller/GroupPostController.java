@@ -321,81 +321,121 @@ public class GroupPostController {
     }
     
     /**
-     * 获取帖子评论列表
+     * 获取帖子评论列表（支持嵌套回复）
      */
-    @Operation(summary = "获取帖子评论列表", description = "分页获取指定帖子的评论")
+    @Operation(summary = "获取帖子评论列表", description = "分页获取指定帖子的评论（含嵌套回复）")
     @GetMapping("/{postId}/comments")
     public R<Map<String, Object>> getPostComments(
             @Parameter(description = "帖子ID") @PathVariable Long postId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") Integer pageSize) {
 
+        // 1. 分页查询顶层评论（parentId IS NULL）
         IPage<PostComment> commentsPage = commentService.getPostComments(postId, pageNum, pageSize);
-        List<PostComment> comments = commentsPage.getRecords();
-        
-        // 获取评论用户信息
-        List<Long> userIds = comments.stream().map(PostComment::getUserId).collect(Collectors.toList());
+        List<PostComment> topComments = commentsPage.getRecords();
+
+        // 2. 批量查询子评论
+        List<Long> parentIds = topComments.stream()
+                .map(PostComment::getCommentId)
+                .collect(Collectors.toList());
+        List<PostComment> allReplies = commentService.getRepliesByParentIds(parentIds);
+
+        // 3. 收集所有涉及的用户ID（顶层 + 回复）
+        List<Long> userIds = topComments.stream().map(PostComment::getUserId).collect(Collectors.toList());
+        List<Long> replyUserIds = allReplies.stream().map(PostComment::getUserId).collect(Collectors.toList());
+        userIds.addAll(replyUserIds);
+        userIds = userIds.stream().distinct().collect(Collectors.toList());
+
         Map<Long, User> userMap = new HashMap<>();
         if (!userIds.isEmpty()) {
             userService.listByIds(userIds).forEach(user -> userMap.put(user.getUserId(), user));
         }
-        
-        // 组装返回数据
-        List<Map<String, Object>> commentsList = comments.stream().map(comment -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("commentId", comment.getCommentId());
-            map.put("postId", comment.getPostId());
-            map.put("content", comment.getContent());
-            map.put("parentId", comment.getParentId());
-            map.put("createdAt", comment.getCreatedAt());
-            
-            // 添加用户信息
-            User user = userMap.get(comment.getUserId());
-            if (user != null) {
-                map.put("userId", user.getUserId());
-                map.put("username", user.getUsername());
-                map.put("nickname", user.getNickname());
-                map.put("avatar", user.getAvatarUrl());
-            }
-            
+
+        // 4. 将回复按 parentId 分组
+        Map<Long, List<Map<String, Object>>> repliesMap = new HashMap<>();
+        for (PostComment reply : allReplies) {
+            Map<String, Object> replyMap = buildCommentMap(reply, userMap);
+            repliesMap.computeIfAbsent(reply.getParentId(), k -> new java.util.ArrayList<>()).add(replyMap);
+        }
+
+        // 5. 组装顶层评论（附加 replies 列表）
+        List<Map<String, Object>> commentsList = topComments.stream().map(comment -> {
+            Map<String, Object> map = buildCommentMap(comment, userMap);
+            map.put("replies", repliesMap.getOrDefault(comment.getCommentId(), java.util.Collections.emptyList()));
             return map;
         }).collect(Collectors.toList());
-        
+
         // 返回结果
         Map<String, Object> result = new HashMap<>();
         result.put("comments", commentsList);
         result.put("total", commentsPage.getTotal());
         result.put("pageNum", commentsPage.getCurrent());
         result.put("pageSize", commentsPage.getSize());
-        
+
         return R.ok(result);
+    }
+
+    /** 将 PostComment 转换为 Map，附加用户信息 */
+    private Map<String, Object> buildCommentMap(PostComment comment, Map<Long, User> userMap) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("commentId", comment.getCommentId());
+        map.put("postId", comment.getPostId());
+        map.put("content", comment.getContent());
+        map.put("parentId", comment.getParentId());
+        map.put("createdAt", comment.getCreatedAt());
+
+        User user = userMap.get(comment.getUserId());
+        if (user != null) {
+            map.put("userId", user.getUserId());
+            map.put("username", user.getUsername());
+            map.put("nickname", user.getNickname());
+            map.put("avatar", user.getAvatarUrl());
+        }
+        return map;
     }
 
     /**
      * 添加评论
      */
-    @Operation(summary = "添加评论", description = "为帖子添加评论")
+    @Operation(summary = "添加评论", description = "为帖子添加评论（支持回复）")
     @PostMapping("/{postId}/comments")
     public R<Long> addComment(
             @Parameter(description = "帖子ID") @PathVariable Long postId,
-            @RequestBody Map<String, String> commentData) {
+            @RequestBody Map<String, Object> commentData) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {
             return R.fail("用户未登录");
         }
-        
-        String content = commentData.get("content");
-        if (content == null || content.trim().isEmpty()) {
+
+        Object contentObj = commentData.get("content");
+        if (contentObj == null || contentObj.toString().trim().isEmpty()) {
             return R.fail("评论内容不能为空");
         }
-        
+
         PostComment comment = new PostComment();
         comment.setPostId(postId);
         comment.setUserId(currentUser.getUserId());
-        comment.setContent(content.trim());
-        
+        comment.setContent(contentObj.toString().trim());
+
+        // 解析 parentId（回复场景）
+        Object parentIdObj = commentData.get("parentId");
+        if (parentIdObj != null) {
+            try {
+                if (parentIdObj instanceof Integer) {
+                    comment.setParentId(Long.valueOf((Integer) parentIdObj));
+                } else if (parentIdObj instanceof Long) {
+                    comment.setParentId((Long) parentIdObj);
+                } else {
+                    long pid = Long.parseLong(parentIdObj.toString());
+                    comment.setParentId(pid);
+                }
+            } catch (NumberFormatException e) {
+                log.warn("无法解析 parentId: {}", parentIdObj);
+            }
+        }
+
         Long commentId = commentService.addComment(comment);
-        
+
         return R.ok(commentId);
     }
 

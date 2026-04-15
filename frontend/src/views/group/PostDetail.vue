@@ -66,8 +66,8 @@
             </div>
 
             <div class="comments-list comments-container" v-loading="commentsLoading">
-              <div v-for="(comment, index) in comments" :key="comment.commentId" 
-                   class="comment-item floating-comment" 
+              <div v-for="(comment, index) in comments" :key="comment.commentId"
+                   class="comment-item floating-comment"
                    :style="{ '--animation-delay': `${index * 0.1}s` }">
                 <div class="comment-author author-container">
                   <el-avatar
@@ -89,18 +89,30 @@
                     {{ comment.nickname || comment.authorName || comment.username || '匿名' }}
                   </el-link>
                   <span class="comment-time time-badge">{{ formatTime(comment.createdAt) }}</span>
-                  
+
                   <!-- 评论操作按钮 -->
-                  <div class="comment-actions" v-if="authStore.user?.userId === (comment.userId || comment.authorId)">
-                    <el-button 
-                      type="text" 
+                  <div class="comment-actions">
+                    <!-- 回复按钮（所有登录用户可见） -->
+                    <el-button
+                      v-if="authStore.isAuthenticated && groupStatus === 'ACTIVE'"
+                      type="text"
+                      size="small"
+                      @click="toggleReply(comment)"
+                      class="action-btn reply-btn">
+                      <el-icon><ChatDotRound /></el-icon>
+                      回复
+                    </el-button>
+                    <el-button
+                      v-if="authStore.user?.userId === (comment.userId || comment.authorId)"
+                      type="text"
                       size="small"
                       @click="editCommentItem(comment)"
                       class="action-btn edit-btn">
                       <el-icon><Edit /></el-icon>
                     </el-button>
-                    <el-button 
-                      type="text" 
+                    <el-button
+                      v-if="authStore.user?.userId === (comment.userId || comment.authorId)"
+                      type="text"
                       size="small"
                       @click="deleteCommentItem(comment)"
                       class="action-btn delete-btn">
@@ -108,7 +120,7 @@
                     </el-button>
                   </div>
                 </div>
-                
+
                 <!-- 编辑状态的评论表单 -->
                 <div v-if="comment.isEditing" class="comment-edit-form">
                   <div class="editor-wrapper">
@@ -119,9 +131,70 @@
                     <el-button type="primary" size="small" @click="updateCommentItem(comment)" :disabled="!comment.editContent || !comment.editContent.trim()">保存</el-button>
                   </div>
                 </div>
-                
+
                 <!-- 正常显示的评论内容 -->
                 <div v-else class="comment-content markdown-content animated-content" v-html="renderCommentContent(comment.content)"></div>
+
+                <!-- 回复输入框（点击"回复"按钮后显示） -->
+                <div v-if="replyTo?.commentId === comment.commentId" class="reply-input-area">
+                  <el-input
+                    v-model="replyContent"
+                    type="textarea"
+                    :rows="2"
+                    :placeholder="`回复 ${comment.nickname || comment.username || '匿名'}...`"
+                    :maxlength="500"
+                    show-word-limit
+                    resize="none"
+                  />
+                  <div class="reply-input-actions">
+                    <el-button size="small" @click="cancelReply">取消</el-button>
+                    <el-button
+                      type="primary"
+                      size="small"
+                      :loading="replyLoading"
+                      :disabled="!replyContent.trim()"
+                      @click="submitReply(comment)">
+                      发送回复
+                    </el-button>
+                  </div>
+                </div>
+
+                <!-- 嵌套回复列表 -->
+                <div v-if="comment.replies && comment.replies.length > 0" class="replies-list">
+                  <div v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
+                    <div class="comment-author author-container">
+                      <el-avatar
+                        :size="20"
+                        :src="reply.avatar || defaultAvatar"
+                        style="cursor:pointer"
+                        @click="goToUserProfile(reply.userId)"
+                        class="comment-avatar magical-avatar"
+                      >
+                        {{ (reply.nickname || reply.username || '').substring(0, 1) }}
+                      </el-avatar>
+                      <el-link
+                        class="comment-author-name gradient-link"
+                        type="primary"
+                        :underline="true"
+                        style="font-weight:500;font-size:13px"
+                        @click="goToUserProfile(reply.userId)"
+                      >
+                        {{ reply.nickname || reply.username || '匿名' }}
+                      </el-link>
+                      <span class="comment-time time-badge">{{ formatTime(reply.createdAt) }}</span>
+                      <div class="comment-actions" v-if="authStore.user?.userId === reply.userId">
+                        <el-button
+                          type="text"
+                          size="small"
+                          @click="deleteReplyItem(comment, reply)"
+                          class="action-btn delete-btn">
+                          <el-icon><Delete /></el-icon>
+                        </el-button>
+                      </div>
+                    </div>
+                    <div class="comment-content markdown-content" style="font-size:13px" v-html="renderCommentContent(reply.content)"></div>
+                  </div>
+                </div>
               </div>
               <el-empty v-if="comments.length === 0 && !commentsLoading" description="暂无评论" class="empty-state" />
             </div>
@@ -189,6 +262,11 @@ const commentTotal = ref(0)
 
 // 默认头像
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
+
+// 回复状态
+const replyTo = ref<{ commentId: number; nickname: string } | null>(null)
+const replyContent = ref('')
+const replyLoading = ref(false)
 
 // 计算属性：根据小组状态判断是否禁用评论
 const isCommentDisabled = computed(() => {
@@ -435,6 +513,81 @@ const deleteCommentItem = async (comment: any) => {
     if (error !== 'cancel') {
       console.error('删除评论失败:', error)
       ElMessage.error('删除评论失败，请稍后重试')
+    }
+  }
+}
+
+// 切换回复输入框
+const toggleReply = (comment: any) => {
+  if (replyTo.value?.commentId === comment.commentId) {
+    cancelReply()
+  } else {
+    replyTo.value = { commentId: comment.commentId, nickname: comment.nickname || comment.username || '匿名' }
+    replyContent.value = ''
+  }
+}
+
+// 取消回复
+const cancelReply = () => {
+  replyTo.value = null
+  replyContent.value = ''
+}
+
+// 提交回复
+const submitReply = async (parentComment: any) => {
+  if (!replyContent.value.trim()) {
+    ElMessage.warning('请输入回复内容')
+    return
+  }
+
+  replyLoading.value = true
+  try {
+    const response = await addComment({
+      postId: postId.value,
+      content: replyContent.value.trim(),
+      parentId: parentComment.commentId
+    })
+
+    if (response.data && response.data.code === 200) {
+      ElMessage.success('回复发送成功')
+      cancelReply()
+      // 重新加载评论（刷新回复列表）
+      await loadComments()
+    } else {
+      ElMessage.error(response.data?.message || '回复失败')
+    }
+  } catch (error) {
+    console.error('提交回复失败:', error)
+    ElMessage.error('回复失败，请稍后重试')
+  } finally {
+    replyLoading.value = false
+  }
+}
+
+// 删除回复（与删除评论逻辑相同，只是不刷新帖子详情的评论数）
+const deleteReplyItem = async (parentComment: any, reply: any) => {
+  try {
+    await ElMessageBox.confirm(
+      '确定要删除该回复吗？此操作不可恢复。',
+      '删除回复',
+      { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' }
+    )
+
+    const response = await deleteComment(postId.value, reply.commentId)
+
+    if (response.data && response.data.code === 200) {
+      ElMessage.success('回复已删除')
+      // 从本地列表中移除，避免整页刷新
+      if (parentComment.replies) {
+        parentComment.replies = parentComment.replies.filter((r: any) => r.commentId !== reply.commentId)
+      }
+    } else {
+      ElMessage.error(response.data?.message || '删除回复失败')
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除回复失败:', error)
+      ElMessage.error('删除回复失败，请稍后重试')
     }
   }
 }
@@ -1560,5 +1713,67 @@ watch(() => showComments.value, (newValue) => {
 
 [data-theme="dark"] .comment-avatar:hover {
     box-shadow: 0 3px 10px rgba(79, 172, 254, 0.4);
+}
+
+/* ===== 回复区域样式 ===== */
+.reply-btn {
+  color: #67c23a;
+}
+.reply-btn:hover {
+  background-color: rgba(103, 194, 58, 0.1);
+  transform: scale(1.1);
+}
+
+.reply-input-area {
+  margin: 10px 0 10px 32px;
+  padding: 10px 12px;
+  background-color: var(--el-bg-color-page);
+  border-radius: 6px;
+  border: 1px solid var(--el-border-color-light);
+}
+
+[data-theme="dark"] .reply-input-area {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+.reply-input-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* 嵌套回复列表 */
+.replies-list {
+  margin: 8px 0 4px 32px;
+  padding: 8px 12px;
+  background-color: var(--el-fill-color-lighter);
+  border-left: 3px solid var(--el-color-primary-light-5);
+  border-radius: 0 6px 6px 0;
+}
+
+[data-theme="dark"] .replies-list {
+  background-color: #2a2a2a;
+  border-left-color: #60a9ff;
+}
+
+.reply-item {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--el-border-color-lighter);
+}
+
+.reply-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.reply-item .comment-actions {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.reply-item:hover .comment-actions {
+  opacity: 1;
 }
 </style>
