@@ -59,12 +59,8 @@
                         <div class="chat-user-info">
                             <div class="chat-username">{{ currentChatUser.nickname }}</div>
                             <div class="user-status">
-                                <WebSocketStatusIndicator 
-                                    :showText="true" 
-                                    :showRefreshButton="true" 
-                                    size="small"
-                                    @click="handleWebSocketStatusClick"
-                                />
+                                <span class="online-dot" :class="targetUserOnline ? 'online' : 'offline'"></span>
+                                <span class="online-text">{{ targetUserOnline ? '在线' : '离线' }}</span>
                             </div>
                         </div>
                     </div>
@@ -235,10 +231,9 @@ import {
     markAllMessagesAsRead,
     getUnreadMessageCount
 } from '@/api/message'
-import { getUserById } from '@/api/user'
+import { getUserById, getUserOnlineStatus } from '@/api/user'
 import type { ChatSession, ChatMessage } from '@/types/message'
 import messageWebSocketEnhancer from '@/utils/messageWebSocketEnhancer'
-import WebSocketStatusIndicator from '@/components/common/WebSocketStatusIndicator.vue'
 import EmojiPicker from '@/components/chat/EmojiPicker.vue'
 import ImageUploader from '@/components/chat/ImageUploader.vue'
 
@@ -264,6 +259,37 @@ const totalMessages = ref(0)
 const hasMoreMessages = ref(false)
 const defaultAvatar = ref('/avatar-placeholder.png')
 const sending = ref(false)
+
+// 当前聊天对象的在线状态
+const targetUserOnline = ref(false)
+let onlineStatusTimer: ReturnType<typeof setInterval> | null = null
+
+// 查询目标用户在线状态
+const fetchTargetOnlineStatus = async () => {
+    if (!currentChatUser.value) return
+    try {
+        const res = await getUserOnlineStatus(currentChatUser.value.userId)
+        if (res.data.code === 200) {
+            targetUserOnline.value = res.data.data === true
+        }
+    } catch {
+        // 查询失败时不改变状态
+    }
+}
+
+// 启动/停止在线状态轮询
+const startOnlineStatusPolling = () => {
+    stopOnlineStatusPolling()
+    fetchTargetOnlineStatus()
+    onlineStatusTimer = setInterval(fetchTargetOnlineStatus, 30000)
+}
+
+const stopOnlineStatusPolling = () => {
+    if (onlineStatusTimer !== null) {
+        clearInterval(onlineStatusTimer)
+        onlineStatusTimer = null
+    }
+}
 
 // 当前用户信息
 const currentUserId = computed(() => authStore.user?.userId)
@@ -673,12 +699,6 @@ const markAllChatAsRead = async () => {
     }
 }
 
-// 处理WebSocket状态指示器点击事件
-const handleWebSocketStatusClick = () => {
-    console.log('WebSocket状态指示器被点击');
-    // 可以在这里添加额外的处理逻辑，比如显示连接详情
-}
-
 // 发送消息 - 只使用HTTP API（后端会自动处理WebSocket推送）
 const sendMessageEnhanced = async (messageData: {
     recipientId: number;
@@ -860,6 +880,19 @@ watch(
     }
 )
 
+// 当聊天对象改变时，重新查询在线状态
+watch(
+    () => currentChatUser.value?.userId,
+    (newUserId) => {
+        if (newUserId) {
+            targetUserOnline.value = false
+            startOnlineStatusPolling()
+        } else {
+            stopOnlineStatusPolling()
+        }
+    }
+)
+
 onMounted(() => {
     fetchSessions()
 
@@ -901,7 +934,10 @@ const handleVisibilityChange = () => {
 onBeforeUnmount(() => {
     // 离开消息页面时刷新一次未读消息数量
     refreshUnreadMessageCount();
-    
+
+    // 停止在线状态轮询
+    stopOnlineStatusPolling();
+
     // 移除页面可见性变化事件监听
     document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
@@ -1055,6 +1091,31 @@ onBeforeUnmount(() => {
 }
 
 .user-status {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.online-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.online-dot.online {
+    background-color: #67c23a;
+    box-shadow: 0 0 0 2px rgba(103, 194, 58, 0.25);
+}
+
+.online-dot.offline {
+    background-color: #909399;
+}
+
+.online-text {
+    color: var(--text-secondary, #909399);
     font-size: 12px;
 }
 

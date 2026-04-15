@@ -11,6 +11,7 @@ import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.EmailService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.UserVO;
+import com.example.campusbuddy.websocket.UserWebSocketHandler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,5 +136,12 @@ public class UserController {
             @RequestParam(defaultValue = "10") Integer size) {
         Page<UserVO> users = userService.searchUsers(keyword, page, size);
         return R.ok("搜索用户成功", users);
+    }
+
+    @Operation(summary = "查询用户在线状态", description = "通过WebSocket连接状态判断用户是否在线")
+    @GetMapping("/{id}/online-status")
+    public R<Boolean> getUserOnlineStatus(@PathVariable Long id) {
+        boolean online = UserWebSocketHandler.isUserOnline(id);
+        return R.ok("获取用户在线状态成功", online);
     }
 }

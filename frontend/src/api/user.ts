@@ -64,3 +64,8 @@ export function sendEmailCode(data: {
 }) {
   return axios.post('/api/user/send-email-code', data)
 }
+
+// 查询用户在线状态
+export function getUserOnlineStatus(userId: number) {
+  return axios.get(`/api/user/${userId}/online-status`)
+}
