@@ -1,5 +1,6 @@
 package com.example.campusbuddy.service.impl;
 
+import com.example.campusbuddy.mapper.UserMapper;
 import com.example.campusbuddy.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,9 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @Value("${email.from:your_email@qq.com}")
     private String fromEmail;
 
@@ -37,6 +41,21 @@ public class EmailServiceImpl implements EmailService {
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("邮箱不能为空");
         }
+
+        // 注册场景：发验证码前先检查邮箱是否已被注册，避免浪费邮件资源
+        if ("REGISTER".equalsIgnoreCase(codeType)) {
+            if (userMapper.findByEmail(email) != null) {
+                throw new IllegalArgumentException("该邮箱已被注册，请直接登录或使用其他邮箱");
+            }
+        }
+
+        // 登录场景：检查邮箱是否已绑定账号
+        if ("LOGIN".equalsIgnoreCase(codeType)) {
+            if (userMapper.findByEmail(email) == null) {
+                throw new IllegalArgumentException("该邮箱尚未绑定任何账号，请先注册");
+            }
+        }
+
         // 生成 6 位数字验证码
         String code = String.format("%06d", new Random().nextInt(1_000_000));
 
