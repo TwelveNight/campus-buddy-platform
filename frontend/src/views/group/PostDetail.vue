@@ -137,10 +137,14 @@
 
                 <!-- 回复输入框（点击顶层评论"回复"按钮后显示） -->
                 <div v-if="replyTo?.commentId === comment.commentId && !replyTo?.replyToNickname" class="reply-input-area">
+                  <!-- 引用预览 -->
+                  <div class="quote-preview" v-if="replyTo?.quotedContent">
+                    <span class="quote-author">@{{ replyTo.nickname }}</span>：<span class="quote-text">{{ getQuotePreview(replyTo.quotedContent) }}</span>
+                  </div>
                   <div class="editor-wrapper">
                     <RichEditor
                       v-model="replyContent"
-                      :placeholder="`回复 ${comment.nickname || comment.username || '匿名'}...（支持Markdown）`"
+                      placeholder="输入回复内容...（支持Markdown）"
                       style="width:100%;margin-bottom:8px;" />
                   </div>
                   <div class="reply-input-actions">
@@ -204,10 +208,14 @@
 
                     <!-- 对某条回复的再次回复输入框 -->
                     <div v-if="replyTo?.commentId === comment.commentId && replyTo?.replyToNickname === (reply.nickname || reply.username)" class="reply-input-area" style="margin-left:0">
+                      <!-- 引用预览 -->
+                      <div class="quote-preview" v-if="replyTo?.quotedContent">
+                        <span class="quote-author">@{{ replyTo.replyToNickname }}</span>：<span class="quote-text">{{ getQuotePreview(replyTo.quotedContent) }}</span>
+                      </div>
                       <div class="editor-wrapper">
                         <RichEditor
                           v-model="replyContent"
-                          :placeholder="`回复 ${reply.nickname || reply.username || '匿名'}...（支持Markdown）`"
+                          placeholder="输入回复内容...（支持Markdown）"
                           style="width:100%;margin-bottom:8px;" />
                       </div>
                       <div class="reply-input-actions">
@@ -293,7 +301,7 @@ const commentTotal = ref(0)
 const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 // 回复状态
-const replyTo = ref<{ commentId: number; nickname: string; replyToNickname?: string } | null>(null)
+const replyTo = ref<{ commentId: number; nickname: string; replyToNickname?: string; quotedContent?: string } | null>(null)
 const replyContent = ref('')
 const replyLoading = ref(false)
 
@@ -553,13 +561,14 @@ const toggleReply = (comment: any) => {
   } else {
     replyTo.value = {
       commentId: comment.commentId,
-      nickname: comment.nickname || comment.username || '匿名'
+      nickname: comment.nickname || comment.username || '匿名',
+      quotedContent: comment.content || ''
     }
     replyContent.value = ''
   }
 }
 
-// 切换对某条子回复的再次回复（扁平化，parentId 仍指向顶层，内容前加 @mention）
+// 切换对某条子回复的再次回复（扁平化，parentId 仍指向顶层，内容前加引用块）
 const toggleReplyToReply = (parentComment: any, reply: any) => {
   const replyNickname = reply.nickname || reply.username || '匿名'
   if (
@@ -571,9 +580,10 @@ const toggleReplyToReply = (parentComment: any, reply: any) => {
     replyTo.value = {
       commentId: parentComment.commentId,
       nickname: parentComment.nickname || parentComment.username || '匿名',
-      replyToNickname: replyNickname
+      replyToNickname: replyNickname,
+      quotedContent: reply.content || ''
     }
-    replyContent.value = `@${replyNickname} `
+    replyContent.value = ''
   }
 }
 
@@ -581,6 +591,28 @@ const toggleReplyToReply = (parentComment: any, reply: any) => {
 const cancelReply = () => {
   replyTo.value = null
   replyContent.value = ''
+}
+
+// 将 Markdown 文本转为纯文本（用于引用预览）
+const stripMarkdown = (md: string): string => {
+  if (!md) return ''
+  return md
+    .replace(/```[\s\S]*?```/g, '[代码]')
+    .replace(/`[^`]+`/g, '[代码]')
+    .replace(/!\[.*?\]\(.*?\)/g, '[图片]')
+    .replace(/\[([^\]]+)\]\(.*?\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/^>\s*/gm, '')
+    .replace(/\n+/g, ' ')
+    .trim()
+}
+
+const getQuotePreview = (content: string): string => {
+  const plain = stripMarkdown(content)
+  return plain.length > 80 ? plain.substring(0, 80) + '...' : plain
 }
 
 // 提交回复
@@ -592,9 +624,18 @@ const submitReply = async (parentComment: any) => {
 
   replyLoading.value = true
   try {
+    // 构建带引用块前缀的内容
+    let finalContent = replyContent.value.trim()
+    if (replyTo.value?.quotedContent) {
+      const quotedNickname = replyTo.value.replyToNickname || replyTo.value.nickname
+      const quotedPlain = stripMarkdown(replyTo.value.quotedContent)
+      const truncated = quotedPlain.length > 120 ? quotedPlain.substring(0, 120) + '...' : quotedPlain
+      finalContent = `> **@${quotedNickname}**：${truncated}\n\n${finalContent}`
+    }
+
     const response = await addComment({
       postId: postId.value,
-      content: replyContent.value.trim(),
+      content: finalContent,
       parentId: parentComment.commentId
     })
 
@@ -1772,6 +1813,34 @@ watch(() => showComments.value, (newValue) => {
 .reply-btn:hover {
   background-color: rgba(103, 194, 58, 0.1);
   transform: scale(1.1);
+}
+
+/* 引用预览块 */
+.quote-preview {
+  background-color: var(--el-fill-color-light);
+  border-left: 3px solid var(--el-color-primary);
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  border-radius: 0 4px 4px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--el-text-color-regular);
+  word-break: break-all;
+}
+
+[data-theme="dark"] .quote-preview {
+  background-color: #2a2a2e;
+  border-left-color: #60a9ff;
+}
+
+.quote-author {
+  color: var(--el-color-primary);
+  font-weight: 600;
+  margin-right: 2px;
+}
+
+.quote-text {
+  color: var(--el-text-color-secondary);
 }
 
 .reply-input-area {

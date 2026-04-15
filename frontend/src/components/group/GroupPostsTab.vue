@@ -122,11 +122,15 @@
                                     <div v-else class="comment-content" v-html="renderCommentContent(comment)"></div>
 
                                     <!-- 回复输入框 -->
-                                    <div v-if="post.replyTarget?.commentId === comment.commentId" class="reply-input-area">
+                                    <div v-if="post.replyTarget?.commentId === comment.commentId && !post.replyTarget?.replyToNickname" class="reply-input-area">
+                                        <!-- 引用预览 -->
+                                        <div class="quote-preview" v-if="post.replyTarget?.quotedContent">
+                                            <span class="quote-author">@{{ comment.nickname || comment.username || '匿名' }}</span>：<span class="quote-text">{{ getQuotePreview(post.replyTarget.quotedContent) }}</span>
+                                        </div>
                                         <div class="editor-wrapper">
                                             <RichEditor
                                                 v-model="post.replyContent"
-                                                :placeholder="`回复 ${comment.nickname || comment.username || '匿名'}...（支持Markdown）`"
+                                                placeholder="输入回复内容...（支持Markdown）"
                                                 style="width:100%;margin-bottom:8px;" />
                                         </div>
                                         <div class="reply-input-actions">
@@ -180,10 +184,14 @@
 
                                             <!-- 对回复的再次回复输入框 -->
                                             <div v-if="post.replyTarget?.commentId === comment.commentId && post.replyTarget?.replyToNickname === (reply.nickname || reply.username)" class="reply-input-area">
+                                                <!-- 引用预览 -->
+                                                <div class="quote-preview" v-if="post.replyTarget?.quotedContent">
+                                                    <span class="quote-author">@{{ post.replyTarget.replyToNickname }}</span>：<span class="quote-text">{{ getQuotePreview(post.replyTarget.quotedContent) }}</span>
+                                                </div>
                                                 <div class="editor-wrapper">
                                                     <RichEditor
                                                         v-model="post.replyContent"
-                                                        :placeholder="`回复 ${reply.nickname || reply.username || '匿名'}...（支持Markdown）`"
+                                                        placeholder="输入回复内容...（支持Markdown）"
                                                         style="width:100%;margin-bottom:8px;" />
                                                 </div>
                                                 <div class="reply-input-actions">
@@ -897,11 +905,33 @@ const handleCommentPageChange = async (post: Post, val: number) => {
 
 // ===== 回复功能 =====
 
+// 将 Markdown 转为纯文本（用于引用预览）
+const stripMarkdown = (md: string): string => {
+  if (!md) return ''
+  return md
+    .replace(/```[\s\S]*?```/g, '[代码]')
+    .replace(/`[^`]+`/g, '[代码]')
+    .replace(/!\[.*?\]\(.*?\)/g, '[图片]')
+    .replace(/\[([^\]]+)\]\(.*?\)/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/~~([^~]+)~~/g, '$1')
+    .replace(/^>\s*/gm, '')
+    .replace(/\n+/g, ' ')
+    .trim()
+}
+
+const getQuotePreview = (content: string): string => {
+  const plain = stripMarkdown(content)
+  return plain.length > 80 ? plain.substring(0, 80) + '...' : plain
+}
+
 /**
  * 切换回复输入框
  * @param post 帖子
  * @param comment 顶层评论（回复一定挂在顶层下）
- * @param replyTo 可选，表示回复的是某条子回复（带 @mention）
+ * @param replyTo 可选，表示回复的是某条子回复（带引用块）
  */
 const toggleReply = (post: Post, comment: any, replyTo?: any) => {
     const targetNickname = replyTo
@@ -919,9 +949,10 @@ const toggleReply = (post: Post, comment: any, replyTo?: any) => {
 
     post.replyTarget = {
         commentId: comment.commentId,
-        replyToNickname: replyTo ? targetNickname : undefined
+        replyToNickname: replyTo ? targetNickname : undefined,
+        quotedContent: (replyTo ? replyTo.content : comment.content) || ''
     };
-    post.replyContent = replyTo ? `@${targetNickname} ` : '';
+    post.replyContent = '';
     post.replyLoading = false;
 };
 
@@ -941,9 +972,18 @@ const submitReply = async (post: Post, comment: any, replyTo?: any) => {
 
     post.replyLoading = true;
     try {
+        // 构建带引用块前缀的内容
+        let finalContent = post.replyContent.trim();
+        if (post.replyTarget?.quotedContent) {
+            const quotedNickname = post.replyTarget.replyToNickname || (comment.nickname || comment.username || '匿名');
+            const quotedPlain = stripMarkdown(post.replyTarget.quotedContent);
+            const truncated = quotedPlain.length > 120 ? quotedPlain.substring(0, 120) + '...' : quotedPlain;
+            finalContent = `> **@${quotedNickname}**：${truncated}\n\n${finalContent}`;
+        }
+
         const response = await addComment({
             postId: post.postId!,
-            content: post.replyContent.trim(),
+            content: finalContent,
             parentId: comment.commentId
         });
 
@@ -1945,6 +1985,34 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
 [data-theme="dark"] .reply-input-area {
     background-color: #2a2a2a;
     border-color: #444;
+}
+
+/* 引用预览块 */
+.quote-preview {
+    background-color: var(--el-fill-color-light, #f0f2f5);
+    border-left: 3px solid var(--el-color-primary, #409eff);
+    padding: 6px 10px;
+    margin-bottom: 8px;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--el-text-color-regular);
+    word-break: break-all;
+}
+
+[data-theme="dark"] .quote-preview {
+    background-color: #2a2a2e;
+    border-left-color: #60a9ff;
+}
+
+.quote-author {
+    color: var(--el-color-primary, #409eff);
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.quote-text {
+    color: var(--el-text-color-secondary);
 }
 
 .reply-input-actions {
