@@ -310,7 +310,7 @@ const imageList = computed(() => {
 // 权限控制
 const canEdit = computed(() => info.value?.status === 'OPEN')
 const canDelete = computed(() => info.value?.status === 'OPEN')
-const canChangeStatus = computed(() => ['OPEN', 'IN_PROGRESS'].includes(info.value?.status))
+const canChangeStatus = computed(() => ['OPEN', 'IN_PROGRESS', 'CLOSED'].includes(info.value?.status))
 
 // 可选状态列表
 const availableStatuses = computed(() => {
@@ -320,8 +320,9 @@ const availableStatuses = computed(() => {
       statuses.push({ label: '关闭', value: 'CLOSED' })
     } else if (info.value.status === 'IN_PROGRESS') {
       statuses.push({ label: '已解决', value: 'RESOLVED' })
-      statuses.push({ label: '不满意', value: 'UNSATISFIED' })
       statuses.push({ label: '关闭', value: 'CLOSED' })
+    } else if (info.value.status === 'CLOSED') {
+      statuses.push({ label: '重新开放', value: 'OPEN' })
     }
   }
   return statuses
@@ -594,6 +595,9 @@ async function handleStatusUpdate() {
       res = await completeHelpInfo(id)
     } else if (newStatus.value === 'CLOSED') {
       res = await closeHelpInfo(id)
+    } else if (newStatus.value === 'OPEN') {
+      // 重新开放：直接调用通用状态更新接口
+      res = await updateHelpInfoStatus(id, 'OPEN')
     }
 
     if (res && res.data.code === 200) {
@@ -736,8 +740,8 @@ async function loadReviewStatus() {
       let helperId = null
       let helperName = ''
 
-      // 优先：如果是已解决/不满意，且 applications 有 ACCEPTED
-      if (info.value.status === 'RESOLVED' || info.value.status === 'UNSATISFIED') {
+      // 优先：如果是已解决，且 applications 有 ACCEPTED
+      if (info.value.status === 'RESOLVED') {
         const acceptedApp = applications.value.find(app => app.status === 'ACCEPTED')
         if (acceptedApp) {
           helperId = acceptedApp.applicantId
@@ -855,7 +859,6 @@ function getStatusLabel(status: string) {
     'OPEN': '进行中',
     'IN_PROGRESS': '处理中',
     'RESOLVED': '已解决',
-    'UNSATISFIED': '不满意',
     'CLOSED': '已关闭',
     'EXPIRED': '已过期'
   }
@@ -867,7 +870,6 @@ function getStatusType(status: string) {
     'OPEN': 'success',
     'IN_PROGRESS': 'warning',
     'RESOLVED': 'info',
-    'UNSATISFIED': 'danger',
     'CLOSED': '',
     'EXPIRED': 'danger'
   }

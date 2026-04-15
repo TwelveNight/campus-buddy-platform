@@ -138,7 +138,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
 
         // 检查互助任务状态
-        boolean hasValidStatus = "RESOLVED".equals(helpInfo.getStatus()) || "UNSATISFIED".equals(helpInfo.getStatus());
+        boolean hasValidStatus = "RESOLVED".equals(helpInfo.getStatus());
         if (!hasValidStatus) {
             return false;
         }
@@ -332,7 +332,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
 
         // 检查互助任务状态
-        boolean hasValidStatus = "RESOLVED".equals(helpInfo.getStatus()) || "UNSATISFIED".equals(helpInfo.getStatus());
+        boolean hasValidStatus = "RESOLVED".equals(helpInfo.getStatus());
         boolean isPublisher = userId.equals(helpInfo.getPublisherId());
         boolean isHelper = userId.equals(application.getApplicantId());
 
