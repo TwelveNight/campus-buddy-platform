@@ -31,5 +31,6 @@ mysql-init/
 *.drawio.bkp
 *.drawio.dtmp
 
+docs
 docs/old
 docs/references
