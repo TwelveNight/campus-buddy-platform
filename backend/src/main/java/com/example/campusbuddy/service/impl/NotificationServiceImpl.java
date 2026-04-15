@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.dto.NotificationCreateDTO;
+import com.example.campusbuddy.entity.GroupPost;
 import com.example.campusbuddy.entity.Notification;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.mapper.NotificationMapper;
+import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.NotificationVO;
@@ -31,6 +33,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private GroupPostService groupPostService;
 
     @Override
     @Transactional
@@ -346,6 +351,34 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         return createUserNotification(dto);
     }
 
+    @Override
+    @Transactional
+    public Long createPostCommentedNotification(Long postId, Long groupId, Long postAuthorId, Long commenterId, String commenterName, String postTitle) {
+        NotificationCreateDTO dto = new NotificationCreateDTO();
+        dto.setRecipientId(postAuthorId);
+        dto.setSenderId(commenterId);
+        dto.setType(Notification.NotificationType.POST_COMMENTED.name());
+        dto.setTitle("您的帖子收到了新评论");
+        dto.setContent(commenterName + " 评论了您的帖子 \"" + postTitle + "\"");
+        dto.setRelatedId(postId);
+
+        return createUserNotification(dto);
+    }
+
+    @Override
+    @Transactional
+    public Long createCommentRepliedNotification(Long postId, Long groupId, Long commentAuthorId, Long replierId, String replierName, String postTitle) {
+        NotificationCreateDTO dto = new NotificationCreateDTO();
+        dto.setRecipientId(commentAuthorId);
+        dto.setSenderId(replierId);
+        dto.setType(Notification.NotificationType.COMMENT_REPLIED.name());
+        dto.setTitle("您的评论收到了新回复");
+        dto.setContent(replierName + " 回复了您在帖子 \"" + postTitle + "\" 中的评论");
+        dto.setRelatedId(postId);
+
+        return createUserNotification(dto);
+    }
+
     /**
      * 根据通知类型和相关ID生成前端路由链接
      */
@@ -356,6 +389,14 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 case "FRIEND_REQUEST" -> "/friends?tab=requests";
                 default -> null;
             };
+        }
+
+        if ("POST_COMMENTED".equals(type) || "COMMENT_REPLIED".equals(type)) {
+            GroupPost post = groupPostService.getById(relatedId);
+            if (post != null) {
+                return "/groups/" + post.getGroupId() + "/posts/" + relatedId;
+            }
+            return null;
         }
 
         return switch (type) {
@@ -381,6 +422,15 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
                 default -> null;
             };
         }
+
+        if ("POST_COMMENTED".equals(type) || "COMMENT_REPLIED".equals(type)) {
+            GroupPost post = groupPostService.getById(relatedId);
+            if (post != null) {
+                return "/groups/" + post.getGroupId() + "/posts/" + relatedId;
+            }
+            return null;
+        }
+
         return switch (type) {
             case "SYSTEM_ANNOUNCEMENT", "SYSTEM_ACTIVITY" -> "/announcement/" + relatedId;
             case "HELP_NEW_APPLICATION", "HELP_APPLICATION_ACCEPTED", "HELP_APPLICATION_REJECTED", "HELP_COMPLETED" ->

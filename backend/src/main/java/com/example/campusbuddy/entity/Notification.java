@@ -90,6 +90,8 @@ public class Notification implements Serializable {
         GROUP_ANNOUNCEMENT,       // 小组公告
         GROUP_ADMIN_ASSIGNED,     // 被设为管理员
         GROUP_ADMIN_REMOVED,      // 被取消管理员
-        GROUP_MEMBER_REMOVED      // 被移出小组
+        GROUP_MEMBER_REMOVED,     // 被移出小组
+        POST_COMMENTED,           // 帖子被评论
+        COMMENT_REPLIED           // 评论被回复
     }
 }

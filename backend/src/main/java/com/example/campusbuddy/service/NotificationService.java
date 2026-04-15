@@ -189,4 +189,30 @@ public interface NotificationService extends IService<Notification> {
      * 发送被移出小组通知
      */
     Long createGroupMemberRemovedNotification(Long groupId, Long userId, Long operatorId, String operatorName, String groupName);
+
+    /**
+     * 创建帖子被评论通知
+     *
+     * @param postId       帖子ID
+     * @param groupId      所属小组ID
+     * @param postAuthorId 帖子作者ID
+     * @param commenterId  评论者ID
+     * @param commenterName 评论者昵称
+     * @param postTitle    帖子标题
+     * @return 通知ID
+     */
+    Long createPostCommentedNotification(Long postId, Long groupId, Long postAuthorId, Long commenterId, String commenterName, String postTitle);
+
+    /**
+     * 创建评论被回复通知
+     *
+     * @param postId          帖子ID
+     * @param groupId         所属小组ID
+     * @param commentAuthorId 被回复评论的作者ID
+     * @param replierId       回复者ID
+     * @param replierName     回复者昵称
+     * @param postTitle       帖子标题
+     * @return 通知ID
+     */
+    Long createCommentRepliedNotification(Long postId, Long groupId, Long commentAuthorId, Long replierId, String replierName, String postTitle);
 }

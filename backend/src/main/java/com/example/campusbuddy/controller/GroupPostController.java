@@ -7,6 +7,7 @@ import com.example.campusbuddy.entity.PostComment;
 import com.example.campusbuddy.entity.User;
 import com.example.campusbuddy.service.GroupPostCacheService;
 import com.example.campusbuddy.service.GroupPostService;
+import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.PostCommentService;
 import com.example.campusbuddy.service.PostLikeService;
 import com.example.campusbuddy.service.UserCacheService;
@@ -45,6 +46,9 @@ public class GroupPostController {
     
     @Autowired
     private GroupPostCacheService postCacheService;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private UserCacheService userCacheService;
@@ -435,6 +439,36 @@ public class GroupPostController {
         }
 
         Long commentId = commentService.addComment(comment);
+
+        // 发送通知（非关键路径，失败不影响主流程）
+        try {
+            GroupPost post = groupPostService.getById(postId);
+            if (post != null) {
+                String commenterName = currentUser.getNickname() != null ? currentUser.getNickname() : currentUser.getUsername();
+                String postTitle = post.getTitle() != null ? post.getTitle() : "该帖子";
+
+                if (comment.getParentId() == null) {
+                    // 评论帖子：通知帖子作者（排除自评论）
+                    if (!post.getUserId().equals(currentUser.getUserId())) {
+                        notificationService.createPostCommentedNotification(
+                            postId, post.getGroupId(), post.getUserId(),
+                            currentUser.getUserId(), commenterName, postTitle
+                        );
+                    }
+                } else {
+                    // 回复评论：通知被回复评论的作者（排除自回复）
+                    PostComment parentComment = commentService.getById(comment.getParentId());
+                    if (parentComment != null && !parentComment.getUserId().equals(currentUser.getUserId())) {
+                        notificationService.createCommentRepliedNotification(
+                            postId, post.getGroupId(), parentComment.getUserId(),
+                            currentUser.getUserId(), commenterName, postTitle
+                        );
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("评论通知发送失败: postId={}, commenterId={}, error={}", postId, currentUser.getUserId(), e.getMessage());
+        }
 
         return R.ok(commentId);
     }
