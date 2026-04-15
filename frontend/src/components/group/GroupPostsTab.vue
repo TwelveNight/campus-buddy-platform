@@ -249,7 +249,7 @@
 
         <!-- 创建/编辑帖子对话框 -->
         <el-dialog v-model="postDialogVisible" :title="isEditing ? '编辑帖子' : '发布帖子'" width="65%"
-            :close-on-click-modal="false">
+            :close-on-click-modal="false" append-to-body>
             <el-form :model="postForm" :rules="postRules" ref="postFormRef" label-width="80px">
                 <el-form-item label="标题" prop="title">
                     <el-input v-model="postForm.title" placeholder="请输入帖子标题" />
