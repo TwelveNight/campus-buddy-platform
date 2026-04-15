@@ -39,7 +39,7 @@
         <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip></el-table-column>
         <el-table-column label="头像" width="80" align="center">
           <template #default="scope">
-            <el-avatar :size="40" :src="scope.row.avatarUrl || '/avatar-placeholder.png'"></el-avatar>
+            <el-avatar :size="40" :src="scope.row.avatarUrl || defaultAvatar"></el-avatar>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
@@ -108,6 +108,8 @@ const groupList = ref<any[]>([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+
+const defaultAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 
 // 过滤条件
 const filters = reactive({
