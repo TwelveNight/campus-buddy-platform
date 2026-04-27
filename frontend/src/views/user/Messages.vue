@@ -407,11 +407,48 @@ const viewUserProfile = () => {
 const filteredSessions = computed(() => {
     if (!searchKeyword.value) return sessions.value
     return sessions.value.filter(session =>
-        session.nickname.toLowerCase().includes(searchKeyword.value.toLowerCase())
+        (session.nickname || '').toLowerCase().includes(searchKeyword.value.toLowerCase())
     )
 })
 
 // 获取会话列表
+const normalizeSession = (session: Partial<ChatSession> & { userId: number }): ChatSession => ({
+    userId: Number(session.userId),
+    nickname: session.nickname || `User #${session.userId}`,
+    avatarUrl: session.avatarUrl || '',
+    lastMessage: session.lastMessage || '',
+    lastMessageTime: session.lastMessageTime || new Date().toISOString(),
+    unreadCount: session.unreadCount || 0
+})
+
+const getRouteChatUserId = () => {
+    const routeUserId = route.params.userId
+    const rawUserId = Array.isArray(routeUserId) ? routeUserId[0] : routeUserId
+
+    if (rawUserId) {
+        const userId = Number(rawUserId)
+        return Number.isNaN(userId) ? null : userId
+    }
+
+    if (typeof route.query.chat_with === 'string') {
+        const userId = Number(route.query.chat_with)
+        return Number.isNaN(userId) ? null : userId
+    }
+
+    return null
+}
+
+const openChatByUserId = async (userId: number) => {
+    if (!userId) return
+
+    const targetSession = sessions.value.find(session => Number(session.userId) === userId)
+    if (targetSession) {
+        await selectChat(targetSession)
+    } else {
+        await fetchUserAndCreateSession(userId)
+    }
+}
+
 const fetchSessions = async () => {
     sessionsLoading.value = true
     try {
@@ -420,19 +457,12 @@ const fetchSessions = async () => {
             size: 50 // 较大的值，一般用户不会有太多活跃会话
         })
         if (res.data.code === 200) {
-            sessions.value = res.data.data.records || []
+            sessions.value = (res.data.data.records || []).map((session: ChatSession) => normalizeSession(session))
 
             // 如果路由有指定用户ID，选择该用户聊天
-            const userId = route.params.userId
+            const userId = getRouteChatUserId()
             if (userId) {
-                const uid = Number(userId)
-                const targetSession = sessions.value.find(session => session.userId === uid)
-                if (targetSession) {
-                    selectChat(targetSession)
-                } else {
-                    // 如果会话列表中没有该用户，需要获取用户信息并创建会话
-                    fetchUserAndCreateSession(uid)
-                }
+                await openChatByUserId(userId)
             } else if (sessions.value.length > 0) {
                 // 默认选择第一个会话
                 selectChat(sessions.value[0])
@@ -451,18 +481,23 @@ const fetchUserAndCreateSession = async (userId: number) => {
     try {
         // 调用真实API获取用户信息
         const res = await getUserById(userId)
-        if (res.data.code === 200) {
-            const user = res.data.data
-            const userInfo = {
+        const user = res.data?.data || (res.data?.userId ? res.data : null)
+        if (user?.userId) {
+            const userInfo = normalizeSession({
                 userId: user.userId,
-                nickname: user.nickname,
+                nickname: user.nickname || user.username,
                 avatarUrl: user.avatarUrl,
                 lastMessage: '',
                 lastMessageTime: new Date().toISOString(),
                 unreadCount: 0
+            })
+            const existingIndex = sessions.value.findIndex(session => Number(session.userId) === userInfo.userId)
+            if (existingIndex === -1) {
+                sessions.value.unshift(userInfo)
+            } else {
+                sessions.value[existingIndex] = { ...sessions.value[existingIndex], ...userInfo }
             }
-            sessions.value.unshift(userInfo)
-            selectChat(userInfo)
+            await selectChat(userInfo)
         } else {
             ElMessage.error('获取用户信息失败')
         }
@@ -474,16 +509,16 @@ const fetchUserAndCreateSession = async (userId: number) => {
 
 // 选择聊天对象
 const selectChat = async (session: ChatSession) => {
-    // 如果头像或昵称缺失，主动补全
-    if (!session.avatarUrl || !session.nickname) {
+    // 如果昵称缺失，主动补全
+    if (!session.nickname) {
         await fetchUserAndCreateSession(session.userId)
         return
     }
-    currentChatUser.value = session
+    currentChatUser.value = normalizeSession(session)
 
     // 更新路由，但不触发重新加载
     router.replace({
-        path: `/messages/${session.userId}`,
+        path: `/messages/${currentChatUser.value.userId}`,
         query: route.query
     })
 
@@ -866,16 +901,11 @@ const handleNewMessage = (data: any) => {
 
 // 监听路由变化
 watch(
-    () => route.params.userId,
-    (newUserId) => {
-        if (newUserId && (!currentChatUser.value || currentChatUser.value.userId !== Number(newUserId))) {
-            const uid = Number(newUserId)
-            const targetSession = sessions.value.find(session => session.userId === uid)
-            if (targetSession) {
-                selectChat(targetSession)
-            } else {
-                fetchUserAndCreateSession(uid)
-            }
+    () => [route.params.userId, route.query.chat_with],
+    async () => {
+        const userId = getRouteChatUserId()
+        if (userId && (!currentChatUser.value || currentChatUser.value.userId !== userId)) {
+            await openChatByUserId(userId)
         }
     }
 )
@@ -907,14 +937,6 @@ onMounted(() => {
     // 进入消息页面时，刷新未读消息数量
     refreshUnreadMessageCount();
 
-    // 处理路由中的chat_with参数
-    if (route.query.chat_with && typeof route.query.chat_with === 'string') {
-        const userId = parseInt(route.query.chat_with as string)
-        if (!isNaN(userId)) {
-            fetchUserAndCreateSession(userId)
-        }
-    }
-    
     // 添加页面可见性变化事件监听
     document.addEventListener('visibilitychange', handleVisibilityChange);
 })
