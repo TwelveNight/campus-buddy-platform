@@ -1,147 +1,140 @@
 <template>
     <div class="home-page">
-        <!-- 英雄区域 -->
         <section class="hero-section">
-            <div class="hero-content">
-                <h1>学伴 <span>校园互助与成长平台</span></h1>
-                <p class="hero-description">让每一位同学都能在这里找到帮助、收获成长、结识伙伴</p>
-                <p class="hero-sub-description">互助 · 共享 · 进步 | 校园生活新方式</p>
+            <div class="hero-copy">
+                <div class="eyebrow">Campus Mutual Aid Platform</div>
+                <h1>学伴</h1>
+                <p class="hero-title-sub">校园互助与资源共享平台</p>
+                <p class="hero-description">
+                    面向校园学习与生活场景，连接课程辅导、技能学习、物品共享和学习小组协作，让帮助更容易被看见。
+                </p>
                 <div class="cta-buttons">
                     <el-button type="primary" size="large" round @click="navigateTo('/helpinfo')">
-                        <el-icon><Promotion /></el-icon>浏览互助任务
+                        <el-icon><Promotion /></el-icon>
+                        浏览互助信息
                     </el-button>
-                    <el-button size="large" round class="secondary-btn" @click="navigateTo('/helpinfo/publish')" v-if="authStore.isAuthenticated">
-                        <el-icon><Edit /></el-icon>发布互助
+                    <el-button v-if="authStore.isAuthenticated" size="large" round class="ghost-btn"
+                        @click="navigateTo('/helpinfo/publish')">
+                        <el-icon><Edit /></el-icon>
+                        发布互助
                     </el-button>
-                    <el-button size="large" round class="accent-btn" @click="navigateTo('/groups?tab=all')" v-if="authStore.isAuthenticated">
-                        <el-icon><UserFilled /></el-icon>学习小组
+                    <el-button v-else size="large" round class="ghost-btn" @click="navigateTo('/login')">
+                        <el-icon><User /></el-icon>
+                        登录使用
                     </el-button>
                 </div>
             </div>
-            <div class="hero-image">
-                <img src="../assets/vue.svg" alt="学伴LOGO" />
-                <div class="floating-icon icon-1"><el-icon><ChatLineRound /></el-icon></div>
-                <div class="floating-icon icon-2"><el-icon><Files /></el-icon></div>
-                <div class="floating-icon icon-3"><el-icon><Trophy /></el-icon></div>
-            </div>
-        </section>
 
-        <!-- 平台特色部分 -->
-        <section class="features-section">
-            <h2 class="section-title">平台特色</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon"><el-icon><Connection /></el-icon></div>
-                    <h3>高效互助</h3>
-                    <p>一键发布/接收互助任务，涵盖学业、生活、技能等多场景</p>
+            <div class="hero-panel">
+                <div class="panel-card primary-card">
+                    <span>当前入口</span>
+                    <strong>互助信息</strong>
+                    <p>课程辅导、技能学习、物品借用、组队协作</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon accent"><el-icon><Trophy /></el-icon></div>
-                    <h3>信用积分</h3>
-                    <p>完成互助任务可获积分，积分提升个人信誉与特权</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon secondary"><el-icon><ChatLineRound /></el-icon></div>
-                    <h3>实时沟通</h3>
-                    <p>内置私信与群聊，沟通无障碍，协作更高效</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon tertiary"><el-icon><Reading /></el-icon></div>
-                    <h3>学习小组</h3>
-                    <p>组队学习、资料共享、共同进步，打造专属学习圈</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon quaternary"><el-icon><Star /></el-icon></div>
-                    <h3>评价反馈</h3>
-                    <p>完善的互评体系，保障互助体验与平台健康</p>
+                <div class="panel-grid">
+                    <div class="mini-card">
+                        <el-icon><UserFilled /></el-icon>
+                        <span>学习小组</span>
+                    </div>
+                    <div class="mini-card">
+                        <el-icon><ChatLineRound /></el-icon>
+                        <span>私信沟通</span>
+                    </div>
+                    <div class="mini-card">
+                        <el-icon><Star /></el-icon>
+                        <span>信用评价</span>
+                    </div>
+                    <div class="mini-card">
+                        <el-icon><Files /></el-icon>
+                        <span>资源文件</span>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- 平台功能区域 -->
-        <section class="modules-section">
-            <h2 class="section-title">核心功能</h2>
-            <el-row :gutter="30" class="module-row">
-                <el-col :xs="24" :sm="12" :md="8">
-                    <el-card class="module-card active" shadow="hover" @click="navigateTo('/helpinfo')">
-                        <el-icon class="module-icon primary"><Service /></el-icon>
-                        <h3>校园互助</h3>
-                        <p>浏览/发布互助任务，涵盖学业辅导、技能交换、生活互助等</p>
-                        <div class="card-action">
-                            <el-button type="primary" text round>立即体验<el-icon><ArrowRight /></el-icon></el-button>
-                        </div>
-                    </el-card>
-                </el-col>
-                <el-col :xs="24" :sm="12" :md="8">
-                    <el-card class="module-card active" shadow="hover" @click="navigateTo('/groups?tab=all')">
-                        <el-icon class="module-icon secondary"><UserFilled /></el-icon>
-                        <h3>学习小组</h3>
-                        <p>创建/加入小组，协作学习、资料共享、组队成长</p>
-                        <div class="card-tag">
-                            <el-tag size="small" effect="dark" type="success">新功能</el-tag>
-                        </div>
-                        <div class="card-action">
-                            <el-button type="success" text round>立即体验<el-icon><ArrowRight /></el-icon></el-button>
-                        </div>
-                    </el-card>
-                </el-col>
-            </el-row>
+        <section class="quick-actions">
+            <button class="action-tile" @click="navigateTo('/helpinfo')">
+                <el-icon><Service /></el-icon>
+                <span>找互助</span>
+                <small>按类型筛选校园帮助</small>
+            </button>
+            <button class="action-tile" @click="navigateTo('/helpinfo/publish')">
+                <el-icon><Promotion /></el-icon>
+                <span>发需求</span>
+                <small>发布任务等待申请</small>
+            </button>
+            <button class="action-tile" @click="navigateTo('/groups?tab=all')">
+                <el-icon><Reading /></el-icon>
+                <span>进小组</span>
+                <small>学习协作与资料共享</small>
+            </button>
         </section>
 
-        <!-- 统计数据展示 -->
+        <section class="section-block">
+            <div class="section-heading">
+                <span>Core Modules</span>
+                <h2>围绕校园互助的核心能力</h2>
+            </div>
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-icon blue"><el-icon><Connection /></el-icon></div>
+                    <h3>互助发布与申请</h3>
+                    <p>支持课程辅导、技能学习、物品借用、物品交换和组队需求，形成从发布到申请处理的闭环。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon green"><el-icon><UserFilled /></el-icon></div>
+                    <h3>学习小组协作</h3>
+                    <p>用户可创建或加入学习小组，围绕帖子、评论和文件开展资料共享与主题讨论。</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon amber"><el-icon><ChatLineRound /></el-icon></div>
+                    <h3>消息通知联动</h3>
+                    <p>好友、私信和通知中心贯穿互助流程，让申请状态、沟通反馈和系统提醒及时触达。</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="workflow-section">
+            <div class="section-heading compact">
+                <span>Workflow</span>
+                <h2>四步完成一次校园互助</h2>
+            </div>
+            <div class="workflow">
+                <div class="workflow-step">
+                    <strong>01</strong>
+                    <h3>发布需求</h3>
+                    <p>填写类型、地点、时间和联系方式。</p>
+                </div>
+                <div class="workflow-step">
+                    <strong>02</strong>
+                    <h3>申请处理</h3>
+                    <p>查看申请人信息并选择合适同学。</p>
+                </div>
+                <div class="workflow-step">
+                    <strong>03</strong>
+                    <h3>私信协作</h3>
+                    <p>通过站内消息沟通细节并推进完成。</p>
+                </div>
+                <div class="workflow-step">
+                    <strong>04</strong>
+                    <h3>评价沉淀</h3>
+                    <p>完成后互评，积累信用记录。</p>
+                </div>
+            </div>
+        </section>
+
         <section class="stats-section">
-            <h2 class="section-title">平台数据</h2>
-            <div class="stats-container">
-                <div class="stat-item">
-                    <div class="stat-number">3,200+</div>
-                    <div class="stat-label">注册用户</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">5,600+</div>
-                    <div class="stat-label">互助任务</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">1,200+</div>
-                    <div class="stat-label">学习小组</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">9,800+</div>
-                    <div class="stat-label">互助成功</div>
-                </div>
+            <div class="stat-item">
+                <strong>5</strong>
+                <span>互助类型</span>
             </div>
-        </section>
-
-        <!-- 使用指南 -->
-        <section class="guide-section">
-            <h2 class="section-title">新手指南</h2>
-            <div class="guide-container">
-                <div class="guide-step">
-                    <div class="step-number">1</div>
-                    <div class="step-icon"><el-icon><User /></el-icon></div>
-                    <h3>注册/登录</h3>
-                    <p>快速注册，完善个人信息，开启互助之旅</p>
-                </div>
-                <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
-                <div class="guide-step">
-                    <div class="step-number">2</div>
-                    <div class="step-icon"><el-icon><Promotion /></el-icon></div>
-                    <h3>浏览/发布互助</h3>
-                    <p>查找你需要的帮助，或主动发布互助任务</p>
-                </div>
-                <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
-                <div class="guide-step">
-                    <div class="step-number">3</div>
-                    <div class="step-icon"><el-icon><ChatDotRound /></el-icon></div>
-                    <h3>沟通协作</h3>
-                    <p>与同学实时沟通，协作解决问题</p>
-                </div>
-                <div class="guide-arrow"><el-icon><ArrowRight /></el-icon></div>
-                <div class="guide-step">
-                    <div class="step-number">4</div>
-                    <div class="step-icon"><el-icon><Star /></el-icon></div>
-                    <h3>互评反馈</h3>
-                    <p>完成互助后互相评价，积累信用积分</p>
-                </div>
+            <div class="stat-item">
+                <strong>4</strong>
+                <span>协作场景</span>
+            </div>
+            <div class="stat-item">
+                <strong>1</strong>
+                <span>统一平台</span>
             </div>
         </section>
     </div>
@@ -156,14 +149,11 @@ import {
     Files,
     Service,
     ChatLineRound,
-    Trophy,
     Promotion,
     Edit,
-    ArrowRight,
     Star,
     Reading,
-    User,
-    ChatDotRound
+    User
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -176,836 +166,414 @@ function navigateTo(path: string) {
 
 <style scoped>
 .home-page {
+    --home-ink: #132238;
+    --home-muted: #637083;
+    --home-line: rgba(19, 34, 56, 0.1);
+    --home-blue: #2563eb;
+    --home-green: #0f9f6e;
+    --home-amber: #d97706;
     width: 100%;
-    margin: 0 auto;
-    max-width: 1440px;
-    min-width: 320px;
-    padding: 0 32px;
-    box-sizing: border-box;
-    position: relative;
-    overflow-x: hidden;
-}
-
-.home-page::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    z-index: 0;
-    background: radial-gradient(circle at 30% 40%, rgba(64,158,255,0.03) 0%, transparent 70%),
-                radial-gradient(circle at 70% 30%, rgba(139,92,246,0.02) 0%, transparent 70%);
-    opacity: 0.6;
+    padding: 28px 0 56px;
 }
 
 .hero-section {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+    gap: 44px;
+    min-height: 470px;
+    padding: 64px;
+    overflow: hidden;
+    border-radius: 34px;
+    color: #fff;
+    background:
+        radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.28), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(45, 212, 191, 0.3), transparent 26%),
+        linear-gradient(135deg, #0f766e 0%, #155e75 45%, #1e3a8a 100%);
+    box-shadow: 0 24px 70px rgba(15, 76, 117, 0.22);
+}
+
+.hero-section::after {
+    content: '';
+    position: absolute;
+    inset: auto -8% -38% 42%;
+    height: 360px;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.12) 0 1px, transparent 1px 42px);
+    transform: rotate(-8deg);
+    opacity: 0.65;
+}
+
+.hero-copy,
+.hero-panel {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-copy {
     display: flex;
-    align-items: center;
-    padding: 80px 0;
-    margin-bottom: 60px;
-    background: #409eff; /* 使用单一颜色替代渐变 */
-    color: white;
-    border-radius: 0 0 24px 24px;
-    position: relative;
-    overflow: visible;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* 减轻阴影效果 */
-    min-height: 520px;
-    padding-left: 64px;
-    padding-right: 64px;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.hero-content {
-    flex: 1;
-    padding: 0 40px;
-    max-width: 600px;
-    z-index: 3;
-    position: relative;
+.eyebrow {
+    width: fit-content;
+    margin-bottom: 18px;
+    padding: 7px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.12);
 }
 
-.hero-content h1 {
-    font-size: 3.2rem;
-    margin-bottom: 20px;
-    font-weight: 700;
-    line-height: 1.2;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    color: white;
+.hero-copy h1 {
+    max-width: 680px;
+    margin: 0;
+    font-size: clamp(2.5rem, 6vw, 4.9rem);
+    line-height: 1.02;
+    letter-spacing: -0.06em;
+    font-weight: 900;
 }
 
-.hero-content h1 span {
-    color: #f0f8ff;
-    display: block;
-    font-weight: 600;
+.hero-title-sub {
+    margin: 16px 0 0;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: clamp(1.35rem, 3vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
 }
 
 .hero-description {
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-    opacity: 0.95;
-    line-height: 1.6;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.hero-sub-description {
-    font-size: 1.15rem;
-    margin-bottom: 40px;
-    opacity: 0.85;
-    line-height: 1.5;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.hero-image {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2;
-    position: relative;
-}
-
-.hero-image img {
-    max-width: 100%;
-    height: 240px;
-    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2)); /* 减轻阴影效果 */
-    transition: transform 0.3s ease;
-}
-
-.hero-image img:hover {
-    transform: scale(1.02); /* 减小缩放效果 */
-}
-
-.floating-icon {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.3); /* 减小边框宽度 */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* 减轻阴影 */
-}
-
-.floating-icon :deep(svg) {
-    font-size: 24px;
-    color: white;
-}
-
-.icon-1 {
-    top: 15%;
-    left: 5%;
-    animation-delay: 0s;
-    animation-duration: 5s;
-}
-
-.icon-2 {
-    bottom: 10%;
-    right: 10%;
-    animation-delay: 1.5s;
-    animation-duration: 6s;
-}
-
-.icon-3 {
-    top: 25%;
-    right: 15%;
-    animation-delay: 3s;
-    animation-duration: 4.5s;
+    max-width: 640px;
+    margin: 24px 0 34px;
+    color: rgba(255, 255, 255, 0.84);
+    font-size: 1.12rem;
+    line-height: 1.9;
 }
 
 .cta-buttons {
     display: flex;
-    gap: 20px;
+    gap: 14px;
     flex-wrap: wrap;
 }
 
 .cta-buttons :deep(.el-button) {
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    font-weight: 600;
-    padding: 14px 28px;
-    font-size: 16px;
-    border-radius: 25px;
-    box-shadow: 0 2px 12px rgba(64,158,255,0.2);
-    background: #409eff;
-    color: #fff;
-}
-
-.cta-buttons :deep(.el-button:hover) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(64,158,255,0.3);
-    background: #337ecc;
-    color: #fff;
-}
-
-.secondary-btn {
-    background: rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    backdrop-filter: blur(8px);
-}
-
-.accent-btn {
-    background: rgba(255, 255, 255, 0.2) !important;
-    color: white !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    backdrop-filter: blur(8px);
-}
-
-/* 平台特色区域 */
-.features-section {
-    padding: 60px 40px 80px;
-    text-align: center;
-    max-width: 1380px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 48px;
-    padding-right: 48px;
-    position: relative;
-}
-
-.features-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
-    pointer-events: none;
-}
-
-.section-title {
-    font-size: 2.5rem;
-    color: var(--text-primary);
-    margin-bottom: 60px;
-    position: relative;
-    display: inline-block;
+    height: 46px;
+    padding: 0 24px;
     font-weight: 700;
-    z-index: 2;
 }
 
-.section-title::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 120%;
-    height: 120%;
-    background: linear-gradient(135deg, 
-        rgba(59, 130, 246, 0.05), 
-        rgba(139, 92, 246, 0.03));
-    border-radius: 20px;
-    z-index: -1;
+.ghost-btn {
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.42) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
 }
 
-.section-title::after {
-    content: '';
-    position: absolute;
-    width: 80px;
-    height: 4px;
-    background: linear-gradient(135deg, var(--primary-color), #8b5cf6);
-    bottom: -15px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 2px;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+.hero-panel {
+    align-self: center;
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px);
 }
 
-.features-grid {
+.panel-card {
+    border-radius: 24px;
+    padding: 28px;
+    background: #fff;
+    color: var(--home-ink);
+    box-shadow: 0 18px 45px rgba(8, 47, 73, 0.22);
+}
+
+.panel-card span {
+    color: var(--home-muted);
+    font-size: 13px;
+}
+
+.panel-card strong {
+    display: block;
+    margin: 8px 0;
+    font-size: 2rem;
+}
+
+.panel-card p {
+    margin: 0;
+    color: var(--home-muted);
+    line-height: 1.7;
+}
+
+.panel-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 40px;
-    margin-bottom: 40px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.mini-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 72px;
+    padding: 16px;
+    border-radius: 18px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-weight: 700;
+}
+
+.mini-card .el-icon {
+    font-size: 22px;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin: -36px 40px 68px;
     position: relative;
     z-index: 2;
+}
+
+.action-tile {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    row-gap: 4px;
+    padding: 22px;
+    border: 1px solid var(--home-line);
+    border-radius: 22px;
+    text-align: left;
+    cursor: pointer;
+    background: var(--card-bg, #fff);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.action-tile:hover {
+    transform: translateY(-4px);
+    border-color: rgba(37, 99, 235, 0.28);
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
+}
+
+.action-tile .el-icon {
+    grid-row: span 2;
+    align-self: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: linear-gradient(135deg, #0f766e, #2563eb);
+    font-size: 22px;
+}
+
+.action-tile span {
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.action-tile small {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+}
+
+.section-block,
+.workflow-section {
+    margin-bottom: 68px;
+}
+
+.section-heading {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.section-heading span {
+    color: var(--home-green);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.section-heading h2 {
+    margin: 8px 0 0;
+    color: var(--text-primary);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    letter-spacing: -0.04em;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
 }
 
 .feature-card {
-    background: linear-gradient(135deg, rgba(248,250,252,0.8), rgba(139,92,246,0.05)); /* 简化渐变 */
-    backdrop-filter: blur(5px); /* 减轻模糊效果 */
-    border: 1px solid rgba(139,92,246,0.08); /* 减小边框宽度 */
-    border-radius: 20px;
-    padding: 40px 30px;
-    box-shadow: 
-        0 4px 16px 0 rgba(59,130,246,0.08), /* 减轻阴影 */
-        0 1px 0 rgba(139,92,246,0.05) inset; /* 减轻内阴影 */
-    transition: all 0.3s ease; /* 加快过渡速度 */
-    position: relative;
-    overflow: hidden;
-}
-
-.feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, #409eff15 0%, #8b5cf615 100%); /* 减轻渐变效果 */
-    opacity: 0.15; /* 降低不透明度 */
-    z-index: 1;
-    pointer-events: none;
-}
-
-@keyframes card-shimmer {
-  0% { opacity: 0.1; }
-  50% { opacity: 0.2; }
-  100% { opacity: 0.1; }
-}
-
-.feature-card:hover {
-    transform: translateY(-1px); /* 减小悬浮高度 */
-    box-shadow: 0 8px 20px #409eff20, 0 4px 10px #8b5cf620; /* 减轻阴影 */
-    border-color: #409eff90; /* 更微妙的边框颜色 */
+    min-height: 245px;
+    padding: 30px;
+    border: 1px solid var(--home-line);
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.86));
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
 }
 
 .feature-icon {
-    width: 70px; /* 减小图标尺寸 */
-    height: 70px; /* 减小图标尺寸 */
-    border-radius: 50%;
-    background: linear-gradient(135deg, #409eff15 0%, #8b5cf615 100%); /* 简化渐变 */
+    width: 54px;
+    height: 54px;
+    margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 25px;
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 4px 12px #409eff20, 0 0 12px #8b5cf620; /* 减轻阴影 */
-    border: 1px solid #8b5cf6; /* 减小边框宽度 */
+    border-radius: 18px;
+    color: #fff;
+    font-size: 26px;
 }
 
-.feature-icon :deep(svg) {
-    font-size: 32px; /* 减小图标尺寸 */
-    color: var(--primary-color);
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 1px 2px #409eff60); /* 减轻阴影 */
+.feature-icon.blue {
+    background: linear-gradient(135deg, #2563eb, #0ea5e9);
 }
 
-/* 移除旋转动画 */
-@keyframes icon-glow {
-  0% { filter: drop-shadow(0 1px 2px #409eff60); }
-  100% { filter: drop-shadow(0 2px 4px #8b5cf660); }
+.feature-icon.green {
+    background: linear-gradient(135deg, #0f9f6e, #14b8a6);
 }
 
-/* 模块区域 */
-.modules-section {
-    padding: 40px 40px 80px;
-    background-color: var(--light-bg);
-    text-align: center;
-    max-width: 1380px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 48px;
-    padding-right: 48px;
+.feature-icon.amber {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
 }
 
-.module-row {
-    margin-top: 40px;
+.feature-card h3 {
+    margin: 0 0 12px;
+    color: var(--text-primary);
+    font-size: 1.26rem;
 }
 
-.module-card {
-    height: 280px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin-bottom: 30px;
-    padding: 30px;
-    border-radius: 12px !important;
-    overflow: hidden;
-    position: relative;
-    transition: all 0.3s ease;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    border: 1px solid rgba(64,158,255,0.1);
+.feature-card p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.85;
 }
 
-.module-card.active {
-    cursor: pointer;
+.workflow-section {
+    padding: 42px;
+    border-radius: 30px;
+    background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(37, 99, 235, 0.08)),
+        var(--card-bg, #fff);
 }
 
-.module-card.active:hover {
-    transform: translateY(-1px); /* 减小悬浮高度 */
-    box-shadow: 0 4px 16px rgba(64,158,255,0.12); /* 减轻阴影 */
-    background: rgba(255,255,255,0.9);
+.workflow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
 }
 
-.module-card.disabled {
-    opacity: 0.7;
-    cursor: default;
+.workflow-step {
+    padding: 24px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(15, 118, 110, 0.14);
 }
 
-.module-card h3 {
-    font-size: 1.5rem;
-    margin: 15px 0;
+.workflow-step strong {
+    color: var(--home-blue);
+    font-size: 1.8rem;
+}
+
+.workflow-step h3 {
+    margin: 10px 0 8px;
     color: var(--text-primary);
 }
 
-.module-card p {
+.workflow-step p {
+    margin: 0;
     color: var(--text-secondary);
     line-height: 1.7;
-    margin-bottom: 20px;
 }
 
-.module-card .module-icon {
-    font-size: 48px;
-    margin-bottom: 18px;
-}
-
-.module-card .card-tag {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    z-index: 2;
-}
-
-.card-action {
-    margin-top: auto;
-}
-
-/* 统计数据区域 */
 .stats-section {
-    padding: 60px 40px;
-    background: linear-gradient(135deg, #409eff 0%, #5a6c8f 100%);
-    color: #fff;
-    text-align: center;
-    margin: 60px 0;
-    max-width: 1380px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 48px;
-    padding-right: 48px;
-    position: relative;
-    border-radius: 12px;
-}
-
-.stats-section .section-title {
-    color: white;
-    margin-bottom: 40px;
-}
-
-.stats-section .section-title::after {
-    background-color: white;
-}
-
-.stats-container {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    max-width: 1200px;
-    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
 }
 
 .stat-item {
-    padding: 20px;
-    flex: 1;
-    min-width: 200px;
-    margin: 10px;
-}
-
-.stat-number {
-    font-size: 3.2rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: white;
-}
-
-.stat-label {
-    font-size: 1.2rem;
-    opacity: 0.9;
-}
-
-/* 使用指南区域 */
-.guide-section {
-    padding: 60px 40px;
+    padding: 28px;
+    border-radius: 24px;
     text-align: center;
-    max-width: 1380px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 48px;
-    padding-right: 48px;
-    margin: 0 auto 60px;
+    color: #fff;
+    background: linear-gradient(135deg, #0f766e, #1e3a8a);
 }
 
-.guide-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-top: 40px;
+.stat-item strong {
+    display: block;
+    font-size: 3rem;
+    line-height: 1;
 }
 
-.guide-step {
-    background: rgba(255,255,255,0.9);
-    border-radius: 12px;
-    padding: 34px 22px;
-    width: 210px;
-    margin: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06); /* 减轻阴影 */
-    position: relative;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: 1px solid rgba(64,158,255,0.1); /* 减小边框宽度 */
+.stat-item span {
+    display: block;
+    margin-top: 10px;
+    opacity: 0.86;
+    font-weight: 700;
 }
 
-.guide-step:hover {
-    transform: translateY(-1px); /* 减小悬浮高度 */
-    box-shadow: 0 4px 12px rgba(64,158,255,0.12); /* 减轻阴影 */
+[data-theme="dark"] .feature-card,
+[data-theme="dark"] .action-tile,
+[data-theme="dark"] .workflow-step {
+    background: rgba(36, 41, 61, 0.92);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
-.step-number {
-    position: absolute;
-    top: -16px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px; /* 减小尺寸 */
-    height: 32px; /* 减小尺寸 */
-    background: #409eff;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 1rem; /* 减小字体大小 */
-    box-shadow: 0 2px 6px rgba(64,158,255,0.2); /* 减轻阴影 */
-    border: 1px solid white; /* 减小边框宽度 */
-    z-index: 2;
+[data-theme="dark"] .workflow-section {
+    background: linear-gradient(135deg, rgba(15, 118, 110, 0.16), rgba(37, 99, 235, 0.12));
 }
 
-.step-icon {
-    width: 56px; /* 减小尺寸 */
-    height: 56px; /* 减小尺寸 */
-    background: rgba(64,158,255,0.08); /* 减轻背景色 */
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 22px;
-    box-shadow: 0 2px 6px rgba(64,158,255,0.15); /* 减轻阴影 */
-    border: 1px solid #409eff; /* 减小边框宽度 */
-    position: relative;
-    z-index: 2;
-}
-
-.step-icon :deep(svg) {
-    font-size: 28px; /* 减小图标尺寸 */
-    color: var(--primary-color);
-}
-
-/* 浮动动画 - 减小幅度 */
-@keyframes float {
-    0% {
-        transform: translateY(0px);
+@media (max-width: 992px) {
+    .hero-section {
+        grid-template-columns: 1fr;
+        padding: 46px 28px;
     }
-    50% {
-        transform: translateY(-5px); /* 减小浮动距离 */
+
+    .quick-actions,
+    .feature-grid,
+    .workflow,
+    .stats-section {
+        grid-template-columns: 1fr;
     }
-    100% {
-        transform: translateY(0px);
+
+    .quick-actions {
+        margin: -28px 18px 52px;
     }
 }
 
-/* 响应式调整 */
-@media (max-width: 1200px) {
-    .features-section,
-    .modules-section,
-    .stats-section,
-    .guide-section {
-        max-width: 98vw;
-        padding-left: 18px;
-        padding-right: 18px;
-    }
+@media (max-width: 640px) {
     .home-page {
-        padding: 0 8px;
+        padding-top: 12px;
     }
-}
 
-@media (max-width: 768px) {
-    .features-section,
-    .modules-section,
-    .stats-section,
-    .guide-section {
-        padding-left: 4px;
-        padding-right: 4px;
-    }
-    .hero-content h1 {
-        font-size: 2.2rem;
+    .hero-section {
+        border-radius: 24px;
+        min-height: auto;
     }
 
     .hero-description {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
-    .section-title {
-        font-size: 1.8rem;
+    .panel-grid {
+        grid-template-columns: 1fr;
     }
 
-    .guide-arrow {
-        display: none;
-    }
-
-    .guide-step {
-        width: 100%;
-        max-width: 250px;
-        margin-bottom: 30px;
-    }
-}
-
-/* 暗色主题适配 */
-[data-theme="dark"] .home-page {
-    background-color: var(--background-color);
-}
-
-[data-theme="dark"] .hero-section {
-    background: linear-gradient(135deg, #1a365d 0%, #2d3748 35%, #553c9a 70%, #1a5f5f 100%);
-    color: #fff;
-}
-
-[data-theme="dark"] .hero-section::before {
-    background: 
-        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06) 0%, transparent 35%),
-        radial-gradient(circle at 40% 80%, rgba(255,255,255,0.04) 0%, transparent 30%),
-        radial-gradient(circle at 90% 20%, rgba(255,255,255,0.03) 0%, transparent 25%);
-}
-
-[data-theme="dark"] .hero-section::after {
-    background: conic-gradient(
-        from 0deg at 50% 50%,
-        transparent 0deg,
-        rgba(255,255,255,0.08) 45deg,
-        transparent 90deg,
-        rgba(255,255,255,0.05) 135deg,
-        transparent 180deg,
-        rgba(255,255,255,0.08) 225deg,
-        transparent 270deg,
-        rgba(255,255,255,0.05) 315deg,
-        transparent 360deg
-    );
-}
-
-[data-theme="dark"] .hero-content h1 {
-    color: #ffffff;
-    text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="dark"] .hero-content h1 span {
-    background: linear-gradient(135deg, #fbbf24, #f59e0b, #d97706);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(251,191,36,0.4));
-}
-
-[data-theme="dark"] .hero-description,
-[data-theme="dark"] .hero-sub-description {
-    color: rgba(255,255,255,0.9);
-}
-
-[data-theme="dark"] .floating-icon {
-    background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.12));
-    border: 1px solid rgba(255,255,255,0.18);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-}
-
-[data-theme="dark"] .floating-icon :deep(svg) {
-    color: #fff;
-}
-
-[data-theme="dark"] .secondary-btn,
-[data-theme="dark"] .accent-btn {
-    background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.12)) !important;
-    color: #fff !important;
-    border: 1px solid rgba(255,255,255,0.18) !important;
-}
-
-[data-theme="dark"] .features-section {
-    background: linear-gradient(135deg, #232946 0%, #2d3748 100%);
-}
-
-[data-theme="dark"] .features-section::before {
-    background: 
-        radial-gradient(circle at 20% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139,92,246,0.06) 0%, transparent 50%);
-}
-
-[data-theme="dark"] .feature-card {
-    background: linear-gradient(135deg, rgba(36,41,61,0.95), rgba(45,55,72,0.92));
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.18);
-}
-
-[data-theme="dark"] .feature-card:hover {
-    box-shadow: 0 20px 40px rgba(0,0,0,0.28), 0 8px 20px rgba(59,130,246,0.18);
-}
-
-[data-theme="dark"] .feature-card h3 {
-    color: #fff;
-}
-
-[data-theme="dark"] .feature-card p {
-    color: #cbd5e1;
-}
-
-[data-theme="dark"] .feature-icon {
-    background: linear-gradient(135deg, rgba(59,130,246,0.22), rgba(59,130,246,0.12));
-    box-shadow: 0 8px 20px rgba(59,130,246,0.18);
-}
-
-[data-theme="dark"] .feature-icon.accent {
-    background: linear-gradient(135deg, rgba(239,68,68,0.22), rgba(239,68,68,0.12));
-    box-shadow: 0 8px 20px rgba(239,68,68,0.18);
-}
-
-[data-theme="dark"] .feature-icon.secondary {
-    background: linear-gradient(135deg, rgba(16,185,129,0.22), rgba(16,185,129,0.12));
-    box-shadow: 0 8px 20px rgba(16,185,129,0.18);
-}
-
-[data-theme="dark"] .feature-icon.tertiary {
-    background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(139,92,246,0.12));
-    box-shadow: 0 8px 20px rgba(139,92,246,0.18);
-}
-
-[data-theme="dark"] .feature-icon.quaternary {
-    background: linear-gradient(135deg, rgba(245,158,11,0.22), rgba(245,158,11,0.12));
-    box-shadow: 0 8px 20px rgba(245,158,11,0.18);
-}
-
-[data-theme="dark"] .modules-section {
-    background: linear-gradient(135deg, #232946 0%, #2d3748 100%);
-}
-
-[data-theme="dark"] .module-card {
-    background: linear-gradient(135deg, rgba(36,41,61,0.95), rgba(45,55,72,0.92));
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.18);
-}
-
-[data-theme="dark"] .module-card h3 {
-    color: #fff;
-}
-
-[data-theme="dark"] .module-card p {
-    color: #cbd5e1;
-}
-
-[data-theme="dark"] .module-icon.primary,
-[data-theme="dark"] .module-icon.secondary,
-[data-theme="dark"] .module-icon.accent {
-    filter: drop-shadow(0 2px 8px rgba(59,130,246,0.25));
-}
-
-[data-theme="dark"] .stats-section {
-    background: linear-gradient(135deg, 
-        rgba(26, 32, 44, 0.95) 0%, 
-        rgba(45, 55, 72, 0.9) 100%);
-}
-
-[data-theme="dark"] .stat-number {
-    background: linear-gradient(45deg, #ffffff, #e2e8f0);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-[data-theme="dark"] .stat-label {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-[data-theme="dark"] .guide-step {
-    background: linear-gradient(145deg, rgba(36,41,61,0.98) 0%, rgba(45,55,72,0.92) 100%);
-    box-shadow: 0 8px 28px rgba(0,0,0,0.22), 0 2px 0 #409eff22 inset, 0 0 0 3px #8b5cf622 inset;
-    border: 1.5px solid rgba(255,255,255,0.13);
-}
-
-[data-theme="dark"] .guide-step::before {
-    background: linear-gradient(120deg, #409eff33 0%, #8b5cf633 100%);
-    opacity: 0.13;
-}
-
-[data-theme="dark"] .guide-step:hover {
-    box-shadow: 0 16px 40px #409eff33, 0 8px 20px #8b5cf6cc, 0 0 0 4px #fbbf2433;
-    border-color: #409eff;
-}
-
-[data-theme="dark"] .step-number {
-    background: linear-gradient(135deg, #fbbf24 0%, #8b5cf6 100%);
-    color: #232946;
-    border: 2px solid #fff2;
-}
-
-[data-theme="dark"] .step-icon {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    border: 2px solid #fff2;
-}
-
-[data-theme="dark"] .step-icon :deep(svg) {
-    color: #fff;
-    filter: drop-shadow(0 2px 4px #fbbf2499);
-}
-
-/* 动画关键帧定义 */
-@keyframes heroParticles {
-    0%, 100% {
-        transform: translateY(0) scale(1);
-        opacity: 0.8;
-    }
-    50% {
-        transform: translateY(-20px) scale(1.1);
-        opacity: 1;
-    }
-}
-
-@keyframes heroFloat {
-    0%, 100% {
-        transform: translateY(0) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-3px) rotate(1deg); /* 减小幅度 */
-    }
-}
-
-@keyframes floatingIconPulse {
-    0%, 100% {
-        transform: scale(1) translateY(0);
-        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15); /* 减轻阴影 */
-    }
-    50% {
-        transform: scale(1.03) translateY(-2px); /* 减小幅度 */
-        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.25); /* 减轻阴影 */
-    }
-}
-
-@keyframes cardShimmer {
-    0% {
-        background-position: -100% center; /* 减小距离 */
-    }
-    100% {
-        background-position: 100% center; /* 减小距离 */
-    }
-}
-
-/* 移除旋转动画 */
-@keyframes iconRotate {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(0deg); /* 移除旋转 */
-    }
-}
-
-@keyframes buttonScan {
-    0% {
-        background-position: -100% center; /* 减小距离 */
-    }
-    100% {
-        background-position: 100% center; /* 减小距离 */
+    .workflow-section {
+        padding: 26px 18px;
     }
 }
 </style>
