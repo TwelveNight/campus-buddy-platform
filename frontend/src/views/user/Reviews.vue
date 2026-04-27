@@ -289,6 +289,8 @@ const getModuleLabel = (moduleType: string | undefined): string => {
         'COURSE_TUTORING': '课程辅导',
         'SKILL_LEARNING': '技能学习',
         'ITEM_LEND': '物品借用',
+        'ITEM_EXCHANGE': '物品交换',
+        'TEAM_UP': '组队合作',
         'GROUP': '学习小组',
         'RESOURCE': '资源共享'
     };

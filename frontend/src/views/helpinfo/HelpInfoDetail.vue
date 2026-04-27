@@ -848,8 +848,10 @@ async function handleCancelApplication() {
 function getTypeLabel(type: string) {
   const typeMap: Record<string, string> = {
     'COURSE_TUTORING': '课程辅导',
-    'SKILL_EXCHANGE': '技能交换',
-    'ITEM_BORROW': '物品借用'
+    'SKILL_LEARNING': '技能学习',
+    'ITEM_LEND': '物品借用',
+    'ITEM_EXCHANGE': '物品交换',
+    'TEAM_UP': '组队合作'
   }
   return typeMap[type] || type
 }

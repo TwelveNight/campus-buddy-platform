@@ -665,6 +665,8 @@ function getModuleTagType(moduleType: string | undefined): string {
         'COURSE_TUTORING': 'success',
         'SKILL_LEARNING': 'warning',
         'ITEM_LEND': 'info',
+        'ITEM_EXCHANGE': 'danger',
+        'TEAM_UP': 'primary',
         'GROUP': 'primary',
         'RESOURCE': 'danger'
     };
@@ -679,6 +681,8 @@ function getModuleLabel(moduleType: string | undefined): string {
         'COURSE_TUTORING': '课程辅导',
         'SKILL_LEARNING': '技能学习',
         'ITEM_LEND': '物品借用',
+        'ITEM_EXCHANGE': '物品交换',
+        'TEAM_UP': '组队合作',
         'GROUP': '学习小组',
         'RESOURCE': '资源共享'
     };
@@ -693,6 +697,8 @@ function getModuleClass(moduleType: string | undefined): string {
         'COURSE_TUTORING': 'module-course',
         'SKILL_LEARNING': 'module-skill',
         'ITEM_LEND': 'module-item',
+        'ITEM_EXCHANGE': 'module-item',
+        'TEAM_UP': 'module-group',
         'GROUP': 'module-group',
         'RESOURCE': 'module-resource'
     };

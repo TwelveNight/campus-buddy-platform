@@ -228,20 +228,22 @@ const applyHelp = async () => {
 
 const getTypeText = (type: string) => {
   const typeMap: Record<string, string> = {
-    study: '学习辅导',
-    life: '生活帮助',
-    activity: '活动互助',
-    other: '其他'
+    COURSE_TUTORING: '课程辅导',
+    SKILL_LEARNING: '技能学习',
+    ITEM_LEND: '物品借用',
+    ITEM_EXCHANGE: '物品交换',
+    TEAM_UP: '组队合作'
   }
   return typeMap[type] || type
 }
 
 const getTypeTagType = (type: string) => {
   const typeMap: Record<string, string> = {
-    study: 'primary',
-    life: 'success',
-    activity: 'warning',
-    other: 'info'
+    COURSE_TUTORING: 'primary',
+    SKILL_LEARNING: 'success',
+    ITEM_LEND: 'warning',
+    ITEM_EXCHANGE: 'danger',
+    TEAM_UP: 'info'
   }
   return typeMap[type] || 'default'
 }
