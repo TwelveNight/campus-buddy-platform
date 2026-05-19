@@ -1,23 +1,22 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import NavBar from './components/common/NavBar.vue'
+import Footer from './components/common/Footer.vue'
+import DebugPanel from './components/common/DebugPanel.vue'
 import GlobalLoading from './components/common/GlobalLoading.vue'
-import PageTransition from './components/common/PageTransition.vue'
 import MobileNav from './components/mobile/MobileNav.vue'
 import MobileBottomNav from './components/mobile/MobileBottomNav.vue'
 import './styles/theme-transition.css'
-import { useAuthStore } from './store/auth'
-import webSocketService from './utils/websocket'
 
-// 主题切换动画元素
-const themeTransitionActive = ref(false)
-const authStore = useAuthStore()
+// 通过 URL 参数控制是否显示调试面板
+const showDebugPanel = ref(window.location.search.includes('debug=true'))
 
 // 初始化主题和WebSocket
 onMounted(() => {
   // 初始化主题
   const savedTheme = localStorage.getItem('theme') || 'light'
   document.documentElement.setAttribute('data-theme', savedTheme)
-  
+
   // 检测系统主题变化并应用
   const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)')
   const handleThemeChange = (e) => {
@@ -25,27 +24,27 @@ onMounted(() => {
       document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light')
     }
   }
-  
+
   prefersDarkScheme.addEventListener('change', handleThemeChange)
-  
+
   // 监听自定义主题切换事件
   window.addEventListener('themeToggle', (e: any) => {
     const { x, y } = e.detail || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
-    
+
     // 创建主题切换动画元素
     const transitionEl = document.querySelector('.theme-toggle-transition') || document.createElement('div')
     transitionEl.className = 'theme-toggle-transition'
     transitionEl.style.setProperty('--x', `${x}px`)
     transitionEl.style.setProperty('--y', `${y}px`)
-    
+
     if (!document.querySelector('.theme-toggle-transition')) {
       document.body.appendChild(transitionEl)
     }
-    
+
     // 触发动画
     setTimeout(() => {
       transitionEl.classList.add('active')
-      
+
       setTimeout(() => {
         transitionEl.classList.remove('active')
       }, 1000)
@@ -56,22 +55,20 @@ onMounted(() => {
 
 <template>
   <div id="app" class="app-container">
-    <!-- 移动端顶部导航 -->
+    <NavBar />
     <MobileNav />
-    
-    <!-- 主内容区域 -->
     <main class="app-main">
-      <router-view v-slot="{ Component }">
-        <page-transition>
-          <component :is="Component" />
-        </page-transition>
-      </router-view>
+      <div class="page-container">
+        <router-view v-slot="{ Component }">
+          <transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </div>
     </main>
-    
-    <!-- 移动端底部导航 -->
+    <Footer />
     <MobileBottomNav />
-    
-    <!-- 全局加载组件 -->
+    <DebugPanel v-if="showDebugPanel" />
     <GlobalLoading />
   </div>
 </template>
@@ -86,20 +83,43 @@ onMounted(() => {
 }
 
 .app-container {
+  display: flex;
+  flex-direction: column;
   position: relative;
   min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden; /* 防止水平溢出 */
   background-color: var(--background-color);
 }
 
 .app-main {
+  flex: 1;
   position: relative;
   z-index: 1;
+  padding-top: 1rem;
+  padding-bottom: 3rem;
   background-color: var(--background-color);
-  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  background-color: var(--background-color);
+  box-sizing: border-box;
 }
 
 /* 响应式布局 */
 @media (max-width: 768px) {
+  .page-container {
+    padding: 0 15px;
+    max-width: 100%;
+  }
+
   .app-main {
     padding-top: 60px; /* 为移动端导航栏留出空间 */
     padding-bottom: 80px; /* 为底部导航栏留出空间 */
@@ -120,6 +140,28 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
+/* 暗色模式下的全局背景 */
+[data-theme="dark"] html,
+[data-theme="dark"] body,
+[data-theme="dark"] #app,
+[data-theme="dark"] .app-container,
+[data-theme="dark"] .app-main,
+[data-theme="dark"] .page-container {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
+/* 页面切换淡入淡出 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
 /* 页面滚动优化 */
 html {
   scroll-behavior: smooth;
@@ -133,16 +175,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-color);
   color: var(--text-regular);
-}
-
-/* 暗色模式下的全局背景 */
-[data-theme="dark"] html,
-[data-theme="dark"] body,
-[data-theme="dark"] #app,
-[data-theme="dark"] .app-container,
-[data-theme="dark"] .app-main {
-  background-color: #1a1a1a !important;
-  color: #ffffff !important;
 }
 
 /* 移除默认样式 */
@@ -223,11 +255,11 @@ body {
   .no-print {
     display: none !important;
   }
-  
+
   .app-main {
     padding-top: 0 !important;
   }
-  
+
   .el-card {
     box-shadow: none !important;
     border: 1px solid #ddd !important;
