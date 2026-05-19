@@ -71,6 +71,10 @@ public class HelpInfoController {
         helpInfo.setViewCount(0);
 
         helpInfoService.save(helpInfo);
+
+        // 清除列表缓存，让新发布的任务在列表页立即可见
+        helpInfoCacheService.clearHelpInfoListCache();
+
         return R.ok("互助任务发布成功", helpInfo);
     }
 
@@ -178,6 +182,11 @@ public class HelpInfoController {
         existingInfo.setPublisherId(userId); // 确保发布者ID不变
 
         helpInfoService.updateById(existingInfo);
+
+        // 清除详情与列表缓存，保证编辑后的数据立即可见
+        helpInfoCacheService.clearHelpInfoCache(id);
+        helpInfoCacheService.clearHelpInfoListCache();
+
         return R.ok("互助任务更新成功", existingInfo);
     }
 
@@ -209,6 +218,11 @@ public class HelpInfoController {
         }
 
         helpInfoService.removeById(id);
+
+        // 清除详情与列表缓存，避免已删除任务残留在列表页
+        helpInfoCacheService.clearHelpInfoCache(id);
+        helpInfoCacheService.clearHelpInfoListCache();
+
         return R.ok("互助任务删除成功", null);
     }
 

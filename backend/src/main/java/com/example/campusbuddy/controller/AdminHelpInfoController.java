@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.campusbuddy.common.R;
 import com.example.campusbuddy.common.ResultCode;
 import com.example.campusbuddy.service.HelpInfoService;
+import com.example.campusbuddy.service.HelpInfoCacheService;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.vo.HelpInfoVO;
 import com.example.campusbuddy.dto.NotificationCreateDTO;
@@ -23,6 +24,9 @@ public class AdminHelpInfoController {
 
     @Autowired
     private HelpInfoService helpInfoService;
+
+    @Autowired
+    private HelpInfoCacheService helpInfoCacheService;
 
     @Autowired
     private NotificationService notificationService;
@@ -115,14 +119,20 @@ public class AdminHelpInfoController {
         HelpInfo helpInfo = helpInfoService.getById(id);
         Long publisherId = helpInfo != null ? helpInfo.getPublisherId() : null;
         boolean success = helpInfoService.removeById(id);
-        if (success && publisherId != null) {
-            NotificationCreateDTO dto = new NotificationCreateDTO();
-            dto.setRecipientId(publisherId);
-            dto.setType("HELPINFO_DELETE");
-            dto.setTitle("互助任务被删除");
-            dto.setContent("您的互助任务(ID:" + id + ")已被管理员删除。");
-            dto.setRelatedId(id);
-            notificationService.createUserNotification(dto);
+        if (success) {
+            // 清除详情与列表缓存，避免已删除任务残留在列表页
+            helpInfoCacheService.clearHelpInfoCache(id);
+            helpInfoCacheService.clearHelpInfoListCache();
+
+            if (publisherId != null) {
+                NotificationCreateDTO dto = new NotificationCreateDTO();
+                dto.setRecipientId(publisherId);
+                dto.setType("HELPINFO_DELETE");
+                dto.setTitle("互助任务被删除");
+                dto.setContent("您的互助任务(ID:" + id + ")已被管理员删除。");
+                dto.setRelatedId(id);
+                notificationService.createUserNotification(dto);
+            }
         }
         return success ? R.ok("删除成功", null) : R.fail("删除失败");
     }
