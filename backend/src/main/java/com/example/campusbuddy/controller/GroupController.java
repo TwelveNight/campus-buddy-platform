@@ -130,7 +130,7 @@ public class GroupController {
         // 查询当前用户在这些小组的成员状态
         User currentUser = getCurrentUser();
         Map<Long, String> userStatusMap = new HashMap<>();
-        if (currentUser != null) {
+        if (currentUser != null && !groupList.isEmpty()) {
             List<GroupMember> userMembers = groupMemberService.list(
                     new LambdaQueryWrapper<GroupMember>()
                             .in(GroupMember::getGroupId,
@@ -183,12 +183,6 @@ public class GroupController {
     @Operation(summary = "获取小组详情", description = "根据小组ID获取详细信息。返回Group对象和创建者信息。")
     @GetMapping("/{groupId}")
     public R<Map<String, Object>> getGroupDetail(@Parameter(description = "小组ID") @PathVariable Long groupId, HttpServletRequest request) {
-        User currentUser = getCurrentUser();
-        // 管理员可以访问任何小组，普通用户需要检查权限
-        if (!isCurrentUserAdmin(request) && !hasGroupAccess(groupId, currentUser.getUserId(), request)) {
-            return R.fail("您没有权限访问该小组");
-        }
-
         Group group = groupService.getGroupDetail(groupId);
         if (group == null) {
             return R.fail("小组不存在");
