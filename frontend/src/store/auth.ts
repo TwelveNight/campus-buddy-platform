@@ -108,6 +108,13 @@ export const useAuthStore = defineStore('auth', {
           this.user = res.data.data;
           this.isAuthenticated = true;
           localStorage.setItem('user', JSON.stringify(this.user));
+          if (this.user?.userId) {
+            try {
+              webSocketService.connect(this.user.userId);
+            } catch (err) {
+              console.error('初始化WebSocket失败:', err);
+            }
+          }
           return this.user;
         } else {
           throw new Error(res.data?.message || '获取用户信息失败');
