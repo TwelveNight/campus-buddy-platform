@@ -59,9 +59,9 @@ onMounted(() => {
     <MobileNav />
     <main class="app-main">
       <div class="page-container">
-        <router-view v-slot="{ Component, route }">
+        <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" :key="route.path" />
+            <component :is="Component" />
           </transition>
         </router-view>
       </div>

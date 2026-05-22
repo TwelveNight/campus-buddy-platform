@@ -194,16 +194,21 @@ router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    // 需要认证但未登录，重定向到登录页
     next('/login')
   } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    // 需要管理员权限但不是管理员，重定向到首页
     next('/')
   } else if (to.meta.guestOnly && authStore.isAuthenticated) {
-    // 已登录用户不允许访问的页面(如登录页)，重定向到首页
     next('/')
   } else {
     next()
+  }
+})
+
+router.onError((error) => {
+  if (error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Loading chunk') ||
+      error.message.includes('Loading CSS chunk')) {
+    window.location.reload()
   }
 })
 
