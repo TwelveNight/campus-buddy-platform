@@ -105,37 +105,37 @@
       </template>
       <ReviewList :reviews="reviews" :loading="loading" :showFilter="false" :targetUserId="userId" :showReviewTarget="false" />
     </el-card>
-  </div>
 
-  <!-- 发送好友申请对话框 -->
-  <el-dialog
-    v-model="addFriendDialogVisible"
-    title="发送好友申请"
-    width="420px"
-    align-center
-    :close-on-click-modal="false"
-    @closed="addFriendMessage = ''"
-  >
-    <div class="add-friend-dialog-body">
-      <div class="add-friend-target">
-        <el-avatar :size="48" :src="userInfo.avatarUrl || defaultAvatar" />
-        <span class="add-friend-name">{{ userInfo.nickname || userInfo.username }}</span>
+    <!-- 发送好友申请对话框 -->
+    <el-dialog
+      v-model="addFriendDialogVisible"
+      title="发送好友申请"
+      width="420px"
+      align-center
+      :close-on-click-modal="false"
+      @closed="addFriendMessage = ''"
+    >
+      <div class="add-friend-dialog-body">
+        <div class="add-friend-target">
+          <el-avatar :size="48" :src="userInfo.avatarUrl || defaultAvatar" />
+          <span class="add-friend-name">{{ userInfo.nickname || userInfo.username }}</span>
+        </div>
+        <el-input
+          v-model="addFriendMessage"
+          type="textarea"
+          :rows="3"
+          placeholder="输入留言（选填，最多50字）"
+          :maxlength="50"
+          show-word-limit
+          style="margin-top: 16px;"
+        />
       </div>
-      <el-input
-        v-model="addFriendMessage"
-        type="textarea"
-        :rows="3"
-        placeholder="输入留言（选填，最多50字）"
-        :maxlength="50"
-        show-word-limit
-        style="margin-top: 16px;"
-      />
-    </div>
-    <template #footer>
-      <el-button @click="addFriendDialogVisible = false">取消</el-button>
-      <el-button type="primary" :loading="addFriendLoading" @click="addFriend">发送申请</el-button>
-    </template>
-  </el-dialog>
+      <template #footer>
+        <el-button @click="addFriendDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="addFriendLoading" @click="addFriend">发送申请</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
