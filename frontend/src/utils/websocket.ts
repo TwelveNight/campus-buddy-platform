@@ -6,6 +6,8 @@ import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs';
 class WebSocketService {
   private client: Client | null = null;
   private subscriptions: StompSubscription[] = [];
+  private connectionId = 0;
+  private reconnectTimeout: number | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 10;
   private userId: number | null = null;
@@ -19,10 +21,17 @@ class WebSocketService {
   public connectionStatus = ref<string>('未连接');
 
   public connect(userId: number): void {
-    if (this.client) {
-      this.disconnect();
+    if (this.client && this.userId === userId && (this.client.connected || this.client.active)) {
+      return;
     }
 
+    this.clearReconnectTimeout();
+
+    if (this.client) {
+      this.closeClient();
+    }
+
+    const currentConnectionId = ++this.connectionId;
     this.userId = userId;
     this.connectionStatus.value = '正在连接';
 
@@ -34,17 +43,27 @@ class WebSocketService {
       reconnectDelay: 0,
       heartbeatIncoming: 30000,
       heartbeatOutgoing: 30000,
-      onConnect: () => this.handleOpen(),
-      onDisconnect: () => this.handleClose('STOMP disconnect'),
-      onStompError: (frame) => this.handleError(frame.headers?.message || frame.body || 'STOMP error'),
-      onWebSocketClose: () => this.handleClose('WebSocket closed'),
-      onWebSocketError: () => this.handleError('WebSocket error')
+      onConnect: () => this.handleOpen(currentConnectionId),
+      onDisconnect: () => this.handleClose(currentConnectionId, 'STOMP disconnect'),
+      onStompError: (frame) => this.handleError(currentConnectionId, frame.headers?.message || frame.body || 'STOMP error'),
+      onWebSocketClose: () => this.handleClose(currentConnectionId, 'WebSocket closed'),
+      onWebSocketError: () => this.handleError(currentConnectionId, 'WebSocket error')
     });
 
     this.client.activate();
   }
 
   public disconnect(): void {
+    this.connectionId++;
+    this.clearReconnectTimeout();
+    this.closeClient();
+    this.userId = null;
+    this.reconnectAttempts = 0;
+    this.isConnected.value = false;
+    this.connectionStatus.value = '未连接';
+  }
+
+  private closeClient(): void {
     this.subscriptions.forEach(subscription => subscription.unsubscribe());
     this.subscriptions = [];
 
@@ -52,11 +71,6 @@ class WebSocketService {
       this.client.deactivate();
       this.client = null;
     }
-
-    this.isConnected.value = false;
-    this.userId = null;
-    this.reconnectAttempts = 0;
-    this.connectionStatus.value = '未连接';
   }
 
   private buildSockJSEndpoint(userId: number): string {
@@ -92,13 +106,16 @@ class WebSocketService {
       return;
     }
 
+    this.clearReconnectTimeout();
+
     this.reconnectAttempts += 1;
     const delay = this.reconnectAttempts < 3
       ? this.reconnectAttempts * 2000 + 1000
       : Math.min(30000, 10000 + 2000 * (this.reconnectAttempts - 2));
 
     this.connectionStatus.value = `正在重连 (${this.reconnectAttempts}/${this.maxReconnectAttempts})`;
-    window.setTimeout(() => {
+    this.reconnectTimeout = window.setTimeout(() => {
+      this.reconnectTimeout = null;
       if (this.userId && navigator.onLine) {
         this.connect(this.userId);
       } else if (this.userId) {
@@ -112,6 +129,13 @@ class WebSocketService {
         window.addEventListener('online', onlineHandler);
       }
     }, delay);
+  }
+
+  private clearReconnectTimeout(): void {
+    if (this.reconnectTimeout !== null) {
+      window.clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
   }
 
   public addMessageListener(callback: (data: any) => void): void {
@@ -142,7 +166,11 @@ class WebSocketService {
     });
   }
 
-  private handleOpen(): void {
+  private handleOpen(connectionId: number): void {
+    if (connectionId !== this.connectionId) {
+      return;
+    }
+
     console.log('STOMP/SockJS 连接成功');
     this.isConnected.value = true;
     this.lastError.value = null;
@@ -185,8 +213,8 @@ class WebSocketService {
     }
   }
 
-  private handleClose(reason: string): void {
-    if (!this.userId) {
+  private handleClose(connectionId: number, reason: string): void {
+    if (connectionId !== this.connectionId || !this.userId) {
       return;
     }
 
@@ -197,7 +225,11 @@ class WebSocketService {
     this.attemptReconnect();
   }
 
-  private handleError(error: string): void {
+  private handleError(connectionId: number, error: string): void {
+    if (connectionId !== this.connectionId) {
+      return;
+    }
+
     console.error('STOMP/SockJS 错误:', error);
     this.lastError.value = error || '连接出错';
     this.isConnected.value = false;
