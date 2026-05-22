@@ -208,7 +208,7 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
      * @return 在线用户数
      */
     public static int getOnlineUserCount() {
-        return userSessionMap.size();
+        return userSessionMap.size() + StompSessionRegistry.getOnlineUserCount();
     }
     
     /**
@@ -218,6 +218,6 @@ public class UserWebSocketHandler extends TextWebSocketHandler {
      */
     public static boolean isUserOnline(Long userId) {
         WebSocketSession session = userSessionMap.get(userId);
-        return session != null && session.isOpen();
+        return (session != null && session.isOpen()) || StompSessionRegistry.isUserOnline(userId);
     }
 }

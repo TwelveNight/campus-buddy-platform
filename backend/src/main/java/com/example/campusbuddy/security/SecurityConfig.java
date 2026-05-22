@@ -37,7 +37,7 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
                                                 // 放行静态资源和WebSocket
-                                                .requestMatchers("/static/**", "/websocket-test.html", "/websocket-test-new.html", "/favicon.ico", "/ws/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                                                .requestMatchers("/static/**", "/websocket-test.html", "/websocket-test-new.html", "/favicon.ico", "/ws/**", "/ws-stomp/**", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                                 // 放行API登录注册等公开接口
                                                 .requestMatchers("/api/auth/**", "/api/user/register", "/api/user/login", "/api/user/send-email-code").permitAll()
                                                 // 其余接口需要认证

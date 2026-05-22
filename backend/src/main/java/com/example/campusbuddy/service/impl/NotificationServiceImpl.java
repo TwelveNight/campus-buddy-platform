@@ -13,7 +13,7 @@ import com.example.campusbuddy.service.GroupPostService;
 import com.example.campusbuddy.service.NotificationService;
 import com.example.campusbuddy.service.UserService;
 import com.example.campusbuddy.vo.NotificationVO;
-import com.example.campusbuddy.websocket.UserWebSocketHandler;
+import com.example.campusbuddy.websocket.WebSocketPushService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +36,9 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
 
     @Autowired
     private GroupPostService groupPostService;
+
+    @Autowired
+    private WebSocketPushService webSocketPushService;
 
     @Override
     @Transactional
@@ -61,7 +64,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             
             // 通过WebSocket发送实时通知
             String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
-            UserWebSocketHandler.sendNotification(
+            webSocketPushService.sendNotification(
                 user.getUserId(), 
                 dto.getTitle(), 
                 dto.getContent(), 
@@ -84,7 +87,7 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         
         // 通过WebSocket发送实时通知
         String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
-        UserWebSocketHandler.sendNotification(
+        webSocketPushService.sendNotification(
             dto.getRecipientId(), 
             dto.getTitle(), 
             dto.getContent(), 
