@@ -15,8 +15,8 @@
                     <div class="group-meta animated-tags">
                         <el-tag class="bouncing-tag">{{ group.category }}</el-tag>
                         <el-tag v-for="tag in normalizeTags(group.tags)" :key="tag" type="info" class="tag bouncing-tag">{{ tag }}</el-tag>
-                        <span class="member-count pulsing-icon">
-                            <el-icon class="rotating-slowly">
+                        <span class="member-count">
+                            <el-icon>
                                 <User />
                             </el-icon> {{ group.memberCount }} 成员
                         </span>
@@ -774,21 +774,6 @@ const confirmDisbandGroup = () => {
         var(--el-tag-bg-color) 100%);
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
-}
-
-/* 脉冲图标 */
-.pulsing-icon {
-    animation: buttonPulse 2s ease-in-out infinite;
-    transition: all 0.3s ease;
-}
-
-.pulsing-icon:hover {
-    transform: scale(1.1);
-    color: #409eff;
-}
-
-.rotating-slowly {
-    animation: rotateSlowly 8s linear infinite;
 }
 
 /* 按钮动效 */

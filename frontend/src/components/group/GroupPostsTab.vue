@@ -39,17 +39,23 @@
                             <div class="post-time">{{ formatTime(post.createdAt) }}</div>
                         </div>
                     </div>
-                    <div class="post-actions" v-if="isPostAuthor(post) || isGroupAdmin">
-                        <el-dropdown trigger="click" @command="handleCommand($event, post)">
-                            <el-button type="text">
+                    <div class="post-menu-actions" v-if="isPostAuthor(post) || isGroupAdmin">
+                        <el-dropdown trigger="click" popper-class="post-action-menu" @command="handleCommand($event, post)">
+                            <el-button class="post-more-button" text circle title="更多操作" aria-label="更多操作">
                                 <el-icon>
                                     <MoreFilled />
                                 </el-icon>
                             </el-button>
                             <template #dropdown>
                                 <el-dropdown-menu>
-                                    <el-dropdown-item command="edit" v-if="isPostAuthor(post)">编辑</el-dropdown-item>
-                                    <el-dropdown-item command="delete" v-if="isPostAuthor(post) || isGroupAdmin">删除</el-dropdown-item>
+                                    <el-dropdown-item command="edit" v-if="isPostAuthor(post)">
+                                        <el-icon><Edit /></el-icon>
+                                        <span>编辑</span>
+                                    </el-dropdown-item>
+                                    <el-dropdown-item command="delete" class="danger-item" v-if="isPostAuthor(post) || isGroupAdmin">
+                                        <el-icon><Delete /></el-icon>
+                                        <span>删除</span>
+                                    </el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
                         </el-dropdown>
@@ -1178,43 +1184,6 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
     flex-wrap: wrap;
 }
 
-/* 发布按钮区域动画（保留旧 class 兼容 post-item 内部的 .post-actions） */
-.post-actions {
-    margin-bottom: 20px;
-    animation: slideInLeft 1s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s both;
-}
-
-.post-actions .el-button {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(45deg, #409eff, #67c23a);
-    border: none;
-}
-
-.post-actions .el-button:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.4);
-}
-
-.post-actions .el-button:before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-.post-actions .el-button:active:before {
-    width: 300px;
-    height: 300px;
-}
-
 /* 帖子容器动画 */
 .posts-container {
     margin-top: 20px;
@@ -1388,33 +1357,70 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
     color: #409eff;
 }
 
-/* 操作按钮动画 */
-.post-actions .el-dropdown {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* 帖子操作入口 */
+.post-menu-actions {
+    margin-left: 12px;
+    display: flex;
+    align-items: flex-start;
+    flex: 0 0 auto;
 }
 
-.post-actions .el-dropdown:hover {
-    transform: scale(1.05);
+.post-menu-actions .post-more-button.el-button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid #dbe4f0;
+    background: rgba(248, 250, 252, 0.92);
+    color: #64748b;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
-.post-actions .el-button {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.post-actions .el-button:hover {
-    background-color: rgba(64, 158, 255, 0.08);
+.post-menu-actions .post-more-button.el-button:hover,
+.post-menu-actions .post-more-button.el-button:focus-visible {
+    border-color: rgba(64, 158, 255, 0.45);
+    background: rgba(64, 158, 255, 0.1);
     color: #409eff;
-    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(64, 158, 255, 0.16);
+    transform: translateY(-1px);
 }
 
-/* 下拉菜单动画 */
-.el-dropdown-menu :deep(.el-dropdown-menu__item) {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.post-menu-actions .post-more-button.el-button:active {
+    transform: translateY(0);
 }
 
-.el-dropdown-menu :deep(.el-dropdown-menu__item):hover {
+:global(.post-action-menu) {
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+:global(.post-action-menu .el-dropdown-menu) {
+    padding: 6px;
+}
+
+:global(.post-action-menu .el-dropdown-menu__item) {
+    min-width: 96px;
+    gap: 8px;
+    border-radius: 8px;
+    line-height: 34px;
+    color: #475569;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+:global(.post-action-menu .el-dropdown-menu__item:hover) {
     background-color: rgba(64, 158, 255, 0.1);
-    transform: translateX(5px);
+    color: #409eff;
+}
+
+:global(.post-action-menu .danger-item) {
+    color: #dc2626;
+}
+
+:global(.post-action-menu .danger-item:hover) {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
 }
 
 /* 分页动画 */
@@ -1544,13 +1550,47 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
     box-shadow: 0 0 15px rgba(64, 158, 255, 0.3);
 }
 
-[data-theme="dark"] .post-actions .el-button:hover {
-    background-color: rgba(64, 158, 255, 0.15);
-    color: var(--primary-color-dark);
+[data-theme="dark"] .post-menu-actions .post-more-button.el-button {
+    border-color: rgba(148, 163, 184, 0.25);
+    background: rgba(30, 41, 59, 0.86);
+    color: #cbd5e1;
+    box-shadow: none;
 }
 
-[data-theme="dark"] .post-actions .el-button:hover {
-    box-shadow: 0 8px 25px rgba(64, 158, 255, 0.3);
+[data-theme="dark"] .post-menu-actions .post-more-button.el-button:hover,
+[data-theme="dark"] .post-menu-actions .post-more-button.el-button:focus-visible {
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(96, 165, 250, 0.16);
+    color: #93c5fd;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+}
+
+:global([data-theme="dark"] .post-action-menu) {
+    border-color: #334155;
+    background: #1e293b;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.36);
+}
+
+:global([data-theme="dark"] .post-action-menu .el-dropdown-menu) {
+    background: #1e293b;
+}
+
+:global([data-theme="dark"] .post-action-menu .el-dropdown-menu__item) {
+    color: #dbeafe;
+}
+
+:global([data-theme="dark"] .post-action-menu .el-dropdown-menu__item:hover) {
+    background-color: rgba(96, 165, 250, 0.16);
+    color: #93c5fd;
+}
+
+:global([data-theme="dark"] .post-action-menu .danger-item) {
+    color: #fca5a5;
+}
+
+:global([data-theme="dark"] .post-action-menu .danger-item:hover) {
+    background-color: rgba(248, 113, 113, 0.14);
+    color: #fecaca;
 }
 
 [data-theme="dark"] .editor-container:hover {
@@ -1822,10 +1862,6 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
 [data-theme="dark"] .group-posts-tab {
     background-color: transparent;
     color: #ffffff;
-}
-
-[data-theme="dark"] .post-actions {
-    background-color: #1a1a1a;
 }
 
 [data-theme="dark"] .post-item {

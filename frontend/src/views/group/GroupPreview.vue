@@ -489,21 +489,11 @@ const handleJoinGroup = async () => {
     gap: 4px;
     font-size: 14px;
     color: #666;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .member-count:hover,
 .join-type:hover {
     color: #409eff;
-    transform: scale(1.05);
-}
-
-.member-count .el-icon {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.member-count:hover .el-icon {
-    transform: rotate(360deg);
 }
 
 /* 创建者信息动画 */
