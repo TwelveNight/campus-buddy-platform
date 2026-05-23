@@ -21,6 +21,7 @@ import com.example.campusbuddy.mapper.SharedResourceMapper;
 import com.example.campusbuddy.service.GroupService;
 import com.example.campusbuddy.vo.GroupVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -42,6 +43,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     private PostLikeMapper postLikeMapper;
     @Autowired
     private SharedResourceMapper sharedResourceMapper;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private com.example.campusbuddy.mapper.UserMapper userMapper;
 
@@ -250,15 +253,26 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         fileQuery.eq(GroupFile::getGroupId, groupId);
         groupFileMapper.delete(fileQuery);
 
-        LambdaQueryWrapper<SharedResource> resourceQuery = new LambdaQueryWrapper<>();
-        resourceQuery.eq(SharedResource::getGroupId, groupId);
-        sharedResourceMapper.delete(resourceQuery);
+        if (tableExists("shared_resource")) {
+            LambdaQueryWrapper<SharedResource> resourceQuery = new LambdaQueryWrapper<>();
+            resourceQuery.eq(SharedResource::getGroupId, groupId);
+            sharedResourceMapper.delete(resourceQuery);
+        }
 
         LambdaQueryWrapper<GroupMember> memberQuery = new LambdaQueryWrapper<>();
         memberQuery.eq(GroupMember::getGroupId, groupId);
         groupMemberMapper.delete(memberQuery);
         
         return removeById(groupId);
+    }
+
+    private boolean tableExists(String tableName) {
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?",
+                Integer.class,
+                tableName
+        );
+        return count != null && count > 0;
     }
 
     // 管理员分页查询小组（带VO）
