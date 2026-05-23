@@ -131,6 +131,14 @@ const unreadCount = computed(() => {
     return notifications.value.filter(item => !item.isRead).length
 })
 
+const showQuickSuccess = (message: string) => {
+    ElMessage({
+        message,
+        type: 'success',
+        duration: 1200
+    })
+}
+
 // 格式化时间
 const formatTime = (time: string) => {
     if (!time) return ''
@@ -299,7 +307,7 @@ const markAsRead = async (notificationId: number) => {
             if (index !== -1) {
                 notifications.value[index].isRead = true
             }
-            ElMessage.success('已标记为已读')
+            showQuickSuccess('已标记为已读')
         }
     } catch (error) {
         ElMessage.error('标记已读失败')
@@ -314,7 +322,7 @@ const markAllAsRead = async () => {
             notifications.value.forEach(item => {
                 item.isRead = true
             })
-            ElMessage.success('已全部标记为已读')
+            showQuickSuccess('已全部标记为已读')
         }
     } catch (error) {
         ElMessage.error('操作失败')
@@ -334,7 +342,7 @@ const handleDelete = async (notificationId: number) => {
         if (data.code === 200) {
             notifications.value = notifications.value.filter(item => item.notificationId !== notificationId)
             total.value -= 1
-            ElMessage.success('删除成功')
+            showQuickSuccess('删除成功')
         }
     } catch (error) {
         if (error !== 'cancel') {
