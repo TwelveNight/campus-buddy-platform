@@ -2,7 +2,7 @@
   <footer class="footer">
     <div class="container">
       <div class="footer-content">
-        <span>© 2025 学伴校园互助与资源共享平台</span>
+        <span>© 2026 学伴校园互助与资源共享平台</span>
         <div class="links">
           <a href="#">关于我们</a>
           <a href="#">使用帮助</a>
