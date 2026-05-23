@@ -29,7 +29,7 @@
   --workbench-dot: rgba(229, 231, 235, 0.035);
 }
 
-.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
+.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard) {
   position: relative !important;
   overflow: hidden !important;
   background:
@@ -39,7 +39,7 @@
   background-size: auto, 28px 28px, auto !important;
 }
 
-.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page)::before {
+.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard)::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -49,13 +49,13 @@
   opacity: 0.42;
 }
 
-[data-theme="dark"] .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page)::before {
+[data-theme="dark"] .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard)::before {
   background:
     linear-gradient(90deg, rgba(26, 26, 29, 0.76), transparent 18%, transparent 82%, rgba(26, 26, 29, 0.76));
   opacity: 0.52;
 }
 
-.page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
+.page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard) {
   max-width: min(1440px, calc(100vw - 48px)) !important;
   position: relative !important;
   z-index: 1 !important;
@@ -66,7 +66,9 @@
 .group-list-page,
 .group-detail-page,
 .post-detail-page,
-.reviews-page {
+.reviews-page,
+.admin-page,
+.admin-dashboard {
   color: var(--workbench-text) !important;
   padding: 16px 0 28px !important;
   animation: none !important;
@@ -77,7 +79,9 @@
 .group-list-page *,
 .group-detail-page *,
 .post-detail-page *,
-.reviews-page * {
+.reviews-page *,
+.admin-page *,
+.admin-dashboard * {
   letter-spacing: 0 !important;
 }
 
@@ -583,12 +587,109 @@
   box-shadow: var(--workbench-shadow) !important;
 }
 
+.admin-page,
+.admin-dashboard {
+  width: 100% !important;
+  max-width: min(1680px, calc(100vw - 48px)) !important;
+  margin: 16px auto 28px !important;
+  padding: 0 !important;
+}
+
+.admin-page > .el-card,
+.admin-dashboard > .el-card {
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface) !important;
+  box-shadow: var(--workbench-shadow) !important;
+  overflow: hidden !important;
+}
+
+.admin-page > .el-card :is(.el-card__header, .el-card__body),
+.admin-dashboard > .el-card :is(.el-card__header, .el-card__body) {
+  padding: 16px !important;
+}
+
+.admin-page .card-header,
+.admin-dashboard .card-header {
+  min-height: 40px !important;
+  margin-bottom: 12px !important;
+  gap: 12px !important;
+}
+
+.admin-page .card-header h2,
+.admin-dashboard .card-header h2 {
+  color: var(--workbench-text) !important;
+  font-size: clamp(20px, 2vw, 26px) !important;
+  font-weight: 650 !important;
+  line-height: 1.25 !important;
+}
+
+.admin-page .filter-area {
+  margin-bottom: 14px !important;
+  padding: 10px !important;
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface-muted) !important;
+}
+
+.admin-page .filter-form {
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.admin-page .filter-form .el-form-item {
+  margin: 0 !important;
+}
+
+.admin-page .el-table {
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  --el-table-border-color: var(--workbench-border) !important;
+  --el-table-header-bg-color: var(--workbench-surface-muted) !important;
+  --el-table-row-hover-bg-color: rgba(64, 158, 255, 0.06) !important;
+}
+
+.admin-page :is(.el-table th.el-table__cell, .el-table td.el-table__cell) {
+  padding: 9px 0 !important;
+}
+
+.admin-page .pagination-area {
+  justify-content: flex-end !important;
+  margin-top: 14px !important;
+}
+
+.admin-dashboard .overview-cards,
+.admin-dashboard .data-section {
+  margin-bottom: 16px !important;
+}
+
+.admin-dashboard .data-section,
+.admin-dashboard .chart-container,
+.admin-dashboard .overview-card {
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface-muted) !important;
+  box-shadow: none !important;
+}
+
+.admin-dashboard .chart-container {
+  min-height: 320px !important;
+}
+
+.admin-dashboard .chart-container h4,
+.admin-dashboard .card-header-small {
+  color: var(--workbench-muted) !important;
+}
+
 [data-theme="dark"] .helpinfo-list-page,
 [data-theme="dark"] .helpinfo-detail-page,
 [data-theme="dark"] .group-list-page,
 [data-theme="dark"] .group-detail-page,
 [data-theme="dark"] .post-detail-page,
-[data-theme="dark"] .reviews-page {
+[data-theme="dark"] .reviews-page,
+[data-theme="dark"] .admin-page,
+[data-theme="dark"] .admin-dashboard {
   background: transparent !important;
 }
 
@@ -688,6 +789,30 @@
 [data-theme="dark"] .el-select-dropdown__item.selected {
   background-color: rgba(64, 158, 255, 0.16) !important;
   color: var(--el-color-primary) !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page .sort-group,
+[data-theme="dark"] .helpinfo-list-page .sort-label {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page .sort-group .el-radio-button__inner {
+  background: #24252a !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page .sort-group .el-radio-button__inner:hover {
+  background: #2b2c32 !important;
+  border-color: var(--workbench-border-strong) !important;
+  color: var(--el-color-primary) !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page .sort-group .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background: var(--el-color-primary) !important;
+  border-color: var(--el-color-primary) !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .markdown-editor,
@@ -851,10 +976,28 @@
 [data-theme="dark"] .reviewer-info,
 [data-theme="dark"] .review-opposite-info,
 [data-theme="dark"] .review-info,
+[data-theme="dark"] .review-date,
+[data-theme="dark"] .review-list-comp .review-date,
+[data-theme="dark"] .related-info,
+[data-theme="dark"] .review-list-comp .related-info,
+[data-theme="dark"] .score-label,
+[data-theme="dark"] .review-list-comp .score-label,
 [data-theme="dark"] .empty-reviews,
 [data-theme="dark"] .no-reviews {
   background: #1f2024 !important;
   border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .score-indicator {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .review-list-comp .score-indicator {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
   color: var(--workbench-text) !important;
 }
 
@@ -864,7 +1007,12 @@
 [data-theme="dark"] .stat-detail,
 [data-theme="dark"] .review-content-empty,
 [data-theme="dark"] .review-info,
-[data-theme="dark"] .review-opposite-info {
+[data-theme="dark"] .review-opposite-info,
+[data-theme="dark"] .related-info {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .review-list-comp :is(.review-date, .score-label, .related-info) {
   color: var(--workbench-muted) !important;
 }
 
@@ -872,6 +1020,8 @@
 [data-theme="dark"] .reviewer-name,
 [data-theme="dark"] .reviewed-name,
 [data-theme="dark"] .review-content,
+[data-theme="dark"] .related-title,
+[data-theme="dark"] .review-list-comp .related-title,
 [data-theme="dark"] .reviews-card h2,
 [data-theme="dark"] .reviews-header h1,
 [data-theme="dark"] .stat-value {
@@ -906,7 +1056,12 @@
 [data-theme="dark"] .group-members-tab .members-section,
 [data-theme="dark"] .group-files-tab .files-container,
 [data-theme="dark"] .group-posts-tab .post-item,
-[data-theme="dark"] .group-list-page .group-card {
+[data-theme="dark"] .group-list-page .group-card,
+[data-theme="dark"] .admin-page > .el-card,
+[data-theme="dark"] .admin-dashboard > .el-card,
+[data-theme="dark"] .admin-dashboard .overview-card,
+[data-theme="dark"] .admin-dashboard .data-section,
+[data-theme="dark"] .admin-dashboard .chart-container {
   background: var(--workbench-surface) !important;
   border-color: var(--workbench-border) !important;
   color: var(--workbench-text) !important;
@@ -921,9 +1076,40 @@
 [data-theme="dark"] .helpinfo-detail-page .images-section,
 [data-theme="dark"] .helpinfo-detail-page .review-section,
 [data-theme="dark"] .group-posts-tab .comments-container,
-[data-theme="dark"] .group-posts-tab .replies-list {
+[data-theme="dark"] .group-posts-tab .replies-list,
+[data-theme="dark"] .admin-page .filter-area {
   background: var(--workbench-surface-muted) !important;
   border-color: var(--workbench-border) !important;
+}
+
+[data-theme="dark"] .admin-page .el-table {
+  --el-table-bg-color: var(--workbench-surface) !important;
+  --el-table-tr-bg-color: var(--workbench-surface) !important;
+  --el-table-header-bg-color: var(--workbench-surface-muted) !important;
+  --el-table-header-text-color: var(--workbench-text) !important;
+  --el-table-text-color: var(--workbench-text) !important;
+  --el-table-border-color: var(--workbench-border) !important;
+  --el-table-row-hover-bg-color: #2b2c32 !important;
+}
+
+[data-theme="dark"] .admin-page :is(.el-table th.el-table__cell, .el-table td.el-table__cell),
+[data-theme="dark"] .admin-page .el-table__fixed-right,
+[data-theme="dark"] .admin-page .el-table__fixed,
+[data-theme="dark"] .admin-page .el-table__body-wrapper,
+[data-theme="dark"] .admin-page .el-table__inner-wrapper {
+  background: var(--workbench-surface) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .admin-page .el-table th.el-table__cell {
+  background: var(--workbench-surface-muted) !important;
+}
+
+[data-theme="dark"] .admin-page .el-form-item__label,
+[data-theme="dark"] .admin-dashboard .data-section h3,
+[data-theme="dark"] .admin-dashboard .chart-container h4,
+[data-theme="dark"] .admin-dashboard .card-header-small {
+  color: var(--workbench-muted) !important;
 }
 
 @media (max-width: 768px) {
@@ -978,7 +1164,7 @@
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
+  .page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard) {
     max-width: calc(100vw - 32px) !important;
   }
 
@@ -992,7 +1178,7 @@
 }
 
 @media (max-width: 768px) {
-  .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
+  .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard) {
     overflow-x: hidden !important;
     background:
       radial-gradient(circle at 1px 1px, var(--workbench-dot) 1px, transparent 0),
@@ -1000,11 +1186,11 @@
     background-size: 24px 24px, auto !important;
   }
 
-  .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page)::before {
+  .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard)::before {
     display: none !important;
   }
 
-  .page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
+  .page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard) {
     width: 100% !important;
     max-width: calc(100vw - 20px) !important;
     padding: 0 !important;
@@ -1015,7 +1201,9 @@
   .group-list-page,
   .group-detail-page,
   .post-detail-page,
-  .reviews-page {
+  .reviews-page,
+  .admin-page,
+  .admin-dashboard {
     padding: 10px 0 calc(88px + env(safe-area-inset-bottom)) !important;
   }
 
@@ -1041,7 +1229,9 @@
   .reviews-card,
   .stat-card,
   .review-item,
-  .user-review-card {
+  .user-review-card,
+  .admin-page > .el-card,
+  .admin-dashboard > .el-card {
     border-radius: 8px !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
@@ -1050,7 +1240,9 @@
   .helpinfo-list-page .main-card :is(.el-card__header, .el-card__body),
   .helpinfo-detail-page > .el-card :is(.el-card__header, .el-card__body),
   .reviews-card :is(.el-card__header, .el-card__body),
-  .user-review-card :is(.el-card__header, .el-card__body) {
+  .user-review-card :is(.el-card__header, .el-card__body),
+  .admin-page > .el-card :is(.el-card__header, .el-card__body),
+  .admin-dashboard > .el-card :is(.el-card__header, .el-card__body) {
     padding: 12px !important;
   }
 
@@ -1058,7 +1250,9 @@
   .helpinfo-detail-page .card-header,
   .group-list-page > .group-actions,
   .reviews-header,
-  .reviews-card .card-header {
+  .reviews-card .card-header,
+  .admin-page .card-header,
+  .admin-dashboard .card-header {
     min-height: 0 !important;
     align-items: stretch !important;
     flex-direction: column !important;
@@ -1088,6 +1282,67 @@
     flex-direction: column !important;
     gap: 8px !important;
     padding: 10px !important;
+  }
+
+  .admin-page,
+  .admin-dashboard {
+    max-width: calc(100vw - 20px) !important;
+    margin: 10px auto calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .admin-page .filter-form {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .admin-page .filter-form .el-form-item,
+  .admin-page .filter-form .el-form-item__content,
+  .admin-page .filter-form .el-input,
+  .admin-page .filter-form .el-select {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .admin-page .filter-form .el-button {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .admin-page .filter-form .el-form-item:last-child .el-form-item__content {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .admin-page .el-table {
+    display: block !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .admin-page .el-table__inner-wrapper,
+  .admin-page .el-table__body-wrapper {
+    min-width: 920px !important;
+  }
+
+  .admin-page .pagination-area {
+    justify-content: center !important;
+  }
+
+  .admin-dashboard .overview-cards .el-col,
+  .admin-dashboard .data-section .el-col {
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+
+  .admin-dashboard .chart-container {
+    min-height: 260px !important;
+    padding: 12px !important;
+  }
+
+  .admin-dashboard .chart {
+    height: 210px !important;
   }
 
   .helpinfo-list-page .filter-section > *,
@@ -1422,14 +1677,16 @@
 }
 
 @media (max-width: 480px) {
-  .page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
+  .page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page, .admin-page, .admin-dashboard) {
     max-width: calc(100vw - 14px) !important;
   }
 
   .helpinfo-list-page .main-card :is(.el-card__header, .el-card__body),
   .helpinfo-detail-page > .el-card :is(.el-card__header, .el-card__body),
   .reviews-card :is(.el-card__header, .el-card__body),
-  .user-review-card :is(.el-card__header, .el-card__body) {
+  .user-review-card :is(.el-card__header, .el-card__body),
+  .admin-page > .el-card :is(.el-card__header, .el-card__body),
+  .admin-dashboard > .el-card :is(.el-card__header, .el-card__body) {
     padding: 10px !important;
   }
 
