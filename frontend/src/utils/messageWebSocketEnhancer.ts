@@ -16,12 +16,14 @@ export interface MessageWebSocketConfig {
 }
 
 export interface PrivateMessageData {
-  type: string;
-  messageId: number;
-  senderId: number;
-  senderName: string;
+  type: 'PRIVATE_MESSAGE' | 'MESSAGE_READ';
+  messageId?: number;
+  messageIds?: number[];
+  senderId?: number;
+  readerId?: number;
+  senderName?: string;
   senderAvatar?: string;
-  content: string;
+  content?: string;
   messageType?: string;
   imageUrl?: string;
   timestamp: number;
@@ -181,7 +183,7 @@ class MessageWebSocketEnhancer {
    * 处理WebSocket消息
    */
   private handleWebSocketMessage(data: any): void {
-    if (!data || data.type !== 'PRIVATE_MESSAGE') {
+    if (!data || (data.type !== 'PRIVATE_MESSAGE' && data.type !== 'MESSAGE_READ')) {
       return;
     }
 

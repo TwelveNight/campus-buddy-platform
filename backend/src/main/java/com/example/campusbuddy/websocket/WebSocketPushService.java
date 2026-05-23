@@ -62,4 +62,18 @@ public class WebSocketPushService {
 
         messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/messages", payload);
     }
+
+    public void sendMessageReadReceipt(Long userId, Long readerId, Iterable<Long> messageIds) {
+        if (userId == null || messageIds == null) {
+            return;
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "MESSAGE_READ");
+        payload.put("readerId", readerId);
+        payload.put("messageIds", messageIds);
+        payload.put("timestamp", System.currentTimeMillis());
+
+        messagingTemplate.convertAndSendToUser(userId.toString(), "/queue/messages", payload);
+    }
 }

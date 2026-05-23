@@ -603,7 +603,7 @@ const sendMessage = async () => {
                 content: messageContent.value.trim(),
                 messageType: 'TEXT' as const,
                 createdAt: new Date().toISOString(),
-                isRead: true
+                isRead: false
             }
             messages.value.push(newMessage)
             
@@ -665,7 +665,7 @@ const sendImage = async (imageUrl: string) => {
                 messageType: 'IMAGE' as const,
                 imageUrl: imageUrl,
                 createdAt: new Date().toISOString(),
-                isRead: true
+                isRead: false
             }
             messages.value.push(newMessage)
             
@@ -832,9 +832,30 @@ const refreshUnreadMessageCount = async () => {
     }
 };
 
+const handleMessageReadReceipt = (data: any) => {
+    const readerId = Number(data.readerId)
+    const chatUserId = currentChatUser.value ? Number(currentChatUser.value.userId) : null
+    if (!chatUserId || readerId !== chatUserId) return
+
+    const readMessageIds = new Set((data.messageIds || []).map((id: number | string) => Number(id)))
+    if (readMessageIds.size === 0) return
+
+    messages.value = messages.value.map(message => {
+        if (message.senderId === currentUserId.value && readMessageIds.has(Number(message.messageId))) {
+            return { ...message, isRead: true }
+        }
+        return message
+    })
+}
+
 // 处理WebSocket接收到的私信
 const handleNewMessage = (data: any) => {
-    if (!data || data.type !== 'PRIVATE_MESSAGE') return
+    if (!data) return
+    if (data.type === 'MESSAGE_READ') {
+        handleMessageReadReceipt(data)
+        return
+    }
+    if (data.type !== 'PRIVATE_MESSAGE') return
 
     // 调试输出，便于排查
     console.log('Messages.vue 收到新消息', data, currentChatUser.value)

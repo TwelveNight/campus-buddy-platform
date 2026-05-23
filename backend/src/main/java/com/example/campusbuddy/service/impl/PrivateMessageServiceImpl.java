@@ -215,7 +215,25 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
     @Override
     @Transactional
     public int markAllAsRead(Long userId, Long otherUserId) {
-        return baseMapper.markAllAsReadBySender(userId, otherUserId);
+        LambdaQueryWrapper<PrivateMessage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(PrivateMessage::getRecipientId, userId)
+                .eq(PrivateMessage::getSenderId, otherUserId)
+                .eq(PrivateMessage::getIsRead, false);
+
+        List<Long> unreadMessageIds = list(wrapper).stream()
+                .map(PrivateMessage::getMessageId)
+                .collect(Collectors.toList());
+
+        if (unreadMessageIds.isEmpty()) {
+            return 0;
+        }
+
+        int count = baseMapper.markAllAsReadBySender(userId, otherUserId);
+        if (count > 0) {
+            webSocketPushService.sendMessageReadReceipt(otherUserId, userId, unreadMessageIds);
+        }
+
+        return count;
     }
 
     @Override
@@ -232,9 +250,22 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
             return false;
         }
         
+        if (Boolean.TRUE.equals(message.getIsRead())) {
+            return true;
+        }
+
         // 标记为已读
         message.setIsRead(true);
-        return updateById(message);
+        boolean updated = updateById(message);
+        if (updated) {
+            webSocketPushService.sendMessageReadReceipt(
+                    message.getSenderId(),
+                    userId,
+                    List.of(message.getMessageId())
+            );
+        }
+
+        return updated;
     }
 
     @Override

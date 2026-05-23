@@ -201,7 +201,8 @@ class WebSocketService {
   private handleMessage(message: IMessage): void {
     try {
       const data = JSON.parse(message.body);
-      const messageId = `${data.type || 'UNKNOWN'}_${data.timestamp || Date.now()}_${data.messageId || ''}_${data.senderId || ''}`;
+      const readMessageIds = Array.isArray(data.messageIds) ? data.messageIds.join(',') : '';
+      const messageId = `${data.type || 'UNKNOWN'}_${data.timestamp || Date.now()}_${data.messageId || ''}_${data.senderId || ''}_${data.readerId || ''}_${readMessageIds}`;
 
       if (this.processedMessages.has(messageId)) {
         return;
