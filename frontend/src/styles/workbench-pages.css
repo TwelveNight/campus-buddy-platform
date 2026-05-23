@@ -693,6 +693,76 @@
   background: transparent !important;
 }
 
+[data-theme="dark"] .home-page {
+  --home-ink: var(--workbench-text);
+  --home-muted: var(--workbench-muted);
+  --home-line: var(--workbench-border);
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .home-page .hero-panel {
+  background: rgba(35, 35, 38, 0.58) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme="dark"] .home-page .panel-card {
+  background: var(--workbench-surface) !important;
+  border: 1px solid var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+  box-shadow: var(--workbench-shadow) !important;
+}
+
+[data-theme="dark"] .home-page .panel-card span,
+[data-theme="dark"] .home-page .panel-card p {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .home-page .panel-card strong {
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .home-page .mini-card {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .home-page .action-tile,
+[data-theme="dark"] .home-page .feature-card,
+[data-theme="dark"] .home-page .workflow-step {
+  background: var(--workbench-surface) !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+  box-shadow: var(--workbench-shadow) !important;
+}
+
+[data-theme="dark"] .home-page .action-tile:hover,
+[data-theme="dark"] .home-page .feature-card:hover,
+[data-theme="dark"] .home-page .workflow-step:hover {
+  background: var(--workbench-surface-muted) !important;
+  border-color: var(--workbench-border-strong) !important;
+}
+
+[data-theme="dark"] .home-page .action-tile span,
+[data-theme="dark"] .home-page .feature-card h3,
+[data-theme="dark"] .home-page .workflow-step h3,
+[data-theme="dark"] .home-page .section-heading h2 {
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .home-page .action-tile small,
+[data-theme="dark"] .home-page .feature-card p,
+[data-theme="dark"] .home-page .workflow-step p {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .home-page .workflow-section {
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.16), rgba(37, 99, 235, 0.12)),
+    var(--workbench-surface) !important;
+  border: 1px solid var(--workbench-border) !important;
+}
+
 [data-theme="dark"] .el-input__wrapper,
 [data-theme="dark"] .el-select__wrapper,
 [data-theme="dark"] .el-textarea__inner,
