@@ -346,11 +346,25 @@ public class GroupPostController {
         IPage<PostComment> commentsPage = commentService.getPostComments(postId, pageNum, pageSize);
         List<PostComment> topComments = commentsPage.getRecords();
 
-        // 2. 批量查询子评论
+        // 2. 递归查询所有层级子评论，避免只返回一层回复
+        List<PostComment> allReplies = new java.util.ArrayList<>();
         List<Long> parentIds = topComments.stream()
                 .map(PostComment::getCommentId)
                 .collect(Collectors.toList());
-        List<PostComment> allReplies = commentService.getRepliesByParentIds(parentIds);
+        java.util.Set<Long> loadedCommentIds = new java.util.HashSet<>(parentIds);
+        List<Long> currentParentIds = parentIds;
+        while (!currentParentIds.isEmpty()) {
+            List<PostComment> levelReplies = commentService.getRepliesByParentIds(currentParentIds).stream()
+                    .filter(reply -> loadedCommentIds.add(reply.getCommentId()))
+                    .collect(Collectors.toList());
+            if (levelReplies.isEmpty()) {
+                break;
+            }
+            allReplies.addAll(levelReplies);
+            currentParentIds = levelReplies.stream()
+                    .map(PostComment::getCommentId)
+                    .collect(Collectors.toList());
+        }
 
         // 3. 收集所有涉及的用户ID（顶层 + 回复）
         List<Long> userIds = topComments.stream().map(PostComment::getUserId).collect(Collectors.toList());
@@ -364,18 +378,13 @@ public class GroupPostController {
         }
 
         // 4. 将回复按 parentId 分组
-        Map<Long, List<Map<String, Object>>> repliesMap = new HashMap<>();
-        for (PostComment reply : allReplies) {
-            Map<String, Object> replyMap = buildCommentMap(reply, userMap);
-            repliesMap.computeIfAbsent(reply.getParentId(), k -> new java.util.ArrayList<>()).add(replyMap);
-        }
+        Map<Long, List<PostComment>> repliesMap = allReplies.stream()
+                .collect(Collectors.groupingBy(PostComment::getParentId));
 
         // 5. 组装顶层评论（附加 replies 列表）
-        List<Map<String, Object>> commentsList = topComments.stream().map(comment -> {
-            Map<String, Object> map = buildCommentMap(comment, userMap);
-            map.put("replies", repliesMap.getOrDefault(comment.getCommentId(), java.util.Collections.emptyList()));
-            return map;
-        }).collect(Collectors.toList());
+        List<Map<String, Object>> commentsList = topComments.stream()
+                .map(comment -> buildCommentTree(comment, userMap, repliesMap))
+                .collect(Collectors.toList());
 
         // 返回结果
         Map<String, Object> result = new HashMap<>();
@@ -403,6 +412,21 @@ public class GroupPostController {
             map.put("nickname", user.getNickname());
             map.put("avatar", user.getAvatarUrl());
         }
+        return map;
+    }
+
+    /** 将评论转换为包含递归 replies 的树节点 */
+    private Map<String, Object> buildCommentTree(
+            PostComment comment,
+            Map<Long, User> userMap,
+            Map<Long, List<PostComment>> repliesMap) {
+        Map<String, Object> map = buildCommentMap(comment, userMap);
+        List<Map<String, Object>> replies = repliesMap
+                .getOrDefault(comment.getCommentId(), java.util.Collections.emptyList())
+                .stream()
+                .map(reply -> buildCommentTree(reply, userMap, repliesMap))
+                .collect(Collectors.toList());
+        map.put("replies", replies);
         return map;
     }
 

@@ -160,78 +160,26 @@
                   </div>
                 </div>
 
-                <!-- 嵌套回复列表 -->
-                <div v-if="comment.replies && comment.replies.length > 0" class="replies-list">
-                  <div v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
-                    <div class="comment-author author-container">
-                      <el-avatar
-                        :size="20"
-                        :src="reply.avatar || defaultAvatar"
-                        style="cursor:pointer"
-                        @click="goToUserProfile(reply.userId)"
-                        class="comment-avatar magical-avatar"
-                      >
-                        {{ (reply.nickname || reply.username || '').substring(0, 1) }}
-                      </el-avatar>
-                      <el-link
-                        class="comment-author-name gradient-link"
-                        type="primary"
-                        :underline="true"
-                        style="font-weight:500;font-size:13px"
-                        @click="goToUserProfile(reply.userId)"
-                      >
-                        {{ reply.nickname || reply.username || '匿名' }}
-                      </el-link>
-                      <span class="comment-time time-badge">{{ formatTime(reply.createdAt) }}</span>
-                      <div class="comment-actions">
-                        <!-- 对回复再次回复（扁平化，parentId 指向顶层，内容前加 @mention） -->
-                        <el-button
-                          v-if="authStore.isAuthenticated && groupStatus === 'ACTIVE'"
-                          type="text"
-                          size="small"
-                          class="action-btn reply-btn"
-                          @click="toggleReplyToReply(comment, reply)">
-                          <el-icon><ChatDotRound /></el-icon>
-                          回复
-                        </el-button>
-                        <el-button
-                          v-if="authStore.user?.userId === reply.userId"
-                          type="text"
-                          size="small"
-                          @click="deleteReplyItem(comment, reply)"
-                          class="action-btn delete-btn">
-                          <el-icon><Delete /></el-icon>
-                        </el-button>
-                      </div>
-                    </div>
-                    <div class="comment-content markdown-content" style="font-size:13px" v-html="renderCommentContent(reply.content)"></div>
-
-                    <!-- 对某条回复的再次回复输入框 -->
-                    <div v-if="replyTo?.commentId === comment.commentId && replyTo?.replyToNickname === (reply.nickname || reply.username)" class="reply-input-area" style="margin-left:0">
-                      <!-- 引用预览 -->
-                      <div class="quote-preview" v-if="replyTo?.quotedContent">
-                        <span class="quote-author">@{{ replyTo.replyToNickname }}</span>：<span class="quote-text">{{ getQuotePreview(replyTo.quotedContent) }}</span>
-                      </div>
-                      <div class="editor-wrapper">
-                        <RichEditor
-                          v-model="replyContent"
-                          placeholder="输入回复内容...（支持Markdown）"
-                          style="width:100%;margin-bottom:8px;" />
-                      </div>
-                      <div class="reply-input-actions">
-                        <el-button size="small" @click="cancelReply">取消</el-button>
-                        <el-button
-                          type="primary"
-                          size="small"
-                          :loading="replyLoading"
-                          :disabled="!replyContent.trim()"
-                          @click="submitReply(comment)">
-                          发送回复
-                        </el-button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <CommentReplies
+                  :replies="comment.replies || []"
+                  :reply-target="replyTo"
+                  :reply-content="replyContent"
+                  :reply-loading="replyLoading"
+                  :auth-user-id="authStore.user?.userId"
+                  :is-authenticated="authStore.isAuthenticated"
+                  :group-active="groupStatus === 'ACTIVE'"
+                  :default-avatar="defaultAvatar"
+                  :format-time="formatTime"
+                  :render-comment-content="renderCommentContent"
+                  :get-quote-preview="getQuotePreview"
+                  :avatar-size="20"
+                  @reply="toggleReplyToReply"
+                  @delete="deleteReplyItem"
+                  @cancel="cancelReply"
+                  @submit="submitReply"
+                  @go-to-user-profile="goToUserProfile"
+                  @update:reply-content="replyContent = $event"
+                />
               </div>
               <el-empty v-if="comments.length === 0 && !commentsLoading" description="暂无评论" class="empty-state" />
             </div>
@@ -269,6 +217,7 @@ import { getPostComments, addComment, deleteComment, updateComment } from '../..
 import { useAuthStore } from '../../store/auth'
 import RichEditor from '../../components/form/RichEditor.vue'
 import DisabledGroupWarning from '../../components/group/DisabledGroupWarning.vue'
+import CommentReplies from '../../components/group/CommentReplies.vue'
 import { marked } from 'marked'
 import '../../styles/comment-editor.css'
 
@@ -568,18 +517,18 @@ const toggleReply = (comment: any) => {
   }
 }
 
-// 切换对某条子回复的再次回复（扁平化，parentId 仍指向顶层，内容前加引用块）
-const toggleReplyToReply = (parentComment: any, reply: any) => {
+// 切换对某条回复的再次回复，parentId 指向被回复的那条评论
+const toggleReplyToReply = (reply: any) => {
   const replyNickname = reply.nickname || reply.username || '匿名'
   if (
-    replyTo.value?.commentId === parentComment.commentId &&
+    replyTo.value?.commentId === reply.commentId &&
     replyTo.value?.replyToNickname === replyNickname
   ) {
     cancelReply()
   } else {
     replyTo.value = {
-      commentId: parentComment.commentId,
-      nickname: parentComment.nickname || parentComment.username || '匿名',
+      commentId: reply.commentId,
+      nickname: replyNickname,
       replyToNickname: replyNickname,
       quotedContent: reply.content || '',
       replyToUserId: reply.userId   // 子回复作者 ID，用于精确通知
@@ -617,9 +566,15 @@ const getQuotePreview = (content: string): string => {
 }
 
 // 提交回复
-const submitReply = async (parentComment: any) => {
+const submitReply = async (parentComment?: any) => {
   if (!replyContent.value.trim()) {
     ElMessage.warning('请输入回复内容')
+    return
+  }
+
+  const parentId = replyTo.value?.commentId || parentComment?.commentId
+  if (!parentId) {
+    ElMessage.error('回复目标不存在')
     return
   }
 
@@ -637,7 +592,7 @@ const submitReply = async (parentComment: any) => {
     const response = await addComment({
       postId: postId.value,
       content: finalContent,
-      parentId: parentComment.commentId,
+      parentId,
       replyToUserId: replyTo.value?.replyToUserId   // 子回复时传递被回复者 ID
     })
 
@@ -658,7 +613,7 @@ const submitReply = async (parentComment: any) => {
 }
 
 // 删除回复（与删除评论逻辑相同，只是不刷新帖子详情的评论数）
-const deleteReplyItem = async (parentComment: any, reply: any) => {
+const deleteReplyItem = async (reply: any) => {
   try {
     await ElMessageBox.confirm(
       '确定要删除该回复吗？此操作不可恢复。',
@@ -670,10 +625,7 @@ const deleteReplyItem = async (parentComment: any, reply: any) => {
 
     if (response.data && response.data.code === 200) {
       ElMessage.success('回复已删除')
-      // 从本地列表中移除，避免整页刷新
-      if (parentComment.replies) {
-        parentComment.replies = parentComment.replies.filter((r: any) => r.commentId !== reply.commentId)
-      }
+      await loadComments()
     } else {
       ElMessage.error(response.data?.message || '删除回复失败')
     }

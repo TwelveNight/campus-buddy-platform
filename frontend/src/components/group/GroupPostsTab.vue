@@ -121,7 +121,7 @@
                                                 v-if="authStore.user?.userId === comment.userId"
                                                 type="text"
                                                 size="small"
-                                                @click="editCommentItem(post, comment)">
+                                                @click="editCommentItem(comment)">
                                                 <el-icon><Edit /></el-icon>
                                             </el-button>
                                             <el-button
@@ -169,68 +169,26 @@
                                         </div>
                                     </div>
 
-                                    <!-- 嵌套回复列表 -->
-                                    <div v-if="comment.replies && comment.replies.length > 0" class="replies-list">
-                                        <div v-for="reply in comment.replies" :key="reply.commentId" class="reply-item">
-                                            <div class="comment-header">
-                                                <div class="comment-author">
-                                                    <el-avatar :size="24" :src="reply.avatar || defaultAvatar" @click="goToUserProfile(reply.userId)" style="cursor:pointer">
-                                                        {{ reply.nickname?.substring(0, 1) || reply.username?.substring(0, 1) }}
-                                                    </el-avatar>
-                                                    <div>
-                                                        <div class="comment-author-name" style="font-size:13px">
-                                                            <span class="nickname" @click="goToUserProfile(reply.userId)" style="cursor:pointer">{{ reply.nickname || reply.username || '匿名' }}</span>
-                                                        </div>
-                                                        <div class="comment-time">{{ formatTime(reply.createdAt) }}</div>
-                                                    </div>
-                                                </div>
-                                                <div class="comment-actions">
-                                                    <!-- 回复中的再次回复按钮（扁平化，parentId 指向顶层） -->
-                                                    <el-button
-                                                        v-if="authStore.isAuthenticated && !props.disabled"
-                                                        type="text"
-                                                        size="small"
-                                                        style="color:#67c23a"
-                                                        @click="toggleReply(post, comment, reply)">
-                                                        <el-icon><ChatDotRound /></el-icon> 回复
-                                                    </el-button>
-                                                    <el-button
-                                                        v-if="authStore.user?.userId === reply.userId"
-                                                        type="text"
-                                                        size="small"
-                                                        @click="deleteReply(post, comment, reply)">
-                                                        <el-icon><Delete /></el-icon>
-                                                    </el-button>
-                                                </div>
-                                            </div>
-                                            <div class="comment-content reply-content" style="font-size:13px" v-html="renderCommentContent(reply)"></div>
-
-                                            <!-- 对回复的再次回复输入框 -->
-                                            <div v-if="post.replyTarget?.commentId === comment.commentId && post.replyTarget?.replyToNickname === (reply.nickname || reply.username)" class="reply-input-area">
-                                                <!-- 引用预览 -->
-                                                <div class="quote-preview" v-if="post.replyTarget?.quotedContent">
-                                                    <span class="quote-author">@{{ post.replyTarget.replyToNickname }}</span>：<span class="quote-text">{{ getQuotePreview(post.replyTarget.quotedContent) }}</span>
-                                                </div>
-                                                <div class="editor-wrapper">
-                                                    <RichEditor
-                                                        v-model="post.replyContent"
-                                                        placeholder="输入回复内容...（支持Markdown）"
-                                                        style="width:100%;margin-bottom:8px;" />
-                                                </div>
-                                                <div class="reply-input-actions">
-                                                    <el-button size="small" @click="cancelReply(post)">取消</el-button>
-                                                    <el-button
-                                                        type="primary"
-                                                        size="small"
-                                                        :loading="post.replyLoading"
-                                                        :disabled="!post.replyContent || !post.replyContent.trim()"
-                                                        @click="submitReply(post, comment, reply)">
-                                                        发送回复
-                                                    </el-button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <CommentReplies
+                                        :replies="comment.replies || []"
+                                        :reply-target="post.replyTarget"
+                                        :reply-content="post.replyContent || ''"
+                                        :reply-loading="post.replyLoading || false"
+                                        :auth-user-id="authStore.user?.userId"
+                                        :is-authenticated="authStore.isAuthenticated"
+                                        :group-active="!props.disabled"
+                                        :default-avatar="defaultAvatar"
+                                        :format-time="formatTime"
+                                        :render-comment-content="renderReplyContent"
+                                        :get-quote-preview="getQuotePreview"
+                                        :avatar-size="24"
+                                        @reply="toggleReply(post, $event, true)"
+                                        @delete="deleteReply(post, $event)"
+                                        @cancel="cancelReply(post)"
+                                        @submit="submitReply(post)"
+                                        @go-to-user-profile="goToUserProfile"
+                                        @update:reply-content="post.replyContent = $event"
+                                    />
                                 </div>
                             </div>
                             <el-empty v-else-if="!post.loadingComments" description="暂无评论" />
@@ -317,6 +275,7 @@ import { getGroupPosts, createPost, updatePost, deletePost, likePost, unlikePost
 import { getPostComments, addComment, deleteComment, updateComment as apiUpdateComment } from '../../api/postComment';
 import { useAuthStore } from '../../store/auth';
 import RichEditor from '../form/RichEditor.vue';
+import CommentReplies from './CommentReplies.vue';
 import '../../styles/comment-editor.css';
 
 // 类型定义
@@ -730,6 +689,8 @@ const renderCommentContent = (comment: any) => {
     }
 };
 
+const renderReplyContent = (content: string) => renderCommentContent({ content });
+
 // 显示/加载评论
 const showComments = async (post: Post) => {
     // 切换评论显示状态
@@ -864,7 +825,7 @@ const deleteCommentItem = async (post: Post, comment: any) => {
 };
 
 // 编辑评论
-const editCommentItem = (post: Post, comment: any) => {
+const editCommentItem = (comment: any) => {
     if (!authStore.isAuthenticated) {
         ElMessage.warning('请先登录');
         return;
@@ -965,28 +926,26 @@ const getQuotePreview = (content: string): string => {
 /**
  * 切换回复输入框
  * @param post 帖子
- * @param comment 顶层评论（回复一定挂在顶层下）
- * @param replyTo 可选，表示回复的是某条子回复（带引用块）
+ * @param target 顶层评论或被回复的嵌套评论
+ * @param isNestedReply 标记是否回复嵌套评论
  */
-const toggleReply = (post: Post, comment: any, replyTo?: any) => {
-    const targetNickname = replyTo
-        ? (replyTo.nickname || replyTo.username || '匿名')
-        : (comment.nickname || comment.username || '匿名');
+const toggleReply = (post: Post, target: any, isNestedReply = false) => {
+    const targetNickname = target.nickname || target.username || '匿名';
 
     // 如果点的是已展开的同一个输入框，则关闭
     if (
-        post.replyTarget?.commentId === comment.commentId &&
-        post.replyTarget?.replyToNickname === (replyTo ? targetNickname : undefined)
+        post.replyTarget?.commentId === target.commentId &&
+        post.replyTarget?.replyToNickname === (isNestedReply ? targetNickname : undefined)
     ) {
         cancelReply(post);
         return;
     }
 
     post.replyTarget = {
-        commentId: comment.commentId,
-        replyToNickname: replyTo ? targetNickname : undefined,
-        quotedContent: (replyTo ? replyTo.content : comment.content) || '',
-        replyToUserId: replyTo ? replyTo.userId : undefined  // 子回复作者 ID，用于精确通知
+        commentId: target.commentId,
+        replyToNickname: isNestedReply ? targetNickname : undefined,
+        quotedContent: target.content || '',
+        replyToUserId: isNestedReply ? target.userId : undefined  // 子回复作者 ID，用于精确通知
     };
     post.replyContent = '';
     post.replyLoading = false;
@@ -1000,9 +959,15 @@ const cancelReply = (post: Post) => {
 };
 
 // 提交回复
-const submitReply = async (post: Post, comment: any, replyTo?: any) => {
+const submitReply = async (post: Post, comment?: any) => {
     if (!post.replyContent || !post.replyContent.trim()) {
         ElMessage.warning('请输入回复内容');
+        return;
+    }
+
+    const parentId = post.replyTarget?.commentId || comment?.commentId;
+    if (!parentId) {
+        ElMessage.error('回复目标不存在');
         return;
     }
 
@@ -1011,7 +976,7 @@ const submitReply = async (post: Post, comment: any, replyTo?: any) => {
         // 构建带引用块前缀的内容
         let finalContent = post.replyContent.trim();
         if (post.replyTarget?.quotedContent) {
-            const quotedNickname = post.replyTarget.replyToNickname || (comment.nickname || comment.username || '匿名');
+            const quotedNickname = post.replyTarget.replyToNickname || (comment?.nickname || comment?.username || '匿名');
             const quotedPlain = stripMarkdown(post.replyTarget.quotedContent);
             const truncated = quotedPlain.length > 120 ? quotedPlain.substring(0, 120) + '...' : quotedPlain;
             finalContent = `> **@${quotedNickname}**：${truncated}\n\n${finalContent}`;
@@ -1020,7 +985,7 @@ const submitReply = async (post: Post, comment: any, replyTo?: any) => {
         const response = await addComment({
             postId: post.postId!,
             content: finalContent,
-            parentId: comment.commentId,
+            parentId,
             replyToUserId: post.replyTarget?.replyToUserId  // 子回复时传递被回复者 ID
         });
 
@@ -1040,7 +1005,7 @@ const submitReply = async (post: Post, comment: any, replyTo?: any) => {
 };
 
 // 删除回复
-const deleteReply = async (post: Post, parentComment: any, reply: any) => {
+const deleteReply = async (post: Post, reply: any) => {
     try {
         await ElMessageBox.confirm('确定要删除该回复吗？此操作不可恢复。', '删除回复', {
             confirmButtonText: '确定',
@@ -1051,10 +1016,7 @@ const deleteReply = async (post: Post, parentComment: any, reply: any) => {
         const response = await deleteComment(post.postId!, reply.commentId);
         if (response.data && response.data.code === 200) {
             ElMessage.success('回复已删除');
-            // 乐观更新：直接从本地列表移除
-            if (parentComment.replies) {
-                parentComment.replies = parentComment.replies.filter((r: any) => r.commentId !== reply.commentId);
-            }
+            await loadComments(post);
         } else {
             ElMessage.error(response.data?.message || '删除失败');
         }
