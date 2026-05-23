@@ -210,6 +210,21 @@ const isMobile = ref(false)
 const isDarkMode = ref(false)
 const unreadCount = ref(0)
 const unreadMessageCount = ref(0)
+let pollingInterval: ReturnType<typeof setInterval> | null = null
+
+const handleNavbarUnreadCountsUpdated = (event: Event) => {
+  const detail = (event as CustomEvent<{
+    notificationCount?: number
+    messageCount?: number
+  }>).detail
+
+  if (typeof detail?.notificationCount === 'number') {
+    unreadCount.value = Math.max(0, detail.notificationCount)
+  }
+  if (typeof detail?.messageCount === 'number') {
+    unreadMessageCount.value = Math.max(0, detail.messageCount)
+  }
+}
 
 // 计算当前激活的菜单项
 const activeMenu = computed(() => {
@@ -227,7 +242,7 @@ const checkTheme = () => {
 }
 
 // 切换主题
-const toggleTheme = (event) => {
+const toggleTheme = (event?: MouseEvent) => {
   const html = document.documentElement
   const isDark = html.getAttribute('data-theme') === 'dark'
   if (isDark) {
@@ -300,8 +315,8 @@ const goToMessages = () => {
 const fetchUnreadCount = async () => {
   try {
     if (authStore.isAuthenticated) {
-      const response = await getUnreadNotificationCount()
-      unreadCount.value = response?.count || 0
+      const response = await getUnreadNotificationCount() as any
+      unreadCount.value = response?.data?.data?.count || 0
     }
   } catch (error) {
     console.error('获取未读通知数量失败', error)
@@ -312,8 +327,8 @@ const fetchUnreadCount = async () => {
 const fetchUnreadMessageCount = async () => {
   try {
     if (authStore.isAuthenticated) {
-      const response = await getUnreadMessageCount()
-      unreadMessageCount.value = response?.data?.count || 0
+      const response = await getUnreadMessageCount() as any
+      unreadMessageCount.value = response?.data?.data?.count || 0
     }
   } catch (error) {
     console.error('获取未读消息数量失败', error)
@@ -329,6 +344,7 @@ onMounted(() => {
   checkMobile()
   checkTheme()
   window.addEventListener('resize', handleResize)
+  window.addEventListener('navbar-unread-counts-updated', handleNavbarUnreadCountsUpdated)
   
   // 获取未读通知和消息数量
   if (authStore.isAuthenticated) {
@@ -336,20 +352,20 @@ onMounted(() => {
     fetchUnreadMessageCount()
     
     // 设置定期更新
-    const pollingInterval = setInterval(() => {
+    pollingInterval = setInterval(() => {
       fetchUnreadCount()
       fetchUnreadMessageCount()
     }, 30000) // 每30秒更新一次
-    
-    // 组件销毁时清除
-    onUnmounted(() => {
-      clearInterval(pollingInterval)
-    })
   }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('navbar-unread-counts-updated', handleNavbarUnreadCountsUpdated)
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
 })
 </script>
 

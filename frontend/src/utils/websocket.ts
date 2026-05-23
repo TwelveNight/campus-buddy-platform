@@ -139,15 +139,33 @@ class WebSocketService {
   }
 
   public addMessageListener(callback: (data: any) => void): void {
-    this.messageListeners.push(callback);
+    if (!this.messageListeners.includes(callback)) {
+      this.messageListeners.push(callback);
+    }
+  }
+
+  public removeMessageListener(callback: (data: any) => void): void {
+    this.messageListeners = this.messageListeners.filter(listener => listener !== callback);
   }
 
   public addNotificationListener(callback: (data: any) => void): void {
-    this.notificationListeners.push(callback);
+    if (!this.notificationListeners.includes(callback)) {
+      this.notificationListeners.push(callback);
+    }
+  }
+
+  public removeNotificationListener(callback: (data: any) => void): void {
+    this.notificationListeners = this.notificationListeners.filter(listener => listener !== callback);
   }
 
   public addConnectionListener(callback: (status: boolean) => void): void {
-    this.connectionListeners.push(callback);
+    if (!this.connectionListeners.includes(callback)) {
+      this.connectionListeners.push(callback);
+    }
+  }
+
+  public removeConnectionListener(callback: (status: boolean) => void): void {
+    this.connectionListeners = this.connectionListeners.filter(listener => listener !== callback);
   }
 
   public testEchoConnection(): Promise<boolean> {

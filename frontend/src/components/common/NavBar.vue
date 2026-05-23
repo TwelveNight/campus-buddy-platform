@@ -284,7 +284,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
+import { computed, onMounted, ref, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import ThemeSwitch from './ThemeSwitch.vue'
@@ -367,22 +367,27 @@ const avatarUrl = computed(() => {
     return `${url}?v=${timestamp}`;
 });
 
-// 处理服务器与客户端的时间差异
-const serverTimeOffset = ref(0);
-
-// 同步服务器时间（当收到PONG响应时调用）
-const syncServerTime = (serverTimestamp: number) => {
-    const clientTime = Date.now();
-    serverTimeOffset.value = serverTimestamp - clientTime;
-    console.log(`服务器时间偏移: ${serverTimeOffset.value}ms`);
-};
-
 // 通知相关状态
 const unreadCount = ref(0)
 const unreadMessageCount = ref(0)
 const recentNotifications = ref<any[]>([])
 const notificationsLoading = ref(false)
 const notificationPollingInterval = ref<any>(null)
+const notificationDropdownVisible = ref(false)
+let unreadCountRequestId = 0
+let unreadMessageCountRequestId = 0
+let unreadCountFloor = 0
+
+const normalizeCount = (count: unknown) => {
+    const numericCount = Number(count)
+    return Number.isFinite(numericCount) ? Math.max(0, numericCount) : 0
+}
+
+watch([unreadCount, unreadMessageCount], ([notificationCount, messageCount]) => {
+    window.dispatchEvent(new CustomEvent('navbar-unread-counts-updated', {
+        detail: { notificationCount, messageCount }
+    }))
+})
 
 // 格式化时间
 const formatTime = (time: string) => {
@@ -392,10 +397,15 @@ const formatTime = (time: string) => {
 
 // 获取未读通知数量
 const fetchUnreadCount = async () => {
+    const requestId = ++unreadCountRequestId
     try {
-        const res = await getUnreadNotificationCount()
-        if (res.data.code === 200) {
-            unreadCount.value = res.data.data.count || 0
+        const res = await getUnreadNotificationCount() as any
+        if (requestId === unreadCountRequestId && res.data.code === 200) {
+            const serverCount = normalizeCount(res.data.data?.count)
+            if (serverCount >= unreadCountFloor) {
+                unreadCountFloor = 0
+            }
+            unreadCount.value = Math.max(serverCount, unreadCountFloor)
         }
     } catch (error) {
         console.error('获取未读通知数量失败', error)
@@ -404,10 +414,11 @@ const fetchUnreadCount = async () => {
 
 // 获取未读消息数量
 const fetchUnreadMessageCount = async () => {
+    const requestId = ++unreadMessageCountRequestId
     try {
-        const res = await getUnreadMessageCount()
-        if (res.data.code === 200) {
-            unreadMessageCount.value = res.data.data.count || 0
+        const res = await getUnreadMessageCount() as any
+        if (requestId === unreadMessageCountRequestId && res.data.code === 200) {
+            unreadMessageCount.value = normalizeCount(res.data.data?.count)
             console.log('未读消息数量:', unreadMessageCount.value);
         }
     } catch (error) {
@@ -426,7 +437,7 @@ const fetchRecentNotifications = async () => {
     notificationsLoading.value = true
     try {
         // 获取最新的10条通知，type传'all'，后端已做未读优先排序
-        const res = await getNotifications({ page: 1, size: 10, type: 'all' })
+        const res = await getNotifications({ page: 1, size: 10, type: 'all' }) as any
         if (res.data.code === 200) {
             // 直接展示，未读在前，已读在后
             recentNotifications.value = res.data.data.records || []
@@ -453,8 +464,10 @@ const handleNotificationClick = (notification: NotificationItem) => {
 // 标记为已读
 const markAsRead = async (notificationId: number) => {
     try {
-        const res = await markNotificationAsRead(notificationId)
+        const res = await markNotificationAsRead(notificationId) as any
         if (res.data.code === 200) {
+            unreadCountFloor = Math.max(0, unreadCountFloor - 1)
+            unreadCount.value = Math.max(0, unreadCount.value - 1)
             // 更新本地状态
             const index = recentNotifications.value.findIndex(item => item.notificationId === notificationId)
             if (index !== -1) {
@@ -471,8 +484,10 @@ const markAsRead = async (notificationId: number) => {
 // 标记全部为已读
 const markAllAsRead = async () => {
     try {
-        const res = await markAllNotificationsAsRead()
+        const res = await markAllNotificationsAsRead() as any
         if (res.data.code === 200) {
+            unreadCountFloor = 0
+            unreadCount.value = 0
             // 更新本地状态
             recentNotifications.value.forEach(item => {
                 item.isRead = true
@@ -491,6 +506,7 @@ const markAllAsRead = async () => {
 
 // 处理通知下拉菜单切换
 const handleNotificationDropdownToggle = (visible: boolean) => {
+    notificationDropdownVisible.value = visible
     if (visible) {
         fetchRecentNotifications()
     }
@@ -500,7 +516,7 @@ const handleNotificationDropdownToggle = (visible: boolean) => {
 const handleUnreadMessageCountUpdate = (event: Event) => {
     const customEvent = event as CustomEvent;
     if (customEvent.detail && typeof customEvent.detail.count === 'number') {
-        unreadMessageCount.value = customEvent.detail.count;
+        unreadMessageCount.value = normalizeCount(customEvent.detail.count);
     } else {
         // fallback：从 API 重新获取
         fetchUnreadMessageCount();
@@ -529,17 +545,6 @@ const clearNotificationPolling = () => {
 
 // ===== WebSocket相关功能 =====
 
-// 私信消息类型定义
-interface PrivateMessagePayload {
-    type: string;
-    title: string;
-    senderId: number;
-    senderName: string;
-    content: string;
-    messageId: number;
-    timestamp: number;
-}
-
 // 处理WebSocket收到的通知
 const handleWebSocketNotification = (data: any) => {
     console.log('收到WebSocket通知:', data);
@@ -550,11 +555,13 @@ const handleWebSocketNotification = (data: any) => {
     }
 
     try {
-        // 从服务端刷新，确保计数准确（不做本地累加，避免重复）
+        // 先本地提升红点，再用服务端计数校准，避免接口乱序导致红点闪一下又消失。
+        unreadCountFloor = Math.max(unreadCountFloor, unreadCount.value + 1)
+        unreadCount.value = unreadCountFloor
         fetchUnreadCount();
 
         // 如果通知下拉菜单是打开的，更新通知列表
-        if (document.querySelector('.notification-dropdown')?.parentElement?.style.display !== 'none') {
+        if (notificationDropdownVisible.value) {
             fetchRecentNotifications();
         }
 
@@ -609,14 +616,16 @@ const initWebSocket = () => {
         webSocketService.addMessageListener(handleWebSocketMessage);
 
         // 添加连接状态监听器
-        webSocketService.addConnectionListener((status: boolean) => {
-            console.log('WebSocket连接状态:', status ? '已连接' : '已断开');
-            // 连接成功后立即获取未读消息和通知数量
-            if (status) {
-                fetchUnreadCount();
-                fetchUnreadMessageCount();
-            }
-        });
+        webSocketService.addConnectionListener(handleWebSocketConnectionChange);
+    }
+};
+
+const handleWebSocketConnectionChange = (status: boolean) => {
+    console.log('WebSocket连接状态:', status ? '已连接' : '已断开');
+    // 连接成功后立即获取未读消息和通知数量
+    if (status) {
+        fetchUnreadCount();
+        fetchUnreadMessageCount();
     }
 };
 
@@ -664,6 +673,9 @@ onBeforeUnmount(() => {
 
     // 移除消息已读事件监听
     window.removeEventListener('update-unread-message-count', handleUnreadMessageCountUpdate);
+    webSocketService.removeNotificationListener(handleWebSocketNotification);
+    webSocketService.removeMessageListener(handleWebSocketMessage);
+    webSocketService.removeConnectionListener(handleWebSocketConnectionChange);
 })
 
 // 退出登录
