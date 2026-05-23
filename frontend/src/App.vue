@@ -97,11 +97,66 @@ onMounted(() => {
   flex: 1;
   position: relative;
   z-index: 1;
+  isolation: isolate;
+  overflow: hidden;
   padding-top: 1rem;
   padding-bottom: 3rem;
   background-color: var(--background-color);
   width: 100%;
   box-sizing: border-box;
+}
+
+.app-main::before,
+.app-main::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-main::before {
+  inset-block: 0;
+  background:
+    linear-gradient(90deg,
+      rgba(14, 165, 233, 0.06) 0,
+      rgba(20, 184, 166, 0.04) calc(50% - 720px),
+      transparent calc(50% - 610px),
+      transparent calc(50% + 610px),
+      rgba(37, 99, 235, 0.045) calc(50% + 720px),
+      rgba(217, 119, 6, 0.03) 100%),
+    repeating-linear-gradient(90deg,
+      transparent 0,
+      transparent calc(50% - 760px),
+      rgba(15, 118, 110, 0.075) calc(50% - 760px),
+      rgba(15, 118, 110, 0.075) calc(50% - 758px),
+      transparent calc(50% - 758px),
+      transparent calc(50% + 758px),
+      rgba(37, 99, 235, 0.075) calc(50% + 758px),
+      rgba(37, 99, 235, 0.075) calc(50% + 760px),
+      transparent calc(50% + 760px)),
+    radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.04) 1px, transparent 0);
+  background-size: auto, auto, 30px 30px;
+}
+
+.app-main::after {
+  top: 16px;
+  height: min(780px, calc(100% - 32px));
+  background:
+    linear-gradient(115deg,
+      transparent 0,
+      transparent calc(50% - 760px),
+      rgba(15, 118, 110, 0.08) calc(50% - 760px),
+      transparent calc(50% - 560px),
+      transparent calc(50% + 560px),
+      rgba(37, 99, 235, 0.07) calc(50% + 760px),
+      transparent 100%),
+    repeating-linear-gradient(72deg,
+      transparent 0 36px,
+      rgba(15, 23, 42, 0.03) 37px,
+      transparent 38px);
+  opacity: 0.9;
+  mask-image: linear-gradient(180deg, transparent, #000 12%, #000 84%, transparent);
 }
 
 .page-container {
@@ -111,10 +166,17 @@ onMounted(() => {
   padding: 0 20px;
   background-color: var(--background-color);
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 /* 响应式布局 */
 @media (max-width: 768px) {
+  .app-main::before,
+  .app-main::after {
+    display: none;
+  }
+
   .page-container {
     padding: 0 15px;
     max-width: 100%;
@@ -149,6 +211,45 @@ onMounted(() => {
 [data-theme="dark"] .page-container {
   background-color: #1a1a1a !important;
   color: #ffffff !important;
+}
+
+[data-theme="dark"] .app-main::before {
+  background:
+    linear-gradient(90deg,
+      rgba(20, 184, 166, 0.09) 0,
+      rgba(37, 99, 235, 0.045) calc(50% - 720px),
+      transparent calc(50% - 610px),
+      transparent calc(50% + 610px),
+      rgba(96, 165, 250, 0.06) calc(50% + 720px),
+      rgba(245, 158, 11, 0.035) 100%),
+    repeating-linear-gradient(90deg,
+      transparent 0,
+      transparent calc(50% - 760px),
+      rgba(45, 212, 191, 0.08) calc(50% - 760px),
+      rgba(45, 212, 191, 0.08) calc(50% - 758px),
+      transparent calc(50% - 758px),
+      transparent calc(50% + 758px),
+      rgba(96, 165, 250, 0.08) calc(50% + 758px),
+      rgba(96, 165, 250, 0.08) calc(50% + 760px),
+      transparent calc(50% + 760px)),
+    radial-gradient(circle at 1px 1px, rgba(229, 231, 235, 0.035) 1px, transparent 0);
+  background-size: auto, auto, 30px 30px;
+}
+
+[data-theme="dark"] .app-main::after {
+  background:
+    linear-gradient(115deg,
+      transparent 0,
+      transparent calc(50% - 760px),
+      rgba(20, 184, 166, 0.09) calc(50% - 760px),
+      transparent calc(50% - 560px),
+      transparent calc(50% + 560px),
+      rgba(96, 165, 250, 0.07) calc(50% + 760px),
+      transparent 100%),
+    repeating-linear-gradient(72deg,
+      transparent 0 36px,
+      rgba(229, 231, 235, 0.035) 37px,
+      transparent 38px);
 }
 
 /* 页面切换淡入淡出 */
