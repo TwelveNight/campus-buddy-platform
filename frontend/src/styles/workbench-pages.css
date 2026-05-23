@@ -29,7 +29,7 @@
   --workbench-dot: rgba(229, 231, 235, 0.035);
 }
 
-.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page) {
+.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
   position: relative !important;
   overflow: hidden !important;
   background:
@@ -39,7 +39,7 @@
   background-size: auto, 28px 28px, auto !important;
 }
 
-.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page)::before {
+.app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page)::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -49,13 +49,13 @@
   opacity: 0.42;
 }
 
-[data-theme="dark"] .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page)::before {
+[data-theme="dark"] .app-main:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page)::before {
   background:
     linear-gradient(90deg, rgba(26, 26, 29, 0.76), transparent 18%, transparent 82%, rgba(26, 26, 29, 0.76));
   opacity: 0.52;
 }
 
-.page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page) {
+.page-container:has(.helpinfo-list-page, .helpinfo-detail-page, .group-list-page, .group-detail-page, .post-detail-page, .reviews-page) {
   max-width: min(1440px, calc(100vw - 48px)) !important;
   position: relative !important;
   z-index: 1 !important;
@@ -65,7 +65,8 @@
 .helpinfo-detail-page,
 .group-list-page,
 .group-detail-page,
-.post-detail-page {
+.post-detail-page,
+.reviews-page {
   color: var(--workbench-text) !important;
   padding: 16px 0 28px !important;
   animation: none !important;
@@ -75,7 +76,8 @@
 .helpinfo-detail-page *,
 .group-list-page *,
 .group-detail-page *,
-.post-detail-page * {
+.post-detail-page *,
+.reviews-page * {
   letter-spacing: 0 !important;
 }
 
@@ -585,7 +587,8 @@
 [data-theme="dark"] .helpinfo-detail-page,
 [data-theme="dark"] .group-list-page,
 [data-theme="dark"] .group-detail-page,
-[data-theme="dark"] .post-detail-page {
+[data-theme="dark"] .post-detail-page,
+[data-theme="dark"] .reviews-page {
   background: transparent !important;
 }
 
@@ -687,6 +690,214 @@
   color: var(--el-color-primary) !important;
 }
 
+[data-theme="dark"] .markdown-editor,
+[data-theme="dark"] .editor-container,
+[data-theme="dark"] .md-editor,
+[data-theme="dark"] .md-editor-fullwidth,
+[data-theme="dark"] .rich-editor-dark {
+  background: var(--workbench-surface) !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .md-editor-toolbar,
+[data-theme="dark"] .md-editor-footer {
+  background: #1f2024 !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .md-editor-input,
+[data-theme="dark"] .md-editor-input-wrapper,
+[data-theme="dark"] .md-editor-preview,
+[data-theme="dark"] .md-editor-content,
+[data-theme="dark"] .cm-editor,
+[data-theme="dark"] .cm-scroller,
+[data-theme="dark"] .cm-content {
+  background: #1f2024 !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .md-editor-input::placeholder,
+[data-theme="dark"] .cm-content::placeholder {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .md-editor-toolbar svg,
+[data-theme="dark"] .md-editor-icon,
+[data-theme="dark"] .md-editor-toolbar-item {
+  color: var(--workbench-muted) !important;
+  fill: currentColor !important;
+}
+
+[data-theme="dark"] .md-editor-toolbar-item:hover,
+[data-theme="dark"] .md-editor-toolbar-item.active {
+  background: #2b2c32 !important;
+  color: var(--el-color-primary) !important;
+}
+
+[data-theme="dark"] .md-editor-preview :is(h1, h2, h3, h4, h5, h6, p, li, td, th) {
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .md-editor-preview :is(pre, code, blockquote, table, th, td) {
+  border-color: var(--workbench-border) !important;
+}
+
+[data-theme="dark"] .el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: #24252a;
+  --el-pagination-button-color: var(--workbench-text);
+  --el-pagination-hover-color: var(--el-color-primary);
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .el-pagination button,
+[data-theme="dark"] .el-pager li {
+  background-color: #24252a !important;
+  border: 1px solid var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .el-pagination button:hover,
+[data-theme="dark"] .el-pager li:hover {
+  background-color: #2b2c32 !important;
+  border-color: var(--workbench-border-strong) !important;
+  color: var(--el-color-primary) !important;
+}
+
+[data-theme="dark"] .el-pagination button:disabled {
+  background-color: #1f2024 !important;
+  border-color: var(--workbench-border) !important;
+  color: #6f737c !important;
+}
+
+[data-theme="dark"] .el-pager li.is-active {
+  background-color: var(--el-color-primary) !important;
+  border-color: var(--el-color-primary) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .el-pagination__total,
+[data-theme="dark"] .el-pagination__jump {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .el-pagination__editor .el-input__wrapper,
+[data-theme="dark"] .el-pagination__sizes .el-select__wrapper {
+  background-color: #24252a !important;
+  box-shadow: 0 0 0 1px var(--workbench-border) inset !important;
+}
+
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions,
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions__body,
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions__table {
+  background: var(--workbench-surface) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions__label,
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions-item__label {
+  background: #1f2024 !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions__content,
+[data-theme="dark"] .helpinfo-detail-page .el-descriptions-item__content {
+  background: var(--workbench-surface) !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .helpinfo-detail-page .publisher-info,
+[data-theme="dark"] .helpinfo-detail-page .helper-info,
+[data-theme="dark"] .helpinfo-detail-page .publisher-helper-info,
+[data-theme="dark"] .helpinfo-detail-page .reviewer-info,
+[data-theme="dark"] .helpinfo-detail-page .info-row {
+  background: #1f2024 !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .helpinfo-detail-page :is(.info-label, .label, .meta-label, .time, .date, .status-text) {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .helpinfo-detail-page :is(.info-value, .value, .publisher-name, .helper-name) {
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .reviews-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .review-item,
+[data-theme="dark"] .user-review-card {
+  background: var(--workbench-surface) !important;
+  border: 1px solid var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+  box-shadow: var(--workbench-shadow) !important;
+}
+
+[data-theme="dark"] .reviews-card :is(.el-card__header, .el-card__body),
+[data-theme="dark"] .stat-card :is(.el-card__header, .el-card__body),
+[data-theme="dark"] .user-review-card :is(.el-card__header, .el-card__body) {
+  background: transparent !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .reviews-filter,
+[data-theme="dark"] .review-filter,
+[data-theme="dark"] .review-content-wrap,
+[data-theme="dark"] .reviewer-info,
+[data-theme="dark"] .review-opposite-info,
+[data-theme="dark"] .review-info,
+[data-theme="dark"] .empty-reviews,
+[data-theme="dark"] .no-reviews {
+  background: #1f2024 !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .review-date,
+[data-theme="dark"] .score-label,
+[data-theme="dark"] .score-max,
+[data-theme="dark"] .stat-detail,
+[data-theme="dark"] .review-content-empty,
+[data-theme="dark"] .review-info,
+[data-theme="dark"] .review-opposite-info {
+  color: var(--workbench-muted) !important;
+}
+
+[data-theme="dark"] .score-value,
+[data-theme="dark"] .reviewer-name,
+[data-theme="dark"] .reviewed-name,
+[data-theme="dark"] .review-content,
+[data-theme="dark"] .reviews-card h2,
+[data-theme="dark"] .reviews-header h1,
+[data-theme="dark"] .stat-value {
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .filter-tabs .el-radio-button__inner,
+[data-theme="dark"] .reviews-filter .el-radio-button__inner,
+[data-theme="dark"] .review-filter .el-radio-button__inner {
+  background: #24252a !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .filter-tabs .el-radio-button__original-radio:checked + .el-radio-button__inner,
+[data-theme="dark"] .reviews-filter .el-radio-button__original-radio:checked + .el-radio-button__inner,
+[data-theme="dark"] .review-filter .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background: var(--el-color-primary) !important;
+  border-color: var(--el-color-primary) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .el-rate__text {
+  color: var(--workbench-muted) !important;
+}
+
 [data-theme="dark"] .helpinfo-list-page .main-card,
 [data-theme="dark"] .helpinfo-detail-page > .el-card,
 [data-theme="dark"] .group-list-page .el-tabs,
@@ -720,7 +931,8 @@
   .helpinfo-detail-page,
   .group-list-page,
   .group-detail-page,
-  .post-detail-page {
+  .post-detail-page,
+  .reviews-page {
     padding: 12px 0 22px !important;
   }
 
