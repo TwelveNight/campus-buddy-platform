@@ -5,9 +5,19 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.entity.Group;
+import com.example.campusbuddy.entity.GroupFile;
 import com.example.campusbuddy.entity.GroupMember;
+import com.example.campusbuddy.entity.GroupPost;
+import com.example.campusbuddy.entity.PostComment;
+import com.example.campusbuddy.entity.PostLike;
+import com.example.campusbuddy.entity.SharedResource;
+import com.example.campusbuddy.mapper.GroupFileMapper;
 import com.example.campusbuddy.mapper.GroupMapper;
 import com.example.campusbuddy.mapper.GroupMemberMapper;
+import com.example.campusbuddy.mapper.GroupPostMapper;
+import com.example.campusbuddy.mapper.PostCommentMapper;
+import com.example.campusbuddy.mapper.PostLikeMapper;
+import com.example.campusbuddy.mapper.SharedResourceMapper;
 import com.example.campusbuddy.service.GroupService;
 import com.example.campusbuddy.vo.GroupVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +32,16 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @Autowired
     private GroupMemberMapper groupMemberMapper;
+    @Autowired
+    private GroupPostMapper groupPostMapper;
+    @Autowired
+    private GroupFileMapper groupFileMapper;
+    @Autowired
+    private PostCommentMapper postCommentMapper;
+    @Autowired
+    private PostLikeMapper postLikeMapper;
+    @Autowired
+    private SharedResourceMapper sharedResourceMapper;
     @Autowired
     private com.example.campusbuddy.mapper.UserMapper userMapper;
 
@@ -204,12 +224,40 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     @Override
     @Transactional
     public boolean adminDeleteGroup(Long groupId) {
-        // 先删除小组成员关系
+        LambdaQueryWrapper<GroupPost> postQuery = new LambdaQueryWrapper<>();
+        postQuery.eq(GroupPost::getGroupId, groupId);
+        List<GroupPost> groupPosts = groupPostMapper.selectList(postQuery);
+        List<Long> postIds = new ArrayList<>();
+        for (GroupPost post : groupPosts) {
+            postIds.add(post.getPostId());
+        }
+
+        if (!postIds.isEmpty()) {
+            LambdaQueryWrapper<PostComment> commentQuery = new LambdaQueryWrapper<>();
+            commentQuery.in(PostComment::getPostId, postIds);
+            postCommentMapper.delete(commentQuery);
+
+            LambdaQueryWrapper<PostLike> likeQuery = new LambdaQueryWrapper<>();
+            likeQuery.in(PostLike::getPostId, postIds);
+            postLikeMapper.delete(likeQuery);
+
+            LambdaQueryWrapper<GroupPost> deletePostQuery = new LambdaQueryWrapper<>();
+            deletePostQuery.in(GroupPost::getPostId, postIds);
+            groupPostMapper.delete(deletePostQuery);
+        }
+
+        LambdaQueryWrapper<GroupFile> fileQuery = new LambdaQueryWrapper<>();
+        fileQuery.eq(GroupFile::getGroupId, groupId);
+        groupFileMapper.delete(fileQuery);
+
+        LambdaQueryWrapper<SharedResource> resourceQuery = new LambdaQueryWrapper<>();
+        resourceQuery.eq(SharedResource::getGroupId, groupId);
+        sharedResourceMapper.delete(resourceQuery);
+
         LambdaQueryWrapper<GroupMember> memberQuery = new LambdaQueryWrapper<>();
         memberQuery.eq(GroupMember::getGroupId, groupId);
         groupMemberMapper.delete(memberQuery);
         
-        // 删除小组
         return removeById(groupId);
     }
 
