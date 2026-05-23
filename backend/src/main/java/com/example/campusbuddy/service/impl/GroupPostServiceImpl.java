@@ -152,6 +152,7 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     }
     
     @Override
+    @Transactional
     public boolean likePost(Long postId, Long userId) {
         // 检查帖子是否存在
         GroupPost post = getById(postId);
@@ -168,9 +169,7 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         boolean success = postLikeService.addLike(postId, userId);
         if (success) {
             // 更新帖子的点赞数
-            post.setLikeCount(post.getLikeCount() + 1);
-            post.setUpdatedAt(new Date());
-            updateById(post);
+            baseMapper.incrementLikeCount(postId);
             
             // 清除相关缓存，因为点赞数发生了变化
             postCacheService.evictPostDetailCache(postId);
@@ -180,6 +179,7 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
     }
 
     @Override
+    @Transactional
     public boolean unlikePost(Long postId, Long userId) {
         // 检查帖子是否存在
         GroupPost post = getById(postId);
@@ -196,9 +196,7 @@ public class GroupPostServiceImpl extends ServiceImpl<GroupPostMapper, GroupPost
         boolean success = postLikeService.removeLike(postId, userId);
         if (success) {
             // 更新帖子的点赞数
-            post.setLikeCount(post.getLikeCount() - 1);
-            post.setUpdatedAt(new Date());
-            updateById(post);
+            baseMapper.decrementLikeCount(postId);
             
             // 清除相关缓存，因为点赞数发生了变化
             postCacheService.evictPostDetailCache(postId);

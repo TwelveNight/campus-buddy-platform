@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.campusbuddy.entity.PostLike;
 import com.example.campusbuddy.mapper.PostLikeMapper;
 import com.example.campusbuddy.service.PostLikeService;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -31,7 +32,11 @@ public class PostLikeServiceImpl extends ServiceImpl<PostLikeMapper, PostLike> i
         postLike.setPostId(postId);
         postLike.setUserId(userId);
         postLike.setCreatedAt(new Date());
-        return save(postLike);
+        try {
+            return save(postLike);
+        } catch (DuplicateKeyException e) {
+            return false;
+        }
     }
 
     @Override
