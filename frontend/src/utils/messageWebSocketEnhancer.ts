@@ -3,10 +3,11 @@
  * 提供便捷的私信WebSocket功能集成
  */
 
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { ElMessage, ElNotification } from 'element-plus';
 import webSocketService from './websocket';
 import { useAuthStore } from '@/store/auth';
+import router from '@/router';
 
 export interface MessageWebSocketConfig {
   autoConnect?: boolean;
@@ -265,10 +266,12 @@ class MessageWebSocketEnhancer {
       title,
       message: content,
       type: 'info',
-      duration: 5000,
+      duration: 3200,
+      position: 'top-right',
+      customClass: 'campus-ws-notification campus-ws-notification-message',
       onClick: () => {
         // 点击通知跳转到消息页面
-        window.location.href = `#/messages/${data.senderId}`;
+        router.push(`/messages/${data.senderId}`).catch(() => {});
       }
     });
   }

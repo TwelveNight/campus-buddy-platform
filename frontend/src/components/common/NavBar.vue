@@ -289,7 +289,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import ThemeSwitch from './ThemeSwitch.vue'
 import UserSearchDialog from './UserSearchDialog.vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessageBox, ElMessage, ElNotification } from 'element-plus'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
@@ -523,6 +523,11 @@ const handleUnreadMessageCountUpdate = (event: Event) => {
     }
 };
 
+const navigateFromNotificationToast = (relatedLink?: string) => {
+    const target = relatedLink && relatedLink.startsWith('/') ? relatedLink : '/notifications'
+    router.push(target).catch(() => {})
+}
+
 // 设置定期轮询未读通知数量
 const setupNotificationPolling = () => {
     if (authStore.isAuthenticated) {
@@ -565,11 +570,15 @@ const handleWebSocketNotification = (data: any) => {
             fetchRecentNotifications();
         }
 
-        // 显示通知提示
-        ElMessage({
+        // 显示可点击通知提示
+        ElNotification({
+            title: data.title || '新通知',
             message: data.content || '您有一条新通知',
             type: 'info',
-            duration: 3000
+            duration: 3200,
+            position: 'top-right',
+            customClass: 'campus-ws-notification campus-ws-notification-info',
+            onClick: () => navigateFromNotificationToast(data.relatedLink)
         });
     } catch (error) {
         console.error('处理WebSocket通知时出错:', error);
