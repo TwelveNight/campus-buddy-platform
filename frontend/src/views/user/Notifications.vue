@@ -8,7 +8,7 @@
                 <NotificationCenter :key="'all'" :title="'全部通知'" :type="'all'" />
             </el-tab-pane>
             <el-tab-pane label="系统通知" name="system">
-                <NotificationCenter :key="'system'" :title="'系统通知'" :type="'SYSTEM_ANNOUNCEMENT,SYSTEM_ACTIVITY,POST_STATUS,POST_DELETE,USER_STATUS_CHANGE,USER_ROLE_CHANGE,GROUP_STATUS_CHANGE,GROUP_DELETE,HELP_INFO_STATUS_CHANGE,HELP_INFO_DELETE'" />
+                <NotificationCenter :key="'system'" :title="'系统通知'" :type="'SYSTEM_ANNOUNCEMENT,SYSTEM_ACTIVITY,POST_STATUS,POST_DELETE,USER_STATUS_CHANGE,USER_ROLE_CHANGE,GROUP_STATUS,GROUP_STATUS_CHANGE,GROUP_DELETE,HELP_INFO_STATUS_CHANGE,HELP_INFO_DELETE'" />
             </el-tab-pane>
             <el-tab-pane label="互助通知" name="help">
                 <NotificationCenter :key="'help'" :title="'互助通知'" :type="'HELP_NEW_APPLICATION,HELP_APPLICATION_ACCEPTED,HELP_APPLICATION_REJECTED,HELP_COMPLETED,HELP_NEW_REVIEW'" />
