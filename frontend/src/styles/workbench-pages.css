@@ -1,0 +1,614 @@
+/*
+ * Business page visual cleanup.
+ * These pages are daily-use work surfaces, so keep them flat, dense, and stable.
+ */
+
+:root {
+  --workbench-bg: #f5f7fb;
+  --workbench-surface: #ffffff;
+  --workbench-surface-muted: #f8fafc;
+  --workbench-border: #e5e7eb;
+  --workbench-border-strong: #d8dee8;
+  --workbench-text: #1f2937;
+  --workbench-muted: #6b7280;
+  --workbench-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme="dark"] {
+  --workbench-bg: #1a1a1d;
+  --workbench-surface: #232326;
+  --workbench-surface-muted: #2a2a2e;
+  --workbench-border: #33343a;
+  --workbench-border-strong: #45464d;
+  --workbench-text: #e5e7eb;
+  --workbench-muted: #a3a6ad;
+  --workbench-shadow: none;
+}
+
+.helpinfo-list-page,
+.helpinfo-detail-page,
+.group-list-page,
+.group-detail-page,
+.post-detail-page {
+  color: var(--workbench-text) !important;
+  padding: 16px 0 28px !important;
+  animation: none !important;
+}
+
+.helpinfo-list-page *,
+.helpinfo-detail-page *,
+.group-list-page *,
+.group-detail-page *,
+.post-detail-page * {
+  letter-spacing: 0 !important;
+}
+
+.helpinfo-list-page .animate-enter,
+.group-list-page .card-entrance,
+.group-detail-page .animated-page,
+.group-detail-page .floating-header,
+.group-detail-page .slide-in-content,
+.group-detail-page .slide-in-actions,
+.group-detail-page .animated-tabs,
+.group-posts-tab .post-item,
+.group-posts-tab .posts-container {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.helpinfo-list-page .page-header,
+.group-list-page > .group-actions {
+  min-height: 56px !important;
+  margin: 0 0 14px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+}
+
+.helpinfo-list-page .page-title,
+.group-list-page .page-title,
+.group-list-page .title-text,
+.group-detail-page .group-name,
+.group-detail-page .gradient-text {
+  margin: 0 !important;
+  color: var(--workbench-text) !important;
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  text-shadow: none !important;
+  filter: none !important;
+  animation: none !important;
+  font-size: clamp(22px, 2vw, 28px) !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+  text-align: left !important;
+}
+
+.group-list-page .animated-title {
+  margin: 0 0 16px !important;
+  text-align: left !important;
+  overflow: visible !important;
+}
+
+.helpinfo-list-page .title-icon,
+.group-list-page .title-decoration,
+.group-detail-page .avatar-ring,
+.group-detail-page .avatar-glow-effect,
+.group-list-page .avatar-glow {
+  display: none !important;
+}
+
+.helpinfo-list-page .publish-btn,
+.group-list-page .create-btn,
+.group-detail-page .primary-btn,
+.group-detail-page .danger-btn,
+.group-detail-page .disabled-btn,
+.group-detail-page .pending-btn,
+.group-posts-tab .toolbar .el-button {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.helpinfo-list-page .publish-btn:hover,
+.group-list-page .create-btn:hover,
+.group-detail-page .primary-btn:hover,
+.group-detail-page .danger-btn:hover,
+.group-posts-tab .toolbar .el-button:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.helpinfo-list-page .main-card,
+.helpinfo-detail-page > .el-card,
+.group-list-page .el-tabs,
+.group-detail-page .group-header,
+.group-detail-page .group-tabs,
+.group-members-tab .members-section,
+.group-files-tab .files-container {
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface) !important;
+  box-shadow: var(--workbench-shadow) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: hidden !important;
+}
+
+.helpinfo-list-page .main-card:hover,
+.helpinfo-detail-page > .el-card:hover,
+.group-list-page .el-tabs:hover,
+.group-detail-page .group-header:hover,
+.group-detail-page .group-tabs:hover,
+.group-members-tab .members-section:hover,
+.group-files-tab .files-container:hover {
+  transform: none !important;
+  box-shadow: var(--workbench-shadow) !important;
+}
+
+.helpinfo-list-page .main-card :is(.el-card__header, .el-card__body),
+.helpinfo-detail-page > .el-card :is(.el-card__header, .el-card__body) {
+  padding: 16px !important;
+}
+
+.helpinfo-list-page .filter-section,
+.group-list-page .group-filters,
+.group-posts-tab .toolbar,
+.members-filter,
+.file-actions {
+  background: var(--workbench-surface-muted) !important;
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  padding: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  box-shadow: none !important;
+}
+
+.helpinfo-list-page .search-container,
+.group-list-page .group-filters {
+  min-width: 260px !important;
+}
+
+.helpinfo-list-page .filter-select,
+.group-list-page .group-filters .el-select,
+.group-posts-tab .toolbar .el-select {
+  min-width: 132px !important;
+}
+
+.helpinfo-list-page .info-table,
+.helpinfo-detail-page .el-table,
+.group-members-tab .el-table,
+.group-files-tab .el-table {
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  --el-table-border-color: var(--workbench-border) !important;
+  --el-table-header-bg-color: var(--workbench-surface-muted) !important;
+  --el-table-row-hover-bg-color: rgba(64, 158, 255, 0.06) !important;
+}
+
+.helpinfo-list-page :is(.el-table th.el-table__cell, .el-table td.el-table__cell),
+.helpinfo-detail-page :is(.el-table th.el-table__cell, .el-table td.el-table__cell),
+.group-members-tab :is(.el-table th.el-table__cell, .el-table td.el-table__cell),
+.group-files-tab :is(.el-table th.el-table__cell, .el-table td.el-table__cell) {
+  padding: 9px 0 !important;
+}
+
+.helpinfo-list-page .title-link,
+.helpinfo-list-page .publisher-link,
+.group-list-page .creator-link,
+.group-detail-page .creator-link,
+.group-posts-tab .author-name,
+.group-posts-tab .post-title {
+  transform: none !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+
+.helpinfo-list-page .title-link::after,
+.group-posts-tab .post-item::before {
+  display: none !important;
+}
+
+.helpinfo-detail-page {
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.helpinfo-detail-page .card-header {
+  min-height: 40px !important;
+  gap: 12px !important;
+  border-bottom: 0 !important;
+}
+
+.helpinfo-detail-page .card-header h2 {
+  font-size: clamp(20px, 2vw, 26px) !important;
+  font-weight: 650 !important;
+  color: var(--workbench-text) !important;
+}
+
+.helpinfo-detail-page .helpinfo-detail-card {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.helpinfo-detail-page .description-section,
+.helpinfo-detail-page .images-section,
+.helpinfo-detail-page .review-section,
+.helpinfo-detail-page .applications-section,
+.helpinfo-detail-page .progress-section,
+.helpinfo-detail-page .info-section {
+  margin-top: 16px !important;
+  padding: 16px !important;
+  background: var(--workbench-surface-muted) !important;
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.helpinfo-detail-page :is(.description-title, .section-title, .applications-section h3, .progress-section h3, .review-section h3) {
+  color: var(--workbench-text) !important;
+  font-size: 16px !important;
+  font-weight: 650 !important;
+  border-bottom: 1px solid var(--workbench-border) !important;
+  padding-bottom: 8px !important;
+}
+
+.helpinfo-detail-page .review-section h3::before {
+  display: none !important;
+}
+
+.group-list-page .el-tabs {
+  padding: 0 16px 16px !important;
+}
+
+.group-list-page .el-tabs :is(.el-tabs__header, .el-tabs__nav-wrap) {
+  margin-bottom: 14px !important;
+}
+
+.group-list-page .group-grid {
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+}
+
+.group-list-page .group-card {
+  padding: 0 !important;
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface) !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.group-list-page .group-card:hover {
+  transform: none !important;
+  border-color: var(--workbench-border-strong) !important;
+  box-shadow: none !important;
+}
+
+.group-list-page .group-card::before,
+.group-list-page .group-card::after {
+  display: none !important;
+}
+
+.group-list-page .group-card > .el-card__body {
+  display: grid !important;
+  grid-template-columns: 56px minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 14px !important;
+  padding: 16px !important;
+}
+
+.group-list-page .floating-avatar {
+  justify-content: flex-start !important;
+  margin: 0 !important;
+}
+
+.group-list-page .floating-avatar .el-avatar,
+.group-list-page .group-card:hover .floating-avatar .el-avatar {
+  width: 52px !important;
+  height: 52px !important;
+  border: 1px solid var(--workbench-border) !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.group-list-page .group-info {
+  margin-top: 0 !important;
+  animation: none !important;
+  min-width: 0 !important;
+}
+
+.group-list-page .group-name {
+  color: var(--workbench-text) !important;
+  font-size: 17px !important;
+  font-weight: 650 !important;
+  margin: 0 0 8px !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+
+.group-list-page .group-meta,
+.group-list-page .group-creator,
+.group-list-page .group-description,
+.group-list-page .group-tags {
+  margin: 8px 0 0 !important;
+}
+
+.group-list-page .group-description {
+  color: var(--workbench-muted) !important;
+  min-height: 40px !important;
+}
+
+.group-list-page .group-card .group-actions {
+  margin: 0 !important;
+  align-self: start !important;
+}
+
+.group-list-page .group-card-inactive,
+.group-list-page .group-card-disbanded {
+  opacity: 1 !important;
+  border-left: 3px solid var(--el-color-warning) !important;
+}
+
+.group-list-page .group-card-disbanded {
+  border-left-color: var(--el-color-info) !important;
+}
+
+.group-detail-page .group-header {
+  display: grid !important;
+  grid-template-columns: 72px minmax(0, 1fr) auto !important;
+  align-items: start !important;
+  gap: 16px !important;
+  margin-bottom: 16px !important;
+  padding: 16px !important;
+}
+
+.group-detail-page .group-avatar {
+  margin: 0 !important;
+}
+
+.group-detail-page .magical-avatar,
+.group-detail-page .magical-avatar:hover {
+  transform: none !important;
+}
+
+.group-detail-page .magical-avatar .el-avatar {
+  width: 64px !important;
+  height: 64px !important;
+  border: 1px solid var(--workbench-border) !important;
+}
+
+.group-detail-page .group-meta {
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+}
+
+.group-detail-page .group-description {
+  color: var(--workbench-muted) !important;
+  margin: 10px 0 0 !important;
+}
+
+.group-detail-page .group-actions {
+  margin-left: 0 !important;
+  min-width: 132px !important;
+}
+
+.group-detail-page .group-tabs {
+  padding: 0 16px 16px !important;
+  margin-top: 16px !important;
+}
+
+.group-detail-page .animated-tabs :is(.el-tabs__item, .el-tabs__item:hover) {
+  transform: none !important;
+}
+
+.group-detail-page .animated-tabs .el-tabs__item::before {
+  display: none !important;
+}
+
+.group-posts-tab,
+.group-members-tab,
+.group-files-tab {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.group-posts-tab .toolbar {
+  margin-bottom: 12px !important;
+  justify-content: space-between !important;
+}
+
+.group-posts-tab .search-sort {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+}
+
+.group-posts-tab .posts-container {
+  margin-top: 0 !important;
+}
+
+.group-posts-tab .post-item {
+  margin-bottom: 10px !important;
+  padding: 16px !important;
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface) !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.group-posts-tab .post-item:hover {
+  transform: none !important;
+  border-color: var(--workbench-border-strong) !important;
+  box-shadow: none !important;
+}
+
+.group-posts-tab .post-header,
+.group-posts-tab .post-content,
+.group-posts-tab .post-footer {
+  animation: none !important;
+}
+
+.group-posts-tab .author-info:hover,
+.group-posts-tab .author-info .el-avatar:hover,
+.group-posts-tab .post-title:hover,
+.group-posts-tab .post-title:hover .el-icon,
+.group-posts-tab .post-actions .el-button:hover {
+  transform: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+.group-posts-tab .post-title {
+  color: var(--workbench-text) !important;
+  font-size: 17px !important;
+  font-weight: 650 !important;
+}
+
+.group-posts-tab .post-body,
+.group-posts-tab .post-time {
+  color: var(--workbench-muted) !important;
+}
+
+.group-posts-tab .post-footer {
+  border-top: 1px solid var(--workbench-border) !important;
+  padding-top: 10px !important;
+}
+
+.group-posts-tab .comments-container,
+.group-posts-tab .replies-list {
+  background: var(--workbench-surface-muted) !important;
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+}
+
+.group-members-tab .members-section,
+.group-files-tab .files-container {
+  padding: 14px !important;
+}
+
+.group-members-tab .member-info:hover,
+.group-files-tab .file-name-cell:hover,
+.group-files-tab .file-icon:hover,
+.group-files-tab .file-name:hover,
+.group-files-tab .file-actions .el-button:hover,
+.group-members-tab .member-actions .el-button:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.group-files-tab .file-uploader {
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+
+.post-detail-page .post-detail-card,
+.post-detail-page .comments-section {
+  border: 1px solid var(--workbench-border) !important;
+  border-radius: 8px !important;
+  background: var(--workbench-surface) !important;
+  box-shadow: var(--workbench-shadow) !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page,
+[data-theme="dark"] .helpinfo-detail-page,
+[data-theme="dark"] .group-list-page,
+[data-theme="dark"] .group-detail-page,
+[data-theme="dark"] .post-detail-page {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page .main-card,
+[data-theme="dark"] .helpinfo-detail-page > .el-card,
+[data-theme="dark"] .group-list-page .el-tabs,
+[data-theme="dark"] .group-detail-page .group-header,
+[data-theme="dark"] .group-detail-page .group-tabs,
+[data-theme="dark"] .group-members-tab .members-section,
+[data-theme="dark"] .group-files-tab .files-container,
+[data-theme="dark"] .group-posts-tab .post-item,
+[data-theme="dark"] .group-list-page .group-card {
+  background: var(--workbench-surface) !important;
+  border-color: var(--workbench-border) !important;
+  color: var(--workbench-text) !important;
+}
+
+[data-theme="dark"] .helpinfo-list-page .filter-section,
+[data-theme="dark"] .group-list-page .group-filters,
+[data-theme="dark"] .group-posts-tab .toolbar,
+[data-theme="dark"] .members-filter,
+[data-theme="dark"] .file-actions,
+[data-theme="dark"] .helpinfo-detail-page .description-section,
+[data-theme="dark"] .helpinfo-detail-page .images-section,
+[data-theme="dark"] .helpinfo-detail-page .review-section,
+[data-theme="dark"] .group-posts-tab .comments-container,
+[data-theme="dark"] .group-posts-tab .replies-list {
+  background: var(--workbench-surface-muted) !important;
+  border-color: var(--workbench-border) !important;
+}
+
+@media (max-width: 768px) {
+  .helpinfo-list-page,
+  .helpinfo-detail-page,
+  .group-list-page,
+  .group-detail-page,
+  .post-detail-page {
+    padding: 12px 0 22px !important;
+  }
+
+  .helpinfo-list-page .page-header,
+  .group-list-page > .group-actions,
+  .group-posts-tab .toolbar {
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .helpinfo-list-page .filter-section,
+  .group-list-page .group-filters,
+  .group-posts-tab .search-sort {
+    width: 100% !important;
+    align-items: stretch !important;
+    flex-direction: column !important;
+  }
+
+  .helpinfo-list-page .search-container,
+  .helpinfo-list-page .filter-select,
+  .group-list-page .group-filters .el-input,
+  .group-list-page .group-filters .el-select,
+  .group-posts-tab .toolbar .el-input,
+  .group-posts-tab .toolbar .el-select {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .group-list-page .group-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .group-list-page .group-card > .el-card__body,
+  .group-detail-page .group-header {
+    grid-template-columns: 48px minmax(0, 1fr) !important;
+  }
+
+  .group-list-page .group-card .group-actions,
+  .group-detail-page .group-actions {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+}
