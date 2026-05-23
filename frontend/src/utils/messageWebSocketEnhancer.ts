@@ -4,10 +4,9 @@
  */
 
 import { computed } from 'vue';
-import { ElMessage, ElNotification } from 'element-plus';
+import { ElMessage } from 'element-plus';
 import webSocketService from './websocket';
 import { useAuthStore } from '@/store/auth';
-import router from '@/router';
 
 export interface MessageWebSocketConfig {
   autoConnect?: boolean;
@@ -199,10 +198,7 @@ class MessageWebSocketEnhancer {
       }
     });
 
-    // 显示通知（如果启用）
-    if (this.config.showNotifications) {
-      this.showMessageNotification(data as PrivateMessageData);
-    }
+    // 私信弹窗由全局 NavBar 统一处理，避免该增强器未挂载时漏弹或重复弹。
   }
 
   /**
@@ -232,48 +228,6 @@ class MessageWebSocketEnhancer {
         ElMessage.warning('私信服务已断开');
       }
     }
-  }
-
-  /**
-   * 显示消息通知
-   */
-  private showMessageNotification(data: PrivateMessageData): void {
-    // 获取当前用户ID
-    const authStore = useAuthStore();
-    const currentUserId = authStore.user?.userId;
-
-    // 如果消息是当前用户自己发送的，不显示通知
-    if (data.senderId && currentUserId && Number(data.senderId) === Number(currentUserId)) {
-      return;
-    }
-
-    // 如果当前已在私信界面，不显示弹窗（避免在聊天界面内重复提示）
-    if (window.location.hash.includes('/messages') || window.location.pathname.includes('/messages')) {
-      return;
-    }
-
-    const title = data.senderName || '新消息';
-    let content = data.content;
-
-    // 根据消息类型调整显示内容
-    if (data.messageType === 'IMAGE') {
-      content = '[图片]';
-    } else if (data.messageType === 'EMOJI') {
-      content = data.content;
-    }
-
-    ElNotification({
-      title,
-      message: content,
-      type: 'info',
-      duration: 3200,
-      position: 'top-right',
-      customClass: 'campus-ws-notification campus-ws-notification-message',
-      onClick: () => {
-        // 点击通知跳转到消息页面
-        router.push(`/messages/${data.senderId}`).catch(() => {});
-      }
-    });
   }
 
   /**

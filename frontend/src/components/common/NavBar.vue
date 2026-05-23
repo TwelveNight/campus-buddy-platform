@@ -294,7 +294,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { getNotifications, getUnreadNotificationCount, markAllNotificationsAsRead, markNotificationAsRead } from '@/api/notification'
-import { getUnreadMessageCount } from '@/api/message'
+import { getUnreadMessageCount, markMessageAsRead } from '@/api/message'
 import type { NotificationItem } from '@/types/notification'
 import webSocketService from '@/utils/websocket'
 import {
@@ -523,9 +523,39 @@ const handleUnreadMessageCountUpdate = (event: Event) => {
     }
 };
 
-const navigateFromNotificationToast = (relatedLink?: string) => {
+const navigateFromNotificationToast = (data: any, close?: () => void) => {
+    close?.()
+    const relatedLink = data?.relatedLink
     const target = relatedLink && relatedLink.startsWith('/') ? relatedLink : '/notifications'
     router.push(target).catch(() => {})
+
+    if (data?.notificationId) {
+        markNotificationAsRead(Number(data.notificationId))
+            .catch(error => {
+                console.error('点击通知弹窗标记已读失败:', error)
+            })
+        if (unreadCount.value > 0) {
+            unreadCountFloor = Math.max(0, unreadCountFloor - 1)
+            unreadCount.value = Math.max(0, unreadCount.value - 1)
+        }
+    }
+}
+
+const navigateFromMessageToast = (data: any, close?: () => void) => {
+    close?.()
+    const senderId = data?.senderId
+    const target = senderId ? `/messages/${senderId}` : '/messages'
+    router.push(target).catch(() => {})
+
+    if (data?.messageId) {
+        markMessageAsRead(Number(data.messageId))
+            .catch(error => {
+                console.error('点击私信弹窗标记已读失败:', error)
+            })
+        if (unreadMessageCount.value > 0) {
+            unreadMessageCount.value = Math.max(0, unreadMessageCount.value - 1)
+        }
+    }
 }
 
 // 设置定期轮询未读通知数量
@@ -571,14 +601,14 @@ const handleWebSocketNotification = (data: any) => {
         }
 
         // 显示可点击通知提示
-        ElNotification({
+        const notification = ElNotification({
             title: data.title || '新通知',
             message: data.content || '您有一条新通知',
             type: 'info',
             duration: 3200,
             position: 'top-right',
             customClass: 'campus-ws-notification campus-ws-notification-info',
-            onClick: () => navigateFromNotificationToast(data.relatedLink)
+            onClick: () => navigateFromNotificationToast(data, notification.close)
         });
     } catch (error) {
         console.error('处理WebSocket通知时出错:', error);
@@ -605,8 +635,25 @@ const handleWebSocketMessage = (data: any) => {
         // 从服务端刷新，确保计数准确（不做本地累加，避免重复）
         fetchUnreadMessageCount();
 
-        // 不在这里显示通知，避免重复通知
-        // 通知已由 messageWebSocketEnhancer.ts 中的 ElNotification 处理
+        const authUserId = authStore.user?.userId
+        if (data.senderId && authUserId && Number(data.senderId) === Number(authUserId)) {
+            return
+        }
+
+        if (route.path.startsWith('/messages') && Number(route.params.userId) === Number(data.senderId)) {
+            return
+        }
+
+        const messageText = data.messageType === 'IMAGE' ? '[图片]' : (data.content || '收到一条新私信')
+        const notification = ElNotification({
+            title: data.senderName || '新私信',
+            message: messageText,
+            type: 'info',
+            duration: 3200,
+            position: 'top-right',
+            customClass: 'campus-ws-notification campus-ws-notification-message',
+            onClick: () => navigateFromMessageToast(data, notification.close)
+        })
     } catch (error) {
         console.error('处理WebSocket私信时出错:', error);
     }

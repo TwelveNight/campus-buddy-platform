@@ -65,7 +65,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
             // 通过WebSocket发送实时通知
             String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
             webSocketPushService.sendNotification(
-                user.getUserId(), 
+                user.getUserId(),
+                notification.getNotificationId(),
                 dto.getTitle(), 
                 dto.getContent(), 
                 dto.getType(), 
@@ -88,7 +89,8 @@ public class NotificationServiceImpl extends ServiceImpl<NotificationMapper, Not
         // 通过WebSocket发送实时通知
         String relatedLink = generateRelatedLink(dto.getType(), dto.getRelatedId());
         webSocketPushService.sendNotification(
-            dto.getRecipientId(), 
+            dto.getRecipientId(),
+            notification.getNotificationId(),
             dto.getTitle(), 
             dto.getContent(), 
             dto.getType(), 

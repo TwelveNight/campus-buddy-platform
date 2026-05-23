@@ -15,12 +15,17 @@ public class WebSocketPushService {
     }
 
     public void sendNotification(Long userId, String title, String content, String type, String relatedLink) {
+        sendNotification(userId, null, title, content, type, relatedLink);
+    }
+
+    public void sendNotification(Long userId, Long notificationId, String title, String content, String type, String relatedLink) {
         if (userId == null) {
             return;
         }
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("type", "NOTIFICATION");
+        payload.put("notificationId", notificationId);
         payload.put("title", title);
         payload.put("content", content);
         payload.put("typeValue", type);

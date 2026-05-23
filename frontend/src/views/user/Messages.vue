@@ -957,6 +957,8 @@ onBeforeUnmount(() => {
     // 离开消息页面时刷新一次未读消息数量
     refreshUnreadMessageCount();
 
+    messageWebSocketEnhancer.removeMessageHandler(handleNewMessage);
+
     // 停止在线状态轮询
     stopOnlineStatusPolling();
 
