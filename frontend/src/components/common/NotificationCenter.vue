@@ -102,6 +102,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/zh-cn'
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from '@/api/notification'
 import type { NotificationItem } from '@/types/notification'
+import { ACCOUNT_DISABLED_PATH, inferAccountUnavailableStatus, saveAccountUnavailable } from '@/utils/accountStatus'
 
 dayjs.extend(relativeTime)
 dayjs.locale('zh-cn')
@@ -169,6 +170,9 @@ const getTypeTagType = (type: string) => {
         'COMMENT_REPLIED': 'primary',
         'POST_STATUS': 'info',
         'POST_DELETE': 'danger',
+        'USER_STATUS': 'danger',
+        'USER_STATUS_CHANGE': 'danger',
+        'USER_ROLE_CHANGE': 'warning',
         'HELPINFO_STATUS': 'warning',
         'HELPINFO_DELETE': 'danger',
         'HELP_INFO_STATUS_CHANGE': 'warning',
@@ -205,6 +209,9 @@ const getTypeLabel = (type: string) => {
         'COMMENT_REPLIED': '评论回复',
         'POST_STATUS': '帖子状态变更',
         'POST_DELETE': '帖子删除',
+        'USER_STATUS': '账号状态变更',
+        'USER_STATUS_CHANGE': '账号状态变更',
+        'USER_ROLE_CHANGE': '账号角色变更',
         'HELPINFO_STATUS': '互助信息状态变更',
         'HELPINFO_DELETE': '互助信息删除',
         'HELP_INFO_STATUS_CHANGE': '互助信息状态变更',
@@ -261,6 +268,15 @@ const handleNotificationClick = (notification: NotificationItem) => {
     
     if (!notification.isRead) {
         markAsRead(notification.notificationId)
+    }
+
+    if (
+        ['USER_STATUS', 'USER_STATUS_CHANGE'].includes(notification.type) &&
+        (notification.content?.includes('禁用') || notification.content?.includes('未激活'))
+    ) {
+        saveAccountUnavailable(inferAccountUnavailableStatus(notification.content), notification.content || '账号当前不可用，请联系管理员处理。')
+        router.replace(ACCOUNT_DISABLED_PATH)
+        return
     }
     
     if (notification.relatedLink) {

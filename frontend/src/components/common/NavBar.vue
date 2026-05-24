@@ -298,6 +298,11 @@ import { getUnreadMessageCount, markMessageAsRead } from '@/api/message'
 import type { NotificationItem } from '@/types/notification'
 import webSocketService from '@/utils/websocket'
 import {
+    ACCOUNT_DISABLED_PATH,
+    inferAccountUnavailableStatus,
+    saveAccountUnavailable
+} from '@/utils/accountStatus'
+import {
     User,
     House,
     Service,
@@ -381,6 +386,23 @@ let unreadCountFloor = 0
 const normalizeCount = (count: unknown) => {
     const numericCount = Number(count)
     return Number.isFinite(numericCount) ? Math.max(0, numericCount) : 0
+}
+
+const getNotificationBusinessType = (data: any) => data?.typeValue || data?.notificationType || data?.businessType
+
+const isAccountDisabledNotification = (data: any) => {
+    const type = getNotificationBusinessType(data)
+    const content = `${data?.title || ''} ${data?.content || ''}`
+    return ['USER_STATUS', 'USER_STATUS_CHANGE'].includes(type) &&
+        (content.includes('禁用') || content.includes('未激活') || content.includes('不可用'))
+}
+
+const handleAccountDisabledNotification = (data: any) => {
+    saveAccountUnavailable(inferAccountUnavailableStatus(data?.content), data?.content || '账号当前不可用，请联系管理员处理。')
+    clearNotificationPolling()
+    authStore.logout()
+    webSocketService.disconnect()
+    router.replace(ACCOUNT_DISABLED_PATH).catch(() => {})
 }
 
 watch([unreadCount, unreadMessageCount], ([notificationCount, messageCount]) => {
@@ -590,6 +612,11 @@ const handleWebSocketNotification = (data: any) => {
     }
 
     try {
+        if (isAccountDisabledNotification(data)) {
+            handleAccountDisabledNotification(data)
+            return
+        }
+
         // 先本地提升红点，再用服务端计数校准，避免接口乱序导致红点闪一下又消失。
         unreadCountFloor = Math.max(unreadCountFloor, unreadCount.value + 1)
         unreadCount.value = unreadCountFloor

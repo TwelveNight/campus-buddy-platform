@@ -20,6 +20,12 @@ const GroupList = () => import('../views/group/GroupList.vue')
 const GroupDetail = () => import('../views/group/GroupDetail.vue')
 const GroupPreview = () => import('../views/group/GroupPreview.vue')
 import { useAuthStore } from '../store/auth'
+import {
+  ACCOUNT_DISABLED_PATH,
+  getAccountUnavailable,
+  isUnavailableStatus,
+  saveAccountUnavailable
+} from '../utils/accountStatus'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -36,6 +42,11 @@ const routes: RouteRecordRaw[] = [
     path: '/register',
     component: Register,
     meta: { guestOnly: true }
+  },
+  {
+    path: ACCOUNT_DISABLED_PATH,
+    component: () => import('../views/auth/AccountDisabled.vue'),
+    meta: { public: true }
   },
   {
     path: '/helpinfo',
@@ -192,6 +203,22 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
+  const accountUnavailable = getAccountUnavailable()
+
+  if (to.path !== ACCOUNT_DISABLED_PATH && accountUnavailable) {
+    next(ACCOUNT_DISABLED_PATH)
+    return
+  }
+
+  if (to.path !== ACCOUNT_DISABLED_PATH && isUnavailableStatus(authStore.user?.status)) {
+    saveAccountUnavailable(
+      authStore.user?.status === 'INACTIVE' ? 'INACTIVE' : 'BANNED',
+      authStore.user?.status === 'INACTIVE' ? '账号未激活，请联系管理员处理。' : '账号已被禁用，请联系管理员处理。'
+    )
+    authStore.logout()
+    next(ACCOUNT_DISABLED_PATH)
+    return
+  }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')

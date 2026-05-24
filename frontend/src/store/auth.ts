@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { login, register, getCurrentUser, checkIsAdmin } from '../api/auth'
 import axios from 'axios'
 import webSocketService from '../utils/websocket'
+import { clearAccountUnavailable } from '@/utils/accountStatus'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -45,6 +46,7 @@ export const useAuthStore = defineStore('auth', {
       if (res.data && res.data.code === 200 && typeof res.data.data === 'string' && res.data.data.length > 0) {
         this.token = res.data.data; // The token is directly in res.data.data
         this.isAuthenticated = true;
+        clearAccountUnavailable();
         localStorage.setItem('token', this.token);
         console.log('Token stored in localStorage:', localStorage.getItem('token'));
 

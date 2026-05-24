@@ -18,6 +18,12 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { useAuthStore } from './store/auth'
+import {
+  ACCOUNT_DISABLED_PATH,
+  getAccountUnavailable,
+  isUnavailableStatus,
+  saveAccountUnavailable
+} from './utils/accountStatus'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -31,7 +37,22 @@ app.use(pinia).use(ElementPlus)
 
 // 全局前置导航守卫 - 在应用挂载前添加，确保获取用户信息
 const authStore = useAuthStore(pinia)
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
+  if (to.path !== ACCOUNT_DISABLED_PATH && getAccountUnavailable()) {
+    next(ACCOUNT_DISABLED_PATH)
+    return
+  }
+
+  if (to.path !== ACCOUNT_DISABLED_PATH && isUnavailableStatus(authStore.user?.status)) {
+    saveAccountUnavailable(
+      authStore.user?.status === 'INACTIVE' ? 'INACTIVE' : 'BANNED',
+      authStore.user?.status === 'INACTIVE' ? '账号未激活，请联系管理员处理。' : '账号已被禁用，请联系管理员处理。'
+    )
+    authStore.logout()
+    next(ACCOUNT_DISABLED_PATH)
+    return
+  }
+
   // 如果已认证但没有完整用户信息，则获取用户信息
   if (authStore.isAuthenticated && (!authStore.user || !authStore.user.roles)) {
     try {
@@ -54,6 +75,16 @@ router.beforeEach(async (to, from, next) => {
     } catch (error) {
       console.error('导航守卫中获取用户信息失败:', error)
     }
+  }
+
+  if (to.path !== ACCOUNT_DISABLED_PATH && isUnavailableStatus(authStore.user?.status)) {
+    saveAccountUnavailable(
+      authStore.user?.status === 'INACTIVE' ? 'INACTIVE' : 'BANNED',
+      authStore.user?.status === 'INACTIVE' ? '账号未激活，请联系管理员处理。' : '账号已被禁用，请联系管理员处理。'
+    )
+    authStore.logout()
+    next(ACCOUNT_DISABLED_PATH)
+    return
   }
   
   // 处理需要管理员权限的路由
